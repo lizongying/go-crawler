@@ -5,7 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"github.com/lizongying/go-crawler/internal"
+	"github.com/lizongying/go-crawler/pkg"
 	"io"
 	"os"
 	"path/filepath"
@@ -115,7 +115,7 @@ func StrMd5(sl ...string) string {
 	return fmt.Sprintf("%x", md5.Sum([]byte(strings.Join(sl, ""))))
 }
 
-func Request2Curl(r *internal.Request) string {
+func Request2Curl(r *pkg.Request) string {
 	var args []string
 	args = append(args, "curl")
 	if r.Method != "GET" {

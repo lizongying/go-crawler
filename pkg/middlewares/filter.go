@@ -2,16 +2,16 @@ package middlewares
 
 import (
 	"context"
-	"github.com/lizongying/go-crawler/internal"
-	"github.com/lizongying/go-crawler/internal/logger"
-	"github.com/lizongying/go-crawler/internal/utils"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"sync"
 )
 
 type FilterMiddleware struct {
-	internal.UnimplementedMiddleware
+	pkg.UnimplementedMiddleware
 	logger *logger.Logger
-	info   *internal.SpiderInfo
+	info   *pkg.SpiderInfo
 	ids    sync.Map
 }
 
@@ -19,12 +19,12 @@ func (m *FilterMiddleware) GetName() string {
 	return "filter"
 }
 
-func (m *FilterMiddleware) SpiderStart(_ context.Context, spider internal.Spider) (err error) {
+func (m *FilterMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.info = spider.GetInfo()
 	return
 }
 
-func (m *FilterMiddleware) ProcessRequest(_ context.Context, r *internal.Request) (request *internal.Request, response *internal.Response, err error) {
+func (m *FilterMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (request *pkg.Request, response *pkg.Response, err error) {
 	m.logger.Debug("request", utils.JsonStr(r))
 
 	filterBefore, ok := m.info.Stats.Load("filter_before")
@@ -43,7 +43,7 @@ func (m *FilterMiddleware) ProcessRequest(_ context.Context, r *internal.Request
 	}
 
 	if _, ok = m.ids.Load(r.UniqueKey); ok {
-		err = internal.ErrIgnoreRequest
+		err = pkg.ErrIgnoreRequest
 		m.logger.InfoF("%s in filter", r.UniqueKey)
 		return
 	}
@@ -51,7 +51,7 @@ func (m *FilterMiddleware) ProcessRequest(_ context.Context, r *internal.Request
 	return
 }
 
-func (m *FilterMiddleware) ProcessItem(_ context.Context, item *internal.Item) (err error) {
+func (m *FilterMiddleware) ProcessItem(_ context.Context, item *pkg.Item) (err error) {
 	if item.UniqueKey == "" {
 		return
 	}
@@ -68,7 +68,7 @@ func (m *FilterMiddleware) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func NewFilterMiddleware(logger *logger.Logger) (m internal.Middleware) {
+func NewFilterMiddleware(logger *logger.Logger) (m pkg.Middleware) {
 	m = &FilterMiddleware{
 		logger: logger,
 	}

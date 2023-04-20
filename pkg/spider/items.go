@@ -3,7 +3,7 @@ package spider
 import (
 	"context"
 	"errors"
-	"github.com/lizongying/go-crawler/internal"
+	"github.com/lizongying/go-crawler/pkg"
 	"time"
 )
 
@@ -26,7 +26,7 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 
 		<-s.itemConcurrencyChan
 		s.Logger.Info(cap(s.itemConcurrencyChan), len(s.itemConcurrencyChan), "id:", item.Id)
-		go func(itemConcurrencyChan chan struct{}, item *internal.Item) {
+		go func(itemConcurrencyChan chan struct{}, item *pkg.Item) {
 			defer func() {
 				if itemConcurrencyChan != s.itemConcurrencyChan && itemConcurrencyChanLen < 0 {
 					itemConcurrencyChanLen++
@@ -39,13 +39,13 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 
 			for _, v := range s.SortedPipelines() {
 				e := v.ProcessItem(ctx, item)
-				if errors.Is(e, internal.BreakErr) {
+				if errors.Is(e, pkg.BreakErr) {
 					break
 				}
 			}
 			for _, v := range s.SortedMiddlewares() {
 				e := v.ProcessItem(ctx, item)
-				if errors.Is(e, internal.BreakErr) {
+				if errors.Is(e, pkg.BreakErr) {
 					break
 				}
 			}
@@ -59,7 +59,7 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 	return
 }
 
-func (s *BaseSpider) YieldItem(item *internal.Item) (err error) {
+func (s *BaseSpider) YieldItem(item *pkg.Item) (err error) {
 	if len(s.itemChan) == cap(s.itemChan) {
 		err = errors.New("itemChan max limit")
 		s.Logger.Error(err)

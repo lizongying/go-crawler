@@ -2,8 +2,8 @@ package logger
 
 import (
 	"fmt"
-	"github.com/lizongying/go-crawler/internal/config"
-	"github.com/lizongying/go-crawler/internal/utils"
+	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"io"
 	"log"
 	"os"

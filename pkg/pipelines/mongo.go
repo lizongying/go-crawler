@@ -3,29 +3,29 @@ package pipelines
 import (
 	"context"
 	"errors"
-	"github.com/lizongying/go-crawler/internal"
-	"github.com/lizongying/go-crawler/internal/logger"
-	"github.com/lizongying/go-crawler/internal/utils"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
 type MongoPipeline struct {
-	internal.UnimplementedPipeline
+	pkg.UnimplementedPipeline
 	logger *logger.Logger
 
 	mongoDb    *mongo.Database
 	timeout    time.Duration
-	spider     internal.Spider
-	spiderInfo *internal.SpiderInfo
+	spider     pkg.Spider
+	spiderInfo *pkg.SpiderInfo
 }
 
 func (p *MongoPipeline) GetName() string {
 	return "mongo"
 }
 
-func (p *MongoPipeline) SpiderStart(_ context.Context, spider internal.Spider) (err error) {
+func (p *MongoPipeline) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	p.spider = spider
 	p.spiderInfo = spider.GetInfo()
 	p.spiderInfo.Stats.Store("item_error", 0)
@@ -33,7 +33,7 @@ func (p *MongoPipeline) SpiderStart(_ context.Context, spider internal.Spider) (
 	return
 }
 
-func (p *MongoPipeline) ProcessItem(ctx context.Context, item *internal.Item) (err error) {
+func (p *MongoPipeline) ProcessItem(ctx context.Context, item *pkg.Item) (err error) {
 	if item.Collection == "" {
 		err = errors.New("collection is empty")
 		p.logger.Error(err)
@@ -88,7 +88,7 @@ func (p *MongoPipeline) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func NewMongoPipeline(logger *logger.Logger, mongoDb *mongo.Database) (m internal.Pipeline) {
+func NewMongoPipeline(logger *logger.Logger, mongoDb *mongo.Database) (m pkg.Pipeline) {
 	m = &MongoPipeline{
 		logger:  logger,
 		mongoDb: mongoDb,

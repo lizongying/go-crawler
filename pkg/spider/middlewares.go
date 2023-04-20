@@ -2,7 +2,7 @@ package spider
 
 import (
 	"errors"
-	"github.com/lizongying/go-crawler/internal"
+	"github.com/lizongying/go-crawler/pkg"
 )
 
 func (s *BaseSpider) GetMiddlewares() (middlewares map[int]string) {
@@ -14,7 +14,7 @@ func (s *BaseSpider) GetMiddlewares() (middlewares map[int]string) {
 	return
 }
 
-func (s *BaseSpider) ReplaceMiddlewares(middlewares map[int]internal.Middleware) (err error) {
+func (s *BaseSpider) ReplaceMiddlewares(middlewares map[int]pkg.Middleware) (err error) {
 	middlewaresNameMap := make(map[string]struct{})
 	middlewaresOrderMap := make(map[int]struct{})
 	for k, v := range middlewares {
@@ -37,7 +37,7 @@ func (s *BaseSpider) ReplaceMiddlewares(middlewares map[int]internal.Middleware)
 	return
 }
 
-func (s *BaseSpider) SetMiddleware(middleware internal.Middleware, order int) {
+func (s *BaseSpider) SetMiddleware(middleware pkg.Middleware, order int) {
 	for k, v := range s.middlewares {
 		if v.GetName() == middleware.GetName() && k != order {
 			delete(s.middlewares, k)
@@ -62,7 +62,7 @@ func (s *BaseSpider) DelMiddleware(name string) {
 }
 
 func (s *BaseSpider) CleanMiddlewares() {
-	s.middlewares = make(map[int]internal.Middleware)
+	s.middlewares = make(map[int]pkg.Middleware)
 
 	return
 }

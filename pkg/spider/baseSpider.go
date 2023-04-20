@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/lizongying/go-crawler/internal"
-	"github.com/lizongying/go-crawler/internal/cli"
-	"github.com/lizongying/go-crawler/internal/config"
-	"github.com/lizongying/go-crawler/internal/httpClient"
-	"github.com/lizongying/go-crawler/internal/logger"
-	"github.com/lizongying/go-crawler/internal/middlewares"
-	"github.com/lizongying/go-crawler/internal/pipelines"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/cli"
+	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/httpClient"
+	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg/middlewares"
+	"github.com/lizongying/go-crawler/pkg/pipelines"
 	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"reflect"
@@ -35,11 +35,11 @@ const defaultChanMetaMax = 1000 * 1000
 const defaultChanItemMax = 1000 * 1000
 
 type BaseSpider struct {
-	*internal.SpiderInfo
-	spider internal.Spider
+	*pkg.SpiderInfo
+	spider pkg.Spider
 
 	MongoDb    *mongo.Database
-	Logger     internal.Logger
+	Logger     pkg.Logger
 	httpClient *httpClient.HttpClient
 
 	startFunc             string
@@ -48,33 +48,33 @@ type BaseSpider struct {
 	itemConcurrencyChan   chan struct{}
 	itemDelay             time.Duration
 	itemTimer             *time.Timer
-	itemChan              chan *internal.Item
+	itemChan              chan *pkg.Item
 	requestSlots          sync.Map
-	requestSlotsCurrent   map[string]internal.RequestSlot
-	requestChan           chan *internal.Request
+	requestSlotsCurrent   map[string]pkg.RequestSlot
+	requestChan           chan *pkg.Request
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
-	middlewares           map[int]internal.Middleware
-	pipelines             map[int]internal.Pipeline
+	middlewares           map[int]pkg.Middleware
+	pipelines             map[int]pkg.Pipeline
 
 	TimeoutRequest time.Duration
 
 	locker sync.Mutex
 }
 
-func (s *BaseSpider) SetLogger(logger internal.Logger) {
+func (s *BaseSpider) SetLogger(logger pkg.Logger) {
 	s.Logger = logger
 }
 
-func (s *BaseSpider) SetSpider(spider internal.Spider) {
+func (s *BaseSpider) SetSpider(spider pkg.Spider) {
 	s.spider = spider
 }
 
-func (s *BaseSpider) GetInfo() *internal.SpiderInfo {
+func (s *BaseSpider) GetInfo() *pkg.SpiderInfo {
 	return s.SpiderInfo
 }
 
-func (s *BaseSpider) SortedMiddlewares() (o []internal.Middleware) {
+func (s *BaseSpider) SortedMiddlewares() (o []pkg.Middleware) {
 	keys := make([]int, 0)
 	for k := range s.middlewares {
 		keys = append(keys, k)
@@ -87,7 +87,7 @@ func (s *BaseSpider) SortedMiddlewares() (o []internal.Middleware) {
 	return
 }
 
-func (s *BaseSpider) SortedPipelines() (o []internal.Pipeline) {
+func (s *BaseSpider) SortedPipelines() (o []pkg.Pipeline) {
 	keys := make([]int, 0)
 	for k := range s.pipelines {
 		keys = append(keys, k)
@@ -125,7 +125,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 
 	for _, v := range s.middlewares {
 		e := v.SpiderStart(ctx, s)
-		if errors.Is(e, internal.BreakErr) {
+		if errors.Is(e, pkg.BreakErr) {
 			break
 		}
 	}
@@ -133,7 +133,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	defer func() {
 		for _, v := range s.middlewares {
 			e := v.SpiderStop(ctx)
-			if errors.Is(e, internal.BreakErr) {
+			if errors.Is(e, pkg.BreakErr) {
 				break
 			}
 		}
@@ -141,7 +141,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 
 	for _, v := range s.pipelines {
 		e := v.SpiderStart(ctx, s)
-		if errors.Is(e, internal.BreakErr) {
+		if errors.Is(e, pkg.BreakErr) {
 			break
 		}
 	}
@@ -149,7 +149,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	defer func() {
 		for _, v := range s.pipelines {
 			e := v.SpiderStop(ctx)
-			if errors.Is(e, internal.BreakErr) {
+			if errors.Is(e, pkg.BreakErr) {
 				break
 			}
 		}
@@ -166,7 +166,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	}
 
 	s.requestSlots.Range(func(key, value any) bool {
-		requestSlot := value.(*internal.RequestSlot)
+		requestSlot := value.(*pkg.RequestSlot)
 		if requestSlot.Delay > 0 {
 			requestSlot.Timer = time.NewTimer(requestSlot.Delay)
 		}
@@ -180,7 +180,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 
 	slot := "*"
 	if _, ok := s.requestSlots.Load(slot); !ok {
-		requestSlot := new(internal.RequestSlot)
+		requestSlot := new(pkg.RequestSlot)
 		requestSlot.Concurrency = 1
 		requestSlot.ConcurrencyChan = make(chan struct{}, requestSlot.Concurrency)
 		for i := 0; i < requestSlot.Concurrency; i++ {
@@ -234,7 +234,7 @@ func NewBaseSpider(cli *cli.Cli, _ *config.Config, logger *logger.Logger, mongoD
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	spider = &BaseSpider{
-		SpiderInfo: new(internal.SpiderInfo),
+		SpiderInfo: new(pkg.SpiderInfo),
 		startFunc:  cli.StartFunc,
 		MongoDb:    mongoDb,
 		Logger:     logger,
@@ -242,11 +242,11 @@ func NewBaseSpider(cli *cli.Cli, _ *config.Config, logger *logger.Logger, mongoD
 
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
-		middlewares:           make(map[int]internal.Middleware),
-		pipelines:             make(map[int]internal.Pipeline),
-		requestSlotsCurrent:   make(map[string]internal.RequestSlot),
-		requestChan:           make(chan *internal.Request, defaultChanMetaMax),
-		itemChan:              make(chan *internal.Item, defaultChanItemMax),
+		middlewares:           make(map[int]pkg.Middleware),
+		pipelines:             make(map[int]pkg.Pipeline),
+		requestSlotsCurrent:   make(map[string]pkg.RequestSlot),
+		requestChan:           make(chan *pkg.Request, defaultChanMetaMax),
+		itemChan:              make(chan *pkg.Item, defaultChanItemMax),
 	}
 	spider.Mode = cli.Mode
 

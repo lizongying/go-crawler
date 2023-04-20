@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/lizongying/go-crawler/internal"
-	"github.com/lizongying/go-crawler/internal/app"
-	"github.com/lizongying/go-crawler/internal/logger"
-	"github.com/lizongying/go-crawler/internal/spider"
-	"github.com/lizongying/go-crawler/internal/utils"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/app"
+	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg/spider"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -39,7 +39,7 @@ type YoutubeSpider struct {
 	publishedTimeRe *regexp.Regexp
 }
 
-func (s *YoutubeSpider) RequestSearch(ctx context.Context, request *internal.Request) (err error) {
+func (s *YoutubeSpider) RequestSearch(ctx context.Context, request *pkg.Request) (err error) {
 	extra := request.Extra.(*ExtraSearch)
 	s.Logger.Info("Search", utils.JsonStr(extra))
 	if ctx == nil {
@@ -86,7 +86,7 @@ func (s *YoutubeSpider) RequestSearch(ctx context.Context, request *internal.Req
 					continue
 				}
 				id := strings.TrimPrefix(runs[0].NavigationEndpoint.BrowseEndpoint.CanonicalBaseURL, "/@")
-				e := s.RequestVideos(ctx, &internal.Request{
+				e := s.RequestVideos(ctx, &pkg.Request{
 					ProxyEnable: true,
 					UniqueKey:   id,
 					Extra: &ExtraUser{
@@ -117,7 +117,7 @@ func (s *YoutubeSpider) RequestSearch(ctx context.Context, request *internal.Req
 		s.Logger.Info("max page")
 		return
 	}
-	err = s.RequestSearchApi(ctx, &internal.Request{
+	err = s.RequestSearchApi(ctx, &pkg.Request{
 		ProxyEnable: true,
 		Extra: &ExtraSearch{
 			Keyword:       extra.Keyword,
@@ -135,7 +135,7 @@ func (s *YoutubeSpider) RequestSearch(ctx context.Context, request *internal.Req
 	return
 }
 
-func (s *YoutubeSpider) RequestSearchApi(ctx context.Context, request *internal.Request) (err error) {
+func (s *YoutubeSpider) RequestSearchApi(ctx context.Context, request *pkg.Request) (err error) {
 	extra := request.Extra.(*ExtraSearch)
 	s.Logger.Info("SearchApi", utils.JsonStr(extra))
 	if ctx == nil {
@@ -182,7 +182,7 @@ func (s *YoutubeSpider) RequestSearchApi(ctx context.Context, request *internal.
 					continue
 				}
 				id := strings.TrimPrefix(runs[0].NavigationEndpoint.BrowseEndpoint.CanonicalBaseURL, "/@")
-				e := s.RequestVideos(ctx, &internal.Request{
+				e := s.RequestVideos(ctx, &pkg.Request{
 					ProxyEnable: true,
 					UniqueKey:   id,
 					Extra: &ExtraUser{
@@ -205,7 +205,7 @@ func (s *YoutubeSpider) RequestSearchApi(ctx context.Context, request *internal.
 			s.Logger.Info("max page")
 			return
 		}
-		err = s.RequestSearchApi(ctx, &internal.Request{
+		err = s.RequestSearchApi(ctx, &pkg.Request{
 			ProxyEnable: true,
 			Extra: &ExtraSearch{
 				Keyword:       extra.Keyword,
@@ -224,7 +224,7 @@ func (s *YoutubeSpider) RequestSearchApi(ctx context.Context, request *internal.
 	return
 }
 
-func (s *YoutubeSpider) RequestVideos(ctx context.Context, request *internal.Request) (err error) {
+func (s *YoutubeSpider) RequestVideos(ctx context.Context, request *pkg.Request) (err error) {
 	extra := request.Extra.(*ExtraUser)
 	s.Logger.Info("Videos", utils.JsonStr(extra))
 	if ctx == nil {
@@ -366,7 +366,7 @@ func (s *YoutubeSpider) RequestVideos(ctx context.Context, request *internal.Req
 			ViewAvg10:   viewAvg,
 			Keyword:     extra.KeyWord,
 		}
-		item := internal.Item{
+		item := pkg.Item{
 			Collection: s.collectionYoutubeUser,
 			Id:         extra.Id,
 			UniqueKey:  extra.Id,
@@ -382,7 +382,7 @@ func (s *YoutubeSpider) RequestVideos(ctx context.Context, request *internal.Req
 	return
 }
 
-func (s *YoutubeSpider) RequestUserApi(ctx context.Context, request *internal.Request) (err error) {
+func (s *YoutubeSpider) RequestUserApi(ctx context.Context, request *pkg.Request) (err error) {
 	extra := request.Extra.(*ExtraUser)
 	s.Logger.Info("UserApi", utils.JsonStr(extra))
 	if ctx == nil {
@@ -522,7 +522,7 @@ func (s *YoutubeSpider) RequestUserApi(ctx context.Context, request *internal.Re
 			ViewAvg10:   viewAvg,
 			Keyword:     extra.KeyWord,
 		}
-		item := internal.Item{
+		item := pkg.Item{
 			Collection: s.collectionYoutubeUser,
 			Id:         data.Id,
 			Data:       &data,
@@ -538,7 +538,7 @@ func (s *YoutubeSpider) RequestUserApi(ctx context.Context, request *internal.Re
 }
 
 func (s *YoutubeSpider) Test(_ context.Context) (err error) {
-	err = s.RequestVideos(nil, &internal.Request{
+	err = s.RequestVideos(nil, &pkg.Request{
 		ProxyEnable: true,
 		Extra: &ExtraUser{
 			Id: "sierramarie",
@@ -552,7 +552,7 @@ func (s *YoutubeSpider) FromKeyword(_ context.Context) (err error) {
 		"veja",
 		"tote bag",
 	} {
-		err = s.RequestSearch(nil, &internal.Request{
+		err = s.RequestSearch(nil, &pkg.Request{
 			ProxyEnable: true,
 			Extra: &ExtraSearch{
 				Keyword: v,
@@ -566,7 +566,7 @@ func (s *YoutubeSpider) FromKeyword(_ context.Context) (err error) {
 	return
 }
 
-func NewYoutubeSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider internal.Spider, err error) {
+func NewYoutubeSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg.Spider, err error) {
 	if baseSpider == nil {
 		err = errors.New("spider is empty")
 		logger.Error(err)

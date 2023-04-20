@@ -3,8 +3,8 @@ package mongodb
 import (
 	"context"
 	"errors"
-	"github.com/lizongying/go-crawler/internal/config"
-	"github.com/lizongying/go-crawler/internal/logger"
+	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"

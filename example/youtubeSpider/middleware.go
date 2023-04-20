@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/lizongying/go-crawler/internal"
-	"github.com/lizongying/go-crawler/internal/logger"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/logger"
 	"net/http"
 )
 
 type YoutubeMiddleware struct {
-	internal.UnimplementedMiddleware
+	pkg.UnimplementedMiddleware
 	logger *logger.Logger
 }
 
@@ -16,7 +16,7 @@ func (m *YoutubeMiddleware) GetName() string {
 	return "youtube"
 }
 
-func (m *YoutubeMiddleware) ProcessRequest(_ context.Context, r *internal.Request) (request *internal.Request, response *internal.Response, err error) {
+func (m *YoutubeMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (request *pkg.Request, response *pkg.Response, err error) {
 	if r.Header == nil {
 		r.Header = make(http.Header)
 	}
@@ -25,7 +25,7 @@ func (m *YoutubeMiddleware) ProcessRequest(_ context.Context, r *internal.Reques
 	return
 }
 
-func NewYoutubeMiddleware(logger *logger.Logger) (m internal.Middleware) {
+func NewYoutubeMiddleware(logger *logger.Logger) (m pkg.Middleware) {
 	m = &YoutubeMiddleware{
 		logger: logger,
 	}

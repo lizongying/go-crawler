@@ -1,4 +1,4 @@
-package internal
+package pkg
 
 type Logger interface {
 	Debug(v ...any)

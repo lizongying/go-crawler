@@ -3,10 +3,10 @@ package httpClient
 import (
 	"context"
 	"errors"
-	"github.com/lizongying/go-crawler/internal"
-	"github.com/lizongying/go-crawler/internal/config"
-	"github.com/lizongying/go-crawler/internal/logger"
-	"github.com/lizongying/go-crawler/internal/utils"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"io"
 	"net/http"
 	"net/url"
@@ -40,7 +40,7 @@ func (h *HttpClient) getClient() {
 	return
 }
 
-func (h *HttpClient) BuildRequest(ctx context.Context, request *internal.Request) (err error) {
+func (h *HttpClient) BuildRequest(ctx context.Context, request *pkg.Request) (err error) {
 	h.logger.Debug("request", utils.JsonStr(request))
 
 	if ctx == nil {
@@ -85,7 +85,7 @@ func (h *HttpClient) BuildRequest(ctx context.Context, request *internal.Request
 	return
 }
 
-func (h *HttpClient) BuildResponse(ctx context.Context, request *internal.Request) (response *internal.Response, err error) {
+func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
 	h.logger.Debug("request", utils.JsonStr(request))
 
 	if ctx == nil {
@@ -110,7 +110,7 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *internal.Reques
 		return
 	}
 
-	response = &internal.Response{
+	response = &pkg.Response{
 		Response: resp,
 		Request:  request,
 	}

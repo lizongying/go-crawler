@@ -2,7 +2,7 @@ package spider
 
 import (
 	"errors"
-	"github.com/lizongying/go-crawler/internal"
+	"github.com/lizongying/go-crawler/pkg"
 )
 
 func (s *BaseSpider) GetPipelines() (pipelines map[int]string) {
@@ -14,7 +14,7 @@ func (s *BaseSpider) GetPipelines() (pipelines map[int]string) {
 	return
 }
 
-func (s *BaseSpider) ReplacePipelines(pipelines map[int]internal.Pipeline) (err error) {
+func (s *BaseSpider) ReplacePipelines(pipelines map[int]pkg.Pipeline) (err error) {
 	pipelinesNameMap := make(map[string]struct{})
 	pipelinesOrderMap := make(map[int]struct{})
 	for k, v := range pipelines {
@@ -37,7 +37,7 @@ func (s *BaseSpider) ReplacePipelines(pipelines map[int]internal.Pipeline) (err 
 	return
 }
 
-func (s *BaseSpider) SetPipeline(pipeline internal.Pipeline, order int) {
+func (s *BaseSpider) SetPipeline(pipeline pkg.Pipeline, order int) {
 	for k, v := range s.pipelines {
 		if v.GetName() == pipeline.GetName() && k != order {
 			delete(s.pipelines, k)
@@ -62,7 +62,7 @@ func (s *BaseSpider) DelPipeline(name string) {
 }
 
 func (s *BaseSpider) CleanPipelines() {
-	s.pipelines = make(map[int]internal.Pipeline)
+	s.pipelines = make(map[int]pkg.Pipeline)
 
 	return
 }

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/lizongying/go-crawler/internal/cli"
+	"github.com/lizongying/go-crawler/pkg/cli"
 	"gopkg.in/yaml.v2"
 	"log"
 	"os"

@@ -3,12 +3,12 @@ package spider
 import (
 	"context"
 	"errors"
-	"github.com/lizongying/go-crawler/internal"
-	"github.com/lizongying/go-crawler/internal/utils"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"time"
 )
 
-func (s *BaseSpider) Request(ctx context.Context, request *internal.Request) (response *internal.Response, err error) {
+func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
 	// TODO limit
 	s.Logger.Debug("request", utils.JsonStr(request))
 
@@ -27,7 +27,7 @@ func (s *BaseSpider) Request(ctx context.Context, request *internal.Request) (re
 		_, r, e := v.ProcessRequest(ctx, request)
 		if e != nil {
 			s.Logger.Error(e)
-			if errors.Is(e, internal.ErrIgnoreRequest) {
+			if errors.Is(e, pkg.ErrIgnoreRequest) {
 				return
 			}
 			continue
@@ -48,7 +48,7 @@ func (s *BaseSpider) Request(ctx context.Context, request *internal.Request) (re
 		_, _, e := v.ProcessResponse(ctx, response)
 		if e != nil {
 			s.Logger.Error(e)
-			if errors.Is(e, internal.BreakErr) {
+			if errors.Is(e, pkg.BreakErr) {
 				break
 			}
 			continue
@@ -59,11 +59,11 @@ func (s *BaseSpider) Request(ctx context.Context, request *internal.Request) (re
 }
 
 func (s *BaseSpider) handleRequest(_ context.Context) {
-	slotsCurrent := make(map[string]internal.RequestSlot)
+	slotsCurrent := make(map[string]pkg.RequestSlot)
 
 	slot := "*"
 	value, _ := s.requestSlots.Load(slot)
-	requestSlot := value.(*internal.RequestSlot)
+	requestSlot := value.(*pkg.RequestSlot)
 	slotsCurrent[slot] = *requestSlot
 
 	for request := range s.requestChan {
@@ -73,7 +73,7 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 		}
 		slotValue, ok := s.requestSlots.Load(slot)
 		if !ok {
-			requestSlot = new(internal.RequestSlot)
+			requestSlot = new(pkg.RequestSlot)
 			if request.Delay > 0 {
 				requestSlot.Delay = request.Delay
 				requestSlot.Timer = time.NewTimer(requestSlot.Delay)
@@ -90,7 +90,7 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 			slotsCurrent[slot] = *requestSlot
 		}
 
-		requestSlot = slotValue.(*internal.RequestSlot)
+		requestSlot = slotValue.(*pkg.RequestSlot)
 		if requestSlot.Delay != slotsCurrent[slot].Delay {
 			if requestSlot.Delay > 0 {
 				requestSlot.Timer = time.NewTimer(requestSlot.Delay)
@@ -106,7 +106,7 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 		slotsCurrent[slot] = *requestSlot
 
 		<-requestSlot.ConcurrencyChan
-		go func(requestConcurrency int, requestSlot *internal.RequestSlot, request *internal.Request) {
+		go func(requestConcurrency int, requestSlot *pkg.RequestSlot, request *pkg.Request) {
 			defer func() {
 				if requestSlot.Delay > 0 {
 					<-requestSlot.Timer.C
@@ -124,12 +124,12 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 
 			ctx := context.Background()
 
-			var response *internal.Response
+			var response *pkg.Response
 			for _, v := range s.SortedMiddlewares() {
 				_, r, e := v.ProcessRequest(ctx, request)
 				if e != nil {
 					s.Logger.Error(e)
-					if errors.Is(e, internal.ErrIgnoreRequest) {
+					if errors.Is(e, pkg.ErrIgnoreRequest) {
 						return
 					}
 					continue
@@ -150,7 +150,7 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 				_, _, e := v.ProcessResponse(ctx, response)
 				if e != nil {
 					s.Logger.Error(e)
-					if errors.Is(e, internal.BreakErr) {
+					if errors.Is(e, pkg.BreakErr) {
 						break
 					}
 					continue
@@ -180,7 +180,7 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 	return
 }
 
-func (s *BaseSpider) YieldRequest(request *internal.Request) (err error) {
+func (s *BaseSpider) YieldRequest(request *pkg.Request) (err error) {
 	if len(s.requestChan) == cap(s.requestChan) {
 		err = errors.New("requestChan max limit")
 		s.Logger.Error(err)
@@ -204,14 +204,14 @@ func (s *BaseSpider) SetRequestDelay(slot string, requestDelay time.Duration) {
 
 	slotValue, ok := s.requestSlots.Load(slot)
 	if !ok {
-		requestSlot := &internal.RequestSlot{
+		requestSlot := &pkg.RequestSlot{
 			Delay: requestDelay,
 		}
 		s.requestSlots.Store(slot, requestSlot)
 		return
 	}
 
-	requestSlot := slotValue.(*internal.RequestSlot)
+	requestSlot := slotValue.(*pkg.RequestSlot)
 	requestSlot.Delay = requestDelay
 }
 
@@ -226,13 +226,13 @@ func (s *BaseSpider) SetRequestConcurrency(slot string, requestConcurrency int) 
 
 	slotValue, ok := s.requestSlots.Load(slot)
 	if !ok {
-		requestSlot := &internal.RequestSlot{
+		requestSlot := &pkg.RequestSlot{
 			Concurrency: requestConcurrency,
 		}
 		s.requestSlots.Store(slot, requestSlot)
 		return
 	}
 
-	requestSlot := slotValue.(*internal.RequestSlot)
+	requestSlot := slotValue.(*pkg.RequestSlot)
 	requestSlot.Concurrency = requestConcurrency
 }
