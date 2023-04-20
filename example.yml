@@ -1,0 +1,10 @@
+mongo:
+  example:
+    uri:
+    database:
+log:
+  filename: youtube.log
+  long_file: true
+  level: debug
+proxy:
+  example:
