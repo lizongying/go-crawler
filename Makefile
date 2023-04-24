@@ -2,7 +2,8 @@
 
 all: tidy testSpider youtubeSpider
 
-module = github.com/lizongying/go-crawler
+module := $(shell head -n 1 go.mod)
+module := $(subst module ,,${module})
 
 tidy:
 	go mod tidy

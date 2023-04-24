@@ -31,7 +31,7 @@ func init() {
 	log.Println(info)
 }
 
-const defaultChanMetaMax = 1000 * 1000
+const defaultChanRequestMax = 1000 * 1000
 const defaultChanItemMax = 1000 * 1000
 
 type BaseSpider struct {
@@ -53,6 +53,7 @@ type BaseSpider struct {
 	requestSlots          sync.Map
 	requestSlotsCurrent   map[string]pkg.RequestSlot
 	requestChan           chan *pkg.Request
+	requestActiveChan     chan struct{}
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
 	middlewares           map[int]pkg.Middleware
@@ -61,12 +62,6 @@ type BaseSpider struct {
 	TimeoutRequest time.Duration
 
 	locker sync.Mutex
-
-	active *Active
-}
-
-func (s *BaseSpider) SetActive() {
-	s.active.SetActive()
 }
 
 func (s *BaseSpider) SetLogger(logger pkg.Logger) {
@@ -240,18 +235,15 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	ticker := time.NewTicker(time.Second)
 	for {
 		<-ticker.C
+		if len(s.requestActiveChan) > 0 {
+			s.Logger.Debug("request is active")
+			continue
+		}
 		if len(s.itemActiveChan) > 0 {
 			s.Logger.Debug("item is active")
 			continue
 		}
-		s.Logger.Debug("item is inactive")
 		break
-		//if s.active.active {
-		//	s.Logger.Info("spider is inactive")
-		//	break
-		//} else {
-		//	s.Logger.Info("spider is active")
-		//}
 	}
 
 	return
@@ -272,12 +264,10 @@ func NewBaseSpider(cli *cli.Cli, _ *config.Config, logger *logger.Logger, mongoD
 		middlewares:           make(map[int]pkg.Middleware),
 		pipelines:             make(map[int]pkg.Pipeline),
 		requestSlotsCurrent:   make(map[string]pkg.RequestSlot),
-		requestChan:           make(chan *pkg.Request, defaultChanMetaMax),
+		requestChan:           make(chan *pkg.Request, defaultChanRequestMax),
+		requestActiveChan:     make(chan struct{}, defaultChanRequestMax),
 		itemChan:              make(chan *pkg.Item, defaultChanItemMax),
 		itemActiveChan:        make(chan struct{}, defaultChanItemMax),
-		active: &Active{
-			duration: time.Minute,
-		},
 	}
 	spider.Mode = cli.Mode
 

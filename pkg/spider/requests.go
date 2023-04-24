@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"runtime"
 	"time"
 )
 
@@ -157,23 +158,44 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 				}
 			}
 
+			if response == nil {
+				err := errors.New("nil response")
+				s.Logger.Error(err)
+				if request.ErrBack != nil {
+					err = errors.New("nil ErrBack")
+					s.Logger.Warning(err)
+				} else {
+					request.ErrBack(ctx, response, err)
+				}
+				return
+			}
+
 			if request.CallBack == nil {
 				err := errors.New("nil CallBack")
 				s.Logger.Error(err)
 				return
 			}
 
-			err := request.CallBack(ctx, response)
-			if err != nil {
-				s.Logger.Error(err)
-				if request.ErrBack == nil {
-					err = errors.New("nil ErrBack")
+			go func() {
+				defer func() {
+					if e := recover(); e != nil {
+						buf := make([]byte, 1<<16)
+						runtime.Stack(buf, true)
+						s.Logger.Error(string(buf))
+					}
+				}()
+				err := request.CallBack(ctx, response)
+				if err != nil {
 					s.Logger.Error(err)
+					if request.ErrBack == nil {
+						err = errors.New("nil ErrBack")
+						s.Logger.Error(err)
+						return
+					}
+					request.ErrBack(ctx, response, err)
 					return
 				}
-				request.ErrBack(ctx, response, err)
-				return
-			}
+			}()
 		}(requestSlot.Concurrency, requestSlot, request)
 	}
 

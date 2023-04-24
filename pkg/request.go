@@ -23,10 +23,9 @@ type Request struct {
 	TimeoutRequest     time.Duration                                `json:"timeout_request,omitempty"`
 	Checksum           string                                       `json:"checksum,omitempty"`
 	CreateTime         string                                       `json:"create_time,omitempty"`          //create time
-	Skip               bool                                         `json:"skip,omitempty"`                 // Not in to schedule
+	Skip               bool                                         `json:"skip,omitempty"`                 // don't schedule
 	SkipFilter         bool                                         `json:"skip_filter,omitempty"`          // Allow duplicate requests if set "true"
 	CanonicalHeaderKey bool                                         `json:"canonical_header_key,omitempty"` //canonical header key
-	AllowRefererEmpty  bool                                         `json:"allow_referer_empty,omitempty"`
 	ProxyEnable        bool                                         `json:"proxy_enable,omitempty"`
 	RetryEnable        bool                                         `json:"retry_enable,omitempty"`
 	RetryTimes         int                                          `json:"retry_times,omitempty"`
@@ -64,7 +63,7 @@ type RequestFormat struct {
 
 func (r *Request) SetHeader(key string, value string) {
 	if r.Header == nil {
-		r.Header = make(map[string][]string)
+		r.Header = make(http.Header)
 	}
 	r.Header.Set(key, value)
 
