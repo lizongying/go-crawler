@@ -4,7 +4,9 @@
 
 ## Usage
 
-* log level: DEBUG/INFO/WARN/ERROR
+* log.filename: log file path. you can replace {name} by ldflags.
+* log.long_file: if set true, will log full file path.
+* log.level: DEBUG/INFO/WARN/ERROR
 
 example
 

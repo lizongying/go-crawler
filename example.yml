@@ -3,7 +3,7 @@ mongo:
     uri:
     database:
 log:
-  filename: youtube.log
+  filename: /tmp/spider_{name}.log
   long_file: true
   level: debug
 proxy:

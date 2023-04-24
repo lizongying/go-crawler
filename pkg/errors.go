@@ -1,6 +1,8 @@
 package pkg
 
-import "errors"
+import (
+	"errors"
+)
 
 var DontStopErr = errors.New("don't stop")
 var BreakErr = errors.New("break")

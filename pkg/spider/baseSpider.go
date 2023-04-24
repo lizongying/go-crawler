@@ -110,6 +110,11 @@ func (s *BaseSpider) SortedPipelines() (o []pkg.Pipeline) {
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.locker.Lock()
 	defer s.locker.Unlock()
+	if s.spider == nil {
+		err = errors.New("nil spider")
+		s.Logger.Error(err)
+		return
+	}
 
 	if s.Name == "" {
 		err = errors.New("name is empty")
@@ -223,12 +228,10 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 }
 
 func (s *BaseSpider) Stop(ctx context.Context) (err error) {
-	s.Logger.Info("Stop")
-	if s.spider == nil {
-		err = errors.New("spider is empty")
-		s.Logger.Error(err)
-		return
-	}
+	s.Logger.Info("Wait for stop")
+	defer func() {
+		s.Logger.Info("Stopped")
+	}()
 
 	if ctx == nil {
 		ctx = context.Background()

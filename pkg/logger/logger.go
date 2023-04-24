@@ -13,6 +13,10 @@ import (
 	"strings"
 )
 
+var (
+	name string
+)
+
 type Level int
 
 const (
@@ -151,6 +155,10 @@ func NewLogger(config *config.Config) (logger *Logger, err error) {
 		logger.loggerWarning = log.New(os.Stdout, "Warn:", log.Ldate|log.Ltime)
 		logger.loggerError = log.New(os.Stdout, "Error:", log.Ldate|log.Ltime)
 		return
+	}
+
+	if name != "" {
+		filename = strings.ReplaceAll(filename, "{name}", name)
 	}
 
 	if !utils.ExistsDir(filename) {
