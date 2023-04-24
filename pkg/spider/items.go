@@ -25,7 +25,7 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 		}
 
 		<-s.itemConcurrencyChan
-		s.Logger.Info(cap(s.itemConcurrencyChan), len(s.itemConcurrencyChan), "id:", item.Id)
+		s.Logger.Debug(cap(s.itemConcurrencyChan), len(s.itemConcurrencyChan), "id:", item.Id)
 		go func(itemConcurrencyChan chan struct{}, item *pkg.Item) {
 			defer func() {
 				if itemConcurrencyChan != s.itemConcurrencyChan && itemConcurrencyChanLen < 0 {
@@ -33,6 +33,7 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 				} else {
 					s.itemConcurrencyChan <- struct{}{}
 				}
+				<-s.itemActiveChan
 			}()
 
 			ctx := context.Background()
@@ -65,6 +66,7 @@ func (s *BaseSpider) YieldItem(item *pkg.Item) (err error) {
 		s.Logger.Error(err)
 		return
 	}
+	s.itemActiveChan <- struct{}{}
 	s.itemChan <- item
 
 	return

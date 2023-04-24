@@ -7,16 +7,16 @@ import (
 	"net/http"
 )
 
-type YoutubeMiddleware struct {
+type Middleware struct {
 	pkg.UnimplementedMiddleware
 	logger *logger.Logger
 }
 
-func (m *YoutubeMiddleware) GetName() string {
+func (m *Middleware) GetName() string {
 	return "youtube"
 }
 
-func (m *YoutubeMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (request *pkg.Request, response *pkg.Response, err error) {
+func (m *Middleware) ProcessRequest(_ context.Context, r *pkg.Request) (request *pkg.Request, response *pkg.Response, err error) {
 	if r.Header == nil {
 		r.Header = make(http.Header)
 	}
@@ -25,8 +25,8 @@ func (m *YoutubeMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (r
 	return
 }
 
-func NewYoutubeMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	m = &YoutubeMiddleware{
+func NewMiddleware(logger *logger.Logger) (middleware pkg.Middleware) {
+	middleware = &Middleware{
 		logger: logger,
 	}
 	return

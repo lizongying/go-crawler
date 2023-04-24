@@ -20,8 +20,8 @@ func (m *ImageMiddleware) GetName() string {
 	return "image"
 }
 
-func (m *ImageMiddleware) ProcessRequest(_ context.Context, _ *internal.Request) (request *internal.Request, response *internal.Response, err error) {
-	extra := request.Extra.(internal.OptionImage)
+func (m *ImageMiddleware) ProcessRequest(_ context.Context, r *internal.Request) (request *internal.Request, response *internal.Response, err error) {
+	extra := r.Extra.(internal.OptionImage)
 	extra.SetName("test3")
 	return
 }

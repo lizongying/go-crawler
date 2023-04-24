@@ -49,6 +49,7 @@ type BaseSpider struct {
 	itemDelay             time.Duration
 	itemTimer             *time.Timer
 	itemChan              chan *pkg.Item
+	itemActiveChan        chan struct{}
 	requestSlots          sync.Map
 	requestSlotsCurrent   map[string]pkg.RequestSlot
 	requestChan           chan *pkg.Request
@@ -60,6 +61,12 @@ type BaseSpider struct {
 	TimeoutRequest time.Duration
 
 	locker sync.Mutex
+
+	active *Active
+}
+
+func (s *BaseSpider) SetActive() {
+	s.active.SetActive()
 }
 
 func (s *BaseSpider) SetLogger(logger pkg.Logger) {
@@ -227,6 +234,23 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 		ctx = context.Background()
 	}
 
+	ticker := time.NewTicker(time.Second)
+	for {
+		<-ticker.C
+		if len(s.itemActiveChan) > 0 {
+			s.Logger.Debug("item is active")
+			continue
+		}
+		s.Logger.Debug("item is inactive")
+		break
+		//if s.active.active {
+		//	s.Logger.Info("spider is inactive")
+		//	break
+		//} else {
+		//	s.Logger.Info("spider is active")
+		//}
+	}
+
 	return
 }
 
@@ -247,6 +271,10 @@ func NewBaseSpider(cli *cli.Cli, _ *config.Config, logger *logger.Logger, mongoD
 		requestSlotsCurrent:   make(map[string]pkg.RequestSlot),
 		requestChan:           make(chan *pkg.Request, defaultChanMetaMax),
 		itemChan:              make(chan *pkg.Item, defaultChanItemMax),
+		itemActiveChan:        make(chan struct{}, defaultChanItemMax),
+		active: &Active{
+			duration: time.Minute,
+		},
 	}
 	spider.Mode = cli.Mode
 
