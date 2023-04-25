@@ -22,6 +22,10 @@ type Config struct {
 	Proxy struct {
 		Example string `yaml:"example" json:"-"`
 	} `yaml:"proxy" json:"-"`
+	Request struct {
+		Concurrency int `yaml:"concurrency" json:"-"`
+		Delay       int `yaml:"delay" json:"-"`
+	} `yaml:"request" json:"-"`
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

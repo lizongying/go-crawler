@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"golang.org/x/time/rate"
 	"runtime"
 	"time"
 )
@@ -29,6 +30,7 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 		if e != nil {
 			s.Logger.Error(e)
 			if errors.Is(e, pkg.ErrIgnoreRequest) {
+				err = e
 				return
 			}
 			continue
@@ -56,16 +58,23 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 		}
 	}
 
+	if response == nil {
+		err = errors.New("nil response")
+		s.Logger.Error(err)
+		return
+	}
+
 	return
 }
 
-func (s *BaseSpider) handleRequest(_ context.Context) {
-	slotsCurrent := make(map[string]pkg.RequestSlot)
+func (s *BaseSpider) handleRequest(ctx context.Context) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
 	slot := "*"
 	value, _ := s.requestSlots.Load(slot)
-	requestSlot := value.(*pkg.RequestSlot)
-	slotsCurrent[slot] = *requestSlot
+	requestSlot := value.(*rate.Limiter)
 
 	for request := range s.requestChan {
 		slot = request.Slot
@@ -74,56 +83,23 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 		}
 		slotValue, ok := s.requestSlots.Load(slot)
 		if !ok {
-			requestSlot = new(pkg.RequestSlot)
-			if request.Delay > 0 {
-				requestSlot.Delay = request.Delay
-				requestSlot.Timer = time.NewTimer(requestSlot.Delay)
-			}
 			if request.Concurrency < 1 {
 				request.Concurrency = 1
 			}
-			requestSlot.Concurrency = request.Concurrency
-			requestSlot.ConcurrencyChan = make(chan struct{}, requestSlot.Concurrency)
-			for i := 0; i < requestSlot.Concurrency; i++ {
-				requestSlot.ConcurrencyChan <- struct{}{}
-			}
+			requestSlot = rate.NewLimiter(rate.Every(request.Delay/time.Duration(request.Concurrency)), request.Concurrency)
 			s.requestSlots.Store(slot, requestSlot)
-			slotsCurrent[slot] = *requestSlot
 		}
 
-		requestSlot = slotValue.(*pkg.RequestSlot)
-		if requestSlot.Delay != slotsCurrent[slot].Delay {
-			if requestSlot.Delay > 0 {
-				requestSlot.Timer = time.NewTimer(requestSlot.Delay)
-			}
-		}
-		if requestSlot.Concurrency != slotsCurrent[slot].Concurrency {
-			requestConcurrency := requestSlot.Concurrency - slotsCurrent[slot].Concurrency + len(slotsCurrent[slot].ConcurrencyChan)
-			requestSlot.ConcurrencyChan = make(chan struct{}, requestSlot.Concurrency)
-			for i := 0; i < requestConcurrency; i++ {
-				requestSlot.ConcurrencyChan <- struct{}{}
-			}
-		}
-		slotsCurrent[slot] = *requestSlot
+		requestSlot = slotValue.(*rate.Limiter)
 
-		<-requestSlot.ConcurrencyChan
-		go func(requestConcurrency int, requestSlot *pkg.RequestSlot, request *pkg.Request) {
+		err := requestSlot.Wait(ctx)
+		if err != nil {
+			s.Logger.Error(err)
+		}
+		go func(request *pkg.Request) {
 			defer func() {
-				if requestSlot.Delay > 0 {
-					<-requestSlot.Timer.C
-				}
-				//if requestConcurrency != requestSlot.Concurrency && requestConcurrencyChanLen < 0 {
-				//	requestConcurrencyChanLen++
-				//} else {
-				//	requestSlot.ConcurrencyChan <- struct{}{}
-				//}
+				<-s.requestActiveChan
 			}()
-
-			if requestSlot.Delay > 0 {
-				requestSlot.Timer.Reset(requestSlot.Delay)
-			}
-
-			ctx := context.Background()
 
 			var response *pkg.Response
 			for _, v := range s.SortedMiddlewares() {
@@ -131,6 +107,12 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 				if e != nil {
 					s.Logger.Error(e)
 					if errors.Is(e, pkg.ErrIgnoreRequest) {
+						if request.ErrBack != nil {
+							request.ErrBack(ctx, response, e)
+						} else {
+							e = errors.New("nil ErrBack")
+							s.Logger.Warning(e)
+						}
 						return
 					}
 					continue
@@ -159,20 +141,20 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 			}
 
 			if response == nil {
-				err := errors.New("nil response")
-				s.Logger.Error(err)
+				e := errors.New("nil response")
+				s.Logger.Error(e)
 				if request.ErrBack != nil {
-					err = errors.New("nil ErrBack")
-					s.Logger.Warning(err)
+					e = errors.New("nil ErrBack")
+					s.Logger.Warning(e)
 				} else {
-					request.ErrBack(ctx, response, err)
+					request.ErrBack(ctx, response, e)
 				}
 				return
 			}
 
 			if request.CallBack == nil {
-				err := errors.New("nil CallBack")
-				s.Logger.Error(err)
+				e := errors.New("nil CallBack")
+				s.Logger.Error(e)
 				return
 			}
 
@@ -184,19 +166,19 @@ func (s *BaseSpider) handleRequest(_ context.Context) {
 						s.Logger.Error(string(buf))
 					}
 				}()
-				err := request.CallBack(ctx, response)
-				if err != nil {
-					s.Logger.Error(err)
+				e := request.CallBack(ctx, response)
+				if e != nil {
+					s.Logger.Error(e)
 					if request.ErrBack == nil {
-						err = errors.New("nil ErrBack")
-						s.Logger.Error(err)
+						e = errors.New("nil ErrBack")
+						s.Logger.Error(e)
 						return
 					}
-					request.ErrBack(ctx, response, err)
+					request.ErrBack(ctx, response, e)
 					return
 				}
 			}()
-		}(requestSlot.Concurrency, requestSlot, request)
+		}(request)
 	}
 
 	return
@@ -213,48 +195,29 @@ func (s *BaseSpider) YieldRequest(request *pkg.Request) (err error) {
 		s.Logger.Debug("skip")
 		return
 	}
-
+	s.requestActiveChan <- struct{}{}
 	s.requestChan <- request
 
 	return
 }
 
-func (s *BaseSpider) SetRequestDelay(slot string, requestDelay time.Duration) {
+func (s *BaseSpider) SetRate(slot string, delay time.Duration, concurrency int) {
 	if slot == "" {
 		slot = "*"
 	}
 
-	slotValue, ok := s.requestSlots.Load(slot)
-	if !ok {
-		requestSlot := &pkg.RequestSlot{
-			Delay: requestDelay,
-		}
-		s.requestSlots.Store(slot, requestSlot)
-		return
-	}
-
-	requestSlot := slotValue.(*pkg.RequestSlot)
-	requestSlot.Delay = requestDelay
-}
-
-func (s *BaseSpider) SetRequestConcurrency(slot string, requestConcurrency int) {
-	if requestConcurrency < 1 {
-		requestConcurrency = 1
-	}
-
-	if slot == "" {
-		slot = "*"
+	if concurrency < 1 {
+		concurrency = 1
 	}
 
 	slotValue, ok := s.requestSlots.Load(slot)
 	if !ok {
-		requestSlot := &pkg.RequestSlot{
-			Concurrency: requestConcurrency,
-		}
+		requestSlot := rate.NewLimiter(rate.Every(delay/time.Duration(concurrency)), concurrency)
 		s.requestSlots.Store(slot, requestSlot)
 		return
 	}
 
-	requestSlot := slotValue.(*pkg.RequestSlot)
-	requestSlot.Concurrency = requestConcurrency
+	limiter := slotValue.(*rate.Limiter)
+	limiter.SetBurst(concurrency)
+	limiter.SetLimit(rate.Every(delay / time.Duration(concurrency)))
 }

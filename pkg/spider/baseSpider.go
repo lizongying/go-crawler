@@ -12,6 +12,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/pipelines"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/time/rate"
 	"log"
 	"reflect"
 	"runtime"
@@ -50,10 +51,9 @@ type BaseSpider struct {
 	itemTimer             *time.Timer
 	itemChan              chan *pkg.Item
 	itemActiveChan        chan struct{}
-	requestSlots          sync.Map
-	requestSlotsCurrent   map[string]pkg.RequestSlot
 	requestChan           chan *pkg.Request
 	requestActiveChan     chan struct{}
+	requestSlots          sync.Map
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
 	middlewares           map[int]pkg.Middleware
@@ -61,7 +61,8 @@ type BaseSpider struct {
 
 	TimeoutRequest time.Duration
 
-	locker sync.Mutex
+	concurrency int
+	delay       time.Duration
 }
 
 func (s *BaseSpider) SetLogger(logger pkg.Logger) {
@@ -103,8 +104,6 @@ func (s *BaseSpider) SortedPipelines() (o []pkg.Pipeline) {
 }
 
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
-	s.locker.Lock()
-	defer s.locker.Unlock()
 	if s.spider == nil {
 		err = errors.New("nil spider")
 		s.Logger.Error(err)
@@ -172,29 +171,10 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 		s.itemConcurrencyChan <- struct{}{}
 	}
 
-	s.requestSlots.Range(func(key, value any) bool {
-		requestSlot := value.(*pkg.RequestSlot)
-		if requestSlot.Delay > 0 {
-			requestSlot.Timer = time.NewTimer(requestSlot.Delay)
-		}
-		requestSlot.ConcurrencyChan = make(chan struct{}, requestSlot.Concurrency)
-		for i := 0; i < requestSlot.Concurrency; i++ {
-			requestSlot.ConcurrencyChan <- struct{}{}
-		}
-		s.requestSlotsCurrent[key.(string)] = *requestSlot
-		return true
-	})
-
 	slot := "*"
 	if _, ok := s.requestSlots.Load(slot); !ok {
-		requestSlot := new(pkg.RequestSlot)
-		requestSlot.Concurrency = 1
-		requestSlot.ConcurrencyChan = make(chan struct{}, requestSlot.Concurrency)
-		for i := 0; i < requestSlot.Concurrency; i++ {
-			requestSlot.ConcurrencyChan <- struct{}{}
-		}
+		requestSlot := rate.NewLimiter(rate.Every(s.delay/time.Duration(s.concurrency)), s.concurrency)
 		s.requestSlots.Store(slot, requestSlot)
-		s.requestSlotsCurrent[slot] = *requestSlot
 	}
 
 	go s.handleItem(ctx)
@@ -249,7 +229,7 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewBaseSpider(cli *cli.Cli, _ *config.Config, logger *logger.Logger, mongoDb *mongo.Database, httpClient *httpClient.HttpClient) (spider *BaseSpider, err error) {
+func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, httpClient *httpClient.HttpClient) (spider *BaseSpider, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	spider = &BaseSpider{
@@ -263,11 +243,13 @@ func NewBaseSpider(cli *cli.Cli, _ *config.Config, logger *logger.Logger, mongoD
 		allowedDomains:        defaultAllowedDomains,
 		middlewares:           make(map[int]pkg.Middleware),
 		pipelines:             make(map[int]pkg.Pipeline),
-		requestSlotsCurrent:   make(map[string]pkg.RequestSlot),
 		requestChan:           make(chan *pkg.Request, defaultChanRequestMax),
 		requestActiveChan:     make(chan struct{}, defaultChanRequestMax),
 		itemChan:              make(chan *pkg.Item, defaultChanItemMax),
 		itemActiveChan:        make(chan struct{}, defaultChanItemMax),
+
+		concurrency: config.Request.Concurrency,
+		delay:       time.Second * time.Duration(config.Request.Delay),
 	}
 	spider.Mode = cli.Mode
 

@@ -8,3 +8,6 @@ log:
   level: debug
 proxy:
   example:
+request:
+  concurrency: 1
+  delay: 1

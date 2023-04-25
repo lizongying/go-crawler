@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -45,9 +46,17 @@ func NowStr() string {
 }
 
 // JsonStr output json string
-func JsonStr(i interface{}) string {
+func JsonStr(i any) string {
 	m, _ := json.Marshal(i)
 	return string(m)
+}
+
+// Struct2JsonKV struct to json key & value
+func Struct2JsonKV(i any) (key string, value string) {
+	key = reflect.TypeOf(i).Name()
+	bs, _ := json.Marshal(i)
+	value = string(bs)
+	return
 }
 
 // StrInSlice return if string in slice

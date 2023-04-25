@@ -7,11 +7,13 @@ require (
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.11.3
 	go.uber.org/fx v1.19.2
+	go.uber.org/ratelimit v0.2.0
 	golang.org/x/time v0.3.0
 	gopkg.in/yaml.v2 v2.2.2
 )
 
 require (
+	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
 	github.com/antchfx/htmlquery v1.2.5 // indirect
 	github.com/antchfx/xpath v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
