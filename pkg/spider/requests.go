@@ -144,10 +144,10 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 				e := errors.New("nil response")
 				s.Logger.Error(e)
 				if request.ErrBack != nil {
+					request.ErrBack(ctx, response, e)
+				} else {
 					e = errors.New("nil ErrBack")
 					s.Logger.Warning(e)
-				} else {
-					request.ErrBack(ctx, response, e)
 				}
 				return
 			}
