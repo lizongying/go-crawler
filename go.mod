@@ -3,6 +3,7 @@ module github.com/lizongying/go-crawler
 go 1.20
 
 require (
+	github.com/lizongying/go-css v0.0.0-20230302074707-40988e39770f
 	github.com/lizongying/go-xpath v0.0.0-20230302062012-e992ea561c4d
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.11.3
@@ -13,7 +14,9 @@ require (
 )
 
 require (
+	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/antchfx/htmlquery v1.2.5 // indirect
 	github.com/antchfx/xpath v1.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect

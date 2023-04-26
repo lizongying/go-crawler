@@ -17,7 +17,7 @@ import (
 const defaultTimeout = time.Minute
 
 type HttpClient struct {
-	Client  *http.Client
+	client  *http.Client
 	Proxy   *url.URL
 	Timeout time.Duration
 	logger  *logger.Logger
@@ -91,7 +91,7 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 			err = errors.New("nil proxy")
 			return
 		}
-		transport.Proxy = http.ProxyURL(h.Proxy)
+		transport.Proxy = http.ProxyURL(proxy)
 	}
 	if request.HttpProto == "" || request.HttpProto == "2.0" {
 		transport.ForceAttemptHTTP2 = true
@@ -99,7 +99,7 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 		transport.ForceAttemptHTTP2 = false
 	}
 
-	client := h.Client
+	client := h.client
 	client.Transport = transport
 
 	timeout := h.Timeout
@@ -152,7 +152,7 @@ func NewHttpClient(config *config.Config, logger *logger.Logger) (httpClient *Ht
 	}
 
 	httpClient = &HttpClient{
-		Client:  http.DefaultClient,
+		client:  http.DefaultClient,
 		Proxy:   proxy,
 		Timeout: timeout,
 		logger:  logger,

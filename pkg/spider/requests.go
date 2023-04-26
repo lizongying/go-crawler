@@ -201,7 +201,7 @@ func (s *BaseSpider) YieldRequest(request *pkg.Request) (err error) {
 	return
 }
 
-func (s *BaseSpider) SetRate(slot string, interval time.Duration, concurrency int) {
+func (s *BaseSpider) SetRequestRate(slot string, interval time.Duration, concurrency int) {
 	if slot == "" {
 		slot = "*"
 	}

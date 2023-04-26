@@ -6,7 +6,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
 	"github.com/lizongying/go-crawler/pkg/logger"
-	"github.com/lizongying/go-crawler/pkg/utils"
 )
 
 type HttpMiddleware struct {
@@ -26,7 +25,7 @@ func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err 
 }
 
 func (m *HttpMiddleware) ProcessRequest(ctx context.Context, r *pkg.Request) (request *pkg.Request, response *pkg.Response, err error) {
-	m.logger.Debug("request", utils.JsonStr(r))
+	m.logger.DebugF("request: %v", r)
 
 	if ctx == nil {
 		ctx = context.Background()
@@ -51,14 +50,6 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, r *pkg.Request) (re
 		return
 	}
 
-	return
-}
-
-func (m *HttpMiddleware) ProcessItem(_ context.Context, _ *pkg.Item) (err error) {
-	return
-}
-
-func (m *HttpMiddleware) SpiderStop(_ context.Context) (err error) {
 	return
 }
 

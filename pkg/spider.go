@@ -36,6 +36,6 @@ type Spider interface {
 	CleanPipelines()
 	SetItemDelay(time.Duration)
 	SetItemConcurrency(int)
-	SetRate(string, time.Duration, int)
+	SetRequestRate(string, time.Duration, int)
 	IsAllowedDomain(*url.URL) bool
 }
