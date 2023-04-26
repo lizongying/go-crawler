@@ -34,6 +34,7 @@ func init() {
 
 const defaultChanRequestMax = 1000 * 1000
 const defaultChanItemMax = 1000 * 1000
+const defaultRequestInterval = 1
 
 type BaseSpider struct {
 	*pkg.SpiderInfo
@@ -232,6 +233,14 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, httpClient *httpClient.HttpClient) (spider *BaseSpider, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
+	requestInterval := defaultRequestInterval
+	if config.Request.Interval > 0 {
+		requestInterval = config.Request.Interval
+	}
+	if config.Request.Interval < 0 {
+		requestInterval = 0
+	}
+
 	spider = &BaseSpider{
 		SpiderInfo: new(pkg.SpiderInfo),
 		startFunc:  cli.StartFunc,
@@ -249,7 +258,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		itemActiveChan:        make(chan struct{}, defaultChanItemMax),
 
 		concurrency: config.Request.Concurrency,
-		interval:    time.Second * time.Duration(config.Request.Interval),
+		interval:    time.Second * time.Duration(requestInterval),
 	}
 	spider.Mode = cli.Mode
 
