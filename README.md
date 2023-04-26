@@ -7,7 +7,7 @@
 * log.filename: Log file path. You can replace {name} with -ldflags.
 * log.long_file: If set to true, the full file path is logged.
 * log.level: DEBUG/INFO/WARN/ERROR
-* request.concurrency: Number of concurrency
+* request.concurrency: Number of request concurrency
 * request.interval: Request interval(seconds)
 * request.timeout: Request timeout(seconds)
 

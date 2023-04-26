@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -19,13 +20,15 @@ type RequestJson struct {
 	Skip               bool                                         `json:"skip,omitempty"`                 // Not in to schedule
 	SkipFilter         bool                                         `json:"skip_filter,omitempty"`          // Allow duplicate requests if set "true"
 	CanonicalHeaderKey bool                                         `json:"canonical_header_key,omitempty"` //canonical header key
+	ProxyEnable        bool                                         `json:"proxy_enable,omitempty"`
+	Proxy              string                                       `json:"proxy,omitempty"`
 	AllowRefererEmpty  bool                                         `json:"allow_referer_empty,omitempty"`
 	RetryEnable        bool                                         `json:"retry_enable,omitempty"`
 	RetryTimes         int                                          `json:"retry_times,omitempty"`
 	RetryMaxTimes      int                                          `json:"retry_max_times,omitempty"`
 	RetryHttpCodes     []int                                        `json:"retry_http_codes,omitempty"`
 	Concurrency        int                                          `json:"concurrency,omitempty"`
-	Delay              int                                          `json:"delay,omitempty"`
+	Interval           int                                          `json:"interval,omitempty"`
 	HttpProto          string                                       `json:"http_proto,omitempty"` // e.g. 1.0/1.1/2.0
 	Extra              any                                          `json:"extra,omitempty"`
 }
@@ -51,19 +54,32 @@ type Request struct {
 	SkipFilter         bool                                         `json:"skip_filter,omitempty"`          // Allow duplicate requests if set "true"
 	CanonicalHeaderKey bool                                         `json:"canonical_header_key,omitempty"` //canonical header key
 	ProxyEnable        bool                                         `json:"proxy_enable,omitempty"`
+	Proxy              *url.URL                                     `json:"proxy,omitempty"`
 	RetryEnable        bool                                         `json:"retry_enable,omitempty"`
 	RetryTimes         int                                          `json:"retry_times,omitempty"`
 	RetryMaxTimes      int                                          `json:"retry_max_times,omitempty"`
 	RetryHttpCodes     []int                                        `json:"retry_http_codes,omitempty"`
 	Slot               string                                       // same slot same concurrency & delay
 	Concurrency        int
-	Delay              time.Duration
+	Interval           time.Duration
 	HttpProto          string `json:"http_proto,omitempty"` // e.g. 1.0/1.1/2.0
 	Extra              any    `json:"extra,omitempty"`
 }
 
 func (r *Request) Marshal(requestJson RequestJson) {
-	requestJson = RequestJson{}
+	requestJson = RequestJson{
+		ProxyEnable: r.ProxyEnable,
+		Proxy:       r.Proxy.String(),
+	}
+}
+func (r *RequestJson) Unmarshal(request Request) (err error) {
+	proxy, err := url.Parse(r.Proxy)
+	request = Request{
+		ProxyEnable: r.ProxyEnable,
+		Proxy:       proxy,
+	}
+
+	return
 }
 
 func (r *Request) SetHeader(key string, value string) {

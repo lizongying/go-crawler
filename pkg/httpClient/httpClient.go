@@ -83,6 +83,14 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 
 	transport := &http.Transport{}
 	if request.ProxyEnable {
+		proxy := h.Proxy
+		if request.Proxy != nil {
+			proxy = request.Proxy
+		}
+		if proxy == nil {
+			err = errors.New("nil proxy")
+			return
+		}
 		transport.Proxy = http.ProxyURL(h.Proxy)
 	}
 	if request.HttpProto == "" || request.HttpProto == "2.0" {
@@ -129,16 +137,13 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 
 func NewHttpClient(config *config.Config, logger *logger.Logger) (httpClient *HttpClient, err error) {
 	proxyExample := config.Proxy.Example
-	if proxyExample == "" {
-		err = errors.New("proxy is empty")
-		logger.Error(err)
-		return
-	}
-
-	proxy, err := url.Parse(proxyExample)
-	if err != nil {
-		logger.Error(err)
-		return
+	var proxy *url.URL
+	if proxyExample != "" {
+		proxy, err = url.Parse(proxyExample)
+		if err != nil {
+			logger.Error(err)
+			return
+		}
 	}
 
 	timeout := defaultTimeout

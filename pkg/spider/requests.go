@@ -86,7 +86,7 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 			if request.Concurrency < 1 {
 				request.Concurrency = 1
 			}
-			requestSlot = rate.NewLimiter(rate.Every(request.Delay/time.Duration(request.Concurrency)), request.Concurrency)
+			requestSlot = rate.NewLimiter(rate.Every(request.Interval/time.Duration(request.Concurrency)), request.Concurrency)
 			s.requestSlots.Store(slot, requestSlot)
 		}
 
