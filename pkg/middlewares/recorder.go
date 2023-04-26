@@ -19,6 +19,7 @@ type RecorderMiddleware struct {
 	requestCount              int
 	responseCount             int
 	statusOK                  int
+	statusIgnore              int
 	statusErr                 int
 	spiderInfo                *pkg.SpiderInfo
 }
@@ -44,11 +45,16 @@ func (m *RecorderMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (
 
 func (m *RecorderMiddleware) ProcessResponse(_ context.Context, r *pkg.Response) (request *pkg.Request, response *pkg.Response, err error) {
 	m.responseCount++
-	if r.StatusCode == http.StatusOK {
-		m.statusOK++
-	} else {
+	if r == nil {
 		m.statusErr++
+	} else {
+		if r.StatusCode == http.StatusOK {
+			m.statusOK++
+		} else {
+			m.statusErr++
+		}
 	}
+
 	return
 }
 
