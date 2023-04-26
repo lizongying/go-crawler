@@ -17,27 +17,10 @@ import (
 const defaultTimeout = time.Minute
 
 type HttpClient struct {
-	Client          *http.Client
-	ClientWithProxy *http.Client
-	Proxy           *url.URL
-	Timeout         time.Duration
-	logger          *logger.Logger
-}
-
-func (h *HttpClient) getClient() {
-	h.Client = &http.Client{
-		Timeout: h.Timeout,
-	}
-
-	tr := &http.Transport{
-		Proxy: http.ProxyURL(h.Proxy),
-	}
-	h.ClientWithProxy = &http.Client{
-		Transport: tr,
-		Timeout:   h.Timeout,
-	}
-
-	return
+	Client  *http.Client
+	Proxy   *url.URL
+	Timeout time.Duration
+	logger  *logger.Logger
 }
 
 func (h *HttpClient) BuildRequest(ctx context.Context, request *pkg.Request) (err error) {
@@ -92,15 +75,31 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 		ctx = context.Background()
 	}
 
-	if request.TimeoutRequest > 0 {
-		c, cancel := context.WithTimeout(ctx, request.TimeoutRequest)
+	if request.Timeout > 0 {
+		c, cancel := context.WithTimeout(ctx, request.Timeout)
 		defer cancel()
 		request.Request = request.Request.WithContext(c)
 	}
 
-	client := h.Client
+	transport := &http.Transport{}
 	if request.ProxyEnable {
-		client = h.ClientWithProxy
+		transport.Proxy = http.ProxyURL(h.Proxy)
+	}
+	if request.HttpProto == "" || request.HttpProto == "2.0" {
+		transport.ForceAttemptHTTP2 = true
+	} else {
+		transport.ForceAttemptHTTP2 = false
+	}
+
+	client := h.Client
+	client.Transport = transport
+
+	timeout := h.Timeout
+	if request.Timeout > 0 {
+		timeout = request.Timeout
+	}
+	if timeout > 0 {
+		client.Timeout = timeout
 	}
 
 	resp, err := client.Do(request.Request)
@@ -142,13 +141,17 @@ func NewHttpClient(config *config.Config, logger *logger.Logger) (httpClient *Ht
 		return
 	}
 
-	httpClient = &HttpClient{
-		Proxy:   proxy,
-		Timeout: defaultTimeout,
-		logger:  logger,
+	timeout := defaultTimeout
+	if config.Request.Timeout > 0 {
+		timeout = time.Second * time.Duration(config.Request.Timeout)
 	}
 
-	httpClient.getClient()
+	httpClient = &HttpClient{
+		Client:  http.DefaultClient,
+		Proxy:   proxy,
+		Timeout: timeout,
+		logger:  logger,
+	}
 
 	return
 }

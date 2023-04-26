@@ -24,7 +24,8 @@ type Config struct {
 	} `yaml:"proxy" json:"-"`
 	Request struct {
 		Concurrency int `yaml:"concurrency" json:"-"`
-		Delay       int `yaml:"delay" json:"-"`
+		Interval    int `yaml:"interval" json:"-"`
+		Timeout     int `yaml:"timeout" json:"-"`
 	} `yaml:"request" json:"-"`
 }
 

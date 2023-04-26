@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/logger"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"sync"
 )
 
@@ -25,7 +24,7 @@ func (m *FilterMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (er
 }
 
 func (m *FilterMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (request *pkg.Request, response *pkg.Response, err error) {
-	m.logger.Debug("request", utils.JsonStr(r))
+	m.logger.DebugF("request: %v", r)
 
 	filterBefore, ok := m.info.Stats.Load("filter_before")
 	if ok {

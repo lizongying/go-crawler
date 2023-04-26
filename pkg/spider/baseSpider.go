@@ -62,7 +62,7 @@ type BaseSpider struct {
 	TimeoutRequest time.Duration
 
 	concurrency int
-	delay       time.Duration
+	interval    time.Duration
 }
 
 func (s *BaseSpider) SetLogger(logger pkg.Logger) {
@@ -173,7 +173,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 
 	slot := "*"
 	if _, ok := s.requestSlots.Load(slot); !ok {
-		requestSlot := rate.NewLimiter(rate.Every(s.delay/time.Duration(s.concurrency)), s.concurrency)
+		requestSlot := rate.NewLimiter(rate.Every(s.interval/time.Duration(s.concurrency)), s.concurrency)
 		s.requestSlots.Store(slot, requestSlot)
 	}
 
@@ -249,7 +249,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		itemActiveChan:        make(chan struct{}, defaultChanItemMax),
 
 		concurrency: config.Request.Concurrency,
-		delay:       time.Second * time.Duration(config.Request.Delay),
+		interval:    time.Second * time.Duration(config.Request.Interval),
 	}
 	spider.Mode = cli.Mode
 

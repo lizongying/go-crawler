@@ -1,7 +1,7 @@
 mongo:
   example:
-    uri:
-    database:
+    uri: mongodb://127.0.0.1:27017
+    database: crawler
 log:
   filename: /tmp/spider_{name}.log
   long_file: true
@@ -10,4 +10,5 @@ proxy:
   example:
 request:
   concurrency: 1
-  delay: 1
+  interval: 1
+  timeout: 30

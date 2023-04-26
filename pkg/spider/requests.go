@@ -201,7 +201,7 @@ func (s *BaseSpider) YieldRequest(request *pkg.Request) (err error) {
 	return
 }
 
-func (s *BaseSpider) SetRate(slot string, delay time.Duration, concurrency int) {
+func (s *BaseSpider) SetRate(slot string, interval time.Duration, concurrency int) {
 	if slot == "" {
 		slot = "*"
 	}
@@ -212,12 +212,12 @@ func (s *BaseSpider) SetRate(slot string, delay time.Duration, concurrency int) 
 
 	slotValue, ok := s.requestSlots.Load(slot)
 	if !ok {
-		requestSlot := rate.NewLimiter(rate.Every(delay/time.Duration(concurrency)), concurrency)
+		requestSlot := rate.NewLimiter(rate.Every(interval/time.Duration(concurrency)), concurrency)
 		s.requestSlots.Store(slot, requestSlot)
 		return
 	}
 
 	limiter := slotValue.(*rate.Limiter)
 	limiter.SetBurst(concurrency)
-	limiter.SetLimit(rate.Every(delay / time.Duration(concurrency)))
+	limiter.SetLimit(rate.Every(interval / time.Duration(concurrency)))
 }

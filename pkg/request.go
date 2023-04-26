@@ -13,7 +13,7 @@ type RequestJson struct {
 	Parser             func(context.Context, *Response) (err error) `json:"-"`
 	ParserTimeout      int                                          `json:"parser_timeout,omitempty"` // Millisecond
 	ErrBack            string                                       `json:"err_back,omitempty"`
-	ErrBackTimeout     int                                          `json:"err_back_timeout,omitempty"` // Millisecond
+	Timeout            int                                          `json:"timeout,omitempty"` // Millisecond
 	Checksum           string                                       `json:"checksum,omitempty"`
 	CreateTime         string                                       `json:"create_time,omitempty"`          //create time
 	Skip               bool                                         `json:"skip,omitempty"`                 // Not in to schedule
@@ -24,8 +24,9 @@ type RequestJson struct {
 	RetryTimes         int                                          `json:"retry_times,omitempty"`
 	RetryMaxTimes      int                                          `json:"retry_max_times,omitempty"`
 	RetryHttpCodes     []int                                        `json:"retry_http_codes,omitempty"`
-	DownloadDelay      int                                          `json:"download_delay,omitempty"` // ms
-	HttpProto          string                                       `json:"http_proto,omitempty"`     // e.g. 1.0/1.1/2.0
+	Concurrency        int                                          `json:"concurrency,omitempty"`
+	Delay              int                                          `json:"delay,omitempty"`
+	HttpProto          string                                       `json:"http_proto,omitempty"` // e.g. 1.0/1.1/2.0
 	Extra              any                                          `json:"extra,omitempty"`
 }
 
@@ -43,7 +44,7 @@ type Request struct {
 	CallBack           func(context.Context, *Response) (err error) `json:"-"`
 	ErrBack            func(context.Context, *Response, error)      `json:"-"`
 	TimeoutAll         time.Duration                                `json:"timeout_all,omitempty"`
-	TimeoutRequest     time.Duration                                `json:"timeout_request,omitempty"`
+	Timeout            time.Duration                                `json:"timeout,omitempty"`
 	Checksum           string                                       `json:"checksum,omitempty"`
 	CreateTime         string                                       `json:"create_time,omitempty"`          //create time
 	Skip               bool                                         `json:"skip,omitempty"`                 // don't schedule
@@ -54,7 +55,7 @@ type Request struct {
 	RetryTimes         int                                          `json:"retry_times,omitempty"`
 	RetryMaxTimes      int                                          `json:"retry_max_times,omitempty"`
 	RetryHttpCodes     []int                                        `json:"retry_http_codes,omitempty"`
-	Slot               string                                       // same slot same request delay
+	Slot               string                                       // same slot same concurrency & delay
 	Concurrency        int
 	Delay              time.Duration
 	HttpProto          string `json:"http_proto,omitempty"` // e.g. 1.0/1.1/2.0
