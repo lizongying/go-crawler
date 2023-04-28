@@ -24,7 +24,7 @@ type HttpClient struct {
 }
 
 func (h *HttpClient) BuildRequest(ctx context.Context, request *pkg.Request) (err error) {
-	h.logger.Debug("request", utils.JsonStr(request))
+	h.logger.DebugF("request: %+v", request)
 
 	if ctx == nil {
 		ctx = context.Background()
@@ -69,7 +69,7 @@ func (h *HttpClient) BuildRequest(ctx context.Context, request *pkg.Request) (er
 }
 
 func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
-	h.logger.Debug("request", utils.JsonStr(request))
+	h.logger.DebugF("request: %+v", request)
 
 	if ctx == nil {
 		ctx = context.Background()
@@ -113,6 +113,7 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 	resp, err := client.Do(request.Request)
 	if err != nil {
 		h.logger.Error(err)
+		h.logger.ErrorF("request: %+v", request)
 		h.logger.Debug(utils.Request2Curl(request))
 		return
 	}

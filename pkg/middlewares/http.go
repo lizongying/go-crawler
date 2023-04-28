@@ -24,12 +24,11 @@ func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err 
 	return
 }
 
-func (m *HttpMiddleware) ProcessRequest(ctx context.Context, r *pkg.Request) (request *pkg.Request, response *pkg.Response, err error) {
-	m.logger.DebugF("request: %v", r)
+func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
+	r := c.Request
+	m.logger.DebugF("request: %+v", r)
 
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	ctx := context.Background()
 
 	err = m.httpClient.BuildRequest(ctx, r)
 	if err != nil {
@@ -44,12 +43,13 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, r *pkg.Request) (re
 		return
 	}
 
-	response, err = m.httpClient.BuildResponse(ctx, r)
+	c.Response, err = m.httpClient.BuildResponse(ctx, r)
 	if err != nil {
 		m.logger.Error(err)
 		return
 	}
 
+	err = c.FirstResponse()
 	return
 }
 

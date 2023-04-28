@@ -32,7 +32,8 @@ func (m *Middleware) SpiderStart(_ context.Context, spider pkg.Spider) (err erro
 	return
 }
 
-func (m *Middleware) ProcessRequest(_ context.Context, request *pkg.Request) (_ *pkg.Request, response *pkg.Response, err error) {
+func (m *Middleware) ProcessRequest(c *pkg.Context) (err error) {
+	request := c.Request
 	_, ok := request.Extra.(*ExtraSearch)
 	if ok {
 		extra := request.Extra.(*ExtraSearch)
@@ -63,6 +64,7 @@ func (m *Middleware) ProcessRequest(_ context.Context, request *pkg.Request) (_ 
 	}
 	request.SetHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
 
+	err = c.NextRequest()
 	return
 }
 

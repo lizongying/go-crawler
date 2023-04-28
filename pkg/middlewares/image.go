@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/logger"
@@ -22,7 +21,10 @@ func (m *ImageMiddleware) GetName() string {
 	return "image"
 }
 
-func (m *ImageMiddleware) ProcessResponse(_ context.Context, r *pkg.Response) (request *pkg.Request, response *pkg.Response, err error) {
+func (m *ImageMiddleware) ProcessResponse(c *pkg.Context) (err error) {
+	r := c.Response
+	m.logger.Debug("response body len:", len(r.BodyBytes))
+
 	if len(r.BodyBytes) == 0 {
 		err = errors.New("BodyBytes empty")
 		m.logger.Error(err)
@@ -45,6 +47,7 @@ func (m *ImageMiddleware) ProcessResponse(_ context.Context, r *pkg.Response) (r
 		extra.SetHeight(rect.Dy())
 	}
 
+	err = c.NextResponse()
 	return
 }
 

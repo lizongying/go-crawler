@@ -105,6 +105,7 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 		return
 	}
 	baseSpider.Name = "test"
+	baseSpider.OkHttpCodes = append(baseSpider.OkHttpCodes, 204)
 	baseSpider.SetMiddleware(middlewares.NewImageMiddleware(logger), 3)
 	spider = &Spider{
 		BaseSpider: baseSpider,

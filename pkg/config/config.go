@@ -23,10 +23,12 @@ type Config struct {
 		Example string `yaml:"example" json:"-"`
 	} `yaml:"proxy" json:"-"`
 	Request struct {
-		Concurrency int `yaml:"concurrency" json:"-"`
-		Interval    int `yaml:"interval" json:"-"`
-		Timeout     int `yaml:"timeout" json:"-"`
+		Concurrency   int `yaml:"concurrency" json:"-"`
+		Interval      int `yaml:"interval" json:"-"`
+		Timeout       int `yaml:"timeout" json:"-"`
+		RetryMaxTimes int `yaml:"retry_max_times" json:"-"`
 	} `yaml:"request" json:"-"`
+	DevAddr string `yaml:"dev_addr" json:"-"`
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

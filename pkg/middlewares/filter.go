@@ -23,8 +23,9 @@ func (m *FilterMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (er
 	return
 }
 
-func (m *FilterMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (request *pkg.Request, response *pkg.Response, err error) {
-	m.logger.DebugF("request: %v", r)
+func (m *FilterMiddleware) ProcessRequest(c *pkg.Context) (err error) {
+	r := c.Request
+	m.logger.DebugF("request: %+v", r)
 
 	filterBefore, ok := m.info.Stats.Load("filter_before")
 	if ok {
@@ -34,10 +35,14 @@ func (m *FilterMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (re
 	}
 
 	if r.SkipFilter {
+		m.logger.Debug("SkipFilter")
+		err = c.NextRequest()
 		return
 	}
 
 	if r.UniqueKey == "" {
+		m.logger.Debug("UniqueKey is empty")
+		err = c.NextRequest()
 		return
 	}
 
@@ -47,6 +52,7 @@ func (m *FilterMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (re
 		return
 	}
 
+	err = c.NextRequest()
 	return
 }
 

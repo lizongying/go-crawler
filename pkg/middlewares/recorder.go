@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/logger"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/http"
 	"time"
 )
@@ -36,14 +35,21 @@ func (m *RecorderMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (
 	return
 }
 
-func (m *RecorderMiddleware) ProcessRequest(_ context.Context, r *pkg.Request) (request *pkg.Request, response *pkg.Response, err error) {
-	m.logger.Debug("request", utils.JsonStr(r))
+func (m *RecorderMiddleware) ProcessRequest(c *pkg.Context) (err error) {
+	r := c.Request
+	m.logger.DebugF("request: %+v", r)
+
 	m.requestWithoutFilterCount++
 	m.requestCount++
+
+	err = c.NextRequest()
 	return
 }
 
-func (m *RecorderMiddleware) ProcessResponse(_ context.Context, r *pkg.Response) (request *pkg.Request, response *pkg.Response, err error) {
+func (m *RecorderMiddleware) ProcessResponse(c *pkg.Context) (err error) {
+	r := c.Response
+	m.logger.Debug("response body len:", len(r.BodyBytes))
+
 	m.responseCount++
 	if r == nil {
 		m.statusErr++
@@ -55,6 +61,7 @@ func (m *RecorderMiddleware) ProcessResponse(_ context.Context, r *pkg.Response)
 		}
 	}
 
+	err = c.NextResponse()
 	return
 }
 

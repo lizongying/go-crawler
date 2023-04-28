@@ -12,3 +12,5 @@ request:
   concurrency: 1
   interval: 1
   timeout: 30
+  retry_max_times: 3
+devAddr: :8081

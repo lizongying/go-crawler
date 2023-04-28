@@ -59,10 +59,10 @@ func Struct2JsonKV(i any) (key string, value string) {
 	return
 }
 
-// StrInSlice return if string in slice
-func StrInSlice(in string, sl []string) bool {
+// InSlice return if in slice
+func InSlice[T int | string](t T, sl []T) bool {
 	for _, s := range sl {
-		if in == s {
+		if t == s {
 			return true
 		}
 	}
@@ -131,8 +131,6 @@ func Request2Curl(r *pkg.Request) string {
 		args = append(args, "-X", r.Method)
 	}
 	args = append(args, fmt.Sprintf(`'%s'`, r.Url))
-
-	args = append(args, "-X")
 	for k := range r.Header {
 		args = append(args, fmt.Sprintf(`-H '%s: %s'`, k, r.Header.Get(k)))
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"golang.org/x/time/rate"
 	"runtime"
 	"time"
@@ -12,7 +11,7 @@ import (
 
 func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
 	// TODO limit
-	s.Logger.Debug("request", utils.JsonStr(request))
+	s.Logger.DebugF("request: %+v", request)
 
 	if ctx == nil {
 		ctx = context.Background()
@@ -24,44 +23,38 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 		defer cancel()
 	}
 
-	for _, v := range s.SortedMiddlewares() {
-		s.Logger.Debug("middleware", v.GetName())
-		_, r, e := v.ProcessRequest(ctx, request)
-		if e != nil {
-			s.Logger.Error(e)
-			if errors.Is(e, pkg.ErrIgnoreRequest) {
-				err = e
-				return
-			}
-			continue
-		}
-		if r != nil {
-			response = r
-			break
-		}
+	requestContext := pkg.Context{
+		Request:     request,
+		Middlewares: s.SortedMiddlewares(),
 	}
 
-	if response != nil {
-		if request.Request != nil {
-			response.Request = request
-		}
-	}
+	err = requestContext.FirstRequest()
+	response = requestContext.Response
+	if err != nil {
+		s.Logger.Error(err)
 
-	for _, v := range s.SortedMiddlewares() {
-		_, _, e := v.ProcessResponse(ctx, response)
-		if e != nil {
-			s.Logger.Error(e)
-			if errors.Is(e, pkg.BreakErr) {
-				break
-			}
-			continue
+		//if errors.Is(err, pkg.ErrIgnoreRequest) {
+		//	s.Logger.Warning(err)
+		//}
+
+		if request.ErrBack != nil {
+			request.ErrBack(ctx, response, err)
+		} else {
+			s.Logger.Warning("nil ErrBack")
 		}
+		return
 	}
 
 	if response == nil {
 		err = errors.New("nil response")
 		s.Logger.Error(err)
 		return
+	}
+
+	if response != nil && response.Request == nil {
+		if request != nil {
+			response.Request = request
+		}
 	}
 
 	return
@@ -101,26 +94,28 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 				<-s.requestActiveChan
 			}()
 
-			var response *pkg.Response
-			for _, v := range s.SortedMiddlewares() {
-				_, r, e := v.ProcessRequest(ctx, request)
-				if e != nil {
-					s.Logger.Error(e)
-					if errors.Is(e, pkg.ErrIgnoreRequest) {
-						if request.ErrBack != nil {
-							request.ErrBack(ctx, response, e)
-						} else {
-							e = errors.New("nil ErrBack")
-							s.Logger.Warning(e)
-						}
-						return
-					}
-					continue
+			requestContext := pkg.Context{
+				Request:     request,
+				Middlewares: s.SortedMiddlewares(),
+			}
+
+			err = requestContext.FirstRequest()
+			response := requestContext.Response
+			if err != nil {
+				s.Logger.Error(err)
+
+				if request.ErrBack != nil {
+					request.ErrBack(ctx, response, err)
+				} else {
+					err = errors.New("nil ErrBack")
+					s.Logger.Warning(err)
 				}
-				if r != nil {
-					response = r
-					break
-				}
+
+				//if errors.Is(err, pkg.ErrIgnoreRequest) {
+				//	s.Logger.Warning(err)
+				//}
+
+				return
 			}
 
 			if response != nil {
@@ -129,25 +124,14 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 				}
 			}
 
-			for _, v := range s.SortedMiddlewares() {
-				_, _, e := v.ProcessResponse(ctx, response)
-				if e != nil {
-					s.Logger.Error(e)
-					if errors.Is(e, pkg.BreakErr) {
-						break
-					}
-					continue
-				}
-			}
-
 			if response == nil {
-				e := errors.New("nil response")
-				s.Logger.Error(e)
+				err = errors.New("nil response")
+				s.Logger.Error(err)
 				if request.ErrBack != nil {
-					request.ErrBack(ctx, response, e)
+					request.ErrBack(ctx, response, err)
 				} else {
-					e = errors.New("nil ErrBack")
-					s.Logger.Warning(e)
+					err = errors.New("nil ErrBack")
+					s.Logger.Warning(err)
 				}
 				return
 			}
@@ -169,12 +153,12 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 				e := request.CallBack(ctx, response)
 				if e != nil {
 					s.Logger.Error(e)
-					if request.ErrBack == nil {
+					if request.ErrBack != nil {
+						request.ErrBack(ctx, response, e)
+					} else {
 						e = errors.New("nil ErrBack")
-						s.Logger.Error(e)
-						return
+						s.Logger.Warning(e)
 					}
-					request.ErrBack(ctx, response, e)
 					return
 				}
 			}()

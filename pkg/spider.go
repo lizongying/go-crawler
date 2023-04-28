@@ -11,6 +11,9 @@ type SpiderInfo struct {
 	Mode  string
 	Name  string
 	Stats sync.Map
+
+	OkHttpCodes   []int
+	RetryMaxTimes int
 }
 
 type Spider interface {
@@ -38,4 +41,7 @@ type Spider interface {
 	SetItemConcurrency(int)
 	SetRequestRate(string, time.Duration, int)
 	IsAllowedDomain(*url.URL) bool
+	YieldRequest(*Request) error
+	YieldItem(*Item) error
+	GetDevServer() DevServer
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
+	"github.com/lizongying/go-crawler/pkg/httpServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/pipelines"
@@ -35,6 +36,7 @@ func init() {
 const defaultChanRequestMax = 1000 * 1000
 const defaultChanItemMax = 1000 * 1000
 const defaultRequestInterval = 1
+const defaultRequestRetryMaxTimes = 3
 
 type BaseSpider struct {
 	*pkg.SpiderInfo
@@ -64,6 +66,8 @@ type BaseSpider struct {
 
 	concurrency int
 	interval    time.Duration
+
+	devServer *httpServer.HttpServer
 }
 
 func (s *BaseSpider) SetLogger(logger pkg.Logger) {
@@ -102,6 +106,10 @@ func (s *BaseSpider) SortedPipelines() (o []pkg.Pipeline) {
 	}
 
 	return
+}
+
+func (s *BaseSpider) GetDevServer() pkg.DevServer {
+	return s.devServer
 }
 
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
@@ -230,7 +238,7 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, httpClient *httpClient.HttpClient) (spider *BaseSpider, err error) {
+func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, httpClient *httpClient.HttpClient, server *httpServer.HttpServer) (spider *BaseSpider, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	requestInterval := defaultRequestInterval
@@ -240,9 +248,23 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	if config.Request.Interval < 0 {
 		requestInterval = 0
 	}
+	requestRetryMaxTimes := defaultRequestRetryMaxTimes
+	if config.Request.RetryMaxTimes > 0 {
+		requestRetryMaxTimes = config.Request.RetryMaxTimes
+	}
+	if config.Request.RetryMaxTimes < 0 {
+		requestRetryMaxTimes = 0
+	}
+
+	if cli.Mode == "dev" {
+		server.AddRoutes(httpServer.NewNoLimitHandler(logger))
+	}
 
 	spider = &BaseSpider{
-		SpiderInfo: new(pkg.SpiderInfo),
+		SpiderInfo: &pkg.SpiderInfo{
+			OkHttpCodes:   []int{200},
+			RetryMaxTimes: requestRetryMaxTimes,
+		},
 		startFunc:  cli.StartFunc,
 		MongoDb:    mongoDb,
 		Logger:     logger,
@@ -259,12 +281,14 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 
 		concurrency: config.Request.Concurrency,
 		interval:    time.Second * time.Duration(requestInterval),
+		devServer:   server,
 	}
 	spider.Mode = cli.Mode
 
 	spider.SetMiddleware(middlewares.NewRecorderMiddleware(logger), 100)
 	spider.SetMiddleware(middlewares.NewFilterMiddleware(logger), 110)
 	spider.SetMiddleware(middlewares.NewHttpMiddleware(logger, httpClient), 120)
+	spider.SetMiddleware(middlewares.NewRetryMiddleware(logger), 130)
 	spider.SetPipeline(pipelines.NewMongoPipeline(logger, mongoDb), 100)
 
 	return
