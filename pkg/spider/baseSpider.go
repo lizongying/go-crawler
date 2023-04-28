@@ -35,6 +35,7 @@ func init() {
 
 const defaultChanRequestMax = 1000 * 1000
 const defaultChanItemMax = 1000 * 1000
+const defaultRequestConcurrency = 1
 const defaultRequestInterval = 1
 const defaultRequestRetryMaxTimes = 3
 
@@ -61,11 +62,6 @@ type BaseSpider struct {
 	allowedDomains        map[string]struct{}
 	middlewares           map[int]pkg.Middleware
 	pipelines             map[int]pkg.Pipeline
-
-	TimeoutRequest time.Duration
-
-	concurrency int
-	interval    time.Duration
 
 	devServer *httpServer.HttpServer
 }
@@ -128,6 +124,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.Logger.Info("allowedDomains", s.spider.GetAllowedDomains())
 	s.Logger.Info("middlewares", s.spider.GetMiddlewares())
 	s.Logger.Info("pipelines", s.spider.GetPipelines())
+	s.Logger.Info("okHttpCodes", s.spider.GetInfo().OkHttpCodes)
 	if s.spider == nil {
 		err = errors.New("spider is empty")
 		s.Logger.Error(err)
@@ -182,7 +179,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 
 	slot := "*"
 	if _, ok := s.requestSlots.Load(slot); !ok {
-		requestSlot := rate.NewLimiter(rate.Every(s.interval/time.Duration(s.concurrency)), s.concurrency)
+		requestSlot := rate.NewLimiter(rate.Every(s.Interval/time.Duration(s.Concurrency)), s.Concurrency)
 		s.requestSlots.Store(slot, requestSlot)
 	}
 
@@ -241,19 +238,31 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, httpClient *httpClient.HttpClient, server *httpServer.HttpServer) (spider *BaseSpider, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
-	requestInterval := defaultRequestInterval
+	concurrency := defaultRequestConcurrency
+	if config.Request.Concurrency > 1 {
+		concurrency = config.Request.Concurrency
+	}
+	interval := defaultRequestInterval
 	if config.Request.Interval > 0 {
-		requestInterval = config.Request.Interval
+		interval = config.Request.Interval
 	}
 	if config.Request.Interval < 0 {
-		requestInterval = 0
+		interval = 0
 	}
-	requestRetryMaxTimes := defaultRequestRetryMaxTimes
+	okHttpCodes := []int{200}
+	if len(config.Request.OkHttpCodes) > 0 {
+		okHttpCodes = config.Request.OkHttpCodes
+	}
+	retryMaxTimes := defaultRequestRetryMaxTimes
 	if config.Request.RetryMaxTimes > 0 {
-		requestRetryMaxTimes = config.Request.RetryMaxTimes
+		retryMaxTimes = config.Request.RetryMaxTimes
 	}
 	if config.Request.RetryMaxTimes < 0 {
-		requestRetryMaxTimes = 0
+		retryMaxTimes = 0
+	}
+	timeout := time.Minute
+	if config.Request.Timeout > 0 {
+		timeout = time.Second * time.Duration(config.Request.Timeout)
 	}
 
 	if cli.Mode == "dev" {
@@ -262,8 +271,11 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 
 	spider = &BaseSpider{
 		SpiderInfo: &pkg.SpiderInfo{
-			OkHttpCodes:   []int{200},
-			RetryMaxTimes: requestRetryMaxTimes,
+			Concurrency:   concurrency,
+			Interval:      time.Second * time.Duration(interval),
+			OkHttpCodes:   okHttpCodes,
+			RetryMaxTimes: retryMaxTimes,
+			Timeout:       timeout,
 		},
 		startFunc:  cli.StartFunc,
 		MongoDb:    mongoDb,
@@ -279,9 +291,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		itemChan:              make(chan *pkg.Item, defaultChanItemMax),
 		itemActiveChan:        make(chan struct{}, defaultChanItemMax),
 
-		concurrency: config.Request.Concurrency,
-		interval:    time.Second * time.Duration(requestInterval),
-		devServer:   server,
+		devServer: server,
 	}
 	spider.Mode = cli.Mode
 

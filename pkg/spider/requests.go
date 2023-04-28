@@ -17,12 +17,6 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 		ctx = context.Background()
 	}
 
-	if request.TimeoutAll != 0 {
-		c, cancel := context.WithTimeout(ctx, request.TimeoutAll)
-		ctx = c
-		defer cancel()
-	}
-
 	requestContext := pkg.Context{
 		Request:     request,
 		Middlewares: s.SortedMiddlewares(),

@@ -524,7 +524,7 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	}
 
 	baseSpider.Name = "youtube"
-	baseSpider.TimeoutRequest = time.Second * 30
+	baseSpider.Timeout = time.Second * 30
 	baseSpider.SetMiddleware(NewMiddleware(logger), 90)
 	spider = &Spider{
 		BaseSpider:            baseSpider,

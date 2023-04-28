@@ -12,8 +12,11 @@ type SpiderInfo struct {
 	Name  string
 	Stats sync.Map
 
+	Concurrency   int
+	Interval      time.Duration
 	OkHttpCodes   []int
 	RetryMaxTimes int
+	Timeout       time.Duration
 }
 
 type Spider interface {

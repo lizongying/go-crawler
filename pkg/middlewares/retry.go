@@ -12,6 +12,7 @@ type RetryMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger        *logger.Logger
 	spider        pkg.Spider
+	okHttpCodes   []int
 	retryMaxTimes int
 }
 
@@ -21,6 +22,7 @@ func (m *RetryMiddleware) GetName() string {
 
 func (m *RetryMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
+	m.okHttpCodes = spider.GetInfo().OkHttpCodes
 	m.retryMaxTimes = spider.GetInfo().RetryMaxTimes
 	return
 }
@@ -29,7 +31,7 @@ func (m *RetryMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 	r := c.Response
 	request := c.Request
 	m.logger.Debug("response len:", len(r.BodyBytes))
-	okHttpCodes := m.spider.GetInfo().OkHttpCodes
+	okHttpCodes := m.okHttpCodes
 	if len(c.Request.OkHttpCodes) > 0 {
 		okHttpCodes = c.Request.OkHttpCodes
 	}
@@ -37,7 +39,7 @@ func (m *RetryMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 	if request.RetryMaxTimes > 0 {
 		retryMaxTimes = request.RetryMaxTimes
 	}
-	if request.RetryMaxTimes == -1 {
+	if request.RetryMaxTimes < 0 {
 		retryMaxTimes = 0
 	}
 	if !utils.InSlice(r.StatusCode, okHttpCodes) {

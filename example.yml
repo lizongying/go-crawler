@@ -12,5 +12,8 @@ request:
   concurrency: 1
   interval: 1
   timeout: 30
+  ok_http_codes:
+    - 200
   retry_max_times: 3
+  http_proto: 2.0
 devAddr: :8081

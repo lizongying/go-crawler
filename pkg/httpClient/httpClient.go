@@ -15,12 +15,14 @@ import (
 )
 
 const defaultTimeout = time.Minute
+const defaultHttpProto = "2.0"
 
 type HttpClient struct {
-	client  *http.Client
-	Proxy   *url.URL
-	Timeout time.Duration
-	logger  *logger.Logger
+	client    *http.Client
+	proxy     *url.URL
+	timeout   time.Duration
+	httpProto string
+	logger    *logger.Logger
 }
 
 func (h *HttpClient) BuildRequest(ctx context.Context, request *pkg.Request) (err error) {
@@ -83,7 +85,7 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 
 	transport := &http.Transport{}
 	if request.ProxyEnable {
-		proxy := h.Proxy
+		proxy := h.proxy
 		if request.Proxy != nil {
 			proxy = request.Proxy
 		}
@@ -93,16 +95,21 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 		}
 		transport.Proxy = http.ProxyURL(proxy)
 	}
-	if request.HttpProto == "" || request.HttpProto == "2.0" {
-		transport.ForceAttemptHTTP2 = true
-	} else {
+
+	httpProto := h.httpProto
+	if request.HttpProto != "" {
+		httpProto = request.HttpProto
+	}
+	if httpProto != "2.0" {
 		transport.ForceAttemptHTTP2 = false
+	} else {
+		transport.ForceAttemptHTTP2 = true
 	}
 
 	client := h.client
 	client.Transport = transport
 
-	timeout := h.Timeout
+	timeout := h.timeout
 	if request.Timeout > 0 {
 		timeout = request.Timeout
 	}
@@ -152,11 +159,17 @@ func NewHttpClient(config *config.Config, logger *logger.Logger) (httpClient *Ht
 		timeout = time.Second * time.Duration(config.Request.Timeout)
 	}
 
+	httpProto := defaultHttpProto
+	if config.Request.HttpProto != "" {
+		httpProto = config.Request.HttpProto
+	}
+
 	httpClient = &HttpClient{
-		client:  http.DefaultClient,
-		Proxy:   proxy,
-		Timeout: timeout,
-		logger:  logger,
+		client:    http.DefaultClient,
+		proxy:     proxy,
+		timeout:   timeout,
+		httpProto: httpProto,
+		logger:    logger,
 	}
 
 	return
