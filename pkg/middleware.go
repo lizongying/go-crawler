@@ -14,7 +14,7 @@ type Middleware interface {
 	SpiderStart(context.Context, Spider) error
 	ProcessRequest(*Context) error
 	ProcessResponse(*Context) error
-	ProcessItem(context.Context, *Item) error
+	ProcessItem(*Context) error
 	SpiderStop(context.Context) error
 }
 
@@ -37,8 +37,8 @@ func (*UnimplementedMiddleware) ProcessResponse(c *Context) error {
 	return c.NextResponse()
 }
 
-func (*UnimplementedMiddleware) ProcessItem(context.Context, *Item) (err error) {
-	return
+func (*UnimplementedMiddleware) ProcessItem(c *Context) (err error) {
+	return c.NextItem()
 }
 
 func (*UnimplementedMiddleware) SpiderStop(context.Context) (err error) {
@@ -50,9 +50,11 @@ type ProcessFunc func(*Context) error
 type Context struct {
 	Request              *Request
 	Response             *Response
+	Item                 *Item
 	Middlewares          []Middleware
 	processRequestIndex  uint8
 	processResponseIndex uint8
+	processItemIndex     uint8
 }
 
 func (m *Context) FirstRequest() (err error) {
@@ -91,5 +93,25 @@ func (m *Context) NextResponse() (err error) {
 	}
 
 	err = m.Middlewares[m.processResponseIndex].ProcessResponse(m)
+	return
+}
+
+func (m *Context) FirstItem() (err error) {
+	m.processItemIndex = 0
+	if m.processItemIndex >= uint8(len(m.Middlewares)) {
+		return
+	}
+
+	err = m.Middlewares[0].ProcessItem(m)
+	return
+}
+
+func (m *Context) NextItem() (err error) {
+	m.processItemIndex++
+	if m.processItemIndex >= uint8(len(m.Middlewares)) {
+		return
+	}
+
+	err = m.Middlewares[m.processItemIndex].ProcessItem(m)
 	return
 }

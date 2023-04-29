@@ -36,19 +36,14 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 				<-s.itemActiveChan
 			}()
 
-			ctx := context.Background()
-
-			for _, v := range s.SortedPipelines() {
-				e := v.ProcessItem(ctx, item)
-				if errors.Is(e, pkg.BreakErr) {
-					break
-				}
+			requestContext := pkg.Context{
+				Item:        item,
+				Middlewares: s.SortedMiddlewares(),
 			}
-			for _, v := range s.SortedMiddlewares() {
-				e := v.ProcessItem(ctx, item)
-				if errors.Is(e, pkg.BreakErr) {
-					break
-				}
+
+			err := requestContext.FirstItem()
+			if err != nil {
+				s.Logger.Error(err)
 			}
 		}(s.itemConcurrencyChan, item)
 

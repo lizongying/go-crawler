@@ -3,6 +3,7 @@ package spider
 import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"sort"
 )
 
 func (s *BaseSpider) GetMiddlewares() (middlewares map[int]string) {
@@ -63,6 +64,19 @@ func (s *BaseSpider) DelMiddleware(name string) {
 
 func (s *BaseSpider) CleanMiddlewares() {
 	s.middlewares = make(map[int]pkg.Middleware)
+
+	return
+}
+
+func (s *BaseSpider) SortedMiddlewares() (o []pkg.Middleware) {
+	keys := make([]int, 0)
+	for k := range s.middlewares {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	for _, key := range keys {
+		o = append(o, s.middlewares[key])
+	}
 
 	return
 }

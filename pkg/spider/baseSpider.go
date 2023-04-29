@@ -11,13 +11,11 @@ import (
 	"github.com/lizongying/go-crawler/pkg/httpServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
-	"github.com/lizongying/go-crawler/pkg/pipelines"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/time/rate"
 	"log"
 	"reflect"
 	"runtime"
-	"sort"
 	"sync"
 	"time"
 )
@@ -61,7 +59,6 @@ type BaseSpider struct {
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
 	middlewares           map[int]pkg.Middleware
-	pipelines             map[int]pkg.Pipeline
 
 	devServer *httpServer.HttpServer
 }
@@ -76,32 +73,6 @@ func (s *BaseSpider) SetSpider(spider pkg.Spider) {
 
 func (s *BaseSpider) GetInfo() *pkg.SpiderInfo {
 	return s.SpiderInfo
-}
-
-func (s *BaseSpider) SortedMiddlewares() (o []pkg.Middleware) {
-	keys := make([]int, 0)
-	for k := range s.middlewares {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-	for _, key := range keys {
-		o = append(o, s.middlewares[key])
-	}
-
-	return
-}
-
-func (s *BaseSpider) SortedPipelines() (o []pkg.Pipeline) {
-	keys := make([]int, 0)
-	for k := range s.pipelines {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-	for _, key := range keys {
-		o = append(o, s.pipelines[key])
-	}
-
-	return
 }
 
 func (s *BaseSpider) GetDevServer() pkg.DevServer {
@@ -123,7 +94,6 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.Logger.Info("mode", s.Mode)
 	s.Logger.Info("allowedDomains", s.spider.GetAllowedDomains())
 	s.Logger.Info("middlewares", s.spider.GetMiddlewares())
-	s.Logger.Info("pipelines", s.spider.GetPipelines())
 	s.Logger.Info("okHttpCodes", s.spider.GetInfo().OkHttpCodes)
 	if s.spider == nil {
 		err = errors.New("spider is empty")
@@ -144,22 +114,6 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 
 	defer func() {
 		for _, v := range s.middlewares {
-			e := v.SpiderStop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				break
-			}
-		}
-	}()
-
-	for _, v := range s.pipelines {
-		e := v.SpiderStart(ctx, s)
-		if errors.Is(e, pkg.BreakErr) {
-			break
-		}
-	}
-
-	defer func() {
-		for _, v := range s.pipelines {
 			e := v.SpiderStop(ctx)
 			if errors.Is(e, pkg.BreakErr) {
 				break
@@ -285,7 +239,6 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
 		middlewares:           make(map[int]pkg.Middleware),
-		pipelines:             make(map[int]pkg.Pipeline),
 		requestChan:           make(chan *pkg.Request, defaultChanRequestMax),
 		requestActiveChan:     make(chan struct{}, defaultChanRequestMax),
 		itemChan:              make(chan *pkg.Item, defaultChanItemMax),
@@ -299,7 +252,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	spider.SetMiddleware(middlewares.NewFilterMiddleware(logger), 110)
 	spider.SetMiddleware(middlewares.NewHttpMiddleware(logger, httpClient), 120)
 	spider.SetMiddleware(middlewares.NewRetryMiddleware(logger), 130)
-	spider.SetPipeline(pipelines.NewMongoPipeline(logger, mongoDb), 100)
+	spider.SetMiddleware(middlewares.NewMongoMiddleware(logger, mongoDb), 140)
 
 	return
 }

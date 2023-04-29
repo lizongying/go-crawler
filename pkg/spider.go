@@ -35,11 +35,7 @@ type Spider interface {
 	SetMiddleware(Middleware, int)
 	DelMiddleware(string)
 	CleanMiddlewares()
-	GetPipelines() map[int]string
-	ReplacePipelines(map[int]Pipeline) error
-	SetPipeline(Pipeline, int)
-	DelPipeline(string)
-	CleanPipelines()
+	SortedMiddlewares() []Middleware
 	SetItemDelay(time.Duration)
 	SetItemConcurrency(int)
 	SetRequestRate(string, time.Duration, int)
