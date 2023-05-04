@@ -18,6 +18,7 @@ type Spider struct {
 	host string
 
 	collectionTest string
+	fileNameTest   string
 }
 
 func (s *Spider) RequestNoLimitSync(ctx context.Context, request *pkg.Request) (err error) {
@@ -105,7 +106,75 @@ func (s *Spider) ResponseOk(_ context.Context, response *pkg.Response) (err erro
 		Id:         extra.Count,
 		Update:     true,
 		Data: DataOk{
-			Id:    extra.Count,
+			Id:    fmt.Sprintf(`%d,"%d"`, extra.Count, extra.Count),
+			Count: extra.Count,
+		},
+	})
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
+func (s *Spider) ResponseCsv(_ context.Context, response *pkg.Response) (err error) {
+	extra := response.Request.Extra.(*ExtraOk)
+	s.Logger.Info("extra", utils.JsonStr(extra))
+	s.Logger.Info("response", string(response.BodyBytes))
+
+	if extra.Count > 2 {
+		return
+	}
+	requestNext := new(pkg.Request)
+	requestNext.Url = response.Request.Url
+	requestNext.Extra = &ExtraOk{
+		Count: extra.Count + 1,
+	}
+	requestNext.CallBack = s.ResponseCsv
+	//requestNext.UniqueKey = "1"
+	err = s.YieldRequest(requestNext)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	err = s.YieldItem(&pkg.ItemCsv{
+		FileName:  s.fileNameTest,
+		UniqueKey: "1",
+		Id:        extra.Count,
+		Data: DataOk{
+			Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
+			Count: extra.Count,
+		},
+	})
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
+func (s *Spider) ResponseJsonl(_ context.Context, response *pkg.Response) (err error) {
+	extra := response.Request.Extra.(*ExtraOk)
+	s.Logger.Info("extra", utils.JsonStr(extra))
+	s.Logger.Info("response", string(response.BodyBytes))
+
+	if extra.Count > 2 {
+		return
+	}
+	requestNext := new(pkg.Request)
+	requestNext.Url = response.Request.Url
+	requestNext.Extra = &ExtraOk{
+		Count: extra.Count + 1,
+	}
+	requestNext.CallBack = s.ResponseJsonl
+	//requestNext.UniqueKey = "1"
+	err = s.YieldRequest(requestNext)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	err = s.YieldItem(&pkg.ItemJsonl{
+		FileName:  s.fileNameTest,
+		UniqueKey: "1",
+		Id:        extra.Count,
+		Data: DataOk{
+			Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
 			Count: extra.Count,
 		},
 	})
@@ -153,6 +222,36 @@ func (s *Spider) TestOk(_ context.Context) (err error) {
 	return
 }
 
+func (s *Spider) TestCsv(_ context.Context) (err error) {
+	if s.Mode == "dev" {
+		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
+	}
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf(s.host, httpServer.UrlOk)
+	request.Extra = &ExtraOk{}
+	request.CallBack = s.ResponseCsv
+	err = s.YieldRequest(request)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
+func (s *Spider) TestJsonl(_ context.Context) (err error) {
+	if s.Mode == "dev" {
+		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
+	}
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf(s.host, httpServer.UrlOk)
+	request.Extra = &ExtraOk{}
+	request.CallBack = s.ResponseJsonl
+	err = s.YieldRequest(request)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
 func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg.Spider, err error) {
 	if baseSpider == nil {
 		err = errors.New("nil baseSpider")
@@ -161,12 +260,15 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	}
 	baseSpider.Name = "test"
 	baseSpider.AddOkHttpCodes(201)
-	baseSpider.SetMiddleware(middlewares.NewMongoMiddleware(logger, baseSpider.MongoDb), 141)
+	//baseSpider.SetMiddleware(middlewares.NewMongoMiddleware(logger, baseSpider.MongoDb), 141)
+	baseSpider.SetMiddleware(middlewares.NewCsvMiddleware(logger), 142)
+	baseSpider.SetMiddleware(middlewares.NewJsonLinesMiddleware(logger), 143)
 
 	spider = &Spider{
 		BaseSpider:     baseSpider,
 		host:           "http://127.0.0.1:8081/%s",
 		collectionTest: "test",
+		fileNameTest:   "test",
 	}
 
 	return

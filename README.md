@@ -10,12 +10,17 @@
   nextResponse()/nextItem()</code>
 * 去掉pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
-* 默认middleware order，建议自定义ProcessItem大于140
+* 默认middleware order，建议自定义ProcessItem的中间件order大于140
     * 100:recorder
     * 110:filter
     * 120:http
     * 130:retry
     * 140:dump
+* 框架内置middleware
+    * csv
+    * dump
+    * jsonlines
+    * mongo
 * 在配置文件中可以配置全局request参数，在具体request中可以覆盖此配置
 
 ## Usage

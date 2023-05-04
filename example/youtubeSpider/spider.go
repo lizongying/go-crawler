@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"regexp"
@@ -324,6 +325,7 @@ func (s *Spider) ParseVideos(ctx context.Context, response *pkg.Response) (err e
 		Collection: s.collectionYoutubeUser,
 		Id:         extra.Id,
 		UniqueKey:  extra.Id,
+		Update:     true,
 		Data:       &data,
 	}
 	err = s.YieldItem(&item)
@@ -526,6 +528,7 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	baseSpider.Name = "youtube"
 	baseSpider.Timeout = time.Second * 30
 	baseSpider.SetMiddleware(NewMiddleware(logger), 90)
+	baseSpider.SetMiddleware(middlewares.NewMongoMiddleware(logger, baseSpider.MongoDb), 141)
 	spider = &Spider{
 		BaseSpider:            baseSpider,
 		collectionYoutubeUser: "youtube_user",

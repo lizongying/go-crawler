@@ -336,8 +336,8 @@ func (s *Spider) RequestVideos(ctx context.Context, request *pkg.Request) (err e
 	}
 	item := pkg.ItemMongo{
 		Collection: s.collectionYoutubeUser,
-		Id:         extra.Id,
 		UniqueKey:  extra.Id,
+		Id:         extra.Id,
 		Data:       &data,
 	}
 	err = s.YieldItem(&item)
@@ -487,6 +487,7 @@ func (s *Spider) RequestUserApi(ctx context.Context, request *pkg.Request) (err 
 	}
 	item := pkg.ItemMongo{
 		Collection: s.collectionYoutubeUser,
+		UniqueKey:  extra.Id,
 		Id:         data.Id,
 		Data:       &data,
 	}

@@ -23,6 +23,6 @@ type ExtraOk struct {
 }
 
 type DataOk struct {
-	Id    int `bson:"_id" json:"id"`
-	Count int `bson:"count" json:"count"`
+	Id    string `bson:"_id" json:"id"`
+	Count int    `bson:"count" json:"count"`
 }

@@ -1,0 +1,149 @@
+package middlewares
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg/utils"
+	"os"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"sync"
+)
+
+type CsvMiddleware struct {
+	pkg.UnimplementedMiddleware
+	logger *logger.Logger
+
+	spider pkg.Spider
+	files  sync.Map
+}
+
+func (m *CsvMiddleware) GetName() string {
+	return "csv"
+}
+
+func (m *CsvMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
+	m.spider = spider
+	return
+}
+
+func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
+	item, ok := c.Item.(*pkg.ItemCsv)
+	if !ok {
+		m.logger.Warning("item not support csv")
+		err = c.NextItem()
+		return
+	}
+
+	if item == nil {
+		err = errors.New("nil item")
+		m.logger.Error(err)
+		err = c.NextItem()
+		return
+	}
+
+	data := item.GetData()
+	if data == nil {
+		err = errors.New("nil data")
+		m.logger.Error(err)
+		err = c.NextItem()
+		return
+	}
+
+	refType := reflect.TypeOf(data)
+	refValue := reflect.ValueOf(data)
+
+	var lines []string
+	var columns []string
+	filename := fmt.Sprintf("%s.csv", item.FileName)
+	var file *os.File
+	fileValue, ok := m.files.Load(item.FileName)
+	create := false
+	if !ok {
+		if !utils.ExistsDir(filename) {
+			err = os.MkdirAll(filepath.Dir(filename), 0744)
+			if err != nil {
+				m.logger.Error(err)
+				err = c.NextItem()
+				return
+			}
+		}
+		if !utils.ExistsFile(filename) {
+			file, err = os.Create(filename)
+			if err != nil {
+				m.logger.Error(err)
+				err = c.NextItem()
+				return
+			}
+			create = true
+		} else {
+			file, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+			if err != nil {
+				m.logger.Error(err)
+				return
+			}
+		}
+		m.files.Store(item.FileName, file)
+	} else {
+		file = fileValue.(*os.File)
+	}
+
+	for i := 0; i < refType.NumField(); i++ {
+		if create {
+			column := refType.Field(i).Tag.Get("column")
+			if column == "" {
+				column = refType.Field(i).Name
+			}
+			if strings.Contains(column, `"`) {
+				column = strings.ReplaceAll(column, `"`, `""`)
+			}
+			if strings.Contains(column, `"`) || strings.Contains(column, ",") {
+				column = fmt.Sprintf(`"%s"`, column)
+			}
+			columns = append(columns, column)
+		}
+
+		line := fmt.Sprint(refValue.Field(i))
+		if strings.Contains(line, `"`) {
+			line = strings.ReplaceAll(line, `"`, `""`)
+		}
+		if strings.Contains(line, `"`) || strings.Contains(line, ",") {
+			line = fmt.Sprintf(`"%s"`, line)
+		}
+		lines = append(lines, line)
+	}
+	if create {
+		_, err = file.WriteString(fmt.Sprintf("%s\n", strings.Join(columns, ",")))
+	}
+	_, err = file.WriteString(fmt.Sprintf("%s\n", strings.Join(lines, ",")))
+	if err != nil {
+		m.logger.Error(err)
+		err = c.NextItem()
+		return err
+	}
+
+	err = c.NextItem()
+	return
+}
+
+func (m *CsvMiddleware) SpiderStop(_ context.Context) (err error) {
+	m.files.Range(func(key, value any) bool {
+		err = value.(*os.File).Close()
+		if err != nil {
+			m.logger.Error(err)
+		}
+		return true
+	})
+	return
+}
+
+func NewCsvMiddleware(logger *logger.Logger) (m pkg.Middleware) {
+	m = &CsvMiddleware{
+		logger: logger,
+	}
+	return
+}

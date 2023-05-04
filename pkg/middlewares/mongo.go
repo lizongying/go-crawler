@@ -37,6 +37,7 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	item, ok := c.Item.(*pkg.ItemMongo)
 	if !ok {
 		m.logger.Warning("item not support mongo")
+		err = c.NextItem()
 		return
 	}
 

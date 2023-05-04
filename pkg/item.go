@@ -41,3 +41,43 @@ func (i *ItemMongo) GetId() any {
 func (i *ItemMongo) GetData() any {
 	return i.Data
 }
+
+type ItemCsv struct {
+	ItemUnimplemented
+	UniqueKey string
+	Id        any
+	Data      any
+	FileName  string
+}
+
+func (i *ItemCsv) GetUniqueKey() string {
+	return i.UniqueKey
+}
+
+func (i *ItemCsv) GetId() any {
+	return i.Id
+}
+
+func (i *ItemCsv) GetData() any {
+	return i.Data
+}
+
+type ItemJsonl struct {
+	ItemUnimplemented
+	UniqueKey string
+	Id        any
+	Data      any
+	FileName  string
+}
+
+func (i *ItemJsonl) GetUniqueKey() string {
+	return i.UniqueKey
+}
+
+func (i *ItemJsonl) GetId() any {
+	return i.Id
+}
+
+func (i *ItemJsonl) GetData() any {
+	return i.Data
+}
