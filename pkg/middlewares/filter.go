@@ -58,12 +58,12 @@ func (m *FilterMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 
 func (m *FilterMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	item := c.Item
-	if item.UniqueKey == "" {
+	if item.GetUniqueKey() == "" {
 		err = c.NextItem()
 		return
 	}
 
-	m.ids.Store(item.UniqueKey, struct{}{})
+	m.ids.Store(item.GetUniqueKey(), struct{}{})
 	err = c.NextItem()
 	return
 }

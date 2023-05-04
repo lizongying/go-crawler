@@ -11,6 +11,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/httpServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/time/rate"
 	"log"
@@ -51,7 +52,7 @@ type BaseSpider struct {
 	itemConcurrencyChan   chan struct{}
 	itemDelay             time.Duration
 	itemTimer             *time.Timer
-	itemChan              chan *pkg.Item
+	itemChan              chan pkg.Item
 	itemActiveChan        chan struct{}
 	requestChan           chan *pkg.Request
 	requestActiveChan     chan struct{}
@@ -61,6 +62,8 @@ type BaseSpider struct {
 	middlewares           map[int]pkg.Middleware
 
 	devServer *httpServer.HttpServer
+
+	okHttpCodes []int
 }
 
 func (s *BaseSpider) SetLogger(logger pkg.Logger) {
@@ -79,6 +82,25 @@ func (s *BaseSpider) GetDevServer() pkg.DevServer {
 	return s.devServer
 }
 
+func (s *BaseSpider) GetMongoDb() *mongo.Database {
+	return s.MongoDb
+}
+
+func (s *BaseSpider) AddOkHttpCodes(httpCodes ...int) {
+	for _, v := range httpCodes {
+		if utils.InSlice(v, s.okHttpCodes) {
+			continue
+		}
+		s.okHttpCodes = append(s.okHttpCodes, v)
+	}
+	return
+}
+
+func (s *BaseSpider) GetOkHttpCodes() (httpCodes []int) {
+	httpCodes = s.okHttpCodes
+	return
+}
+
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	if s.spider == nil {
 		err = errors.New("nil spider")
@@ -94,7 +116,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.Logger.Info("mode", s.Mode)
 	s.Logger.Info("allowedDomains", s.spider.GetAllowedDomains())
 	s.Logger.Info("middlewares", s.spider.GetMiddlewares())
-	s.Logger.Info("okHttpCodes", s.spider.GetInfo().OkHttpCodes)
+	s.Logger.Info("okHttpCodes", s.okHttpCodes)
 	if s.spider == nil {
 		err = errors.New("spider is empty")
 		s.Logger.Error(err)
@@ -219,29 +241,25 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		timeout = time.Second * time.Duration(config.Request.Timeout)
 	}
 
-	if cli.Mode == "dev" {
-		server.AddRoutes(httpServer.NewNoLimitHandler(logger))
-	}
-
 	spider = &BaseSpider{
 		SpiderInfo: &pkg.SpiderInfo{
 			Concurrency:   concurrency,
 			Interval:      time.Second * time.Duration(interval),
-			OkHttpCodes:   okHttpCodes,
 			RetryMaxTimes: retryMaxTimes,
 			Timeout:       timeout,
 		},
-		startFunc:  cli.StartFunc,
-		MongoDb:    mongoDb,
-		Logger:     logger,
-		httpClient: httpClient,
+		okHttpCodes: okHttpCodes,
+		startFunc:   cli.StartFunc,
+		MongoDb:     mongoDb,
+		Logger:      logger,
+		httpClient:  httpClient,
 
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
 		middlewares:           make(map[int]pkg.Middleware),
 		requestChan:           make(chan *pkg.Request, defaultChanRequestMax),
 		requestActiveChan:     make(chan struct{}, defaultChanRequestMax),
-		itemChan:              make(chan *pkg.Item, defaultChanItemMax),
+		itemChan:              make(chan pkg.Item, defaultChanItemMax),
 		itemActiveChan:        make(chan struct{}, defaultChanItemMax),
 
 		devServer: server,
@@ -252,7 +270,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	spider.SetMiddleware(middlewares.NewFilterMiddleware(logger), 110)
 	spider.SetMiddleware(middlewares.NewHttpMiddleware(logger, httpClient), 120)
 	spider.SetMiddleware(middlewares.NewRetryMiddleware(logger), 130)
-	spider.SetMiddleware(middlewares.NewMongoMiddleware(logger, mongoDb), 140)
+	spider.SetMiddleware(middlewares.NewDumpMiddleware(logger), 140)
 
 	return
 }

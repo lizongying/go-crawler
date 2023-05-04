@@ -24,7 +24,7 @@ func (h *HttpServer) Run() (err error) {
 		return
 	}
 
-	h.logger.Info("Starting HTTP server at", h.srv.Addr)
+	h.logger.Info("Starting dev server at", h.srv.Addr)
 	go func() {
 		err = h.srv.Serve(ln)
 		if err != nil {

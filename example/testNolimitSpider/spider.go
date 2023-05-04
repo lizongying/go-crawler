@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
+	"github.com/lizongying/go-crawler/pkg/httpServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/spider"
@@ -15,6 +16,8 @@ import (
 type Spider struct {
 	*spider.BaseSpider
 	host string
+
+	collectionTest string
 }
 
 func (s *Spider) RequestNoLimitSync(ctx context.Context, request *pkg.Request) (err error) {
@@ -48,7 +51,7 @@ func (s *Spider) RequestNoLimitSync(ctx context.Context, request *pkg.Request) (
 	return
 }
 
-func (s *Spider) RequestNoLimit(_ context.Context, response *pkg.Response) (err error) {
+func (s *Spider) ResponseNoLimit(_ context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraNoLimit)
 	s.Logger.Info("extra", utils.JsonStr(extra))
 
@@ -62,13 +65,13 @@ func (s *Spider) RequestNoLimit(_ context.Context, response *pkg.Response) (err 
 	requestNext.Extra = &ExtraNoLimit{
 		Count: extra.Count + 1,
 	}
-	requestNext.CallBack = s.RequestNoLimit
+	requestNext.CallBack = s.ResponseNoLimit
 	//requestNext.UniqueKey = "1"
 	err = s.YieldRequest(requestNext)
 	if err != nil {
 		s.Logger.Error(err)
 	}
-	err = s.YieldItem(&pkg.Item{
+	err = s.YieldItem(&pkg.ItemMongo{
 		UniqueKey: "1",
 	})
 	if err != nil {
@@ -77,35 +80,38 @@ func (s *Spider) RequestNoLimit(_ context.Context, response *pkg.Response) (err 
 	return
 }
 
-func (s *Spider) ParseImages(ctx context.Context, response *pkg.Response) (err error) {
-	request := response.Request
-	s.Logger.Info("Images", utils.JsonStr(request))
+func (s *Spider) ResponseOk(_ context.Context, response *pkg.Response) (err error) {
+	extra := response.Request.Extra.(*ExtraOk)
+	s.Logger.Info("extra", utils.JsonStr(extra))
+	s.Logger.Info("response", string(response.BodyBytes))
 
-	if ctx == nil {
-		ctx = context.Background()
+	if extra.Count > 2 {
+		return
 	}
-
-	s.Logger.Info("len", len(response.BodyBytes))
-
-	return
-}
-
-func (s *Spider) RequestImagesAsync(ctx context.Context, request *pkg.Request) (err error) {
-	s.Logger.Info("Images", utils.JsonStr(request))
-	request.CallBack = s.ParseImages
-
-	if ctx == nil {
-		ctx = context.Background()
+	requestNext := new(pkg.Request)
+	requestNext.Url = response.Request.Url
+	requestNext.Extra = &ExtraOk{
+		Count: extra.Count + 1,
 	}
-
-	err = s.YieldRequest(request)
+	requestNext.CallBack = s.ResponseOk
+	//requestNext.UniqueKey = "1"
+	err = s.YieldRequest(requestNext)
 	if err != nil {
 		s.Logger.Error(err)
-		return err
 	}
-
-	//s.Logger.Info("len", len(body))
-
+	err = s.YieldItem(&pkg.ItemMongo{
+		Collection: s.collectionTest,
+		UniqueKey:  "1",
+		Id:         extra.Count,
+		Update:     true,
+		Data: DataOk{
+			Id:    extra.Count,
+			Count: extra.Count,
+		},
+	})
+	if err != nil {
+		s.Logger.Error(err)
+	}
 	return
 }
 
@@ -124,7 +130,22 @@ func (s *Spider) TestNoLimit(_ context.Context) (err error) {
 	request := new(pkg.Request)
 	request.Url = fmt.Sprintf(s.host, "no-limit")
 	request.Extra = &ExtraNoLimit{}
-	request.CallBack = s.RequestNoLimit
+	request.CallBack = s.ResponseNoLimit
+	err = s.YieldRequest(request)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
+func (s *Spider) TestOk(_ context.Context) (err error) {
+	if s.Mode == "dev" {
+		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
+	}
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf(s.host, httpServer.UrlOk)
+	request.Extra = &ExtraOk{}
+	request.CallBack = s.ResponseOk
 	err = s.YieldRequest(request)
 	if err != nil {
 		s.Logger.Error(err)
@@ -139,11 +160,13 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 		return
 	}
 	baseSpider.Name = "test"
-	baseSpider.OkHttpCodes = append(baseSpider.OkHttpCodes, 204)
-	baseSpider.SetMiddleware(middlewares.NewImageMiddleware(logger), 3)
+	baseSpider.AddOkHttpCodes(201)
+	baseSpider.SetMiddleware(middlewares.NewMongoMiddleware(logger, baseSpider.MongoDb), 141)
+
 	spider = &Spider{
-		BaseSpider: baseSpider,
-		host:       "http://127.0.0.1:8081/%s",
+		BaseSpider:     baseSpider,
+		host:           "http://127.0.0.1:8081/%s",
+		collectionTest: "test",
 	}
 
 	return

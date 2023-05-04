@@ -334,7 +334,7 @@ func (s *Spider) RequestVideos(ctx context.Context, request *pkg.Request) (err e
 		ViewAvg:     viewAvg,
 		Keyword:     extra.KeyWord,
 	}
-	item := pkg.Item{
+	item := pkg.ItemMongo{
 		Collection: s.collectionYoutubeUser,
 		Id:         extra.Id,
 		UniqueKey:  extra.Id,
@@ -485,7 +485,7 @@ func (s *Spider) RequestUserApi(ctx context.Context, request *pkg.Request) (err 
 		ViewAvg:     viewAvg,
 		Keyword:     extra.KeyWord,
 	}
-	item := pkg.Item{
+	item := pkg.ItemMongo{
 		Collection: s.collectionYoutubeUser,
 		Id:         data.Id,
 		Data:       &data,

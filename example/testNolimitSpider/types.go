@@ -17,3 +17,12 @@ type ExtraTest struct {
 type DataTest struct {
 	*pkg.Image
 }
+
+type ExtraOk struct {
+	Count int
+}
+
+type DataOk struct {
+	Id    int `bson:"_id" json:"id"`
+	Count int `bson:"count" json:"count"`
+}

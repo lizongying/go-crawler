@@ -12,7 +12,7 @@ import (
 )
 
 type Spider struct {
-	*spider.BaseSpider
+	*spider.BaseSpider //TODO not ptr?
 }
 
 func (s *Spider) RequestImages(ctx context.Context, request *pkg.Request) (err error) {
@@ -45,7 +45,7 @@ func (s *Spider) RequestImages(ctx context.Context, request *pkg.Request) (err e
 	//}
 
 	for i := 0; i < 20; i++ {
-		item := pkg.Item{
+		item := pkg.ItemMongo{
 			Collection: "test",
 			Id:         i,
 			Data:       extra,
@@ -105,7 +105,7 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 		return
 	}
 	baseSpider.Name = "test"
-	baseSpider.OkHttpCodes = append(baseSpider.OkHttpCodes, 204)
+	baseSpider.AddOkHttpCodes(204)
 	baseSpider.SetMiddleware(middlewares.NewImageMiddleware(logger), 3)
 	spider = &Spider{
 		BaseSpider: baseSpider,

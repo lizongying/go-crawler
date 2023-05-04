@@ -50,7 +50,7 @@ type ProcessFunc func(*Context) error
 type Context struct {
 	Request              *Request
 	Response             *Response
-	Item                 *Item
+	Item                 Item
 	Middlewares          []Middleware
 	processRequestIndex  uint8
 	processResponseIndex uint8

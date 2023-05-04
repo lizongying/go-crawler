@@ -22,7 +22,7 @@ func (m *RetryMiddleware) GetName() string {
 
 func (m *RetryMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
-	m.okHttpCodes = spider.GetInfo().OkHttpCodes
+	m.okHttpCodes = spider.GetOkHttpCodes()
 	m.retryMaxTimes = spider.GetInfo().RetryMaxTimes
 	return
 }

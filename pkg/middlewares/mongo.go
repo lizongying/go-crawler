@@ -34,7 +34,12 @@ func (m *MongoMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err
 }
 
 func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
-	item := c.Item
+	item, ok := c.Item.(*pkg.ItemMongo)
+	if !ok {
+		m.logger.Warning("item not support mongo")
+		return
+	}
+
 	if item.Collection == "" {
 		err = errors.New("collection is empty")
 		m.logger.Error(err)
@@ -57,7 +62,7 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	}
 
 	if m.spider.GetInfo().Mode == "test" {
-		m.logger.Debug("mode test don't need save")
+		m.logger.Debug("current mode don't need save")
 		err = c.NextItem()
 		return
 	}
@@ -66,25 +71,37 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
+
 	res, err := m.mongoDb.Collection(item.Collection).InsertOne(ctx, bs)
 	if err != nil {
+		if item.Update && mongo.IsDuplicateKeyError(err) {
+			_, err = m.mongoDb.Collection(item.Collection).UpdateOne(ctx, bson.M{"_id": item.Id}, bson.M{"$set": item.Data})
+			if err == nil {
+				m.logger.Info(item.Collection, "update success", item.Id)
+			}
+		}
+	} else {
+		m.logger.Info(item.Collection, "insert success", res.InsertedID)
+	}
+	if err != nil {
+		m.logger.Error(err)
 		itemError, ok := m.spiderInfo.Stats.Load("item_error")
 		if ok {
 			itemErrorInt := itemError.(int)
 			itemErrorInt++
 			m.spiderInfo.Stats.Store("item_error", itemErrorInt)
 		}
-		m.logger.Error(err)
+
 		err = c.NextItem()
 		return
 	}
+
 	itemSuccess, ok := m.spiderInfo.Stats.Load("item_success")
 	if ok {
 		itemSuccessInt := itemSuccess.(int)
 		itemSuccessInt++
 		m.spiderInfo.Stats.Store("item_success", itemSuccessInt)
 	}
-	m.logger.Info(item.Collection, "insert success", res.InsertedID)
 
 	err = c.NextItem()
 	return

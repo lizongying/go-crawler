@@ -14,7 +14,6 @@ type SpiderInfo struct {
 
 	Concurrency   int
 	Interval      time.Duration
-	OkHttpCodes   []int
 	RetryMaxTimes int
 	Timeout       time.Duration
 }
@@ -41,6 +40,7 @@ type Spider interface {
 	SetRequestRate(string, time.Duration, int)
 	IsAllowedDomain(*url.URL) bool
 	YieldRequest(*Request) error
-	YieldItem(*Item) error
+	YieldItem(Item) error
 	GetDevServer() DevServer
+	GetOkHttpCodes() []int
 }
