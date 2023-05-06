@@ -15,10 +15,11 @@ type MongoMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger *logger.Logger
 
-	mongoDb    *mongo.Database
-	timeout    time.Duration
-	spider     pkg.Spider
-	spiderInfo *pkg.SpiderInfo
+	mongoDb *mongo.Database
+	timeout time.Duration
+	spider  pkg.Spider
+	info    *pkg.SpiderInfo
+	stats   pkg.Stats
 }
 
 func (m *MongoMiddleware) GetName() string {
@@ -27,9 +28,8 @@ func (m *MongoMiddleware) GetName() string {
 
 func (m *MongoMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
-	m.spiderInfo = spider.GetInfo()
-	m.spiderInfo.Stats.Store("item_error", 0)
-	m.spiderInfo.Stats.Store("item_success", 0)
+	m.info = spider.GetInfo()
+	m.stats = spider.GetStats()
 	return
 }
 
@@ -41,29 +41,43 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		return
 	}
 
+	if item == nil {
+		err = errors.New("nil item")
+		m.logger.Error(err)
+		m.stats.IncItemError()
+		err = c.NextItem()
+		return
+	}
+
 	if item.Collection == "" {
 		err = errors.New("collection is empty")
 		m.logger.Error(err)
+		m.stats.IncItemError()
 		err = c.NextItem()
 		return
 	}
 
-	if item == nil {
-		err = errors.New("item is empty")
+	data := item.GetData()
+	if data == nil {
+		err = errors.New("nil data")
 		m.logger.Error(err)
+		m.stats.IncItemError()
 		err = c.NextItem()
 		return
 	}
-	m.logger.Debug("Data", utils.JsonStr(item.Data))
-	bs, err := bson.Marshal(item.Data)
+
+	m.logger.Debug("Data", utils.JsonStr(data))
+	bs, err := bson.Marshal(data)
 	if err != nil {
 		m.logger.Error(err)
+		m.stats.IncItemError()
 		err = c.NextItem()
 		return
 	}
 
-	if m.spider.GetInfo().Mode == "test" {
+	if m.info.Mode == "test" {
 		m.logger.Debug("current mode don't need save")
+		m.stats.IncItemIgnore()
 		err = c.NextItem()
 		return
 	}
@@ -86,24 +100,12 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	}
 	if err != nil {
 		m.logger.Error(err)
-		itemError, ok := m.spiderInfo.Stats.Load("item_error")
-		if ok {
-			itemErrorInt := itemError.(int)
-			itemErrorInt++
-			m.spiderInfo.Stats.Store("item_error", itemErrorInt)
-		}
-
+		m.stats.IncItemError()
 		err = c.NextItem()
 		return
 	}
 
-	itemSuccess, ok := m.spiderInfo.Stats.Load("item_success")
-	if ok {
-		itemSuccessInt := itemSuccess.(int)
-		itemSuccessInt++
-		m.spiderInfo.Stats.Store("item_success", itemSuccessInt)
-	}
-
+	m.stats.IncItemSuccess()
 	err = c.NextItem()
 	return
 }

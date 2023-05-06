@@ -10,15 +10,14 @@
   nextResponse()/nextItem()</code>
 * 去掉pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
-* 默认middleware order，建议自定义ProcessItem的中间件order大于140
-    * 100:recorder
-    * 110:filter
-    * 120:http
-    * 130:retry
-    * 140:dump
-* 框架内置middleware
+* 框架内置middleware和默认order，建议自定义ProcessItem的中间件order大于140
+    * stats:100
+    * filter:110
+    * http:120
+    * retry:130
+    * dump:140
     * csv
-    * dump
+    * dump 在debug模式下打印item.data
     * jsonlines
     * mongo
 * 在配置文件中可以配置全局request参数，在具体request中可以覆盖此配置
@@ -29,6 +28,7 @@
 
 * -c config file. must set it.
 * -f start func. default Test.
+* -a args. json string.
 * -m mode. default test. prod? dev? or another something.
 
 ### config
@@ -59,4 +59,16 @@ git clone github.com/lizongying/go-crawler-example
 go run example/testNoLimitSpider/*.go -c dev.yml -f TestOk -m dev
 
 ```
+
+## TODO
+
+* middlewares
+    * mysql
+    * kafka
+    * ua
+    * browser
+    * robots
+    * file
+    * media
+    * proxy
 

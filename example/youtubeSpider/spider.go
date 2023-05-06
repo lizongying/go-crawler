@@ -487,7 +487,7 @@ func (s *Spider) RequestUserApi(ctx context.Context, request *pkg.Request) (err 
 	return
 }
 
-func (s *Spider) Test(_ context.Context) (err error) {
+func (s *Spider) Test(_ context.Context, _ string) (err error) {
 	err = s.YieldRequest(&pkg.Request{
 		ProxyEnable: true,
 		Extra: &ExtraVideos{
@@ -498,7 +498,7 @@ func (s *Spider) Test(_ context.Context) (err error) {
 	return
 }
 
-func (s *Spider) FromKeyword(_ context.Context) (err error) {
+func (s *Spider) FromKeyword(_ context.Context, _ string) (err error) {
 	for _, v := range []string{
 		"veja",
 		"tote bag",

@@ -8,6 +8,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/spider"
+	"github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
 
@@ -88,7 +89,7 @@ func (s *Spider) RequestImagesAsync(ctx context.Context, request *pkg.Request) (
 	return
 }
 
-func (s *Spider) TestImages(_ context.Context) (err error) {
+func (s *Spider) TestImages(_ context.Context, _ string) (err error) {
 	request := new(pkg.Request)
 	request.Url = "https://chinese.aljazeera.net/wp-content/uploads/2023/03/1-126.jpg"
 	request.Extra = &ExtraTest{
@@ -106,7 +107,8 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	}
 	baseSpider.Name = "test"
 	baseSpider.AddOkHttpCodes(204)
-	baseSpider.SetMiddleware(middlewares.NewImageMiddleware(logger), 3)
+	baseSpider.SetMiddleware(middlewares.NewImageMiddleware(logger), 111)
+	baseSpider.Stats = &stats.ImageStats{}
 	spider = &Spider{
 		BaseSpider: baseSpider,
 	}

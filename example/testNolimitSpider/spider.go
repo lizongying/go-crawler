@@ -15,7 +15,6 @@ import (
 
 type Spider struct {
 	*spider.BaseSpider
-	host string
 
 	collectionTest string
 	fileNameTest   string
@@ -41,7 +40,7 @@ func (s *Spider) RequestNoLimitSync(ctx context.Context, request *pkg.Request) (
 		return
 	}
 	requestNext := new(pkg.Request)
-	requestNext.Url = fmt.Sprintf(s.host, "no-limit")
+	requestNext.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), "/no-limit")
 	requestNext.Extra = &ExtraNoLimit{
 		Count: extra.Count + 1,
 	}
@@ -62,7 +61,7 @@ func (s *Spider) ResponseNoLimit(_ context.Context, response *pkg.Response) (err
 		return
 	}
 	requestNext := new(pkg.Request)
-	requestNext.Url = fmt.Sprintf(s.host, "no-limit")
+	requestNext.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), "/no-limit")
 	requestNext.Extra = &ExtraNoLimit{
 		Count: extra.Count + 1,
 	}
@@ -184,9 +183,9 @@ func (s *Spider) ResponseJsonl(_ context.Context, response *pkg.Response) (err e
 	return
 }
 
-func (s *Spider) TestNoLimitSync(_ context.Context) (err error) {
+func (s *Spider) TestNoLimitSync(_ context.Context, _ string) (err error) {
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf(s.host, "no-limit")
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), "/no-limit")
 	request.Extra = &ExtraNoLimit{}
 	err = s.RequestNoLimitSync(nil, request)
 	if err != nil {
@@ -195,9 +194,9 @@ func (s *Spider) TestNoLimitSync(_ context.Context) (err error) {
 	return
 }
 
-func (s *Spider) TestNoLimit(_ context.Context) (err error) {
+func (s *Spider) TestNoLimit(_ context.Context, _ string) (err error) {
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf(s.host, "no-limit")
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), "/no-limit")
 	request.Extra = &ExtraNoLimit{}
 	request.CallBack = s.ResponseNoLimit
 	err = s.YieldRequest(request)
@@ -207,12 +206,12 @@ func (s *Spider) TestNoLimit(_ context.Context) (err error) {
 	return
 }
 
-func (s *Spider) TestOk(_ context.Context) (err error) {
+func (s *Spider) TestOk(_ context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
 		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
 	}
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf(s.host, httpServer.UrlOk)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), httpServer.UrlOk)
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ResponseOk
 	err = s.YieldRequest(request)
@@ -222,12 +221,12 @@ func (s *Spider) TestOk(_ context.Context) (err error) {
 	return
 }
 
-func (s *Spider) TestCsv(_ context.Context) (err error) {
+func (s *Spider) TestCsv(_ context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
 		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
 	}
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf(s.host, httpServer.UrlOk)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), httpServer.UrlOk)
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ResponseCsv
 	err = s.YieldRequest(request)
@@ -237,12 +236,12 @@ func (s *Spider) TestCsv(_ context.Context) (err error) {
 	return
 }
 
-func (s *Spider) TestJsonl(_ context.Context) (err error) {
+func (s *Spider) TestJsonl(_ context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
 		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
 	}
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf(s.host, httpServer.UrlOk)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), httpServer.UrlOk)
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ResponseJsonl
 	err = s.YieldRequest(request)
@@ -266,7 +265,6 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 
 	spider = &Spider{
 		BaseSpider:     baseSpider,
-		host:           "http://127.0.0.1:8081/%s",
 		collectionTest: "test",
 		fileNameTest:   "test",
 	}

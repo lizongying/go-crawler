@@ -20,6 +20,7 @@ type CsvMiddleware struct {
 
 	spider pkg.Spider
 	files  sync.Map
+	stats  pkg.Stats
 }
 
 func (m *CsvMiddleware) GetName() string {
@@ -28,6 +29,7 @@ func (m *CsvMiddleware) GetName() string {
 
 func (m *CsvMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
+	m.stats = spider.GetStats()
 	return
 }
 
@@ -42,6 +44,15 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
+		m.stats.IncItemError()
+		err = c.NextItem()
+		return
+	}
+
+	if item.FileName == "" {
+		err = errors.New("fileName is empty")
+		m.logger.Error(err)
+		m.stats.IncItemError()
 		err = c.NextItem()
 		return
 	}
@@ -50,6 +61,7 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
+		m.stats.IncItemError()
 		err = c.NextItem()
 		return
 	}
@@ -68,6 +80,7 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			err = os.MkdirAll(filepath.Dir(filename), 0744)
 			if err != nil {
 				m.logger.Error(err)
+				m.stats.IncItemError()
 				err = c.NextItem()
 				return
 			}
@@ -76,6 +89,7 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			file, err = os.Create(filename)
 			if err != nil {
 				m.logger.Error(err)
+				m.stats.IncItemError()
 				err = c.NextItem()
 				return
 			}
@@ -84,6 +98,8 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			file, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 			if err != nil {
 				m.logger.Error(err)
+				m.stats.IncItemError()
+				err = c.NextItem()
 				return
 			}
 		}
@@ -122,10 +138,12 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	_, err = file.WriteString(fmt.Sprintf("%s\n", strings.Join(lines, ",")))
 	if err != nil {
 		m.logger.Error(err)
+		m.stats.IncItemError()
 		err = c.NextItem()
 		return err
 	}
 
+	m.stats.IncItemSuccess()
 	err = c.NextItem()
 	return
 }

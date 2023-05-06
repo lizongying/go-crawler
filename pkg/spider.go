@@ -3,14 +3,12 @@ package pkg
 import (
 	"context"
 	"net/url"
-	"sync"
 	"time"
 )
 
 type SpiderInfo struct {
-	Mode  string
-	Name  string
-	Stats sync.Map
+	Mode string
+	Name string
 
 	Concurrency   int
 	Interval      time.Duration
@@ -20,6 +18,7 @@ type SpiderInfo struct {
 
 type Spider interface {
 	GetInfo() *SpiderInfo
+	GetStats() Stats
 	SetLogger(logger Logger)
 	SetSpider(spider Spider)
 	Start(ctx context.Context) error

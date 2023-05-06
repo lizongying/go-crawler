@@ -2,12 +2,14 @@ package httpServer
 
 import (
 	"context"
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"go.uber.org/fx"
 	"net"
 	"net/http"
+	"strings"
 )
 
 const defaultAddr = ":8081"
@@ -43,6 +45,14 @@ func (h *HttpServer) AddRoutes(routes ...pkg.Route) {
 		mux.Handle(route.Pattern(), route)
 	}
 	h.srv.Handler = mux
+}
+
+func (h *HttpServer) GetHost() (host string) {
+	host = h.srv.Addr
+	if !strings.Contains(host, "http://") && !strings.Contains(host, "https://") {
+		host = fmt.Sprintf("http://%s", host)
+	}
+	return
 }
 
 func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger *logger.Logger) (httpServer *HttpServer) {

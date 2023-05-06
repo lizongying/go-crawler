@@ -13,6 +13,7 @@ type HttpMiddleware struct {
 	httpClient *httpClient.HttpClient
 	logger     *logger.Logger
 	spider     pkg.Spider
+	stats      pkg.Stats
 }
 
 func (m *HttpMiddleware) GetName() string {
@@ -21,6 +22,7 @@ func (m *HttpMiddleware) GetName() string {
 
 func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
+	m.stats = spider.GetStats()
 	return
 }
 
@@ -33,6 +35,7 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 	err = m.httpClient.BuildRequest(ctx, r)
 	if err != nil {
 		m.logger.Error(err)
+		m.stats.IncRequestError()
 		return
 	}
 
@@ -40,15 +43,18 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 	if !ok {
 		err = errors.New("it's not a allowed domain")
 		m.logger.Error(err)
+		m.stats.IncRequestError()
 		return
 	}
 
 	c.Response, err = m.httpClient.BuildResponse(ctx, r)
 	if err != nil {
 		m.logger.Error(err)
+		m.stats.IncRequestError()
 		return
 	}
 
+	m.stats.IncRequestSuccess()
 	err = c.FirstResponse()
 	return
 }

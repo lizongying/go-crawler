@@ -11,6 +11,7 @@ type FilterMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger *logger.Logger
 	info   *pkg.SpiderInfo
+	stats  pkg.Stats
 	ids    sync.Map
 }
 
@@ -20,19 +21,13 @@ func (m *FilterMiddleware) GetName() string {
 
 func (m *FilterMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.info = spider.GetInfo()
+	m.stats = spider.GetStats()
 	return
 }
 
 func (m *FilterMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 	r := c.Request
 	m.logger.DebugF("request: %+v", r)
-
-	filterBefore, ok := m.info.Stats.Load("filter_before")
-	if ok {
-		filterBeforeInt := filterBefore.(int)
-		filterBeforeInt++
-		m.info.Stats.Store("filter_before", filterBeforeInt)
-	}
 
 	if r.SkipFilter {
 		m.logger.Debug("SkipFilter")
@@ -46,9 +41,10 @@ func (m *FilterMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		return
 	}
 
-	if _, ok = m.ids.Load(r.UniqueKey); ok {
+	if _, ok := m.ids.Load(r.UniqueKey); ok {
 		err = pkg.ErrIgnoreRequest
 		m.logger.InfoF("%s in filter", r.UniqueKey)
+		m.stats.IncRequestIgnore()
 		return
 	}
 

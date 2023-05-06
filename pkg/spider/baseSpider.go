@@ -11,6 +11,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/httpServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
+	pkg2 "github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/time/rate"
@@ -41,12 +42,14 @@ const defaultRequestRetryMaxTimes = 3
 type BaseSpider struct {
 	*pkg.SpiderInfo
 	spider pkg.Spider
+	Stats  pkg.Stats
 
 	MongoDb    *mongo.Database
 	Logger     pkg.Logger
 	httpClient *httpClient.HttpClient
 
 	startFunc             string
+	args                  string
 	itemConcurrency       int
 	itemConcurrencyNew    int
 	itemConcurrencyChan   chan struct{}
@@ -76,6 +79,10 @@ func (s *BaseSpider) SetSpider(spider pkg.Spider) {
 
 func (s *BaseSpider) GetInfo() *pkg.SpiderInfo {
 	return s.SpiderInfo
+}
+
+func (s *BaseSpider) GetStats() pkg.Stats {
+	return s.Stats
 }
 
 func (s *BaseSpider) GetDevServer() pkg.DevServer {
@@ -165,6 +172,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 
 	params := []reflect.Value{
 		reflect.ValueOf(ctx),
+		reflect.ValueOf(s.args),
 	}
 	caller := reflect.ValueOf(s.spider).MethodByName(s.startFunc)
 	if !caller.IsValid() {
@@ -248,8 +256,10 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 			RetryMaxTimes: retryMaxTimes,
 			Timeout:       timeout,
 		},
+		Stats:       &pkg2.Stats{},
 		okHttpCodes: okHttpCodes,
 		startFunc:   cli.StartFunc,
+		args:        cli.Args,
 		MongoDb:     mongoDb,
 		Logger:      logger,
 		httpClient:  httpClient,
@@ -266,7 +276,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	}
 	spider.Mode = cli.Mode
 
-	spider.SetMiddleware(middlewares.NewRecorderMiddleware(logger), 100)
+	spider.SetMiddleware(middlewares.NewStatsMiddleware(logger), 100)
 	spider.SetMiddleware(middlewares.NewFilterMiddleware(logger), 110)
 	spider.SetMiddleware(middlewares.NewHttpMiddleware(logger, httpClient), 120)
 	spider.SetMiddleware(middlewares.NewRetryMiddleware(logger), 130)

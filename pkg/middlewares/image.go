@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/logger"
@@ -15,10 +16,19 @@ import (
 type ImageMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger *logger.Logger
+
+	spider pkg.Spider
+	stats  pkg.StatsWithImage
 }
 
 func (m *ImageMiddleware) GetName() string {
 	return "image"
+}
+
+func (m *ImageMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
+	m.spider = spider
+	m.stats, _ = spider.GetStats().(pkg.StatsWithImage)
+	return
 }
 
 func (m *ImageMiddleware) ProcessResponse(c *pkg.Context) (err error) {
@@ -45,6 +55,9 @@ func (m *ImageMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 		extra.SetExtension(name)
 		extra.SetWidth(rect.Dx())
 		extra.SetHeight(rect.Dy())
+		if m.stats != nil {
+			m.stats.IncImageTotal()
+		}
 	}
 
 	err = c.NextResponse()
