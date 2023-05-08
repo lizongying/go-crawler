@@ -48,8 +48,10 @@ func (s *Spider) RequestImages(ctx context.Context, request *pkg.Request) (err e
 	for i := 0; i < 20; i++ {
 		item := pkg.ItemMongo{
 			Collection: "test",
-			Id:         i,
-			Data:       extra,
+			ItemUnimplemented: pkg.ItemUnimplemented{
+				Id:   i,
+				Data: extra,
+			},
 		}
 		_ = s.YieldItem(&item)
 	}

@@ -322,11 +322,13 @@ func (s *Spider) ParseVideos(ctx context.Context, response *pkg.Response) (err e
 		Keyword:     extra.KeyWord,
 	}
 	item := pkg.ItemMongo{
-		Collection: s.collectionYoutubeUser,
-		Id:         extra.Id,
-		UniqueKey:  extra.Id,
 		Update:     true,
-		Data:       &data,
+		Collection: s.collectionYoutubeUser,
+		ItemUnimplemented: pkg.ItemUnimplemented{
+			Id:        extra.Id,
+			UniqueKey: extra.Id,
+			Data:      &data,
+		},
 	}
 	err = s.YieldItem(&item)
 	if err != nil {
@@ -475,8 +477,10 @@ func (s *Spider) RequestUserApi(ctx context.Context, request *pkg.Request) (err 
 	}
 	item := pkg.ItemMongo{
 		Collection: s.collectionYoutubeUser,
-		Id:         data.Id,
-		Data:       &data,
+		ItemUnimplemented: pkg.ItemUnimplemented{
+			Id:   data.Id,
+			Data: &data,
+		},
 	}
 	err = s.YieldItem(&item)
 	if err != nil {

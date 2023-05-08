@@ -62,8 +62,8 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		return
 	}
 
-	refType := reflect.TypeOf(data)
-	refValue := reflect.ValueOf(data)
+	refType := reflect.TypeOf(data).Elem()
+	refValue := reflect.ValueOf(data).Elem()
 
 	var lines []string
 	var columns []string

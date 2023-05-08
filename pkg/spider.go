@@ -40,7 +40,9 @@ type Spider interface {
 	IsAllowedDomain(*url.URL) bool
 	YieldRequest(*Request) error
 	YieldItem(Item) error
-	GetDevServer() DevServer
+	RunDevServer() error
+	GetDevServerHost() string
+	AddDevServerRoutes(routes ...Route) Spider
 	AddOkHttpCodes(httpCodes ...int) Spider
 	GetOkHttpCodes() []int
 }

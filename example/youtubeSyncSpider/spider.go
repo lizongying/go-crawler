@@ -336,9 +336,11 @@ func (s *Spider) RequestVideos(ctx context.Context, request *pkg.Request) (err e
 	}
 	item := pkg.ItemMongo{
 		Collection: s.collectionYoutubeUser,
-		UniqueKey:  extra.Id,
-		Id:         extra.Id,
-		Data:       &data,
+		ItemUnimplemented: pkg.ItemUnimplemented{
+			UniqueKey: extra.Id,
+			Id:        extra.Id,
+			Data:      &data,
+		},
 	}
 	err = s.YieldItem(&item)
 	if err != nil {
@@ -487,9 +489,11 @@ func (s *Spider) RequestUserApi(ctx context.Context, request *pkg.Request) (err 
 	}
 	item := pkg.ItemMongo{
 		Collection: s.collectionYoutubeUser,
-		UniqueKey:  extra.Id,
-		Id:         data.Id,
-		Data:       &data,
+		ItemUnimplemented: pkg.ItemUnimplemented{
+			UniqueKey: extra.Id,
+			Id:        data.Id,
+			Data:      &data,
+		},
 	}
 	err = s.YieldItem(&item)
 	if err != nil {

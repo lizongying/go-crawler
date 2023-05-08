@@ -1,4 +1,4 @@
-package httpServer
+package devServer
 
 import (
 	"context"
@@ -17,9 +17,13 @@ const defaultAddr = ":8081"
 type HttpServer struct {
 	srv    *http.Server
 	logger *logger.Logger
+
+	mux    *http.ServeMux
+	routes map[string]struct{}
 }
 
 func (h *HttpServer) Run() (err error) {
+	h.srv.Handler = h.mux
 	ln, err := net.Listen("tcp", h.srv.Addr)
 	if err != nil {
 		h.logger.Error(err)
@@ -40,11 +44,17 @@ func (h *HttpServer) Run() (err error) {
 }
 
 func (h *HttpServer) AddRoutes(routes ...pkg.Route) {
-	mux := http.NewServeMux()
 	for _, route := range routes {
-		mux.Handle(route.Pattern(), route)
+		h.mux.Handle(route.Pattern(), route)
+		h.routes[route.Pattern()] = struct{}{}
 	}
-	h.srv.Handler = mux
+}
+
+func (h *HttpServer) GetRoutes() (routes []string) {
+	for route := range h.routes {
+		routes = append(routes, route)
+	}
+	return
 }
 
 func (h *HttpServer) GetHost() (host string) {
@@ -64,6 +74,8 @@ func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger *logger.Logger
 	httpServer = &HttpServer{
 		srv:    srv,
 		logger: logger,
+		mux:    http.NewServeMux(),
+		routes: make(map[string]struct{}),
 	}
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

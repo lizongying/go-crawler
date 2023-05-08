@@ -8,8 +8,8 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
-	"github.com/lizongying/go-crawler/pkg/httpServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	pkg2 "github.com/lizongying/go-crawler/pkg/stats"
@@ -66,7 +66,7 @@ type BaseSpider struct {
 	allowedDomains        map[string]struct{}
 	middlewares           map[int]pkg.Middleware
 
-	devServer *httpServer.HttpServer
+	devServer *devServer.HttpServer
 
 	okHttpCodes []int
 }
@@ -87,8 +87,24 @@ func (s *BaseSpider) GetStats() pkg.Stats {
 	return s.Stats
 }
 
-func (s *BaseSpider) GetDevServer() pkg.DevServer {
-	return s.devServer
+func (s *BaseSpider) RunDevServer() (err error) {
+	err = s.devServer.Run()
+	if err != nil {
+		s.Logger.Error(err)
+		return
+	}
+
+	return
+}
+
+func (s *BaseSpider) AddDevServerRoutes(routes ...pkg.Route) pkg.Spider {
+	s.devServer.AddRoutes(routes...)
+	return s
+}
+
+func (s *BaseSpider) GetDevServerHost() (host string) {
+	host = s.devServer.GetHost()
+	return
 }
 
 func (s *BaseSpider) GetMongoDb() *mongo.Database {
@@ -223,7 +239,7 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, mysql *sql.DB, httpClient *httpClient.HttpClient, server *httpServer.HttpServer) (spider *BaseSpider, err error) {
+func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, mysql *sql.DB, httpClient *httpClient.HttpClient, server *devServer.HttpServer) (spider *BaseSpider, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	concurrency := defaultRequestConcurrency

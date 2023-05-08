@@ -3,7 +3,8 @@ module github.com/lizongying/go-crawler
 go 1.20
 
 require (
-	github.com/lizongying/go-css v0.0.0-20230302074707-40988e39770f
+	github.com/go-sql-driver/mysql v1.7.1
+	github.com/lizongying/go-query v0.0.0-20230426070941-98a11b3d6cf7
 	github.com/lizongying/go-xpath v0.0.0-20230508033725-6786fb94ccc1
 	github.com/pkg/errors v0.9.1
 	go.mongodb.org/mongo-driver v1.11.3
@@ -19,12 +20,10 @@ require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/antchfx/htmlquery v1.3.0 // indirect
 	github.com/antchfx/xpath v1.2.4 // indirect
-	github.com/go-sql-driver/mysql v1.7.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/lizongying/go-query v0.0.0-20230426070941-98a11b3d6cf7 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect

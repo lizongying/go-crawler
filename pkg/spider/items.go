@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"reflect"
 	"time"
 )
 
@@ -56,8 +57,15 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 }
 
 func (s *BaseSpider) YieldItem(item pkg.Item) (err error) {
-	if item.GetData() == nil {
+	data := item.GetData()
+	if data == nil {
 		err = errors.New("nil data")
+		s.Logger.Error(err)
+		return
+	}
+
+	if reflect.ValueOf(data).Kind() != reflect.Ptr {
+		err = errors.New("data should be ptr")
 		s.Logger.Error(err)
 		return
 	}

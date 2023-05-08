@@ -7,8 +7,8 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/db"
+	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
-	"github.com/lizongying/go-crawler/pkg/httpServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"go.uber.org/fx"
@@ -29,15 +29,14 @@ func NewApp(f func(*spider.BaseSpider, *logger.Logger) (pkg.Spider, error)) (app
 				logger.NewLogger,
 				httpClient.NewHttpClient,
 				spider.NewBaseSpider,
-				httpServer.NewHttpServer,
+				devServer.NewHttpServer,
 				f,
 			),
 			fx.Invoke(func(logger *logger.Logger, cli *cli.Cli, spider pkg.Spider, shutdowner fx.Shutdowner) {
 				ctx := context.Background()
 
 				if cli.Mode == "dev" {
-					devServer := spider.GetDevServer()
-					err := devServer.Run()
+					err := spider.RunDevServer()
 					if err != nil {
 						logger.Error(err)
 						_ = shutdowner.Shutdown()

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/go-sql-driver/mysql"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"reflect"
@@ -75,8 +76,8 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	refType := reflect.TypeOf(item.Data)
-	refValue := reflect.ValueOf(item.Data)
+	refType := reflect.TypeOf(item.Data).Elem()
+	refValue := reflect.ValueOf(item.Data).Elem()
 	var columns []string
 	var values []any
 	for i := 0; i < refType.NumField(); i++ {
@@ -99,7 +100,15 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	}
 	res, err := stmt.ExecContext(ctx, values...)
 	if err != nil {
-		if item.Update && !reflect.ValueOf(item.Id).IsZero() {
+		e, o := err.(*mysql.MySQLError)
+		if !o {
+			m.logger.Error(e)
+			m.stats.IncItemError()
+			err = c.NextItem()
+			return
+		}
+
+		if item.Update && !reflect.ValueOf(item.Id).IsZero() && e.Number == 1062 {
 			s = fmt.Sprintf(`UPDATE %s SET %s WHERE id=?`, item.Table, strings.Join(columns, ","))
 			values = append(values, item.Id)
 			stmt, err = m.mysql.PrepareContext(ctx, s)

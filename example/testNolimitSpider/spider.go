@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	devServer2 "github.com/lizongying/go-crawler/internal/devServer"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/httpServer"
+	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/spider"
@@ -46,12 +47,12 @@ func (s *Spider) ParseMysql(_ context.Context, response *pkg.Response) (err erro
 		ItemUnimplemented: pkg.ItemUnimplemented{
 			UniqueKey: "1",
 			Id:        3,
-			Data: DataMysql{
-				//Id: 3,
-				A: 0,
-				B: 2,
-				C: "",
-				D: "2",
+			Data: &DataMysql{
+				Id: 3,
+				A:  0,
+				B:  2,
+				C:  "",
+				D:  "2",
 			},
 		},
 	})
@@ -86,7 +87,7 @@ func (s *Spider) ParseOk(_ context.Context, response *pkg.Response) (err error) 
 		ItemUnimplemented: pkg.ItemUnimplemented{
 			UniqueKey: "1",
 			Id:        extra.Count,
-			Data: DataOk{
+			Data: &DataOk{
 				Id:    fmt.Sprintf(`%d,"%d"`, extra.Count, extra.Count),
 				Count: extra.Count,
 			},
@@ -122,7 +123,7 @@ func (s *Spider) ParseCsv(_ context.Context, response *pkg.Response) (err error)
 		ItemUnimplemented: pkg.ItemUnimplemented{
 			UniqueKey: "1",
 			Id:        extra.Count,
-			Data: DataOk{
+			Data: &DataOk{
 				Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
 				Count: extra.Count,
 			},
@@ -158,7 +159,7 @@ func (s *Spider) ParseJsonl(_ context.Context, response *pkg.Response) (err erro
 		ItemUnimplemented: pkg.ItemUnimplemented{
 			UniqueKey: "1",
 			Id:        extra.Count,
-			Data: DataOk{
+			Data: &DataOk{
 				Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
 				Count: extra.Count,
 			},
@@ -172,10 +173,10 @@ func (s *Spider) ParseJsonl(_ context.Context, response *pkg.Response) (err erro
 
 func (s *Spider) TestMysql(_ context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
-		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
+		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
 	}
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), httpServer.UrlOk)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ParseMysql
 	err = s.YieldRequest(request)
@@ -187,10 +188,10 @@ func (s *Spider) TestMysql(_ context.Context, _ string) (err error) {
 
 func (s *Spider) TestOk(_ context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
-		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
+		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
 	}
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), httpServer.UrlOk)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ParseOk
 	err = s.YieldRequest(request)
@@ -202,10 +203,10 @@ func (s *Spider) TestOk(_ context.Context, _ string) (err error) {
 
 func (s *Spider) TestCsv(_ context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
-		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
+		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
 	}
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), httpServer.UrlOk)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ParseCsv
 	err = s.YieldRequest(request)
@@ -217,16 +218,22 @@ func (s *Spider) TestCsv(_ context.Context, _ string) (err error) {
 
 func (s *Spider) TestJsonl(_ context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
-		s.GetDevServer().AddRoutes(httpServer.NewOkHandler(s.Logger))
+		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
 	}
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServer().GetHost(), httpServer.UrlOk)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ParseJsonl
 	err = s.YieldRequest(request)
 	if err != nil {
 		s.Logger.Error(err)
 	}
+	return
+}
+
+func (s *Spider) Stop(_ context.Context) (err error) {
+	//err = pkg.DontStopErr
+
 	return
 }
 
@@ -237,6 +244,9 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 		return
 	}
 	baseSpider.Name = "test"
+	if baseSpider.Mode == "dev" {
+		baseSpider.AddDevServerRoutes(devServer2.NewCustomHandler(logger))
+	}
 	baseSpider.
 		AddOkHttpCodes(201).
 		//SetMiddleware(middlewares.NewMongoMiddleware(logger, baseSpider.MongoDb), 141).
