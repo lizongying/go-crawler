@@ -73,13 +73,14 @@ func (s *BaseSpider) YieldItem(item pkg.Item) (err error) {
 	return
 }
 
-func (s *BaseSpider) SetItemDelay(itemDelay time.Duration) {
+func (s *BaseSpider) SetItemDelay(itemDelay time.Duration) (spider pkg.Spider) {
 	s.itemDelay = itemDelay
+	return s
 }
 
-func (s *BaseSpider) SetItemConcurrency(itemConcurrency int) {
+func (s *BaseSpider) SetItemConcurrency(itemConcurrency int) pkg.Spider {
 	if s.itemConcurrency == itemConcurrency {
-		return
+		return s
 	}
 
 	if itemConcurrency < 1 {
@@ -87,4 +88,5 @@ func (s *BaseSpider) SetItemConcurrency(itemConcurrency int) {
 	}
 
 	s.itemConcurrencyNew = itemConcurrency
+	return s
 }

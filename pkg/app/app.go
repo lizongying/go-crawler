@@ -6,10 +6,10 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/db"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
 	"github.com/lizongying/go-crawler/pkg/httpServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
-	"github.com/lizongying/go-crawler/pkg/mongodb"
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"go.uber.org/fx"
 )
@@ -24,7 +24,8 @@ func NewApp(f func(*spider.BaseSpider, *logger.Logger) (pkg.Spider, error)) (app
 			fx.Provide(
 				cli.NewCli,
 				config.NewConfig,
-				mongodb.NewMongoDb,
+				db.NewMongoDb,
+				db.NewMysql,
 				logger.NewLogger,
 				httpClient.NewHttpClient,
 				spider.NewBaseSpider,

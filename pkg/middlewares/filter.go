@@ -15,10 +15,6 @@ type FilterMiddleware struct {
 	ids    sync.Map
 }
 
-func (m *FilterMiddleware) GetName() string {
-	return "filter"
-}
-
 func (m *FilterMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.info = spider.GetInfo()
 	m.stats = spider.GetStats()

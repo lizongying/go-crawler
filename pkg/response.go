@@ -2,8 +2,8 @@ package pkg
 
 import (
 	"errors"
-	query "github.com/lizongying/go-css/selector"
-	xpath "github.com/lizongying/go-xpath/selector"
+	"github.com/lizongying/go-query/query"
+	"github.com/lizongying/go-xpath/xpath"
 	"net/http"
 )
 

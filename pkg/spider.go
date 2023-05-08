@@ -30,16 +30,17 @@ type Spider interface {
 	CleanAllowedDomains()
 	GetMiddlewares() map[int]string
 	ReplaceMiddlewares(map[int]Middleware) error
-	SetMiddleware(Middleware, int)
+	SetMiddleware(Middleware, int) Spider
 	DelMiddleware(string)
 	CleanMiddlewares()
 	SortedMiddlewares() []Middleware
-	SetItemDelay(time.Duration)
-	SetItemConcurrency(int)
-	SetRequestRate(string, time.Duration, int)
+	SetItemDelay(time.Duration) Spider
+	SetItemConcurrency(int) Spider
+	SetRequestRate(string, time.Duration, int) Spider
 	IsAllowedDomain(*url.URL) bool
 	YieldRequest(*Request) error
 	YieldItem(Item) error
 	GetDevServer() DevServer
+	AddOkHttpCodes(httpCodes ...int) Spider
 	GetOkHttpCodes() []int
 }

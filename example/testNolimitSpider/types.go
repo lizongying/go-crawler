@@ -26,3 +26,10 @@ type DataOk struct {
 	Id    string `bson:"_id" json:"id"`
 	Count int    `bson:"count" json:"count"`
 }
+type DataMysql struct {
+	Id int    `column:"id"`
+	A  uint   `column:"a"`
+	B  uint32 `column:"b"`
+	C  string `column:"c"`
+	D  string `column:"d"`
+}

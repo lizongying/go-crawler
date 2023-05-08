@@ -2,6 +2,10 @@ mongo:
   example:
     uri: mongodb://127.0.0.1:27017
     database: crawler
+mysql:
+  example:
+    uri: root@tcp(127.0.0.1:3306)
+    database: crawler
 log:
   filename: /tmp/spider_{name}.log
   long_file: true

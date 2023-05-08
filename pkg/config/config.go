@@ -14,6 +14,12 @@ type Config struct {
 			Database string `yaml:"database" json:"-"`
 		} `yaml:"example" json:"-"`
 	} `yaml:"mongo" json:"-"`
+	Mysql struct {
+		Example struct {
+			Uri      string `yaml:"uri" json:"-"`
+			Database string `yaml:"database" json:"-"`
+		} `yaml:"example" json:"-"`
+	} `yaml:"mysql" json:"-"`
 	Log struct {
 		Filename string `yaml:"filename" json:"-"`
 		LongFile bool   `yaml:"long_file" json:"-"`

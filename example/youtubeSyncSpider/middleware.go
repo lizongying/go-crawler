@@ -23,10 +23,6 @@ type Middleware struct {
 	apiKey string
 }
 
-func (m *Middleware) GetName() string {
-	return "youtube"
-}
-
 func (m *Middleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
 	return

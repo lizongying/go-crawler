@@ -10,7 +10,6 @@ type MiddlewareOrder struct {
 }
 
 type Middleware interface {
-	GetName() string
 	SpiderStart(context.Context, Spider) error
 	ProcessRequest(*Context) error
 	ProcessResponse(*Context) error
@@ -19,10 +18,6 @@ type Middleware interface {
 }
 
 type UnimplementedMiddleware struct {
-}
-
-func (*UnimplementedMiddleware) GetName() (name string) {
-	return
 }
 
 func (*UnimplementedMiddleware) SpiderStart(context.Context, Spider) (err error) {

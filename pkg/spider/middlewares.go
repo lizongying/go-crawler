@@ -3,13 +3,14 @@ package spider
 import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"reflect"
 	"sort"
 )
 
 func (s *BaseSpider) GetMiddlewares() (middlewares map[int]string) {
 	middlewares = make(map[int]string)
 	for k, v := range s.middlewares {
-		middlewares[k] = v.GetName()
+		middlewares[k] = reflect.TypeOf(v).Elem().String()
 	}
 
 	return
@@ -19,12 +20,13 @@ func (s *BaseSpider) ReplaceMiddlewares(middlewares map[int]pkg.Middleware) (err
 	middlewaresNameMap := make(map[string]struct{})
 	middlewaresOrderMap := make(map[int]struct{})
 	for k, v := range middlewares {
-		if _, ok := middlewaresNameMap[v.GetName()]; ok {
+		name := reflect.TypeOf(v).Elem().String()
+		if _, ok := middlewaresNameMap[name]; ok {
 			err = errors.New("middleware name duplicate")
 			s.Logger.Error(err)
 			return
 		}
-		middlewaresNameMap[v.GetName()] = struct{}{}
+		middlewaresNameMap[name] = struct{}{}
 		if _, ok := middlewaresOrderMap[k]; ok {
 			err = errors.New("middleware order duplicate")
 			s.Logger.Error(err)
@@ -38,9 +40,10 @@ func (s *BaseSpider) ReplaceMiddlewares(middlewares map[int]pkg.Middleware) (err
 	return
 }
 
-func (s *BaseSpider) SetMiddleware(middleware pkg.Middleware, order int) {
+func (s *BaseSpider) SetMiddleware(middleware pkg.Middleware, order int) pkg.Spider {
+	name := reflect.TypeOf(middleware).Elem().String()
 	for k, v := range s.middlewares {
-		if v.GetName() == middleware.GetName() && k != order {
+		if reflect.TypeOf(v).Elem().String() == name && k != order {
 			delete(s.middlewares, k)
 			break
 		}
@@ -48,12 +51,12 @@ func (s *BaseSpider) SetMiddleware(middleware pkg.Middleware, order int) {
 
 	s.middlewares[order] = middleware
 
-	return
+	return s
 }
 
 func (s *BaseSpider) DelMiddleware(name string) {
 	for k, v := range s.middlewares {
-		if v.GetName() == name {
+		if reflect.TypeOf(v).Elem().String() == name {
 			delete(s.middlewares, k)
 			break
 		}

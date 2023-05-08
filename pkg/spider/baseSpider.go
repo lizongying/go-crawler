@@ -2,6 +2,7 @@ package spider
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
@@ -45,6 +46,7 @@ type BaseSpider struct {
 	Stats  pkg.Stats
 
 	MongoDb    *mongo.Database
+	Mysql      *sql.DB
 	Logger     pkg.Logger
 	httpClient *httpClient.HttpClient
 
@@ -93,14 +95,14 @@ func (s *BaseSpider) GetMongoDb() *mongo.Database {
 	return s.MongoDb
 }
 
-func (s *BaseSpider) AddOkHttpCodes(httpCodes ...int) {
+func (s *BaseSpider) AddOkHttpCodes(httpCodes ...int) pkg.Spider {
 	for _, v := range httpCodes {
 		if utils.InSlice(v, s.okHttpCodes) {
 			continue
 		}
 		s.okHttpCodes = append(s.okHttpCodes, v)
 	}
-	return
+	return s
 }
 
 func (s *BaseSpider) GetOkHttpCodes() (httpCodes []int) {
@@ -120,6 +122,8 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 		return
 	}
 	s.Logger.Info("name", s.Name)
+	s.Logger.Info("start func", s.startFunc)
+	s.Logger.Info("args", s.args)
 	s.Logger.Info("mode", s.Mode)
 	s.Logger.Info("allowedDomains", s.spider.GetAllowedDomains())
 	s.Logger.Info("middlewares", s.spider.GetMiddlewares())
@@ -193,7 +197,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 }
 
 func (s *BaseSpider) Stop(ctx context.Context) (err error) {
-	s.Logger.Info("Wait for stop")
+	s.Logger.Debug("Wait for stop")
 	defer func() {
 		s.Logger.Info("Stopped")
 	}()
@@ -219,7 +223,7 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, httpClient *httpClient.HttpClient, server *httpServer.HttpServer) (spider *BaseSpider, err error) {
+func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, mysql *sql.DB, httpClient *httpClient.HttpClient, server *httpServer.HttpServer) (spider *BaseSpider, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	concurrency := defaultRequestConcurrency
@@ -261,6 +265,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		startFunc:   cli.StartFunc,
 		args:        cli.Args,
 		MongoDb:     mongoDb,
+		Mysql:       mysql,
 		Logger:      logger,
 		httpClient:  httpClient,
 

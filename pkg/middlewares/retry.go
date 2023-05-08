@@ -16,10 +16,6 @@ type RetryMiddleware struct {
 	retryMaxTimes int
 }
 
-func (m *RetryMiddleware) GetName() string {
-	return "retry"
-}
-
 func (m *RetryMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
 	m.okHttpCodes = spider.GetOkHttpCodes()
@@ -46,11 +42,11 @@ func (m *RetryMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 		request.RetryTimes++
 
 		if request.RetryTimes > retryMaxTimes {
-			err = errors.New("RetryMaxTimes")
-			m.logger.Error(err, retryMaxTimes)
+			err = errors.New("retry max times")
+			m.logger.Error(request.UniqueKey, err, retryMaxTimes)
 			return
 		}
-		m.logger.Info("retry times", request.RetryTimes)
+		m.logger.Info(request.UniqueKey, "retry times", request.RetryTimes)
 		err = c.FirstRequest()
 		return
 	}

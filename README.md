@@ -1,6 +1,7 @@
 # go-crawler
 
 [go-crawler](https://github.com/lizongying/go-crawler)
+[document](https://pkg.go.dev/github.com/lizongying/go-crawler)
 
 ## Feature
 
@@ -15,12 +16,17 @@
     * filter:110
     * http:120
     * retry:130
-    * dump:140
+    * dump:140 在debug模式下打印item.data
     * csv
-    * dump 在debug模式下打印item.data
     * jsonlines
     * mongo
+    * mysql
 * 在配置文件中可以配置全局request参数，在具体request中可以覆盖此配置
+* 解析模块
+    * query选择器 [go-query](https://github.com/lizongying/go-query)
+    * xpath选择器 [go-xpath](https://github.com/lizongying/go-xpath)
+* 代理
+    * 可以自行搭建隧道代理 [go-proxy](https://github.com/lizongying/go-proxy)
 
 ## Usage
 
@@ -63,12 +69,12 @@ go run example/testNoLimitSpider/*.go -c dev.yml -f TestOk -m dev
 ## TODO
 
 * middlewares
-    * mysql
     * kafka
-    * ua
-    * browser
+    * device(browser ua)
     * robots
     * file
     * media
     * proxy
+    * random
+* cron
 

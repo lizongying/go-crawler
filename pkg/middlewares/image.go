@@ -21,10 +21,6 @@ type ImageMiddleware struct {
 	stats  pkg.StatsWithImage
 }
 
-func (m *ImageMiddleware) GetName() string {
-	return "image"
-}
-
 func (m *ImageMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
 	m.stats, _ = spider.GetStats().(pkg.StatsWithImage)

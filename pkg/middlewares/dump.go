@@ -16,10 +16,6 @@ type DumpMiddleware struct {
 	stats  pkg.Stats
 }
 
-func (m *DumpMiddleware) GetName() string {
-	return "dump"
-}
-
 func (m *DumpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
 	m.stats = spider.GetStats()

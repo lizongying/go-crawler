@@ -8,6 +8,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"reflect"
 	"time"
 )
 
@@ -20,10 +21,6 @@ type MongoMiddleware struct {
 	spider  pkg.Spider
 	info    *pkg.SpiderInfo
 	stats   pkg.Stats
-}
-
-func (m *MongoMiddleware) GetName() string {
-	return "mongo"
 }
 
 func (m *MongoMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
@@ -89,7 +86,7 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 
 	res, err := m.mongoDb.Collection(item.Collection).InsertOne(ctx, bs)
 	if err != nil {
-		if item.Update && mongo.IsDuplicateKeyError(err) {
+		if item.Update && !reflect.ValueOf(item.Id).IsZero() && mongo.IsDuplicateKeyError(err) {
 			_, err = m.mongoDb.Collection(item.Collection).UpdateOne(ctx, bson.M{"_id": item.Id}, bson.M{"$set": item.Data})
 			if err == nil {
 				m.logger.Info(item.Collection, "update success", item.Id)

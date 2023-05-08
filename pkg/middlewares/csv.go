@@ -23,10 +23,6 @@ type CsvMiddleware struct {
 	stats  pkg.Stats
 }
 
-func (m *CsvMiddleware) GetName() string {
-	return "csv"
-}
-
 func (m *CsvMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
 	m.stats = spider.GetStats()

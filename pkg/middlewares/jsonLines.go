@@ -21,10 +21,6 @@ type JsonLinesMiddleware struct {
 	stats  pkg.Stats
 }
 
-func (m *JsonLinesMiddleware) GetName() string {
-	return "jsonlines"
-}
-
 func (m *JsonLinesMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
 	m.stats = spider.GetStats()

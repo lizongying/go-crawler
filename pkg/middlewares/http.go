@@ -16,10 +16,6 @@ type HttpMiddleware struct {
 	stats      pkg.Stats
 }
 
-func (m *HttpMiddleware) GetName() string {
-	return "http"
-}
-
 func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
 	m.stats = spider.GetStats()
