@@ -30,7 +30,7 @@ func (m *JsonLinesMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) 
 func (m *JsonLinesMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	item, ok := c.Item.(*pkg.ItemJsonl)
 	if !ok {
-		m.logger.Warning("item not support jsonl")
+		m.logger.Warn("item not support jsonl")
 		err = c.NextItem()
 		return
 	}

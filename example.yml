@@ -6,6 +6,9 @@ mysql:
   example:
     uri: root@tcp(127.0.0.1:3306)
     database: crawler
+kafka:
+  example:
+    uri: localhost:9092
 log:
   filename: /tmp/spider_{name}.log
   long_file: true

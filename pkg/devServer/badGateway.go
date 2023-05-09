@@ -5,12 +5,14 @@ import (
 	"net/http"
 )
 
+const UrlBadGateway = "/bad-gateway"
+
 type BadGatewayHandler struct {
 	logger *logger.Logger
 }
 
 func (h *BadGatewayHandler) Pattern() string {
-	return "/bad-gateway"
+	return UrlBadGateway
 }
 
 func (h *BadGatewayHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {

@@ -32,7 +32,7 @@ func (m *CsvMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err e
 func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	item, ok := c.Item.(*pkg.ItemCsv)
 	if !ok {
-		m.logger.Warning("item not support csv")
+		m.logger.Warn("item not support csv")
 		err = c.NextItem()
 		return
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	pkg2 "github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/time/rate"
 	"log"
@@ -47,6 +48,7 @@ type BaseSpider struct {
 
 	MongoDb    *mongo.Database
 	Mysql      *sql.DB
+	Kafka      *kafka.Writer
 	Logger     pkg.Logger
 	httpClient *httpClient.HttpClient
 
@@ -239,7 +241,7 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, mysql *sql.DB, httpClient *httpClient.HttpClient, server *devServer.HttpServer) (spider *BaseSpider, err error) {
+func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, mysql *sql.DB, kafka *kafka.Writer, httpClient *httpClient.HttpClient, server *devServer.HttpServer) (spider *BaseSpider, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	concurrency := defaultRequestConcurrency
@@ -282,6 +284,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		args:        cli.Args,
 		MongoDb:     mongoDb,
 		Mysql:       mysql,
+		Kafka:       kafka,
 		Logger:      logger,
 		httpClient:  httpClient,
 

@@ -3,37 +3,37 @@ package middlewares
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"reflect"
 	"time"
 )
 
-type MongoMiddleware struct {
+type KafkaMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger *logger.Logger
 
-	mongoDb *mongo.Database
-	timeout time.Duration
-	spider  pkg.Spider
-	info    *pkg.SpiderInfo
-	stats   pkg.Stats
+	kafkaWriter *kafka.Writer
+	timeout     time.Duration
+	spider      pkg.Spider
+	info        *pkg.SpiderInfo
+	stats       pkg.Stats
 }
 
-func (m *MongoMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
+func (m *KafkaMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
 	m.info = spider.GetInfo()
 	m.stats = spider.GetStats()
 	return
 }
 
-func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
-	item, ok := c.Item.(*pkg.ItemMongo)
+func (m *KafkaMiddleware) ProcessItem(c *pkg.Context) (err error) {
+	item, ok := c.Item.(*pkg.ItemKafka)
 	if !ok {
-		m.logger.Warn("item not support mongo")
+		m.logger.Warn("item not support kafka")
 		err = c.NextItem()
 		return
 	}
@@ -46,8 +46,8 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		return
 	}
 
-	if item.Collection == "" {
-		err = errors.New("collection is empty")
+	if item.Topic == "" {
+		err = errors.New("topic is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
 		err = c.NextItem()
@@ -84,17 +84,16 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	res, err := m.mongoDb.Collection(item.Collection).InsertOne(ctx, bs)
-	if err != nil {
-		if item.Update && !reflect.ValueOf(item.Id).IsZero() && mongo.IsDuplicateKeyError(err) {
-			_, err = m.mongoDb.Collection(item.Collection).UpdateOne(ctx, bson.M{"_id": item.Id}, bson.M{"$set": item.Data})
-			if err == nil {
-				m.logger.Info(item.Collection, "update success", item.Id)
-			}
-		}
-	} else {
-		m.logger.Info(item.Collection, "insert success", res.InsertedID)
-	}
+	m.kafkaWriter.Topic = item.Topic
+	m.kafkaWriter.Logger = kafka.LoggerFunc(func(msg string, a ...interface{}) {
+		m.logger.Info(item.Topic, "insert success", a)
+	})
+	err = m.kafkaWriter.WriteMessages(ctx,
+		kafka.Message{
+			Key:   []byte(fmt.Sprint(item.Id)),
+			Value: bs,
+		},
+	)
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncItemError()
@@ -107,11 +106,11 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	return
 }
 
-func NewMongoMiddleware(logger *logger.Logger, mongoDb *mongo.Database) (m pkg.Middleware) {
-	m = &MongoMiddleware{
-		logger:  logger,
-		mongoDb: mongoDb,
-		timeout: time.Minute,
+func NewKafkaMiddleware(logger *logger.Logger, kafkaWriter *kafka.Writer) (m pkg.Middleware) {
+	m = &KafkaMiddleware{
+		logger:      logger,
+		kafkaWriter: kafkaWriter,
+		timeout:     time.Minute,
 	}
 	return
 }

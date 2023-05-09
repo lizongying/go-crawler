@@ -10,7 +10,7 @@ func (s *BaseSpider) IsAllowedDomain(Url *url.URL) (ok bool) {
 	for domain := range s.allowedDomains {
 		matched, err := filepath.Match(domain, Url.Hostname())
 		if err != nil {
-			s.Logger.Warning(err)
+			s.Logger.Warn(err)
 			continue
 		}
 		if matched {

@@ -7,7 +7,7 @@
 
 * 为了方便开发调试，增加了本地httpserver，在<code>-m dev</code>模式下会默认启用。可以自定义route，仅需要实现<code>
   pkg.Route</code>，然后在spider中通过<code>AddDevServerRoutes(...pkg.Route)</code>注册到devServer即可。
-* 编写middleware的时候需要注意，name不能重复。注册的时候order不能重复。注意不要忘记<code>nextRequest()</code>/<code>
+* 编写middleware的时候需要注意，注册的时候order不能重复。注意不要忘记<code>nextRequest()</code>/<code>
   nextResponse()/nextItem()</code>
 * 去掉pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
@@ -21,6 +21,7 @@
     * jsonlines
     * mongo
     * mysql
+    * kafka
 * 在配置文件中可以配置全局request参数，在具体request中可以覆盖此配置
 * 解析模块
     * query选择器 [go-query](https://github.com/lizongying/go-query)
@@ -69,12 +70,13 @@ go run example/testNoLimitSpider/*.go -c dev.yml -f TestOk -m dev
 ## TODO
 
 * middlewares
-    * kafka
     * device(browser ua)
     * robots
     * file
     * media
     * proxy
     * random
+
+* once
 * cron
 

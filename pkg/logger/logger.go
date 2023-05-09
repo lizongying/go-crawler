@@ -2,6 +2,7 @@ package logger
 
 import (
 	"fmt"
+	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"io"
@@ -17,26 +18,17 @@ var (
 	name string
 )
 
-type Level int
-
-const (
-	LevelDebug Level = iota
-	LevelInfo
-	LevelWarn
-	LevelError
-)
-
 type Logger struct {
-	longFile      bool
-	level         Level
-	loggerDebug   *log.Logger
-	loggerInfo    *log.Logger
-	loggerWarning *log.Logger
-	loggerError   *log.Logger
+	longFile    bool
+	level       pkg.Level
+	loggerDebug *log.Logger
+	loggerInfo  *log.Logger
+	loggerWarn  *log.Logger
+	loggerError *log.Logger
 }
 
 func (l *Logger) Debug(v ...any) {
-	if l.level > LevelDebug {
+	if l.level > pkg.LevelDebug {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
@@ -48,7 +40,7 @@ func (l *Logger) Debug(v ...any) {
 }
 
 func (l *Logger) DebugF(format string, v ...any) {
-	if l.level > LevelDebug {
+	if l.level > pkg.LevelDebug {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
@@ -60,7 +52,7 @@ func (l *Logger) DebugF(format string, v ...any) {
 }
 
 func (l *Logger) Info(v ...any) {
-	if l.level > LevelInfo {
+	if l.level > pkg.LevelInfo {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
@@ -72,7 +64,7 @@ func (l *Logger) Info(v ...any) {
 }
 
 func (l *Logger) InfoF(format string, v ...any) {
-	if l.level > LevelInfo {
+	if l.level > pkg.LevelInfo {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
@@ -83,8 +75,8 @@ func (l *Logger) InfoF(format string, v ...any) {
 	l.loggerInfo.Printf(format, v...)
 }
 
-func (l *Logger) Warning(v ...any) {
-	if l.level > LevelWarn {
+func (l *Logger) Warn(v ...any) {
+	if l.level > pkg.LevelWarn {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
@@ -92,11 +84,11 @@ func (l *Logger) Warning(v ...any) {
 		file = file[strings.LastIndex(file, "/")+1:]
 	}
 	v = append([]any{strings.Join([]string{file, strconv.Itoa(line)}, ":")}, v...)
-	l.loggerWarning.Println(v...)
+	l.loggerWarn.Println(v...)
 }
 
-func (l *Logger) WarningF(format string, v ...any) {
-	if l.level > LevelWarn {
+func (l *Logger) WarnF(format string, v ...any) {
+	if l.level > pkg.LevelWarn {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
@@ -104,11 +96,11 @@ func (l *Logger) WarningF(format string, v ...any) {
 		file = file[strings.LastIndex(file, "/")+1:]
 	}
 	format = fmt.Sprintf("%s %s", strings.Join([]string{file, strconv.Itoa(line)}, ":"), format)
-	l.loggerWarning.Printf(format, v...)
+	l.loggerWarn.Printf(format, v...)
 }
 
 func (l *Logger) Error(v ...any) {
-	if l.level > LevelError {
+	if l.level > pkg.LevelError {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
@@ -120,7 +112,7 @@ func (l *Logger) Error(v ...any) {
 }
 
 func (l *Logger) ErrorF(format string, v ...any) {
-	if l.level > LevelError {
+	if l.level > pkg.LevelError {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
@@ -133,15 +125,12 @@ func (l *Logger) ErrorF(format string, v ...any) {
 
 func NewLogger(config *config.Config) (logger *Logger, err error) {
 	levelStr := config.Log.Level
-	level := LevelInfo
+	level := pkg.LevelInfo
 	if levelStr != "" {
-		var LevelMap = map[string]Level{
-			"DEBUG": LevelDebug,
-			"INFO":  LevelInfo,
-			"WARN":  LevelWarn,
-			"ERROR": LevelError,
+		l, ok := pkg.LevelMap[strings.ToUpper(levelStr)]
+		if ok {
+			level = l
 		}
-		level = LevelMap[strings.ToUpper(levelStr)]
 	}
 
 	logger = &Logger{
@@ -150,9 +139,9 @@ func NewLogger(config *config.Config) (logger *Logger, err error) {
 	}
 	filename := config.Log.Filename
 	if filename == "" {
-		logger.loggerDebug = log.New(os.Stdout, "Info:", log.Ldate|log.Ltime)
+		logger.loggerDebug = log.New(os.Stdout, "Debug:", log.Ldate|log.Ltime)
 		logger.loggerInfo = log.New(os.Stdout, "Info:", log.Ldate|log.Ltime)
-		logger.loggerWarning = log.New(os.Stdout, "Warn:", log.Ldate|log.Ltime)
+		logger.loggerWarn = log.New(os.Stdout, "Warn:", log.Ldate|log.Ltime)
 		logger.loggerError = log.New(os.Stdout, "Error:", log.Ldate|log.Ltime)
 		return
 	}
@@ -188,7 +177,7 @@ func NewLogger(config *config.Config) (logger *Logger, err error) {
 
 	logger.loggerDebug = log.New(io.MultiWriter(os.Stderr, logFile), "Debug:", log.Ldate|log.Ltime)
 	logger.loggerInfo = log.New(io.MultiWriter(os.Stderr, logFile), "Info:", log.Ldate|log.Ltime)
-	logger.loggerWarning = log.New(io.MultiWriter(os.Stderr, logFile), "Warning:", log.Ldate|log.Ltime)
+	logger.loggerWarn = log.New(io.MultiWriter(os.Stderr, logFile), "Warn:", log.Ldate|log.Ltime)
 	logger.loggerError = log.New(io.MultiWriter(os.Stderr, logFile), "Error:", log.Ldate|log.Ltime)
 
 	return

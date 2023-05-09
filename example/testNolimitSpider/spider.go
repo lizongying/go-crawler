@@ -19,6 +19,7 @@ type Spider struct {
 
 	collectionTest string
 	tableTest      string
+	topicTest      string
 	fileNameTest   string
 }
 
@@ -44,6 +45,45 @@ func (s *Spider) ParseMysql(_ context.Context, response *pkg.Response) (err erro
 	err = s.YieldItem(&pkg.ItemMysql{
 		Update: true,
 		Table:  s.tableTest,
+		ItemUnimplemented: pkg.ItemUnimplemented{
+			UniqueKey: "1",
+			Id:        3,
+			Data: &DataMysql{
+				Id: 3,
+				A:  0,
+				B:  2,
+				C:  "",
+				D:  "2",
+			},
+		},
+	})
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
+func (s *Spider) ParseKafka(_ context.Context, response *pkg.Response) (err error) {
+	extra := response.Request.Extra.(*ExtraOk)
+	s.Logger.Info("extra", utils.JsonStr(extra))
+	s.Logger.Info("response", string(response.BodyBytes))
+
+	if extra.Count > 0 {
+		return
+	}
+	requestNext := new(pkg.Request)
+	requestNext.Url = response.Request.Url
+	requestNext.Extra = &ExtraOk{
+		Count: extra.Count + 1,
+	}
+	requestNext.CallBack = s.ParseKafka
+	//requestNext.UniqueKey = "1"
+	err = s.YieldRequest(requestNext)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	err = s.YieldItem(&pkg.ItemKafka{
+		Topic: s.tableTest,
 		ItemUnimplemented: pkg.ItemUnimplemented{
 			UniqueKey: "1",
 			Id:        3,
@@ -186,6 +226,21 @@ func (s *Spider) TestMysql(_ context.Context, _ string) (err error) {
 	return
 }
 
+func (s *Spider) TestKafka(_ context.Context, _ string) (err error) {
+	if s.Mode == "dev" {
+		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
+	}
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
+	request.Extra = &ExtraOk{}
+	request.CallBack = s.ParseKafka
+	err = s.YieldRequest(request)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
 func (s *Spider) TestOk(_ context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
 		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
@@ -231,7 +286,8 @@ func (s *Spider) TestJsonl(_ context.Context, _ string) (err error) {
 	return
 }
 
-func (s *Spider) Stop(_ context.Context) (err error) {
+func (s *Spider) Stop(ctx context.Context) (err error) {
+	err = s.BaseSpider.Stop(ctx)
 	//err = pkg.DontStopErr
 
 	return
@@ -252,12 +308,14 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 		//SetMiddleware(middlewares.NewMongoMiddleware(logger, baseSpider.MongoDb), 141).
 		//SetMiddleware(middlewares.NewCsvMiddleware(logger), 142).
 		//SetMiddleware(middlewares.NewJsonLinesMiddleware(logger), 143).
-		SetMiddleware(middlewares.NewMysqlMiddleware(logger, baseSpider.Mysql), 144)
+		//SetMiddleware(middlewares.NewMysqlMiddleware(logger, baseSpider.Mysql), 144).
+		SetMiddleware(middlewares.NewKafkaMiddleware(logger, baseSpider.Kafka), 145)
 
 	spider = &Spider{
 		BaseSpider:     baseSpider,
 		collectionTest: "test",
 		tableTest:      "test",
+		topicTest:      "test",
 		fileNameTest:   "test",
 	}
 

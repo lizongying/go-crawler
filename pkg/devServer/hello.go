@@ -1,33 +1,25 @@
 package devServer
 
 import (
-	"fmt"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"io"
 	"net/http"
 )
+
+const UrlHello = "/hello"
 
 type HelloHandler struct {
 	logger *logger.Logger
 }
 
 func (*HelloHandler) Pattern() string {
-	return "/hello"
+	return UrlHello
 }
 
 func (h *HelloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		h.logger.Error("Failed to read request")
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	if _, err = fmt.Fprintf(w, "Hello, %s\n", body); err != nil {
-		h.logger.Error("Failed to write response")
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
+	h.logger.InfoF("request: %+v", r)
+	body, _ := io.ReadAll(r.Body)
+	h.logger.InfoF("body: %s", string(body))
 }
 
 func NewHelloHandler(logger *logger.Logger) *HelloHandler {

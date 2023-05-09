@@ -28,13 +28,13 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 		s.Logger.Error(err)
 
 		//if errors.Is(err, pkg.ErrIgnoreRequest) {
-		//	s.Logger.Warning(err)
+		//	s.Logger.Warn(err)
 		//}
 
 		if request.ErrBack != nil {
 			request.ErrBack(ctx, response, err)
 		} else {
-			s.Logger.Warning("nil ErrBack")
+			s.Logger.Warn("nil ErrBack")
 		}
 		return
 	}
@@ -102,11 +102,11 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 					request.ErrBack(ctx, response, err)
 				} else {
 					err = errors.New("nil ErrBack")
-					s.Logger.Warning(err)
+					s.Logger.Warn(err)
 				}
 
 				//if errors.Is(err, pkg.ErrIgnoreRequest) {
-				//	s.Logger.Warning(err)
+				//	s.Logger.Warn(err)
 				//}
 
 				return
@@ -125,7 +125,7 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 					request.ErrBack(ctx, response, err)
 				} else {
 					err = errors.New("nil ErrBack")
-					s.Logger.Warning(err)
+					s.Logger.Warn(err)
 				}
 				return
 			}
@@ -151,7 +151,7 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 						request.ErrBack(ctx, response, e)
 					} else {
 						e = errors.New("nil ErrBack")
-						s.Logger.Warning(e)
+						s.Logger.Warn(e)
 					}
 					return
 				}

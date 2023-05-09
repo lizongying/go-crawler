@@ -26,6 +26,7 @@ func NewApp(f func(*spider.BaseSpider, *logger.Logger) (pkg.Spider, error)) (app
 				config.NewConfig,
 				db.NewMongoDb,
 				db.NewMysql,
+				db.NewKafka,
 				logger.NewLogger,
 				httpClient.NewHttpClient,
 				spider.NewBaseSpider,

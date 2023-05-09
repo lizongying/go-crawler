@@ -20,6 +20,11 @@ type Config struct {
 			Database string `yaml:"database" json:"-"`
 		} `yaml:"example" json:"-"`
 	} `yaml:"mysql" json:"-"`
+	Kafka struct {
+		Example struct {
+			Uri string `yaml:"uri" json:"-"`
+		} `yaml:"example" json:"-"`
+	} `yaml:"kafka" json:"-"`
 	Log struct {
 		Filename string `yaml:"filename" json:"-"`
 		LongFile bool   `yaml:"long_file" json:"-"`

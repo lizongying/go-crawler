@@ -8,9 +8,10 @@ import (
 )
 
 type Message struct {
-	Response    string `json:"response"`
-	Description string `json:"description"`
+	Data string `json:"data"`
 }
+
+const UrlRateLimiter = "/rate-limiter"
 
 type RateLimiterHandler struct {
 	logger  *logger.Logger
@@ -18,24 +19,21 @@ type RateLimiterHandler struct {
 }
 
 func (*RateLimiterHandler) Pattern() string {
-	return "/rate-limiter"
+	return UrlRateLimiter
 }
 
 func (h *RateLimiterHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	if !h.limiter.Allow() {
-		_, _ = w.Write([]byte("rate limit exceeded "))
-		return
-	}
 	w.Header().Set("Content-Type", "application/json")
-
 	w.WriteHeader(http.StatusOK)
-
 	message := Message{
-		Response:    "Successful",
-		Description: "You've successfully hit the API endpoint",
+		Data: "Success",
+	}
+	if !h.limiter.Allow() {
+		message.Data = "Rate limit"
 	}
 	err := json.NewEncoder(w).Encode(&message)
 	if err != nil {
+		h.logger.Error(err)
 		return
 	}
 }
@@ -43,6 +41,6 @@ func (h *RateLimiterHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 func NewRateLimiterHandler(logger *logger.Logger) *RateLimiterHandler {
 	return &RateLimiterHandler{
 		logger:  logger,
-		limiter: rate.NewLimiter(3, 6), // max of 6 requests and then three more requests per second
+		limiter: rate.NewLimiter(3, 6),
 	}
 }

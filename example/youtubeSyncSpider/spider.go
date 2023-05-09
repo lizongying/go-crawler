@@ -438,7 +438,7 @@ func (s *Spider) RequestUserApi(ctx context.Context, request *pkg.Request) (err 
 	}
 
 	if !ok {
-		s.Logger.Warning("out date")
+		s.Logger.Warn("out date")
 		return
 	}
 

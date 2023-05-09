@@ -34,7 +34,7 @@ func (m *MysqlMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err
 func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	item, ok := c.Item.(*pkg.ItemMysql)
 	if !ok {
-		m.logger.Warning("item not support mysql")
+		m.logger.Warn("item not support mysql")
 		err = c.NextItem()
 		return
 	}
