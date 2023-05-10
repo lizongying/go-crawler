@@ -44,7 +44,7 @@ func NewMongoDb(config *config.Config, logger *logger.Logger, lc fx.Lifecycle) (
 	db = client.Database(database)
 	lc.Append(fx.Hook{
 		OnStop: func(_ context.Context) (err error) {
-			if client != nil {
+			if client == nil {
 				return
 			}
 

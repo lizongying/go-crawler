@@ -9,7 +9,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
-	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
@@ -105,9 +104,9 @@ func (s *Spider) ParseKafka(_ context.Context, response *pkg.Response) (err erro
 func (s *Spider) ParseOk(_ context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
 	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
+	s.Logger.Debug("response", string(response.BodyBytes))
 
-	if extra.Count > 0 {
+	if extra.Count > 1000 {
 		return
 	}
 	requestNext := new(pkg.Request)
@@ -241,6 +240,7 @@ func (s *Spider) TestKafka(_ context.Context, _ string) (err error) {
 	return
 }
 
+// TestOk go run example/testNoLimitSpider/*.go -c dev.yml -f TestOk -m dev
 func (s *Spider) TestOk(_ context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
 		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
@@ -304,12 +304,12 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 		baseSpider.AddDevServerRoutes(devServer2.NewCustomHandler(logger))
 	}
 	baseSpider.
-		AddOkHttpCodes(201).
-		//SetMiddleware(middlewares.NewMongoMiddleware(logger, baseSpider.MongoDb), 141).
-		//SetMiddleware(middlewares.NewCsvMiddleware(logger), 142).
-		//SetMiddleware(middlewares.NewJsonLinesMiddleware(logger), 143).
-		//SetMiddleware(middlewares.NewMysqlMiddleware(logger, baseSpider.Mysql), 144).
-		SetMiddleware(middlewares.NewKafkaMiddleware(logger, baseSpider.Kafka), 145)
+		AddOkHttpCodes(201)
+	//SetMiddleware(middlewares.NewMongoMiddleware(logger, baseSpider.MongoDb), 141).
+	//SetMiddleware(middlewares.NewCsvMiddleware(logger), 142).
+	//SetMiddleware(middlewares.NewJsonLinesMiddleware(logger), 143).
+	//SetMiddleware(middlewares.NewMysqlMiddleware(logger, baseSpider.Mysql), 144).
+	//SetMiddleware(middlewares.NewKafkaMiddleware(logger, baseSpider.Kafka), 145)
 
 	spider = &Spider{
 		BaseSpider:     baseSpider,

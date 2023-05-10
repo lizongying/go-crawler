@@ -83,7 +83,10 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 		request.Request = request.Request.WithContext(c)
 	}
 
-	transport := &http.Transport{}
+	transport := &http.Transport{
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 100,
+	}
 	if request.ProxyEnable {
 		proxy := h.proxy
 		if request.Proxy != nil {
