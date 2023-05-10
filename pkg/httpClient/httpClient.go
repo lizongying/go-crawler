@@ -89,6 +89,11 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 	}
 
 	transport := &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		IdleConnTimeout:       timeout,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+
 		MaxConnsPerHost:       1000,
 		MaxIdleConns:          1000,
 		MaxIdleConnsPerHost:   1000,
