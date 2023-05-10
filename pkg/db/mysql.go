@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/lizongying/go-crawler/pkg/config"
@@ -12,17 +11,20 @@ import (
 )
 
 func NewMysql(config *config.Config, logger *logger.Logger, lc fx.Lifecycle) (db *sql.DB, err error) {
+	if !config.MysqlEnable {
+		logger.Debug("Mysql Disable")
+		return
+	}
+
 	uri := config.Mysql.Example.Uri
 	if uri == "" {
-		err = errors.New("uri is empty")
-		logger.Error(err)
+		logger.Warn("uri is empty")
 		return
 	}
 
 	database := config.Mysql.Example.Database
 	if database == "" {
-		err = errors.New("database is empty")
-		logger.Error(err)
+		logger.Warn("database is empty")
 		return
 	}
 
@@ -40,6 +42,10 @@ func NewMysql(config *config.Config, logger *logger.Logger, lc fx.Lifecycle) (db
 
 	lc.Append(fx.Hook{
 		OnStop: func(_ context.Context) (err error) {
+			if db == nil {
+				return
+			}
+
 			err = db.Close()
 			if err != nil {
 				logger.Error(err)

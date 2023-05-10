@@ -8,19 +8,22 @@ import (
 )
 
 type Config struct {
-	Mongo struct {
+	MongoEnable bool `yaml:"mongo_enable" json:"-"`
+	Mongo       struct {
 		Example struct {
 			Uri      string `yaml:"uri" json:"-"`
 			Database string `yaml:"database" json:"-"`
 		} `yaml:"example" json:"-"`
 	} `yaml:"mongo" json:"-"`
-	Mysql struct {
+	MysqlEnable bool `yaml:"mysql_enable" json:"-"`
+	Mysql       struct {
 		Example struct {
 			Uri      string `yaml:"uri" json:"-"`
 			Database string `yaml:"database" json:"-"`
 		} `yaml:"example" json:"-"`
 	} `yaml:"mysql" json:"-"`
-	Kafka struct {
+	KafkaEnable bool `yaml:"kafka_enable" json:"-"`
+	Kafka       struct {
 		Example struct {
 			Uri string `yaml:"uri" json:"-"`
 		} `yaml:"example" json:"-"`

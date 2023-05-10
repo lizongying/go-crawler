@@ -12,7 +12,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/httpClient"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
-	pkg2 "github.com/lizongying/go-crawler/pkg/stats"
+	"github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -274,11 +274,11 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	spider = &BaseSpider{
 		SpiderInfo: &pkg.SpiderInfo{
 			Concurrency:   concurrency,
-			Interval:      time.Second * time.Duration(interval),
+			Interval:      time.Millisecond * time.Duration(interval),
 			RetryMaxTimes: retryMaxTimes,
 			Timeout:       timeout,
 		},
-		Stats:       &pkg2.Stats{},
+		Stats:       &stats.Stats{},
 		okHttpCodes: okHttpCodes,
 		startFunc:   cli.StartFunc,
 		args:        cli.Args,
@@ -300,11 +300,12 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	}
 	spider.Mode = cli.Mode
 
-	spider.SetMiddleware(middlewares.NewStatsMiddleware(logger), 100)
-	spider.SetMiddleware(middlewares.NewFilterMiddleware(logger), 110)
-	spider.SetMiddleware(middlewares.NewHttpMiddleware(logger, httpClient), 120)
-	spider.SetMiddleware(middlewares.NewRetryMiddleware(logger), 130)
-	spider.SetMiddleware(middlewares.NewDumpMiddleware(logger), 140)
+	spider.
+		SetMiddleware(middlewares.NewStatsMiddleware(logger), 100).
+		SetMiddleware(middlewares.NewFilterMiddleware(logger), 110).
+		SetMiddleware(middlewares.NewHttpMiddleware(logger, httpClient), 120).
+		SetMiddleware(middlewares.NewRetryMiddleware(logger), 130).
+		SetMiddleware(middlewares.NewDumpMiddleware(logger), 140)
 
 	return
 }

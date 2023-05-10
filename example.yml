@@ -1,11 +1,14 @@
+mongo_enable: true
 mongo:
   example:
     uri: mongodb://127.0.0.1:27017
     database: crawler
+mysql_enable: false
 mysql:
   example:
     uri: root@tcp(127.0.0.1:3306)
     database: crawler
+kafka_enable: false
 kafka:
   example:
     uri: localhost:9092
@@ -17,7 +20,7 @@ proxy:
   example:
 request:
   concurrency: 1
-  interval: 1
+  interval: 1000
   timeout: 30
   ok_http_codes:
     - 200

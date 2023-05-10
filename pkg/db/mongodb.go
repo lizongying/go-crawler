@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"errors"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -12,17 +11,20 @@ import (
 )
 
 func NewMongoDb(config *config.Config, logger *logger.Logger, lc fx.Lifecycle) (db *mongo.Database, err error) {
+	if !config.MongoEnable {
+		logger.Debug("Mongo Disable")
+		return
+	}
+
 	uri := config.Mongo.Example.Uri
 	if uri == "" {
-		err = errors.New("uri is empty")
-		logger.Error(err)
+		logger.Warn("uri is empty")
 		return
 	}
 
 	database := config.Mongo.Example.Database
 	if database == "" {
-		err = errors.New("database is empty")
-		logger.Error(err)
+		logger.Warn("database is empty")
 		return
 	}
 
@@ -42,6 +44,10 @@ func NewMongoDb(config *config.Config, logger *logger.Logger, lc fx.Lifecycle) (
 	db = client.Database(database)
 	lc.Append(fx.Hook{
 		OnStop: func(_ context.Context) (err error) {
+			if client != nil {
+				return
+			}
+
 			err = client.Disconnect(ctx)
 			if err != nil {
 				logger.Error(err)

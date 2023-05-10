@@ -44,7 +44,7 @@
 * log.long_file: If set to true, the full file path is logged.
 * log.level: DEBUG/INFO/WARN/ERROR
 * request.concurrency: Number of request concurrency
-* request.interval: Request interval(seconds). If set to 0, it is the default interval(1). If set to a negative number,
+* request.interval: Request interval(Millisecond). If set to 0, it is the default interval(1000). If set to a negative number,
   it is 0.
 * request.timeout: Request timeout(seconds)
 * request.ok_http_codes: Request ok httpcodes
