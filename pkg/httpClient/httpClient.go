@@ -78,14 +78,21 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 	}
 
 	if request.Timeout > 0 {
-		c, cancel := context.WithTimeout(ctx, request.Timeout)
-		defer cancel()
-		request.Request = request.Request.WithContext(c)
+		//c, cancel := context.WithTimeout(ctx, request.Timeout)
+		//defer cancel()
+		//request.Request = request.Request.WithContext(c)
+	}
+
+	timeout := h.timeout
+	if request.Timeout > 0 {
+		timeout = request.Timeout
 	}
 
 	transport := &http.Transport{
-		MaxIdleConns:        100,
-		MaxIdleConnsPerHost: 100,
+		MaxConnsPerHost:       1000,
+		MaxIdleConns:          1000,
+		MaxIdleConnsPerHost:   1000,
+		ResponseHeaderTimeout: timeout * time.Duration(2),
 	}
 	if request.ProxyEnable {
 		proxy := h.proxy
@@ -112,10 +119,6 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 	client := h.client
 	client.Transport = transport
 
-	timeout := h.timeout
-	if request.Timeout > 0 {
-		timeout = request.Timeout
-	}
 	if timeout > 0 {
 		client.Timeout = timeout
 	}
