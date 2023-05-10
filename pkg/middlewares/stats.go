@@ -44,13 +44,13 @@ func (m *StatsMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 }
 
 func (m *StatsMiddleware) ProcessResponse(c *pkg.Context) (err error) {
-	r := c.Response
-	m.logger.Debug("response body len:", len(r.BodyBytes))
+	response := c.Response
+	m.logger.Debug("before response")
 
-	if r == nil {
+	if response == nil {
 		m.stats.IncStatusErr()
 	} else {
-		if r.StatusCode == http.StatusOK {
+		if response.Response != nil && response.StatusCode == http.StatusOK {
 			m.stats.IncStatusOk()
 		} else {
 			m.stats.IncStatusErr()

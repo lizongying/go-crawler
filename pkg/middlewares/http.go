@@ -23,19 +23,19 @@ func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err 
 }
 
 func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	r := c.Request
-	m.logger.DebugF("request: %+v", r)
+	request := c.Request
+	m.logger.DebugF("request: %+v", request)
 
 	ctx := context.Background()
 
-	err = m.httpClient.BuildRequest(ctx, r)
+	err = m.httpClient.BuildRequest(ctx, request)
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncRequestError()
 		return
 	}
 
-	ok := m.spider.IsAllowedDomain(r.URL)
+	ok := m.spider.IsAllowedDomain(request.URL)
 	if !ok {
 		err = errors.New("it's not a allowed domain")
 		m.logger.Error(err)
@@ -43,9 +43,13 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		return
 	}
 
-	c.Response, err = m.httpClient.BuildResponse(ctx, r)
+	c.Response, err = m.httpClient.BuildResponse(ctx, request)
 	if err != nil {
-		m.logger.Error(err)
+		if request.RetryMaxTimes > 0 && request.RetryTimes < request.RetryMaxTimes {
+			err = c.FirstResponse()
+			return
+		}
+		m.logger.Error(err, "RetryTimes:", request.RetryTimes, request.RetryMaxTimes)
 		m.stats.IncRequestError()
 		return
 	}

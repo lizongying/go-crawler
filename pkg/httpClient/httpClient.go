@@ -8,6 +8,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -89,15 +90,20 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 	}
 
 	transport := &http.Transport{
-		Proxy:                 http.ProxyFromEnvironment,
-		IdleConnTimeout:       timeout,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   60 * time.Second,
+			KeepAlive: 60 * time.Second,
+		}).DialContext,
+		DisableKeepAlives:     true,
+		IdleConnTimeout:       180 * time.Second,
+		TLSHandshakeTimeout:   20 * time.Second,
+		ExpectContinueTimeout: 2 * time.Second,
+		ResponseHeaderTimeout: 30 * time.Second,
 
-		MaxConnsPerHost:       1000,
-		MaxIdleConns:          1000,
-		MaxIdleConnsPerHost:   1000,
-		ResponseHeaderTimeout: timeout * time.Duration(2),
+		MaxConnsPerHost:     1000,
+		MaxIdleConns:        1000,
+		MaxIdleConnsPerHost: 1000,
 	}
 	if request.ProxyEnable {
 		proxy := h.proxy
@@ -128,22 +134,26 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 		client.Timeout = timeout
 	}
 
-	resp, err := client.Do(request.Request)
+	response = &pkg.Response{
+		Request: request,
+	}
+
+	begin := time.Now()
+	response.Response, err = client.Do(request.Request)
+	response.Request.SpendTime = time.Now().Sub(begin)
 	if err != nil {
-		h.logger.Error(err)
+		if request.RetryTimes < request.RetryMaxTimes {
+			return
+		}
+		h.logger.Error(err, "RetryTimes:", request.RetryTimes)
 		h.logger.ErrorF("request: %+v", request)
 		h.logger.Debug(utils.Request2Curl(request))
 		return
 	}
 
-	response = &pkg.Response{
-		Response: resp,
-		Request:  request,
-	}
-
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
-	}(resp.Body)
+	}(response.Body)
 
 	response.BodyBytes, err = io.ReadAll(response.Body)
 	if err != nil {

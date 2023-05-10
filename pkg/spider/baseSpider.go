@@ -303,8 +303,8 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	spider.
 		SetMiddleware(middlewares.NewStatsMiddleware(logger), 100).
 		SetMiddleware(middlewares.NewFilterMiddleware(logger), 110).
-		SetMiddleware(middlewares.NewHttpMiddleware(logger, httpClient), 120).
-		SetMiddleware(middlewares.NewRetryMiddleware(logger), 130).
+		SetMiddleware(middlewares.NewRetryMiddleware(logger), 120).
+		SetMiddleware(middlewares.NewHttpMiddleware(logger, httpClient), 130).
 		SetMiddleware(middlewares.NewDumpMiddleware(logger), 140)
 
 	return

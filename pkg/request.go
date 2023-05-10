@@ -45,6 +45,7 @@ type Request struct {
 	ErrBack            func(context.Context, *Response, error)
 	Checksum           string
 	CreateTime         string
+	SpendTime          time.Duration
 	Skip               bool
 	SkipFilter         bool
 	CanonicalHeaderKey bool
