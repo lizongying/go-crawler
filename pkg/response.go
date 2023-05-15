@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/lizongying/go-query/query"
 	"github.com/lizongying/go-xpath/xpath"
+	"github.com/tidwall/gjson"
 	"net/http"
 )
 
@@ -49,6 +50,23 @@ func (r *Response) Query() (selector *query.Selector, err error) {
 	if err != nil {
 		return
 	}
+
+	return
+}
+
+// Json return a gjson
+func (r *Response) Json() (result gjson.Result, err error) {
+	if r == nil {
+		err = errors.New("response is invalid")
+		return
+	}
+
+	if len(r.BodyBytes) == 0 {
+		err = errors.New("response body is empty")
+		return
+	}
+
+	result = gjson.ParseBytes(r.BodyBytes)
 
 	return
 }
