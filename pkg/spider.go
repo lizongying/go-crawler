@@ -45,4 +45,6 @@ type Spider interface {
 	AddDevServerRoutes(routes ...Route) Spider
 	AddOkHttpCodes(httpCodes ...int) Spider
 	GetOkHttpCodes() []int
+	GetPlatform() []Platform
+	GetBrowser() []Browser
 }

@@ -71,6 +71,40 @@ type BaseSpider struct {
 	devServer *devServer.HttpServer
 
 	okHttpCodes []int
+	platform    map[pkg.Platform]struct{}
+	browser     map[pkg.Browser]struct{}
+}
+
+func (s *BaseSpider) SetPlatform(platform pkg.Platform) (err error) {
+	if platform > pkg.Ios {
+		err = errors.New("platform error")
+		return
+	}
+	s.platform[platform] = struct{}{}
+	return
+}
+
+func (s *BaseSpider) GetPlatform() (platform []pkg.Platform) {
+	for k := range s.platform {
+		platform = append(platform, k)
+	}
+	return
+}
+
+func (s *BaseSpider) SetBrowser(browser pkg.Browser) (err error) {
+	if browser > pkg.FireFox {
+		err = errors.New("browser error")
+		return
+	}
+	s.browser[browser] = struct{}{}
+	return
+}
+
+func (s *BaseSpider) GetBrowser() (browser []pkg.Browser) {
+	for k := range s.browser {
+		browser = append(browser, k)
+	}
+	return
 }
 
 func (s *BaseSpider) SetLogger(logger pkg.Logger) {
@@ -297,6 +331,9 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		itemActiveChan:        make(chan struct{}, defaultChanItemMax),
 
 		devServer: server,
+
+		platform: make(map[pkg.Platform]struct{}),
+		browser:  make(map[pkg.Browser]struct{}),
 	}
 	spider.Mode = cli.Mode
 

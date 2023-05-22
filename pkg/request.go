@@ -59,6 +59,8 @@ type Request struct {
 	Interval           time.Duration
 	Timeout            time.Duration
 	HttpProto          string
+	Platform           []Platform
+	Browser            []Browser
 	Extra              any
 }
 
@@ -114,3 +116,23 @@ func (r *Request) SetHeader(key string, value string) {
 
 	return
 }
+
+type Platform uint8
+
+const (
+	NoPlatform Platform = iota
+	Windows
+	Mac
+	Android
+	Ios
+)
+
+type Browser uint8
+
+const (
+	NoBrowser Browser = iota
+	Chrome
+	Edge
+	Safari
+	FireFox
+)
