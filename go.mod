@@ -26,6 +26,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
+	github.com/lizongying/go-re v0.0.0-20230522044635-8e45e9501811 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/stretchr/testify v1.8.1 // indirect

@@ -13,3 +13,13 @@ func TestStruct2JsonKV(t *testing.T) {
 	k, v := Struct2JsonKV(a)
 	t.Log(k, v)
 }
+
+func TestStr2Int(t *testing.T) {
+	i, e := Str2Int("20")
+	t.Log(i, e)
+}
+
+func TestStr2Int8(t *testing.T) {
+	i, e := Str2Int8("20a")
+	t.Log(i, e)
+}

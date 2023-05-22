@@ -11,7 +11,8 @@
 * 本框架舍弃了pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
 * 框架内置middleware和默认order，建议自定义ProcessItem的中间件order大于140
-    * stats:100
+    * stats:90
+    * device:100
     * filter:110
     * retry:120
     * http:130
@@ -24,8 +25,13 @@
 * 在配置文件中可以配置全局request参数，在具体request中可以覆盖此配置
 * 解析模块
     * query选择器 [go-query](https://github.com/lizongying/go-query)
+        * ```response.Query()```
     * xpath选择器 [go-xpath](https://github.com/lizongying/go-xpath)
+        * ```response.Xpath()```
     * gjson
+        * ```response.Json()```
+    * re选择器 [go-re](https://github.com/lizongying/go-re)
+        * ```response.Re()```
 * 代理
     * 可以自行搭建隧道代理 [go-proxy](https://github.com/lizongying/go-proxy)
 
@@ -71,7 +77,6 @@ go run example/testNoLimitSpider/*.go -c dev.yml -f TestOk -m dev
 ## TODO
 
 * middlewares
-    * device(browser ua)
     * robots
     * file
     * media
