@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"image"
 	_ "image/gif"
@@ -15,7 +14,7 @@ import (
 
 type ImageMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 
 	spider pkg.Spider
 	stats  pkg.StatsWithImage
@@ -60,9 +59,11 @@ func (m *ImageMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 	return
 }
 
-func NewImageMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	m = &ImageMiddleware{
-		logger: logger,
-	}
-	return
+func (m *ImageMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	return m
+}
+
+func NewImageMiddleware() pkg.Middleware {
+	return &ImageMiddleware{}
 }

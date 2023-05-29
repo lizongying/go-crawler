@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
 
 type RetryMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger        *logger.Logger
+	logger        pkg.Logger
 	spider        pkg.Spider
 	okHttpCodes   []int
 	retryMaxTimes int
@@ -60,9 +59,11 @@ func (m *RetryMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 	return
 }
 
-func NewRetryMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	m = &RetryMiddleware{
-		logger: logger,
-	}
-	return
+func (m *RetryMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	return m
+}
+
+func NewRetryMiddleware() pkg.Middleware {
+	return &RetryMiddleware{}
 }

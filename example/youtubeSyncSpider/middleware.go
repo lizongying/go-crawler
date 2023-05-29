@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"net/url"
 )
 
@@ -12,7 +11,7 @@ const Video = "EgIQAQ%253D%253D"
 
 type Middleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 	spider pkg.Spider
 
 	urlSearch    string
@@ -64,16 +63,16 @@ func (m *Middleware) ProcessRequest(c *pkg.Context) (err error) {
 	return
 }
 
-func NewMiddleware(logger *logger.Logger) (middleware pkg.Middleware) {
-	middleware = &Middleware{
-		logger: logger,
+func (m *Middleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	m.urlSearch = "https://www.youtube.com/results?search_query=%s"
+	m.urlSearchApi = "https://www.youtube.com/youtubei/v1/search?key=%s"
+	m.urlUserApi = "https://www.youtube.com/youtubei/v1/browse?key=%s"
+	m.urlVideos = "https://www.youtube.com/@%s/videos"
+	m.apiKey = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
+	return m
+}
 
-		urlSearch:    "https://www.youtube.com/results?search_query=%s",
-		urlSearchApi: "https://www.youtube.com/youtubei/v1/search?key=%s",
-		urlUserApi:   "https://www.youtube.com/youtubei/v1/browse?key=%s",
-		urlVideos:    "https://www.youtube.com/@%s/videos",
-
-		apiKey: "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8",
-	}
-	return
+func NewMiddleware() pkg.Middleware {
+	return &Middleware{}
 }

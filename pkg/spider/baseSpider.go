@@ -9,7 +9,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/devServer"
-	"github.com/lizongying/go-crawler/pkg/httpClient"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/stats"
@@ -50,7 +49,7 @@ type BaseSpider struct {
 	Mysql      *sql.DB
 	Kafka      *kafka.Writer
 	Logger     pkg.Logger
-	httpClient *httpClient.HttpClient
+	httpClient pkg.HttpClient
 
 	startFunc             string
 	args                  string
@@ -73,6 +72,8 @@ type BaseSpider struct {
 	okHttpCodes []int
 	platform    map[pkg.Platform]struct{}
 	browser     map[pkg.Browser]struct{}
+
+	config *config.Config
 }
 
 func (s *BaseSpider) SetPlatform(platform pkg.Platform) (err error) {
@@ -143,10 +144,6 @@ func (s *BaseSpider) GetDevServerHost() (host string) {
 	return
 }
 
-func (s *BaseSpider) GetMongoDb() *mongo.Database {
-	return s.MongoDb
-}
-
 func (s *BaseSpider) AddOkHttpCodes(httpCodes ...int) pkg.Spider {
 	for _, v := range httpCodes {
 		if utils.InSlice(v, s.okHttpCodes) {
@@ -160,6 +157,30 @@ func (s *BaseSpider) AddOkHttpCodes(httpCodes ...int) pkg.Spider {
 func (s *BaseSpider) GetOkHttpCodes() (httpCodes []int) {
 	httpCodes = s.okHttpCodes
 	return
+}
+
+func (s *BaseSpider) GetConfig() *config.Config {
+	return s.config
+}
+
+func (s *BaseSpider) GetLogger() pkg.Logger {
+	return s.Logger
+}
+
+func (s *BaseSpider) GetHttpClient() pkg.HttpClient {
+	return s.httpClient
+}
+
+func (s *BaseSpider) GetKafka() *kafka.Writer {
+	return s.Kafka
+}
+
+func (s *BaseSpider) GetMongoDb() *mongo.Database {
+	return s.MongoDb
+}
+
+func (s *BaseSpider) GetMysql() *sql.DB {
+	return s.Mysql
 }
 
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
@@ -275,7 +296,7 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, mysql *sql.DB, kafka *kafka.Writer, httpClient *httpClient.HttpClient, server *devServer.HttpServer) (spider *BaseSpider, err error) {
+func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, mysql *sql.DB, kafka *kafka.Writer, httpClient pkg.HttpClient, server *devServer.HttpServer) (spider *BaseSpider, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	concurrency := defaultRequestConcurrency
@@ -334,15 +355,16 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 
 		platform: make(map[pkg.Platform]struct{}),
 		browser:  make(map[pkg.Browser]struct{}),
+		config:   config,
 	}
 	spider.Mode = cli.Mode
 
 	spider.
-		SetMiddleware(middlewares.NewStatsMiddleware(logger), 100).
-		SetMiddleware(middlewares.NewFilterMiddleware(logger), 110).
-		SetMiddleware(middlewares.NewRetryMiddleware(logger), 120).
-		SetMiddleware(middlewares.NewHttpMiddleware(logger, httpClient), 130).
-		SetMiddleware(middlewares.NewDumpMiddleware(logger), 140)
+		SetMiddleware(middlewares.NewStatsMiddleware, 100).
+		SetMiddleware(middlewares.NewFilterMiddleware, 110).
+		SetMiddleware(middlewares.NewRetryMiddleware, 120).
+		SetMiddleware(middlewares.NewHttpMiddleware, 130).
+		SetMiddleware(middlewares.NewDumpMiddleware, 140)
 
 	return
 }

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"os"
 	"path/filepath"
@@ -16,7 +15,7 @@ import (
 
 type CsvMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 
 	spider pkg.Spider
 	files  sync.Map
@@ -155,9 +154,11 @@ func (m *CsvMiddleware) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func NewCsvMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	m = &CsvMiddleware{
-		logger: logger,
-	}
-	return
+func (m *CsvMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	return m
+}
+
+func NewCsvMiddleware() pkg.Middleware {
+	return &CsvMiddleware{}
 }

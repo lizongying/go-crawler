@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,7 +13,7 @@ import (
 
 type MongoMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 
 	mongoDb *mongo.Database
 	timeout time.Duration
@@ -107,11 +106,13 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	return
 }
 
-func NewMongoMiddleware(logger *logger.Logger, mongoDb *mongo.Database) (m pkg.Middleware) {
-	m = &MongoMiddleware{
-		logger:  logger,
-		mongoDb: mongoDb,
-		timeout: time.Minute,
-	}
-	return
+func (m *MongoMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	m.mongoDb = spider.GetMongoDb()
+	m.timeout = time.Minute
+	return m
+}
+
+func NewMongoMiddleware() pkg.Middleware {
+	return &MongoMiddleware{}
 }

@@ -3,13 +3,12 @@ package middlewares
 import (
 	"context"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"sync"
 )
 
 type FilterMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 	info   *pkg.SpiderInfo
 	stats  pkg.Stats
 	ids    sync.Map
@@ -68,9 +67,11 @@ func (m *FilterMiddleware) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func NewFilterMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	m = &FilterMiddleware{
-		logger: logger,
-	}
-	return
+func (m *FilterMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	return m
+}
+
+func NewFilterMiddleware() pkg.Middleware {
+	return &FilterMiddleware{}
 }

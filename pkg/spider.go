@@ -2,6 +2,10 @@ package pkg
 
 import (
 	"context"
+	"database/sql"
+	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/segmentio/kafka-go"
+	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"
 	"time"
 )
@@ -30,7 +34,7 @@ type Spider interface {
 	CleanAllowedDomains()
 	GetMiddlewares() map[int]string
 	ReplaceMiddlewares(map[int]Middleware) error
-	SetMiddleware(Middleware, int) Spider
+	SetMiddleware(func() Middleware, int) Spider
 	DelMiddleware(string)
 	CleanMiddlewares()
 	SortedMiddlewares() []Middleware
@@ -47,4 +51,10 @@ type Spider interface {
 	GetOkHttpCodes() []int
 	GetPlatform() []Platform
 	GetBrowser() []Browser
+	GetConfig() *config.Config
+	GetLogger() Logger
+	GetHttpClient() HttpClient
+	GetKafka() *kafka.Writer
+	GetMongoDb() *mongo.Database
+	GetMysql() *sql.DB
 }

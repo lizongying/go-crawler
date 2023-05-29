@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/http"
 	"reflect"
@@ -14,7 +13,7 @@ import (
 
 type StatsMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger       *logger.Logger
+	logger       pkg.Logger
 	interval     time.Duration
 	timer        *time.Timer
 	chanStop     chan struct{}
@@ -126,11 +125,12 @@ func getKV(v reflect.Value, m map[string]uint32) {
 	}
 }
 
-func NewStatsMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	interval := time.Minute
-	m = &StatsMiddleware{
-		logger:   logger,
-		interval: interval,
-	}
-	return
+func (m *StatsMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	m.interval = time.Minute
+	return m
+}
+
+func NewStatsMiddleware() pkg.Middleware {
+	return &StatsMiddleware{}
 }

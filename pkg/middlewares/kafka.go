@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/bson"
@@ -14,7 +13,7 @@ import (
 
 type KafkaMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 
 	kafkaWriter *kafka.Writer
 	timeout     time.Duration
@@ -106,11 +105,13 @@ func (m *KafkaMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	return
 }
 
-func NewKafkaMiddleware(logger *logger.Logger, kafkaWriter *kafka.Writer) (m pkg.Middleware) {
-	m = &KafkaMiddleware{
-		logger:      logger,
-		kafkaWriter: kafkaWriter,
-		timeout:     time.Minute,
-	}
-	return
+func (m *KafkaMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	m.kafkaWriter = spider.GetKafka()
+	m.timeout = time.Minute
+	return m
+}
+
+func NewKafkaMiddleware() pkg.Middleware {
+	return &KafkaMiddleware{}
 }

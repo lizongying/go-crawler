@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"os"
 	"path/filepath"
@@ -14,7 +13,7 @@ import (
 
 type JsonLinesMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 
 	spider pkg.Spider
 	files  sync.Map
@@ -119,9 +118,11 @@ func (m *JsonLinesMiddleware) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func NewJsonLinesMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	m = &JsonLinesMiddleware{
-		logger: logger,
-	}
-	return
+func (m *JsonLinesMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	return m
+}
+
+func NewJsonLinesMiddleware() pkg.Middleware {
+	return &JsonLinesMiddleware{}
 }

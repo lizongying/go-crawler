@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"math/rand"
 	"time"
 )
 
 type DeviceMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 	spider pkg.Spider
 	uaAll  map[string][]map[string]string
 	ua     []map[string]string
@@ -54,6 +53,8 @@ func (m *DeviceMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		uaLen = m.uaLen
 	}
 
+	m.logger.Error(1111, request.UserAgent())
+
 	if request.UserAgent() == "" && uaLen > 0 {
 		u := ua[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(uaLen)]
 		for k, v := range u {
@@ -65,9 +66,11 @@ func (m *DeviceMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 	return
 }
 
-func NewDeviceMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	m = &DeviceMiddleware{
-		logger: logger,
-	}
-	return
+func (m *DeviceMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	return m
+}
+
+func NewDeviceMiddleware() pkg.Middleware {
+	return &DeviceMiddleware{}
 }

@@ -3,12 +3,11 @@ package middlewares
 import (
 	"context"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 )
 
 type CustomMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 
 	spider pkg.Spider
 }
@@ -49,9 +48,11 @@ func (m *CustomMiddleware) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func NewCustomMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	m = &CustomMiddleware{
-		logger: logger,
-	}
-	return
+func (m *CustomMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	return m
+}
+
+func NewCustomMiddleware() pkg.Middleware {
+	return &CustomMiddleware{}
 }

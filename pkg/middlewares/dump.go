@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
 
 type DumpMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 
 	spider pkg.Spider
 	stats  pkg.Stats
@@ -50,9 +49,11 @@ func (m *DumpMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	return
 }
 
-func NewDumpMiddleware(logger *logger.Logger) (m pkg.Middleware) {
-	m = &DumpMiddleware{
-		logger: logger,
-	}
-	return
+func (m *DumpMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	return m
+}
+
+func NewDumpMiddleware() pkg.Middleware {
+	return &DumpMiddleware{}
 }

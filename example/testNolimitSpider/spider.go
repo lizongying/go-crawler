@@ -106,9 +106,12 @@ func (s *Spider) ParseOk(_ context.Context, response *pkg.Response) (err error) 
 	s.Logger.Info("extra", utils.JsonStr(extra))
 	s.Logger.Debug("response", string(response.BodyBytes))
 
-	if extra.Count > 1000 {
+	if extra.Count > 10 {
 		return
 	}
+	//if extra.Count%1000 == 0 {
+	//	s.Logger.Info("extra", utils.JsonStr(extra))
+	//}
 	requestNext := new(pkg.Request)
 	requestNext.Url = response.Request.Url
 	requestNext.Extra = &ExtraOk{
@@ -176,6 +179,7 @@ func (s *Spider) ParseCsv(_ context.Context, response *pkg.Response) (err error)
 
 func (s *Spider) ParseJsonl(_ context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
+	s.Logger.Info("request", response.Request.Header)
 	s.Logger.Info("extra", utils.JsonStr(extra))
 	s.Logger.Info("response", string(response.BodyBytes))
 
@@ -303,13 +307,15 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	if baseSpider.Mode == "dev" {
 		baseSpider.AddDevServerRoutes(devServer2.NewCustomHandler(logger))
 	}
+	//baseSpider.Interval = time.Millisecond
 	baseSpider.
 		AddOkHttpCodes(201)
-	//SetMiddleware(middlewares.NewMongoMiddleware(logger, baseSpider.MongoDb), 141).
-	//SetMiddleware(middlewares.NewCsvMiddleware(logger), 142).
-	//SetMiddleware(middlewares.NewJsonLinesMiddleware(logger), 143).
-	//SetMiddleware(middlewares.NewMysqlMiddleware(logger, baseSpider.Mysql), 144).
-	//SetMiddleware(middlewares.NewKafkaMiddleware(logger, baseSpider.Kafka), 145)
+	//SetMiddleware(middlewares.NewDeviceMiddleware, 100)
+	//SetMiddleware(middlewares.NewMongoMiddleware, 141).
+	//SetMiddleware(middlewares.NewCsvMiddleware, 142)
+	//SetMiddleware(middlewares.NewJsonLinesMiddleware, 143).
+	//SetMiddleware(middlewares.NewMysqlMiddleware, 144).
+	//SetMiddleware(middlewares.NewKafkaMiddleware, 145)
 
 	spider = &Spider{
 		BaseSpider:     baseSpider,

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"reflect"
 	"strings"
 	"time"
@@ -15,7 +14,7 @@ import (
 
 type MysqlMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger *logger.Logger
+	logger pkg.Logger
 
 	mysql   *sql.DB
 	timeout time.Duration
@@ -159,11 +158,13 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	return
 }
 
-func NewMysqlMiddleware(logger *logger.Logger, mysql *sql.DB) (m pkg.Middleware) {
-	m = &MysqlMiddleware{
-		logger:  logger,
-		mysql:   mysql,
-		timeout: time.Minute,
-	}
-	return
+func (m *MysqlMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	m.mysql = spider.GetMysql()
+	m.timeout = time.Minute
+	return m
+}
+
+func NewMysqlMiddleware() pkg.Middleware {
+	return &MysqlMiddleware{}
 }

@@ -15,6 +15,7 @@ type Middleware interface {
 	ProcessResponse(*Context) error
 	ProcessItem(*Context) error
 	SpiderStop(context.Context) error
+	FromCrawler(Spider) Middleware
 }
 
 type UnimplementedMiddleware struct {

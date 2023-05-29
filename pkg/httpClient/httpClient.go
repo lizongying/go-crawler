@@ -19,11 +19,12 @@ const defaultTimeout = time.Minute
 const defaultHttpProto = "2.0"
 
 type HttpClient struct {
-	client    *http.Client
-	proxy     *url.URL
-	timeout   time.Duration
-	httpProto string
-	logger    *logger.Logger
+	client      *http.Client
+	proxy       *url.URL
+	timeout     time.Duration
+	httpProto   string
+	logger      pkg.Logger
+	middlewares map[int]pkg.Middleware
 }
 
 func (h *HttpClient) BuildRequest(ctx context.Context, request *pkg.Request) (err error) {
@@ -164,7 +165,7 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 	return
 }
 
-func NewHttpClient(config *config.Config, logger *logger.Logger) (httpClient *HttpClient, err error) {
+func NewHttpClient(config *config.Config, logger *logger.Logger) (httpClient pkg.HttpClient, err error) {
 	proxyExample := config.Proxy.Example
 	var proxy *url.URL
 	if proxyExample != "" {

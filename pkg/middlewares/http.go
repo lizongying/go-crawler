@@ -4,14 +4,12 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/httpClient"
-	"github.com/lizongying/go-crawler/pkg/logger"
 )
 
 type HttpMiddleware struct {
 	pkg.UnimplementedMiddleware
-	httpClient *httpClient.HttpClient
-	logger     *logger.Logger
+	httpClient pkg.HttpClient
+	logger     pkg.Logger
 	spider     pkg.Spider
 	stats      pkg.Stats
 }
@@ -59,10 +57,12 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 	return
 }
 
-func NewHttpMiddleware(logger *logger.Logger, httpClient *httpClient.HttpClient) (m pkg.Middleware) {
-	m = &HttpMiddleware{
-		httpClient: httpClient,
-		logger:     logger,
-	}
-	return
+func (m *HttpMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	m.logger = spider.GetLogger()
+	m.httpClient = spider.GetHttpClient()
+	return m
+}
+
+func NewHttpMiddleware() pkg.Middleware {
+	return &HttpMiddleware{}
 }
