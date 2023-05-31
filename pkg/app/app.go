@@ -8,7 +8,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/db"
 	"github.com/lizongying/go-crawler/pkg/devServer"
-	"github.com/lizongying/go-crawler/pkg/httpClient"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"go.uber.org/fx"
@@ -28,7 +27,6 @@ func NewApp(f func(*spider.BaseSpider, *logger.Logger) (pkg.Spider, error)) (app
 				db.NewMysql,
 				db.NewKafka,
 				logger.NewLogger,
-				httpClient.NewHttpClient,
 				spider.NewBaseSpider,
 				devServer.NewHttpServer,
 				f,

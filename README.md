@@ -13,7 +13,9 @@
 * 框架内置middleware和默认order，建议自定义ProcessItem的中间件order大于140
     * stats:90
     * device:100
+        * 修改request设备信息。修改header和tls信息，暂时只支持user-agent随机切换。需要设置`SetPlatforms`和`SetBrowsers`限定设备范围。
     * filter:110
+        * 过滤重复请求。默认支持的是item保存成功后才会进入去重队列，防止出现请求失败后再次请求却被过滤的问题。所以当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
     * retry:120
     * http:130
     * dump:140 在debug模式下打印item.data
@@ -85,4 +87,5 @@ go run example/testNoLimitSpider/*.go -c dev.yml -f TestOk -m dev
 
 * once
 * cron
+* max request limit?
 

@@ -114,25 +114,27 @@ func (r *Request) SetHeader(key string, value string) {
 	}
 	r.Header.Set(key, value)
 
+	if r.Request != nil {
+		r.Request.Header = r.Header
+	}
+
 	return
 }
 
-type Platform uint8
+type Platform string
 
 const (
-	NoPlatform Platform = iota
-	Windows
-	Mac
-	Android
-	Ios
+	Windows Platform = "windows"
+	Mac     Platform = "mac"
+	Android Platform = "android"
+	Ios     Platform = "ios"
 )
 
-type Browser uint8
+type Browser string
 
 const (
-	NoBrowser Browser = iota
-	Chrome
-	Edge
-	Safari
-	FireFox
+	Chrome  Browser = "chrome"
+	Edge    Browser = "edge"
+	Safari  Browser = "safari"
+	FireFox Browser = "firefox"
 )

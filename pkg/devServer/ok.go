@@ -1,6 +1,7 @@
 package devServer
 
 import (
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"net/http"
 )
@@ -15,9 +16,9 @@ func (h *OkHandler) Pattern() string {
 	return UrlOk
 }
 
-func (h *OkHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (h *OkHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	_, err := w.Write([]byte(`Ok`))
+	_, err := w.Write([]byte(fmt.Sprintf("requestHeader: %v", request.Header)))
 	if err != nil {
 		h.logger.Error(err)
 		return

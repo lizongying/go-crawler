@@ -9,6 +9,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/httpClient"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/stats"
@@ -35,6 +36,7 @@ func init() {
 }
 
 const defaultChanRequestMax = 1000 * 1000
+const defaultMaxRequestActive = 1000
 const defaultChanItemMax = 1000 * 1000
 const defaultRequestConcurrency = 1
 const defaultRequestInterval = 1
@@ -70,40 +72,48 @@ type BaseSpider struct {
 	devServer *devServer.HttpServer
 
 	okHttpCodes []int
-	platform    map[pkg.Platform]struct{}
-	browser     map[pkg.Browser]struct{}
+	platforms   map[pkg.Platform]struct{}
+	browsers    map[pkg.Browser]struct{}
 
 	config *config.Config
 }
 
-func (s *BaseSpider) SetPlatform(platform pkg.Platform) (err error) {
-	if platform > pkg.Ios {
-		err = errors.New("platform error")
-		return
+func (s *BaseSpider) SetPlatforms(platforms ...pkg.Platform) pkg.Spider {
+	for _, platform := range platforms {
+		if platform == "" {
+			err := errors.New("platform error")
+			s.Logger.Warn(err)
+			continue
+		}
+		s.platforms[platform] = struct{}{}
 	}
-	s.platform[platform] = struct{}{}
+
+	return s
+}
+
+func (s *BaseSpider) GetPlatforms() (platforms []pkg.Platform) {
+	for k := range s.platforms {
+		platforms = append(platforms, k)
+	}
 	return
 }
 
-func (s *BaseSpider) GetPlatform() (platform []pkg.Platform) {
-	for k := range s.platform {
-		platform = append(platform, k)
+func (s *BaseSpider) SetBrowsers(browsers ...pkg.Browser) pkg.Spider {
+	for _, browser := range browsers {
+		if browser == "" {
+			err := errors.New("browser error")
+			s.Logger.Warn(err)
+			continue
+		}
+		s.browsers[browser] = struct{}{}
 	}
-	return
+
+	return s
 }
 
-func (s *BaseSpider) SetBrowser(browser pkg.Browser) (err error) {
-	if browser > pkg.FireFox {
-		err = errors.New("browser error")
-		return
-	}
-	s.browser[browser] = struct{}{}
-	return
-}
-
-func (s *BaseSpider) GetBrowser() (browser []pkg.Browser) {
-	for k := range s.browser {
-		browser = append(browser, k)
+func (s *BaseSpider) GetBrowsers() (browsers []pkg.Browser) {
+	for k := range s.browsers {
+		browsers = append(browsers, k)
 	}
 	return
 }
@@ -201,6 +211,8 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.Logger.Info("allowedDomains", s.spider.GetAllowedDomains())
 	s.Logger.Info("middlewares", s.spider.GetMiddlewares())
 	s.Logger.Info("okHttpCodes", s.okHttpCodes)
+	s.Logger.Info("platforms", s.spider.GetPlatforms())
+	s.Logger.Info("browsers", s.spider.GetBrowsers())
 	if s.spider == nil {
 		err = errors.New("spider is empty")
 		s.Logger.Error(err)
@@ -296,7 +308,7 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, mysql *sql.DB, kafka *kafka.Writer, httpClient pkg.HttpClient, server *devServer.HttpServer) (spider *BaseSpider, err error) {
+func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, mongoDb *mongo.Database, mysql *sql.DB, kafka *kafka.Writer, server *devServer.HttpServer) (spider *BaseSpider, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	concurrency := defaultRequestConcurrency
@@ -341,7 +353,6 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		Mysql:       mysql,
 		Kafka:       kafka,
 		Logger:      logger,
-		httpClient:  httpClient,
 
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
@@ -353,11 +364,12 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 
 		devServer: server,
 
-		platform: make(map[pkg.Platform]struct{}),
-		browser:  make(map[pkg.Browser]struct{}),
-		config:   config,
+		platforms: make(map[pkg.Platform]struct{}, 4),
+		browsers:  make(map[pkg.Browser]struct{}, 4),
+		config:    config,
 	}
 	spider.Mode = cli.Mode
+	spider.httpClient = new(httpClient.HttpClient).FromCrawler(spider)
 
 	spider.
 		SetMiddleware(middlewares.NewStatsMiddleware, 100).

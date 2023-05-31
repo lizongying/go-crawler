@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/device"
+	"github.com/lizongying/go-crawler/static"
 	"math/rand"
+	"reflect"
 	"time"
 )
 
@@ -12,38 +15,51 @@ type DeviceMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger pkg.Logger
 	spider pkg.Spider
-	uaAll  map[string][]map[string]string
-	ua     []map[string]string
+	uaAll  map[string][]device.Device
+	ua     []device.Device
 	uaLen  int
 }
 
 func (m *DeviceMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
-	platform := spider.GetPlatform()
-	browser := spider.GetBrowser()
-	var ua []map[string]string
-	if len(platform) > 0 {
-		if len(browser) > 0 {
-			u, ok := m.uaAll[fmt.Sprintf("%d%d", platform, browser)]
-			if ok {
-				ua = append(ua, u...)
+	platforms := spider.GetPlatforms()
+	browsers := spider.GetBrowsers()
+
+	devices, _ := device.NewDevicesFromBytes(static.Devices)
+	m.uaAll = devices.Devices
+
+	var ua []device.Device
+	if len(platforms) > 0 && len(browsers) > 0 {
+		for _, platform := range platforms {
+			for _, browser := range browsers {
+				u, ok := m.uaAll[fmt.Sprintf("%s-%s", platform, browser)]
+				if ok {
+					ua = append(ua, u...)
+				}
 			}
 		}
 	}
 	m.ua = ua
 	m.uaLen = len(ua)
+
 	return
 }
 
 func (m *DeviceMiddleware) ProcessRequest(c *pkg.Context) (err error) {
+	err = c.NextRequest()
+	if err != nil {
+		m.logger.Debug(err)
+		return
+	}
+
 	request := c.Request
 
 	platform := request.Platform
 	browser := request.Browser
-	var ua []map[string]string
+	var ua []device.Device
 	uaLen := 0
 	if len(platform) > 0 && len(browser) > 0 {
-		u, ok := m.uaAll[fmt.Sprintf("%d%d", platform, browser)]
+		u, ok := m.uaAll[fmt.Sprintf("%s-%s", platform, browser)]
 		if ok {
 			ua = append(ua, u...)
 		}
@@ -53,16 +69,16 @@ func (m *DeviceMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		uaLen = m.uaLen
 	}
 
-	m.logger.Error(1111, request.UserAgent())
-
 	if request.UserAgent() == "" && uaLen > 0 {
 		u := ua[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(uaLen)]
-		for k, v := range u {
-			request.SetHeader(k, v)
+		rt := reflect.TypeOf(u)
+		rv := reflect.ValueOf(u)
+		for i := 0; i < rt.NumField(); i++ {
+			request.SetHeader(rt.Field(i).Tag.Get("name"), rv.Field(i).String())
 		}
+		m.logger.Debug("UserAgent", request.UserAgent())
 	}
 
-	err = c.NextRequest()
 	return
 }
 

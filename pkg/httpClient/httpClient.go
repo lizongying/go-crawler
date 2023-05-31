@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/config"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"io"
 	"net"
@@ -15,16 +13,13 @@ import (
 	"time"
 )
 
-const defaultTimeout = time.Minute
-const defaultHttpProto = "2.0"
-
 type HttpClient struct {
 	client      *http.Client
 	proxy       *url.URL
 	timeout     time.Duration
 	httpProto   string
 	logger      pkg.Logger
-	middlewares map[int]pkg.Middleware
+	middlewares []pkg.Middleware
 }
 
 func (h *HttpClient) BuildRequest(ctx context.Context, request *pkg.Request) (err error) {
@@ -165,34 +160,15 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 	return
 }
 
-func NewHttpClient(config *config.Config, logger *logger.Logger) (httpClient pkg.HttpClient, err error) {
-	proxyExample := config.Proxy.Example
-	var proxy *url.URL
-	if proxyExample != "" {
-		proxy, err = url.Parse(proxyExample)
-		if err != nil {
-			logger.Error(err)
-			return
-		}
-	}
+func (h *HttpClient) FromCrawler(spider pkg.Spider) pkg.HttpClient {
+	config := spider.GetConfig()
 
-	timeout := defaultTimeout
-	if config.Request.Timeout > 0 {
-		timeout = time.Second * time.Duration(config.Request.Timeout)
-	}
+	h.client = http.DefaultClient
+	h.proxy = config.GetProxy()
+	h.timeout = config.GetTimeout()
+	h.httpProto = config.GetHttpProto()
+	h.logger = spider.GetLogger()
+	h.middlewares = spider.SortedMiddlewares()
 
-	httpProto := defaultHttpProto
-	if config.Request.HttpProto != "" {
-		httpProto = config.Request.HttpProto
-	}
-
-	httpClient = &HttpClient{
-		client:    http.DefaultClient,
-		proxy:     proxy,
-		timeout:   timeout,
-		httpProto: httpProto,
-		logger:    logger,
-	}
-
-	return
+	return h
 }

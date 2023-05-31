@@ -9,6 +9,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
@@ -106,7 +107,7 @@ func (s *Spider) ParseOk(_ context.Context, response *pkg.Response) (err error) 
 	s.Logger.Info("extra", utils.JsonStr(extra))
 	s.Logger.Debug("response", string(response.BodyBytes))
 
-	if extra.Count > 10 {
+	if extra.Count > 1 {
 		return
 	}
 	//if extra.Count%1000 == 0 {
@@ -307,15 +308,18 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	if baseSpider.Mode == "dev" {
 		baseSpider.AddDevServerRoutes(devServer2.NewCustomHandler(logger))
 	}
-	//baseSpider.Interval = time.Millisecond
+	//baseSpider.Interval = 0
 	baseSpider.
-		AddOkHttpCodes(201)
-	//SetMiddleware(middlewares.NewDeviceMiddleware, 100)
+		AddOkHttpCodes(201).
+		SetMiddleware(middlewares.NewDeviceMiddleware, 100)
 	//SetMiddleware(middlewares.NewMongoMiddleware, 141).
 	//SetMiddleware(middlewares.NewCsvMiddleware, 142)
 	//SetMiddleware(middlewares.NewJsonLinesMiddleware, 143).
 	//SetMiddleware(middlewares.NewMysqlMiddleware, 144).
 	//SetMiddleware(middlewares.NewKafkaMiddleware, 145)
+
+	baseSpider.SetPlatforms(pkg.Windows, pkg.Mac, pkg.Android, pkg.Ios)
+	baseSpider.SetBrowsers(pkg.Chrome, pkg.Edge, pkg.Safari, pkg.FireFox)
 
 	spider = &Spider{
 		BaseSpider:     baseSpider,

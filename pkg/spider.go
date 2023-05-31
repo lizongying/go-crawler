@@ -49,8 +49,10 @@ type Spider interface {
 	AddDevServerRoutes(routes ...Route) Spider
 	AddOkHttpCodes(httpCodes ...int) Spider
 	GetOkHttpCodes() []int
-	GetPlatform() []Platform
-	GetBrowser() []Browser
+	GetPlatforms() []Platform
+	GetBrowsers() []Browser
+	SetPlatforms(...Platform) Spider
+	SetBrowsers(...Browser) Spider
 	GetConfig() *config.Config
 	GetLogger() Logger
 	GetHttpClient() HttpClient

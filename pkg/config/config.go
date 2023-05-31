@@ -4,8 +4,13 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"gopkg.in/yaml.v2"
 	"log"
+	"net/url"
 	"os"
+	"time"
 )
+
+const defaultHttpProto = "2.0"
+const defaultTimeout = time.Minute
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -45,6 +50,34 @@ type Config struct {
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
 	DevAddr string `yaml:"dev_addr" json:"-"`
+}
+
+func (c *Config) GetProxy() *url.URL {
+	if c.Proxy.Example != "" {
+		proxy, err := url.Parse(c.Proxy.Example)
+		if err != nil {
+			log.Panicln(err)
+		}
+		return proxy
+	}
+
+	return nil
+}
+
+func (c *Config) GetHttpProto() string {
+	if c.Request.HttpProto != "" {
+		return c.Request.HttpProto
+	}
+
+	return defaultHttpProto
+}
+
+func (c *Config) GetTimeout() time.Duration {
+	if c.Request.Timeout > 0 {
+		return time.Second * time.Duration(c.Request.Timeout)
+	}
+
+	return defaultTimeout
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {
