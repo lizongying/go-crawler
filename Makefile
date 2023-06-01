@@ -9,5 +9,5 @@ tidy:
 	go mod tidy
 
 testSpider:
-	go vet ./example/testSpider
-	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test" -o ./releases/testSpider ./example/testSpider
+	go vet ./cmd/testSpider
+	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test" -o ./releases/testSpider ./cmd/testSpider
