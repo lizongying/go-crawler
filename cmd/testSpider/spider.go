@@ -338,6 +338,7 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 		baseSpider.AddDevServerRoutes(devServer2.NewCustomHandler(logger))
 	}
 	//baseSpider.Interval = 0
+	//baseSpider.SetRequestRate("*", time.Second*3, 1)
 	baseSpider.
 		AddOkHttpCodes(201).
 		SetMiddleware(middlewares.NewDeviceMiddleware, 100)

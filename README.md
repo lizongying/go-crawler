@@ -5,7 +5,16 @@
 
 ## Feature
 
-* 为了方便开发调试，增加了本地devServer，在`-m dev`模式下会默认启用。可以自定义route，仅需要实现`pkg.Route`，然后在spider中通过`AddDevServerRoutes(...pkg.Route)`注册到devServer即可。
+* 内置devServer，方便调试开发。
+* 完善的配置项，自由性更高。
+* 丰富的内置中间件，同时方便自定义中间件。
+* 多种解析方式，解析页面更简单。
+* 支持多种结果保存方式，按需使用。
+
+## Usage
+
+* 为了方便开发调试，增加了本地devServer，在`-m dev`模式下会默认启用。可以自定义route，仅需要实现`pkg.Route`
+  ，然后在spider中通过`AddDevServerRoutes(...pkg.Route)`注册到devServer即可。
 * 中间件的order不能重复。编写的时候不要忘记`nextRequest()`/`nextResponse()`/`nextItem()`
 * 本框架舍弃了pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
@@ -42,9 +51,8 @@
     * re选择器 [go-re](https://github.com/lizongying/go-re)
         * ```response.Re()```
 * 代理
-    * 可以自行搭建隧道代理 [go-proxy](https://github.com/lizongying/go-proxy)。这是一个随机切换的隧道代理，调用方无感知，方便使用。后期会加入一些其他的调用方式，比如维持原来的代理地址。
-
-## Usage
+    * 可以自行搭建隧道代理 [go-proxy](https://github.com/lizongying/go-proxy)
+      。这是一个随机切换的隧道代理，调用方无感知，方便使用。后期会加入一些其他的调用方式，比如维持原来的代理地址。
 
 ### args
 
@@ -79,7 +87,7 @@ git clone github.com/lizongying/go-crawler-example
 ## Test
 
 ```shell
-go run example/testSpider/*.go -c dev.yml -f TestOk -m dev
+go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
 
 ```
 
