@@ -46,12 +46,6 @@ func (m *DeviceMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (er
 }
 
 func (m *DeviceMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	err = c.NextRequest()
-	if err != nil {
-		m.logger.Debug(err)
-		return
-	}
-
 	request := c.Request
 
 	platform := request.Platform
@@ -69,14 +63,19 @@ func (m *DeviceMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		uaLen = m.uaLen
 	}
 
-	if request.UserAgent() == "" && uaLen > 0 {
+	if len(request.Header) == 0 && uaLen > 0 {
 		u := ua[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(uaLen)]
 		rt := reflect.TypeOf(u)
 		rv := reflect.ValueOf(u)
 		for i := 0; i < rt.NumField(); i++ {
 			request.SetHeader(rt.Field(i).Tag.Get("name"), rv.Field(i).String())
 		}
-		m.logger.Debug("UserAgent", request.UserAgent())
+	}
+
+	err = c.NextRequest()
+	if err != nil {
+		m.logger.Debug(err)
+		return
 	}
 
 	return

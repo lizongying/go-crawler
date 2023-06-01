@@ -1,10 +1,11 @@
 package device
 
 import (
+	"github.com/lizongying/go-crawler/static"
 	"testing"
 )
 
 func TestNewDevices(t *testing.T) {
-	device, _ := NewDevices("/Users/lizongying/IdeaProjects/go-crawler/pkg/device/devices.csv")
-	t.Log(device.Devices)
+	devices, _ := NewDevicesFromBytes(static.Devices)
+	t.Log(devices.Devices)
 }
