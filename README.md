@@ -15,8 +15,9 @@
 
 * 为了方便开发调试，增加了本地devServer，在`-m dev`模式下会默认启用。可以自定义route，仅需要实现`pkg.Route`
   ，然后在spider中通过`AddDevServerRoutes(...pkg.Route)`注册到devServer即可。
-  * 支持http和https，可以设置`dev_server`。如http`:8081`，https`https://:8081`。
-  * 默认显示ja3指纹，暂未加入配置。
+    * 支持http和https，可以设置`dev_server`。如http`:8081`，https`https://:8081`。
+    * 默认显示ja3指纹。
+    * 可以通过tls工具`tls`生成服务器的私钥和证书。
 * 中间件的order不能重复。编写的时候不要忘记`nextRequest()`/`nextResponse()`/`nextItem()`
 * 本框架舍弃了pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
@@ -26,12 +27,16 @@
         * 修改request设备信息。修改header和tls信息，暂时只支持user-agent随机切换。需要设置`SetPlatforms`和`SetBrowsers`
           限定设备范围。默认不启用。
         * 启用方法。`spider.SetMiddleware(middlewares.NewDeviceMiddleware, 100)`
+        * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
+        * Browsers: Chrome/Edge/Safari/FireFox
     * filter:110
         * 过滤重复请求。默认支持的是item保存成功后才会进入去重队列，防止出现请求失败后再次请求却被过滤的问题。所以当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
     * retry:120
         * 如果请求出错，会进行重试。默认启用，`RetryMaxTimes=3`
     * http:130
-    * dump:140 在debug模式下打印item.data
+    * dump:140
+        * 在debug模式下打印item.data
+        * 默认启用
     * csv
         * 保存结果到csv文件。
     * jsonlines

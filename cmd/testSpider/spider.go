@@ -351,7 +351,7 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	//	AddOkHttpCodes(204).
 	//	SetMiddleware(middlewares.NewImageMiddleware, 111)
 
-	baseSpider.SetPlatforms(pkg.Windows, pkg.Mac, pkg.Android, pkg.Ios)
+	baseSpider.SetPlatforms(pkg.Windows, pkg.Mac, pkg.Android, pkg.Iphone, pkg.Ipad)
 	baseSpider.SetBrowsers(pkg.Chrome, pkg.Edge, pkg.Safari, pkg.FireFox)
 
 	baseSpider.Stats = &stats.ImageStats{}

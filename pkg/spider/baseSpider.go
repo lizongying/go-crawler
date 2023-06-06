@@ -364,7 +364,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 
 		devServer: server,
 
-		platforms: make(map[pkg.Platform]struct{}, 4),
+		platforms: make(map[pkg.Platform]struct{}, 6),
 		browsers:  make(map[pkg.Browser]struct{}, 4),
 		config:    config,
 	}

@@ -127,7 +127,9 @@ const (
 	Windows Platform = "windows"
 	Mac     Platform = "mac"
 	Android Platform = "android"
-	Ios     Platform = "ios"
+	Iphone  Platform = "iphone"
+	Ipad    Platform = "ipad"
+	Linux   Platform = "linux"
 )
 
 type Browser string
