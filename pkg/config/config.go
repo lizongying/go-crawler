@@ -11,6 +11,7 @@ import (
 
 const defaultHttpProto = "2.0"
 const defaultTimeout = time.Minute
+const defaultDevServer = "http://:8081"
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -49,7 +50,7 @@ type Config struct {
 		RetryMaxTimes int    `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
-	DevAddr string `yaml:"dev_addr" json:"-"`
+	DevServer string `yaml:"dev_server" json:"-"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -78,6 +79,16 @@ func (c *Config) GetTimeout() time.Duration {
 	}
 
 	return defaultTimeout
+}
+
+func (c *Config) GetDevServer() (url *url.URL, err error) {
+	if c.DevServer != "" {
+		url, err = url.Parse(c.DevServer)
+		return
+	}
+
+	url, err = url.Parse(defaultDevServer)
+	return
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

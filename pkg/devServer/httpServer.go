@@ -2,19 +2,21 @@ package devServer
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/static"
 	"go.uber.org/fx"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
-const defaultAddr = ":8081"
-
 type HttpServer struct {
+	url    *url.URL
 	srv    *http.Server
 	logger *logger.Logger
 
@@ -22,17 +24,68 @@ type HttpServer struct {
 	routes map[string]struct{}
 }
 
+func convertToJA3(info *tls.ClientHelloInfo) string {
+	var ja3Builder strings.Builder
+
+	ja3Builder.WriteString(fmt.Sprintf("%d,", info.SupportedVersions[0]))
+
+	cipherSuites := make([]string, len(info.CipherSuites))
+	for i, suite := range info.CipherSuites {
+		cipherSuites[i] = fmt.Sprintf("%d", suite)
+	}
+	ja3Builder.WriteString(strings.Join(cipherSuites, "-"))
+	ja3Builder.WriteString(",")
+
+	//extensions := make([]string, len(info.Extensions))
+	//for i, ext := range info.Extensions {
+	//	extensions[i] = fmt.Sprintf("%04x", ext)
+	//}
+	//ja3Builder.WriteString(strings.Join(extensions, "-"))
+	ja3Builder.WriteString(",")
+
+	curves := make([]string, len(info.SupportedCurves))
+	for i, curve := range info.SupportedCurves {
+		curves[i] = fmt.Sprintf("%d", curve)
+	}
+	ja3Builder.WriteString(strings.Join(curves, "-"))
+	ja3Builder.WriteString(",")
+
+	points := make([]string, len(info.SupportedPoints))
+	for i, point := range info.SupportedPoints {
+		points[i] = fmt.Sprintf("%d", point)
+	}
+	ja3Builder.WriteString(strings.Join(points, "-"))
+
+	return ja3Builder.String()
+}
+
 func (h *HttpServer) Run() (err error) {
+	h.logger.Info("Starting dev server at", h.url.String())
 	h.srv.Handler = h.mux
-	ln, err := net.Listen("tcp", h.srv.Addr)
-	if err != nil {
+	listener, e := net.Listen("tcp", h.url.Host)
+	if e != nil {
+		err = e
 		h.logger.Error(err)
 		return
 	}
-
-	h.logger.Info("Starting dev server at", h.srv.Addr)
 	go func() {
-		err = h.srv.Serve(ln)
+		if h.url.Scheme == "https" {
+			cer, e := tls.X509KeyPair(static.Cert, static.Key)
+			if e != nil {
+				err = e
+				h.logger.Error(err)
+				return
+			}
+			tlsListener := tls.NewListener(listener, &tls.Config{
+				GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
+					h.logger.Info("ja3", convertToJA3(info))
+					return &cer, nil
+				},
+			})
+			err = h.srv.Serve(tlsListener)
+		} else {
+			err = h.srv.Serve(listener)
+		}
 		if err != nil {
 			if err.Error() == "http: Server closed" {
 				return
@@ -58,20 +111,19 @@ func (h *HttpServer) GetRoutes() (routes []string) {
 }
 
 func (h *HttpServer) GetHost() (host string) {
-	host = h.srv.Addr
-	if !strings.Contains(host, "http://") && !strings.Contains(host, "https://") {
-		host = fmt.Sprintf("http://%s", host)
-	}
+	host = h.url.String()
 	return
 }
 
 func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger *logger.Logger) (httpServer *HttpServer) {
-	addr := defaultAddr
-	if config.DevAddr != "" {
-		addr = config.DevAddr
+	devServer, err := config.GetDevServer()
+	if err != nil {
+		logger.Error(err)
+		return
 	}
-	srv := &http.Server{Addr: addr}
+	srv := &http.Server{}
 	httpServer = &HttpServer{
+		url:    devServer,
 		srv:    srv,
 		logger: logger,
 		mux:    http.NewServeMux(),

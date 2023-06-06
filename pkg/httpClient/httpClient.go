@@ -2,9 +2,12 @@ package httpClient
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"github.com/lizongying/go-crawler/static"
 	"io"
 	"net"
 	"net/http"
@@ -85,6 +88,8 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 		timeout = request.Timeout
 	}
 
+	pool := x509.NewCertPool()
+	pool.AppendCertsFromPEM(static.Cert)
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -100,6 +105,10 @@ func (h *HttpClient) BuildResponse(ctx context.Context, request *pkg.Request) (r
 		MaxConnsPerHost:     1000,
 		MaxIdleConns:        1000,
 		MaxIdleConnsPerHost: 1000,
+		TLSClientConfig: &tls.Config{
+			RootCAs: pool,
+			//InsecureSkipVerify: true,
+		},
 	}
 	if request.ProxyEnable {
 		proxy := h.proxy

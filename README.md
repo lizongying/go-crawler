@@ -15,6 +15,8 @@
 
 * 为了方便开发调试，增加了本地devServer，在`-m dev`模式下会默认启用。可以自定义route，仅需要实现`pkg.Route`
   ，然后在spider中通过`AddDevServerRoutes(...pkg.Route)`注册到devServer即可。
+  * 支持http和https，可以设置`dev_server`。如http`:8081`，https`https://:8081`。
+  * 默认显示ja3指纹，暂未加入配置。
 * 中间件的order不能重复。编写的时候不要忘记`nextRequest()`/`nextResponse()`/`nextItem()`
 * 本框架舍弃了pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
@@ -74,7 +76,7 @@
 * request.ok_http_codes: Request ok httpcodes
 * request.retry_max_times: Request retry max times
 * request.http_proto: Request http proto
-* dev_addr: dev httpserver addr
+* dev_server: devServer。如http`:8081`，https`https://:8081`。
 
 ## Example
 
