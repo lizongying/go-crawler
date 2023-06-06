@@ -933,7 +933,7 @@ android-chrome,"Mozilla/5.0 (Linux; Android 13; V2037) AppleWebKit/537.36 (KHTML
 windows-chrome,"Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.80 Safari/537.36"
 android-chrome,"Mozilla/5.0 (Linux; Android 11; SM-A325F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Mobile Safari/537.36"
 iphone-safari,"Mozilla/5.0 (iPhone; CPU iPhone OS 15_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/111.0.5563.72 Mobile/15E148 Safari/604.1"
-iphone-,"Mozilla/5.0 (iPhone XR; CPU iOS 16_0 like Mac OS X) AppleWebKit/604.4.7 (KHTML, like Gecko) Mobile/15C153 MubuApp/2.28.4 native/{\"channelId\":\"iOS\",\"language\":\"zh_cn\",\"channel\":\"iOS\"}"
+iphone-,"Mozilla/5.0 (iPhone XR; CPU iOS 16_0 like Mac OS X) AppleWebKit/604.4.7 (KHTML, like Gecko) Mobile/15C153 MubuApp/2.28.4 native/"
 android-chrome,"Mozilla/5.0 (Linux; Android 11; Joy 4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Mobile Safari/537.36"
 android-chrome,"Mozilla/5.0 (Linux; Android 12; 21091116UG) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36"
 mac-chrome,"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36"

@@ -169,7 +169,7 @@ func (s *BaseSpider) GetOkHttpCodes() (httpCodes []int) {
 	return
 }
 
-func (s *BaseSpider) GetConfig() *config.Config {
+func (s *BaseSpider) GetConfig() pkg.Config {
 	return s.config
 }
 
@@ -213,6 +213,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.Logger.Info("okHttpCodes", s.okHttpCodes)
 	s.Logger.Info("platforms", s.spider.GetPlatforms())
 	s.Logger.Info("browsers", s.spider.GetBrowsers())
+	s.Logger.Info("referrerPolicy", s.config.GetReferrerPolicy())
 	if s.spider == nil {
 		err = errors.New("spider is empty")
 		s.Logger.Error(err)
@@ -375,8 +376,9 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		SetMiddleware(middlewares.NewStatsMiddleware, 100).
 		SetMiddleware(middlewares.NewFilterMiddleware, 110).
 		SetMiddleware(middlewares.NewRetryMiddleware, 120).
-		SetMiddleware(middlewares.NewHttpMiddleware, 130).
-		SetMiddleware(middlewares.NewDumpMiddleware, 140)
+		SetMiddleware(middlewares.NewRefererMiddleware, 130).
+		SetMiddleware(middlewares.NewHttpMiddleware, 140).
+		SetMiddleware(middlewares.NewDumpMiddleware, 150)
 
 	return
 }

@@ -19,7 +19,6 @@ require (
 )
 
 require (
-	github.com/CUCyber/ja3transport v0.0.0-20201031204932-8a22ac8ab5d7 // indirect
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
@@ -31,7 +30,6 @@ require (
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
-	github.com/refraction-networking/utls v0.0.0-20200820030103-33a29038e742 // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect

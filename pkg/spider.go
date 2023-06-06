@@ -3,7 +3,6 @@ package pkg
 import (
 	"context"
 	"database/sql"
-	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"
@@ -42,8 +41,8 @@ type Spider interface {
 	SetItemConcurrency(int) Spider
 	SetRequestRate(string, time.Duration, int) Spider
 	IsAllowedDomain(*url.URL) bool
-	YieldRequest(*Request) error
-	YieldItem(Item) error
+	YieldRequest(context.Context, *Request) error
+	YieldItem(context.Context, Item) error
 	RunDevServer() error
 	GetDevServerHost() string
 	AddDevServerRoutes(routes ...Route) Spider
@@ -53,7 +52,7 @@ type Spider interface {
 	GetBrowsers() []Browser
 	SetPlatforms(...Platform) Spider
 	SetBrowsers(...Browser) Spider
-	GetConfig() *config.Config
+	GetConfig() Config
 	GetLogger() Logger
 	GetHttpClient() HttpClient
 	GetKafka() *kafka.Writer

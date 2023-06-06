@@ -56,7 +56,7 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 	return
 }
 
-func (s *BaseSpider) YieldItem(item pkg.Item) (err error) {
+func (s *BaseSpider) YieldItem(ctx context.Context, item pkg.Item) (err error) {
 	data := item.GetData()
 	if data == nil {
 		err = errors.New("nil data")
@@ -75,6 +75,13 @@ func (s *BaseSpider) YieldItem(item pkg.Item) (err error) {
 		s.Logger.Error(err)
 		return
 	}
+
+	// add referer to item
+	referer := ctx.Value("referer")
+	if referer != nil {
+		item.SetReferer(referer.(string))
+	}
+
 	s.itemActiveChan <- struct{}{}
 	s.itemChan <- item
 

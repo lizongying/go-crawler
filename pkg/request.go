@@ -12,6 +12,7 @@ type RequestJson struct {
 	UniqueKey          string `json:"unique_key,omitempty"` // for filter
 	CallBack           string `json:"call_back,omitempty"`
 	ErrBack            string `json:"err_back,omitempty"`
+	Referer            string `json:"referer,omitempty"`
 	Checksum           string `json:"checksum,omitempty"`
 	CreateTime         string `json:"create_time,omitempty"`          //create time
 	Skip               bool   `json:"skip,omitempty"`                 // Not in to schedule
@@ -43,6 +44,7 @@ type Request struct {
 	UniqueKey          string
 	CallBack           func(context.Context, *Response) (err error)
 	ErrBack            func(context.Context, *Response, error)
+	Referer            string
 	Checksum           string
 	CreateTime         string
 	SpendTime          time.Duration

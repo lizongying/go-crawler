@@ -4,10 +4,13 @@ type Item interface {
 	GetUniqueKey() string
 	GetId() any
 	GetData() any
+	SetReferer(string)
+	GetReferer() string
 }
 
 type ItemUnimplemented struct {
 	UniqueKey string
+	referer   string
 	Id        any
 	Data      any
 }
@@ -15,13 +18,17 @@ type ItemUnimplemented struct {
 func (i *ItemUnimplemented) GetUniqueKey() string {
 	return i.UniqueKey
 }
-
 func (i *ItemUnimplemented) GetId() any {
 	return i.Id
 }
-
 func (i *ItemUnimplemented) GetData() any {
 	return i.Data
+}
+func (i *ItemUnimplemented) SetReferer(referer string) {
+	i.referer = referer
+}
+func (i *ItemUnimplemented) GetReferer() string {
+	return i.referer
 }
 
 type ItemMongo struct {

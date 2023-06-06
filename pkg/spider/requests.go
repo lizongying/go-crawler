@@ -144,6 +144,12 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 						s.Logger.Error(string(buf))
 					}
 				}()
+
+				// add referer to context
+				if request.Url != "" {
+					ctx = context.WithValue(ctx, "referer", request.Url)
+				}
+
 				e := request.CallBack(ctx, response)
 				if e != nil {
 					s.Logger.Error(e)
@@ -162,7 +168,7 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 	return
 }
 
-func (s *BaseSpider) YieldRequest(request *pkg.Request) (err error) {
+func (s *BaseSpider) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
 	if len(s.requestChan) == cap(s.requestChan) {
 		err = errors.New("requestChan max limit")
 		s.Logger.Error(err)
@@ -173,6 +179,13 @@ func (s *BaseSpider) YieldRequest(request *pkg.Request) (err error) {
 		s.Logger.Debug("skip")
 		return
 	}
+
+	// add referer to request
+	referer := ctx.Value("referer")
+	if referer != nil {
+		request.Referer = referer.(string)
+	}
+
 	s.requestActiveChan <- struct{}{}
 	s.requestChan <- request
 

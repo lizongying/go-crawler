@@ -26,4 +26,5 @@ request:
     - 200
   retry_max_times: 10
   http_proto: 2.0
-dev_server: http://:8081
+dev_server: http://localhost:8081
+referrer_policy: NoReferrerPolicy

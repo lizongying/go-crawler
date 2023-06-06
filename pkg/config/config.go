@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"gopkg.in/yaml.v2"
 	"log"
@@ -11,7 +12,7 @@ import (
 
 const defaultHttpProto = "2.0"
 const defaultTimeout = time.Minute
-const defaultDevServer = "http://:8081"
+const defaultDevServer = "http://localhost:8081"
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -50,7 +51,8 @@ type Config struct {
 		RetryMaxTimes int    `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
-	DevServer string `yaml:"dev_server" json:"-"`
+	DevServer      string `yaml:"dev_server" json:"-"`
+	ReferrerPolicy string `yaml:"referrer_policy" json:"-"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -89,6 +91,21 @@ func (c *Config) GetDevServer() (url *url.URL, err error) {
 
 	url, err = url.Parse(defaultDevServer)
 	return
+}
+
+func (c *Config) GetReferrerPolicy() pkg.ReferrerPolicy {
+	if c.ReferrerPolicy != "" {
+		switch pkg.ReferrerPolicy(c.ReferrerPolicy) {
+		case pkg.DefaultReferrerPolicy:
+			return pkg.DefaultReferrerPolicy
+		case pkg.NoReferrerPolicy:
+			return pkg.NoReferrerPolicy
+		default:
+			return pkg.DefaultReferrerPolicy
+		}
+	}
+
+	return pkg.DefaultReferrerPolicy
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

@@ -47,7 +47,7 @@ func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err e
 			Data:      &data,
 		},
 	}
-	err = s.YieldItem(&item)
+	err = s.YieldItem(ctx, &item)
 	if err != nil {
 		s.Logger.Error(err)
 		return err
@@ -57,8 +57,8 @@ func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err e
 }
 
 // Test go run cmd/baiduBaikeSpider/* -c dev.yml -m prod
-func (s *Spider) Test(_ context.Context, _ string) (err error) {
-	err = s.YieldRequest(&pkg.Request{
+func (s *Spider) Test(ctx context.Context, _ string) (err error) {
+	err = s.YieldRequest(ctx, &pkg.Request{
 		Extra: &ExtraDetail{
 			Keyword: "动物传染病",
 		},
