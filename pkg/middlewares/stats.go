@@ -131,11 +131,10 @@ func getKV(v reflect.Value, m map[string]uint32) {
 }
 
 func (m *StatsMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(StatsMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	m.interval = time.Minute
 	return m
-}
-
-func NewStatsMiddleware() pkg.Middleware {
-	return &StatsMiddleware{}
 }

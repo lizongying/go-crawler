@@ -13,6 +13,8 @@ type RequestJson struct {
 	CallBack           string `json:"call_back,omitempty"`
 	ErrBack            string `json:"err_back,omitempty"`
 	Referer            string `json:"referer,omitempty"`
+	Username           string `json:"username,omitempty"`
+	Password           string `json:"password,omitempty"`
 	Checksum           string `json:"checksum,omitempty"`
 	CreateTime         string `json:"create_time,omitempty"`          //create time
 	Skip               bool   `json:"skip,omitempty"`                 // Not in to schedule
@@ -33,10 +35,11 @@ type RequestJson struct {
 
 type Http struct {
 	*http.Request
-	Url     string      `json:"url,omitempty"`
-	Method  string      `json:"method,omitempty"`
-	BodyStr string      `json:"body,omitempty"`
-	Header  http.Header `json:"header,omitempty"`
+	Url     string         `json:"url,omitempty"`
+	Method  string         `json:"method,omitempty"`
+	BodyStr string         `json:"body,omitempty"`
+	Header  http.Header    `json:"header,omitempty"`
+	Cookies []*http.Cookie `json:"cookies,omitempty"`
 }
 
 type Request struct {
@@ -45,6 +48,8 @@ type Request struct {
 	CallBack           func(context.Context, *Response) (err error)
 	ErrBack            func(context.Context, *Response, error)
 	Referer            string
+	Username           string
+	Password           string
 	Checksum           string
 	CreateTime         string
 	SpendTime          time.Duration

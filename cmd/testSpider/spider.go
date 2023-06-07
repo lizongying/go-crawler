@@ -144,6 +144,13 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	return
 }
 
+func (s *Spider) ParseHttpAuth(ctx context.Context, response *pkg.Response) (err error) {
+	extra := response.Request.Extra.(*ExtraHttpAuth)
+	s.Logger.Info("extra", utils.JsonStr(extra))
+	s.Logger.Info("response", string(response.BodyBytes))
+	return
+}
+
 func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
 	s.Logger.Info("extra", utils.JsonStr(extra))
@@ -277,6 +284,22 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	return
 }
 
+// TestHttpAuth go run cmd/testSpider/*.go -c dev.yml -f TestHttpAuth -m dev
+func (s *Spider) TestHttpAuth(ctx context.Context, _ string) (err error) {
+	if s.Mode == "dev" {
+		s.AddDevServerRoutes(devServer.NewHttpAuthHandler(s.Logger))
+	}
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlHttpAuth)
+	request.Extra = &ExtraHttpAuth{}
+	request.CallBack = s.ParseHttpAuth
+	err = s.YieldRequest(ctx, request)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
 func (s *Spider) TestCsv(ctx context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
 		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
@@ -336,6 +359,8 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 		return
 	}
 	baseSpider.Name = "test"
+	baseSpider.Username = "username"
+	baseSpider.Password = "password"
 	if baseSpider.Mode == "dev" {
 		baseSpider.AddDevServerRoutes(devServer2.NewCustomHandler(logger))
 	}
@@ -343,12 +368,12 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	//baseSpider.SetRequestRate("*", time.Second*3, 1)
 	baseSpider.
 		AddOkHttpCodes(201).
-		SetMiddleware(middlewares.NewDeviceMiddleware, 100)
-	//SetMiddleware(middlewares.NewMongoMiddleware, 141).
-	//SetMiddleware(middlewares.NewCsvMiddleware, 142)
-	//SetMiddleware(middlewares.NewJsonLinesMiddleware, 143).
-	//SetMiddleware(middlewares.NewMysqlMiddleware, 144).
-	//SetMiddleware(middlewares.NewKafkaMiddleware, 145)
+		SetMiddleware(new(middlewares.DeviceMiddleware), 100)
+	//SetMiddleware(new(middlewares.MongoMiddleware), 141).
+	//SetMiddleware(new(middlewares.CsvMiddleware), 142)
+	//SetMiddleware(new(middlewares.JsonLinesMiddleware), 143).
+	//SetMiddleware(new(middlewares.MysqlMiddleware), 144).
+	//SetMiddleware(new(middlewares.KafkaMiddleware), 145)
 	//baseSpider.
 	//	AddOkHttpCodes(204).
 	//	SetMiddleware(middlewares.NewImageMiddleware, 111)

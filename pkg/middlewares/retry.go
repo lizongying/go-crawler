@@ -65,10 +65,9 @@ func (m *RetryMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 }
 
 func (m *RetryMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(RetryMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	return m
-}
-
-func NewRetryMiddleware() pkg.Middleware {
-	return &RetryMiddleware{}
 }

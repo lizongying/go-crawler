@@ -82,10 +82,9 @@ func (m *DeviceMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 }
 
 func (m *DeviceMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(DeviceMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	return m
-}
-
-func NewDeviceMiddleware() pkg.Middleware {
-	return &DeviceMiddleware{}
 }

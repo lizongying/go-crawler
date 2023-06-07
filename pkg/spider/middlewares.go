@@ -39,8 +39,8 @@ func (s *BaseSpider) ReplaceMiddlewares(middlewares map[uint8]pkg.Middleware) (e
 	return
 }
 
-func (s *BaseSpider) SetMiddleware(NewMiddleware func() pkg.Middleware, order uint8) pkg.Spider {
-	middleware := NewMiddleware().FromCrawler(s)
+func (s *BaseSpider) SetMiddleware(newMiddleware pkg.Middleware, order uint8) pkg.Spider {
+	middleware := newMiddleware.FromCrawler(s)
 	name := reflect.TypeOf(middleware).Elem().String()
 	middleware.SetName(name)
 	for k, v := range s.middlewares {

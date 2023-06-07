@@ -33,3 +33,6 @@ type DataMysql struct {
 	C  string `column:"c"`
 	D  string `column:"d"`
 }
+
+type ExtraHttpAuth struct {
+}

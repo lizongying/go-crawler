@@ -17,6 +17,8 @@ type SpiderInfo struct {
 	Interval      time.Duration
 	RetryMaxTimes int
 	Timeout       time.Duration
+	Username      string
+	Password      string
 }
 
 type Spider interface {
@@ -33,7 +35,7 @@ type Spider interface {
 	CleanAllowedDomains()
 	GetMiddlewares() map[uint8]string
 	ReplaceMiddlewares(map[uint8]Middleware) error
-	SetMiddleware(func() Middleware, uint8) Spider
+	SetMiddleware(Middleware, uint8) Spider
 	DelMiddleware(string)
 	CleanMiddlewares()
 	SortedMiddlewares() []Middleware

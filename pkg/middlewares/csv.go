@@ -155,10 +155,9 @@ func (m *CsvMiddleware) SpiderStop(_ context.Context) (err error) {
 }
 
 func (m *CsvMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(CsvMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	return m
-}
-
-func NewCsvMiddleware() pkg.Middleware {
-	return &CsvMiddleware{}
 }

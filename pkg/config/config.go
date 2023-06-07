@@ -16,6 +16,8 @@ const defaultTimeout = time.Minute
 const defaultDevServer = "http://localhost:8081"
 
 const defaultUrlLengthLimit = 2083
+const defaultEnableCookie = false
+const defaultEnableDump = true
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -57,6 +59,9 @@ type Config struct {
 	DevServer      string `yaml:"dev_server" json:"-"`
 	ReferrerPolicy string `yaml:"referrer_policy" json:"-"`
 	UrlLengthLimit int    `yaml:"url_length_limit" json:"-"`
+	EnableHttpAuth bool   `yaml:"enable_http_auth" json:"-"`
+	EnableCookie   bool   `yaml:"enable_cookie" json:"-"`
+	EnableDump     bool   `yaml:"enable_dump" json:"-"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -114,6 +119,18 @@ func (c *Config) GetReferrerPolicy() pkg.ReferrerPolicy {
 
 func (c *Config) GetUrlLengthLimit() int {
 	return utils.Max(c.UrlLengthLimit, defaultUrlLengthLimit)
+}
+
+func (c *Config) GetEnableCookie() bool {
+	return c.EnableCookie
+}
+
+func (c *Config) GetEnableDump() bool {
+	return c.EnableDump
+}
+
+func (c *Config) GetEnableHttpAuth() bool {
+	return c.EnableHttpAuth
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

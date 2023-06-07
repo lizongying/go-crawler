@@ -119,10 +119,9 @@ func (m *JsonLinesMiddleware) SpiderStop(_ context.Context) (err error) {
 }
 
 func (m *JsonLinesMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(JsonLinesMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	return m
-}
-
-func NewJsonLinesMiddleware() pkg.Middleware {
-	return &JsonLinesMiddleware{}
 }

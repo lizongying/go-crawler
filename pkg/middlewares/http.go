@@ -63,11 +63,10 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 }
 
 func (m *HttpMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(HttpMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	m.httpClient = spider.GetHttpClient()
 	return m
-}
-
-func NewHttpMiddleware() pkg.Middleware {
-	return &HttpMiddleware{}
 }

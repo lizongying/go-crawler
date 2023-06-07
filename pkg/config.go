@@ -11,4 +11,5 @@ type Config interface {
 	GetTimeout() time.Duration
 	GetReferrerPolicy() ReferrerPolicy
 	GetUrlLengthLimit() int
+	GetEnableCookie() bool
 }

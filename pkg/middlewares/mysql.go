@@ -159,12 +159,11 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 }
 
 func (m *MysqlMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(MysqlMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	m.mysql = spider.GetMysql()
 	m.timeout = time.Minute
 	return m
-}
-
-func NewMysqlMiddleware() pkg.Middleware {
-	return &MysqlMiddleware{}
 }

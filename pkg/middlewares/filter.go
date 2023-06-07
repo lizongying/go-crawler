@@ -73,10 +73,9 @@ func (m *FilterMiddleware) SpiderStop(_ context.Context) (err error) {
 }
 
 func (m *FilterMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(FilterMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	return m
-}
-
-func NewFilterMiddleware() pkg.Middleware {
-	return &FilterMiddleware{}
 }

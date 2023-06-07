@@ -37,11 +37,10 @@ func (m *RefererMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 }
 
 func (m *RefererMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(RefererMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	m.refererPolicy = spider.GetConfig().GetReferrerPolicy()
 	return m
-}
-
-func NewRefererMiddleware() pkg.Middleware {
-	return &RefererMiddleware{}
 }

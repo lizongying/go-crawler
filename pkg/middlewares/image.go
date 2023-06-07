@@ -60,10 +60,9 @@ func (m *ImageMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 }
 
 func (m *ImageMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(ImageMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	return m
-}
-
-func NewImageMiddleware() pkg.Middleware {
-	return &ImageMiddleware{}
 }

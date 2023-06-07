@@ -51,10 +51,9 @@ func (m *DumpMiddleware) ProcessItem(c *pkg.Context) (err error) {
 }
 
 func (m *DumpMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(DumpMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	return m
-}
-
-func NewDumpMiddleware() pkg.Middleware {
-	return &DumpMiddleware{}
 }

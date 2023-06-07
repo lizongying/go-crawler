@@ -27,15 +27,15 @@ func (m *UrlMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		return
 	}
 
+	err = c.NextRequest()
 	return
 }
 
 func (m *UrlMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(UrlMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	m.urlLengthLimit = spider.GetConfig().GetUrlLengthLimit()
 	return m
-}
-
-func NewUrlMiddleware() pkg.Middleware {
-	return &UrlMiddleware{}
 }

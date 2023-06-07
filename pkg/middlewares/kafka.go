@@ -106,12 +106,11 @@ func (m *KafkaMiddleware) ProcessItem(c *pkg.Context) (err error) {
 }
 
 func (m *KafkaMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(KafkaMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	m.kafkaWriter = spider.GetKafka()
 	m.timeout = time.Minute
 	return m
-}
-
-func NewKafkaMiddleware() pkg.Middleware {
-	return &KafkaMiddleware{}
 }

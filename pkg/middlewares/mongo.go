@@ -107,12 +107,11 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 }
 
 func (m *MongoMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(MongoMiddleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	m.mongoDb = spider.GetMongoDb()
 	m.timeout = time.Minute
 	return m
-}
-
-func NewMongoMiddleware() pkg.Middleware {
-	return &MongoMiddleware{}
 }

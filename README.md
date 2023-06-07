@@ -51,30 +51,32 @@
         * 通过设置`referrer_policy`采用不同的referer策略，
         * DefaultReferrerPolicy。会加入请求来源，默认
         * NoReferrerPolicy。不加入请求来源
-    * http:150
-    * dump:160
+    * httpAuth:150
+        * 通过设置`username`、`password`添加httpAuth认证，
+    * http:160
+    * dump:170
         * 在debug模式下打印item.data
         * 默认启用
     * csv
         * 保存结果到csv文件。
         * 需在在ItemCsv中设置`FileName`，保存的文件名称，不包含.csv
-        * 启用方法。`spider.SetMiddleware(middlewares.NewCsvMiddleware, 161)`
-    * jsonlines
+        * 启用方法。`spider.SetMiddleware(middlewares.NewCsvMiddleware, 181)`
+    * jsonLines
         * 保存结果到jsonlines文件。
         * 需在在ItemJsonl中设置`FileName`，保存的文件名称，不包含.jsonl
-        * 启用方法。`spider.SetMiddleware(middlewares.NewJsonlinesMiddleware, 162)`
+        * 启用方法。`spider.SetMiddleware(middlewares.NewJsonLinesMiddleware, 182)`
     * mongo
         * 保存结果到mongo。
         * 需在在ItemMongo中设置`Collection`，保存的collection
-        * 启用方法。`spider.SetMiddleware(middlewares.NewMongoMiddleware, 163)`
+        * 启用方法。`spider.SetMiddleware(middlewares.NewMongoMiddleware, 183)`
     * mysql
         * 保存结果到mysql。
         * 需在在ItemMysql中设置`table`，保存的table
-        * 启用方法。`spider.SetMiddleware(middlewares.NewMysqlMiddleware, 164)`
+        * 启用方法。`spider.SetMiddleware(middlewares.NewMysqlMiddleware, 184)`
     * kafka
         * 保存结果到kafka。
         * 需在在ItemKafka中设置`Topic`，保存的topic
-        * 启用方法。`spider.SetMiddleware(middlewares.NewKafkaMiddleware, 165)`
+        * 启用方法。`spider.SetMiddleware(middlewares.NewKafkaMiddleware, 185)`
 * 在配置文件中可以配置全局request参数，在具体request中可以覆盖此配置
 * 解析模块
     * query选择器 [go-query](https://github.com/lizongying/go-query)
@@ -134,6 +136,13 @@ go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
     * media
     * proxy
     * random
+    * gzip
+    * decode
+    * redirect
+    * downloadtimeout
+    * defaultheaders
+    * cookie
+    * disable/enable middleware
 
 * once
 * cron

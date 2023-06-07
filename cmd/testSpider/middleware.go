@@ -24,10 +24,9 @@ func (m *Middleware) ProcessRequest(c *pkg.Context) (err error) {
 }
 
 func (m *Middleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(Middleware).FromCrawler(spider)
+	}
 	m.logger = spider.GetLogger()
 	return m
-}
-
-func NewMiddleware() pkg.Middleware {
-	return &Middleware{}
 }

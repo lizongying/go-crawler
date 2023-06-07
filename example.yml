@@ -29,3 +29,6 @@ request:
 dev_server: http://localhost:8081
 referrer_policy: NoReferrerPolicy
 url_length_limit:
+enable_http_auth: true
+enable_cookie: true
+enable_dump: true
