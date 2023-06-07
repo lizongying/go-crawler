@@ -21,6 +21,11 @@ func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err 
 }
 
 func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
+	m.logger.Debug("enter ProcessRequest")
+	defer func() {
+		m.logger.Debug("exit ProcessRequest")
+	}()
+
 	request := c.Request
 	m.logger.DebugF("request: %+v", request)
 

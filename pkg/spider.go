@@ -31,9 +31,9 @@ type Spider interface {
 	SetAllowedDomain(string)
 	DelAllowedDomain(string) error
 	CleanAllowedDomains()
-	GetMiddlewares() map[int]string
-	ReplaceMiddlewares(map[int]Middleware) error
-	SetMiddleware(func() Middleware, int) Spider
+	GetMiddlewares() map[uint8]string
+	ReplaceMiddlewares(map[uint8]Middleware) error
+	SetMiddleware(func() Middleware, uint8) Spider
 	DelMiddleware(string)
 	CleanMiddlewares()
 	SortedMiddlewares() []Middleware

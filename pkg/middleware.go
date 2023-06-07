@@ -4,21 +4,19 @@ import (
 	"context"
 )
 
-type MiddlewareOrder struct {
-	Middleware Middleware
-	Order      int
-}
-
 type Middleware interface {
 	SpiderStart(context.Context, Spider) error
 	ProcessRequest(*Context) error
 	ProcessResponse(*Context) error
 	ProcessItem(*Context) error
 	SpiderStop(context.Context) error
+	SetName(string)
+	GetName() string
 	FromCrawler(Spider) Middleware
 }
 
 type UnimplementedMiddleware struct {
+	name string
 }
 
 func (*UnimplementedMiddleware) SpiderStart(context.Context, Spider) (err error) {
@@ -39,6 +37,12 @@ func (*UnimplementedMiddleware) ProcessItem(c *Context) (err error) {
 
 func (*UnimplementedMiddleware) SpiderStop(context.Context) (err error) {
 	return
+}
+func (m *UnimplementedMiddleware) SetName(name string) {
+	m.name = name
+}
+func (m *UnimplementedMiddleware) GetName() string {
+	return m.name
 }
 
 type ProcessFunc func(*Context) error

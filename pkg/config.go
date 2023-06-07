@@ -10,4 +10,5 @@ type Config interface {
 	GetHttpProto() string
 	GetTimeout() time.Duration
 	GetReferrerPolicy() ReferrerPolicy
+	GetUrlLengthLimit() int
 }

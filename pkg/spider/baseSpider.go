@@ -67,7 +67,7 @@ type BaseSpider struct {
 	requestSlots          sync.Map
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
-	middlewares           map[int]pkg.Middleware
+	middlewares           map[uint8]pkg.Middleware
 
 	devServer *devServer.HttpServer
 
@@ -214,6 +214,7 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.Logger.Info("platforms", s.spider.GetPlatforms())
 	s.Logger.Info("browsers", s.spider.GetBrowsers())
 	s.Logger.Info("referrerPolicy", s.config.GetReferrerPolicy())
+	s.Logger.Info("urlLengthLimit", s.config.GetUrlLengthLimit())
 	if s.spider == nil {
 		err = errors.New("spider is empty")
 		s.Logger.Error(err)
@@ -357,7 +358,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
-		middlewares:           make(map[int]pkg.Middleware),
+		middlewares:           make(map[uint8]pkg.Middleware),
 		requestChan:           make(chan *pkg.Request, defaultChanRequestMax),
 		requestActiveChan:     make(chan struct{}, defaultChanRequestMax),
 		itemChan:              make(chan pkg.Item, defaultChanItemMax),
@@ -376,9 +377,10 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		SetMiddleware(middlewares.NewStatsMiddleware, 100).
 		SetMiddleware(middlewares.NewFilterMiddleware, 110).
 		SetMiddleware(middlewares.NewRetryMiddleware, 120).
-		SetMiddleware(middlewares.NewRefererMiddleware, 130).
-		SetMiddleware(middlewares.NewHttpMiddleware, 140).
-		SetMiddleware(middlewares.NewDumpMiddleware, 150)
+		SetMiddleware(middlewares.NewUrlMiddleware, 130).
+		SetMiddleware(middlewares.NewRefererMiddleware, 140).
+		SetMiddleware(middlewares.NewHttpMiddleware, 150).
+		SetMiddleware(middlewares.NewDumpMiddleware, 160)
 
 	return
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"strings"
 )
 
 type Spider struct {
@@ -259,13 +260,14 @@ func (s *Spider) TestKafka(ctx context.Context, _ string) (err error) {
 	return
 }
 
-// TestOk go run example/testNoLimitSpider/*.go -c dev.yml -f TestOk -m dev
+// TestOk go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
 		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
 	}
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
+	//request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk+strings.Repeat("#", 10000))
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ParseOk
 	err = s.YieldRequest(ctx, request)

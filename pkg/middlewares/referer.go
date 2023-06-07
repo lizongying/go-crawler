@@ -12,6 +12,11 @@ type RefererMiddleware struct {
 }
 
 func (m *RefererMiddleware) ProcessRequest(c *pkg.Context) (err error) {
+	m.logger.Debug("enter ProcessRequest")
+	defer func() {
+		m.logger.Debug("exit ProcessRequest")
+	}()
+
 	request := c.Request
 
 	if m.refererPolicy == pkg.NoReferrerPolicy && request.Header != nil && request.Header.Get("Referer") != "" {

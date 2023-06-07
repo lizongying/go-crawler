@@ -3,12 +3,12 @@ package spider
 import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"reflect"
-	"sort"
 )
 
-func (s *BaseSpider) GetMiddlewares() (middlewares map[int]string) {
-	middlewares = make(map[int]string)
+func (s *BaseSpider) GetMiddlewares() (middlewares map[uint8]string) {
+	middlewares = make(map[uint8]string)
 	for k, v := range s.middlewares {
 		middlewares[k] = reflect.TypeOf(v).Elem().String()
 	}
@@ -16,9 +16,9 @@ func (s *BaseSpider) GetMiddlewares() (middlewares map[int]string) {
 	return
 }
 
-func (s *BaseSpider) ReplaceMiddlewares(middlewares map[int]pkg.Middleware) (err error) {
+func (s *BaseSpider) ReplaceMiddlewares(middlewares map[uint8]pkg.Middleware) (err error) {
 	middlewaresNameMap := make(map[string]struct{})
-	middlewaresOrderMap := make(map[int]struct{})
+	middlewaresOrderMap := make(map[uint8]struct{})
 	for k, v := range middlewares {
 		name := reflect.TypeOf(v).Elem().String()
 		if _, ok := middlewaresNameMap[name]; ok {
@@ -36,13 +36,13 @@ func (s *BaseSpider) ReplaceMiddlewares(middlewares map[int]pkg.Middleware) (err
 	}
 
 	s.middlewares = middlewares
-
 	return
 }
 
-func (s *BaseSpider) SetMiddleware(NewMiddleware func() pkg.Middleware, order int) pkg.Spider {
+func (s *BaseSpider) SetMiddleware(NewMiddleware func() pkg.Middleware, order uint8) pkg.Spider {
 	middleware := NewMiddleware().FromCrawler(s)
 	name := reflect.TypeOf(middleware).Elem().String()
+	middleware.SetName(name)
 	for k, v := range s.middlewares {
 		if reflect.TypeOf(v).Elem().String() == name && k != order {
 			delete(s.middlewares, k)
@@ -67,17 +67,15 @@ func (s *BaseSpider) DelMiddleware(name string) {
 }
 
 func (s *BaseSpider) CleanMiddlewares() {
-	s.middlewares = make(map[int]pkg.Middleware)
-
-	return
+	s.middlewares = make(map[uint8]pkg.Middleware)
 }
 
 func (s *BaseSpider) SortedMiddlewares() (o []pkg.Middleware) {
-	keys := make([]int, 0)
+	keys := make([]uint8, 0)
 	for k := range s.middlewares {
 		keys = append(keys, k)
 	}
-	sort.Ints(keys)
+	utils.AscSort(keys)
 	for _, key := range keys {
 		o = append(o, s.middlewares[key])
 	}

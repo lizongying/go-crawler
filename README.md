@@ -23,6 +23,7 @@
     * 默认显示ja3指纹。
     * 可以通过tls工具`tls`生成服务器的私钥和证书。
 * 需要返回的item需要实现Item（可以组合ItemUnimplemented）
+    * `GetReferer()` 可以获取到referer。
     * UniqueKey 唯一键，不会保存到数据库。可以用作过滤等其他用途。
     * Id 保存主键
     * Data 完整数据
@@ -42,34 +43,38 @@
         * 过滤重复请求。默认支持的是item保存成功后才会进入去重队列，防止出现请求失败后再次请求却被过滤的问题。所以当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
     * retry:120
         * 如果请求出错，会进行重试。默认启用，`RetryMaxTimes=3`
-    * referer:130
+    * url:130
+        * 通过设置`url_length_limit`限制url的长度，
+        * 默认url_length_limit=2083
+        * 默认启用
+    * referer:140
         * 通过设置`referrer_policy`采用不同的referer策略，
         * DefaultReferrerPolicy。会加入请求来源，默认
         * NoReferrerPolicy。不加入请求来源
-    * http:140
-    * dump:150
+    * http:150
+    * dump:160
         * 在debug模式下打印item.data
         * 默认启用
     * csv
         * 保存结果到csv文件。
         * 需在在ItemCsv中设置`FileName`，保存的文件名称，不包含.csv
-        * 启用方法。`spider.SetMiddleware(middlewares.NewCsvMiddleware, 151)`
+        * 启用方法。`spider.SetMiddleware(middlewares.NewCsvMiddleware, 161)`
     * jsonlines
         * 保存结果到jsonlines文件。
         * 需在在ItemJsonl中设置`FileName`，保存的文件名称，不包含.jsonl
-        * 启用方法。`spider.SetMiddleware(middlewares.NewJsonlinesMiddleware, 152)`
+        * 启用方法。`spider.SetMiddleware(middlewares.NewJsonlinesMiddleware, 162)`
     * mongo
         * 保存结果到mongo。
         * 需在在ItemMongo中设置`Collection`，保存的collection
-        * 启用方法。`spider.SetMiddleware(middlewares.NewMongoMiddleware, 153)`
+        * 启用方法。`spider.SetMiddleware(middlewares.NewMongoMiddleware, 163)`
     * mysql
         * 保存结果到mysql。
         * 需在在ItemMysql中设置`table`，保存的table
-        * 启用方法。`spider.SetMiddleware(middlewares.NewMysqlMiddleware, 154)`
+        * 启用方法。`spider.SetMiddleware(middlewares.NewMysqlMiddleware, 164)`
     * kafka
         * 保存结果到kafka。
         * 需在在ItemKafka中设置`Topic`，保存的topic
-        * 启用方法。`spider.SetMiddleware(middlewares.NewKafkaMiddleware, 155)`
+        * 启用方法。`spider.SetMiddleware(middlewares.NewKafkaMiddleware, 165)`
 * 在配置文件中可以配置全局request参数，在具体request中可以覆盖此配置
 * 解析模块
     * query选择器 [go-query](https://github.com/lizongying/go-query)
@@ -87,9 +92,9 @@
 ### args
 
 * -c config file. must set it. 配置文件，必须配置。
-* -f start func. default Test. 入口方法，默认`Test`。
+* -f start func. default `Test`. 入口方法，默认`Test`。
 * -a args. json string. 额外的参数，用于入口方法调用，非必须项。
-* -m mode. default test. 启动模式，如`dev`,`prod`等，默认`test`
+* -m mode. default `test`. 启动模式，如`dev`,`prod`等，默认`test`
 
 ### config
 

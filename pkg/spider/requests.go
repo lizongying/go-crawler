@@ -96,18 +96,19 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 			err = requestContext.FirstRequest()
 			response := requestContext.Response
 			if err != nil {
-				s.Logger.Error(err, "RetryTimes:", request.RetryTimes)
 
 				if request.ErrBack != nil {
 					request.ErrBack(ctx, response, err)
 				} else {
-					err = errors.New("nil ErrBack")
-					s.Logger.Warn(err)
-				}
+					e := errors.New("nil ErrBack")
+					err = errors.Join(err, e)
 
-				//if errors.Is(err, pkg.ErrIgnoreRequest) {
-				//	s.Logger.Warn(err)
-				//}
+					//if errors.Is(err, pkg.ErrIgnoreRequest) {
+					//	s.Logger.Warn(err)
+					//}
+					s.Logger.Debug(err)
+					s.Logger.Warn("RetryTimes:", request.RetryTimes)
+				}
 
 				return
 			}

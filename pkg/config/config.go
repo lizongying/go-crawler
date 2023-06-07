@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"gopkg.in/yaml.v2"
 	"log"
 	"net/url"
@@ -13,6 +14,8 @@ import (
 const defaultHttpProto = "2.0"
 const defaultTimeout = time.Minute
 const defaultDevServer = "http://localhost:8081"
+
+const defaultUrlLengthLimit = 2083
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -53,6 +56,7 @@ type Config struct {
 	} `yaml:"request" json:"-"`
 	DevServer      string `yaml:"dev_server" json:"-"`
 	ReferrerPolicy string `yaml:"referrer_policy" json:"-"`
+	UrlLengthLimit int    `yaml:"url_length_limit" json:"-"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -106,6 +110,10 @@ func (c *Config) GetReferrerPolicy() pkg.ReferrerPolicy {
 	}
 
 	return pkg.DefaultReferrerPolicy
+}
+
+func (c *Config) GetUrlLengthLimit() int {
+	return utils.Max(c.UrlLengthLimit, defaultUrlLengthLimit)
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {
