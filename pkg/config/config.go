@@ -3,8 +3,7 @@ package config
 import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
-	"github.com/lizongying/go-crawler/pkg/utils"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"log"
 	"net/url"
 	"os"
@@ -16,8 +15,14 @@ const defaultTimeout = time.Minute
 const defaultDevServer = "http://localhost:8081"
 
 const defaultUrlLengthLimit = 2083
-const defaultEnableCookie = false
+const defaultEnableCookie = true
 const defaultEnableDump = true
+const defaultEnableUrl = true
+const defaultEnableRetry = true
+const defaultEnableStats = true
+const defaultEnableFilter = true
+const defaultEnableReferer = true
+const defaultEnableHttpAuth = true
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -56,12 +61,17 @@ type Config struct {
 		RetryMaxTimes int    `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
-	DevServer      string `yaml:"dev_server" json:"-"`
-	ReferrerPolicy string `yaml:"referrer_policy" json:"-"`
-	UrlLengthLimit int    `yaml:"url_length_limit" json:"-"`
-	EnableHttpAuth bool   `yaml:"enable_http_auth" json:"-"`
-	EnableCookie   bool   `yaml:"enable_cookie" json:"-"`
-	EnableDump     bool   `yaml:"enable_dump" json:"-"`
+	DevServer      string  `yaml:"dev_server" json:"-"`
+	EnableReferer  *bool   `yaml:"enable_referer,omitempty" json:"enable_referer"`
+	ReferrerPolicy *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
+	EnableHttpAuth *bool   `yaml:"enable_http_auth,omitempty" json:"enable_http_auth"`
+	EnableCookie   *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
+	EnableDump     *bool   `yaml:"enable_dump,omitempty" json:"enable_dump"`
+	EnableFilter   *bool   `yaml:"enable_filter,omitempty" json:"enable_filter"`
+	EnableStats    *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
+	EnableUrl      *bool   `yaml:"enable_url,omitempty" json:"enable_url"`
+	UrlLengthLimit *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
+	EnableRetry    *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -103,8 +113,12 @@ func (c *Config) GetDevServer() (url *url.URL, err error) {
 }
 
 func (c *Config) GetReferrerPolicy() pkg.ReferrerPolicy {
-	if c.ReferrerPolicy != "" {
-		switch pkg.ReferrerPolicy(c.ReferrerPolicy) {
+	if c.ReferrerPolicy == nil {
+		referrerPolicy := string(pkg.DefaultReferrerPolicy)
+		c.ReferrerPolicy = &referrerPolicy
+	}
+	if *c.ReferrerPolicy != "" {
+		switch pkg.ReferrerPolicy(*c.ReferrerPolicy) {
 		case pkg.DefaultReferrerPolicy:
 			return pkg.DefaultReferrerPolicy
 		case pkg.NoReferrerPolicy:
@@ -117,20 +131,85 @@ func (c *Config) GetReferrerPolicy() pkg.ReferrerPolicy {
 	return pkg.DefaultReferrerPolicy
 }
 
-func (c *Config) GetUrlLengthLimit() int {
-	return utils.Max(c.UrlLengthLimit, defaultUrlLengthLimit)
-}
-
 func (c *Config) GetEnableCookie() bool {
-	return c.EnableCookie
+	if c.EnableCookie == nil {
+		enableCookie := defaultEnableCookie
+		c.EnableCookie = &enableCookie
+	}
+
+	return *c.EnableCookie
 }
 
 func (c *Config) GetEnableDump() bool {
-	return c.EnableDump
+	if c.EnableDump == nil {
+		enableDump := defaultEnableDump
+		c.EnableDump = &enableDump
+	}
+
+	return *c.EnableDump
 }
 
 func (c *Config) GetEnableHttpAuth() bool {
-	return c.EnableHttpAuth
+	if c.EnableHttpAuth == nil {
+		enableHttpAuth := defaultEnableHttpAuth
+		c.EnableHttpAuth = &enableHttpAuth
+	}
+
+	return *c.EnableHttpAuth
+}
+
+func (c *Config) GetEnableReferer() bool {
+	if c.EnableReferer == nil {
+		enableReferer := defaultEnableReferer
+		c.EnableReferer = &enableReferer
+	}
+
+	return *c.EnableReferer
+}
+
+func (c *Config) GetEnableFilter() bool {
+	if c.EnableFilter == nil {
+		enableFilter := defaultEnableFilter
+		c.EnableFilter = &enableFilter
+	}
+
+	return *c.EnableFilter
+}
+
+func (c *Config) GetEnableStats() bool {
+	if c.EnableStats == nil {
+		enableStats := defaultEnableStats
+		c.EnableStats = &enableStats
+	}
+
+	return *c.EnableStats
+}
+
+func (c *Config) GetEnableUrl() bool {
+	if c.EnableUrl == nil {
+		enableUrl := defaultEnableUrl
+		c.EnableUrl = &enableUrl
+	}
+
+	return *c.EnableUrl
+}
+
+func (c *Config) GetUrlLengthLimit() int {
+	if c.UrlLengthLimit == nil {
+		urlLengthLimit := defaultUrlLengthLimit
+		c.UrlLengthLimit = &urlLengthLimit
+	}
+
+	return *c.UrlLengthLimit
+}
+
+func (c *Config) GetEnableRetry() bool {
+	if c.EnableRetry == nil {
+		enableRetry := defaultEnableRetry
+		c.EnableRetry = &enableRetry
+	}
+
+	return *c.EnableRetry
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

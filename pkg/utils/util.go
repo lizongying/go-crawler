@@ -61,9 +61,9 @@ func Struct2JsonKV(i any) (key string, value string) {
 }
 
 // InSlice return if in slice
-func InSlice[T int | string](t T, sl []T) bool {
-	for _, s := range sl {
-		if t == s {
+func InSlice[T comparable](a T, s []T) bool {
+	for _, i := range s {
+		if a == i {
 			return true
 		}
 	}
@@ -233,4 +233,15 @@ func Str2Uint64(str string) (i uint64, err error) {
 func Int2Str[T int | uint | int8 | uint8 | int16 | uint16 | int32 | uint32 | int64 | uint64](i T) (str string) {
 	str = fmt.Sprintf("%d", i)
 	return
+}
+
+func GetBoolDefault(s string, d bool) bool {
+	switch strings.ToUpper(s) {
+	case "TRUE":
+		return true
+	case "FALSE":
+		return false
+	default:
+		return d
+	}
 }

@@ -90,6 +90,17 @@
 * 代理
     * 可以自行搭建隧道代理 [go-proxy](https://github.com/lizongying/go-proxy)
       。这是一个随机切换的隧道代理，调用方无感知，方便使用。后期会加入一些其他的调用方式，比如维持原来的代理地址。
+* 增加爬虫性能
+    * 在不影响功能的情况下，可以考虑关闭一些用不到的中间件。可以在配置文件中修改，或者爬虫入口中修改
+    * 配置文件:
+        * enable_retry: false
+        * enable_stats: true
+        * enable_filter: true
+        * enable_referer: true
+        * enable_http_auth: true
+        * enable_cookie: true
+        * enable_dump: true
+        * enable_url: true
 
 ### args
 
@@ -112,6 +123,16 @@
 * request.retry_max_times: Request retry max times
 * request.http_proto: Request http proto
 * dev_server: devServer。如http`http://localhost:8081`，https`https://localhost:8081`。
+* enable_retry: true 是否开启重试，默认开启
+* enable_stats: true 是否开启统计，默认开启
+* enable_filter: true 是否开启过滤，默认开启
+* enable_referer: true 是否开启referer，默认开启
+* referrer_policy: DefaultReferrerPolicy 来源政策，默认DefaultReferrerPolicy，可选DefaultReferrerPolicy、NoReferrerPolicy
+* enable_http_auth: true 是否开启httpAuth，默认开启
+* enable_cookie: true 是否开启cookie，默认开启
+* enable_dump: true 是否开启打印item，默认开启
+* enable_url: true 是否开启url长度限制，默认开启
+* url_length_limit: 2083 url长度限制，默认2083
 
 ## Example
 

@@ -374,13 +374,23 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	spider.httpClient = new(httpClient.HttpClient).FromCrawler(spider)
 
 	spider.
-		SetMiddleware(new(middlewares.StatsMiddleware), 100).
-		SetMiddleware(new(middlewares.FilterMiddleware), 110).
-		SetMiddleware(new(middlewares.RetryMiddleware), 120).
-		SetMiddleware(new(middlewares.UrlMiddleware), 130).
-		SetMiddleware(new(middlewares.RefererMiddleware), 140).
 		SetMiddleware(new(middlewares.HttpMiddleware), 160)
 
+	if config.GetEnableStats() {
+		spider.SetMiddleware(new(middlewares.StatsMiddleware), 100)
+	}
+	if config.GetEnableFilter() {
+		spider.SetMiddleware(new(middlewares.FilterMiddleware), 110)
+	}
+	if config.GetEnableRetry() {
+		spider.SetMiddleware(new(middlewares.RetryMiddleware), 120)
+	}
+	if config.GetEnableUrl() {
+		spider.SetMiddleware(new(middlewares.UrlMiddleware), 130)
+	}
+	if config.GetEnableReferer() {
+		spider.SetMiddleware(new(middlewares.RefererMiddleware), 140)
+	}
 	if config.GetEnableCookie() {
 		spider.SetMiddleware(new(middlewares.CookieMiddleware), 150)
 	}
