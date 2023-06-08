@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -33,6 +34,18 @@ func (m *RefererMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		return
 	}
 
+	return
+}
+
+func (m *RefererMiddleware) ProcessResponse(c *pkg.Context) (err error) {
+	request := c.Request
+
+	// add referer to context
+	if request.Url != "" {
+		c.SetContext(context.WithValue(c.GetContext(), "referer", request.Url))
+	}
+
+	err = c.NextResponse()
 	return
 }
 

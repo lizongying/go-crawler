@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"golang.org/x/time/rate"
+	"net/http"
 	"runtime"
 	"time"
 )
@@ -54,6 +55,27 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 	return
 }
 
+func (s *BaseSpider) buildRequest(ctx pkg.Context) {
+	request := ctx.Request
+	err := ctx.FirstRequest()
+	if err != nil {
+		if request.ErrBack != nil {
+			request.ErrBack(nil, ctx.Response, err)
+		} else {
+			e := errors.New("nil ErrBack")
+			err = errors.Join(err, e)
+
+			//if errors.Is(err, pkg.ErrIgnoreRequest) {
+			//	s.Logger.Warn(err)
+			//}
+			s.Logger.Debug(err)
+			s.Logger.Warn("RetryTimes:", request.RetryTimes)
+		}
+
+		return
+	}
+}
+
 func (s *BaseSpider) handleRequest(ctx context.Context) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -92,11 +114,26 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 				Request:     request,
 				Middlewares: s.SortedMiddlewares(),
 			}
+			requestContext.SetContext(ctx)
 
-			err = requestContext.FirstRequest()
-			response := requestContext.Response
+			s.buildRequest(requestContext)
+
+			requestContext.Response, err = s.httpClient.BuildResponse(ctx, request)
 			if err != nil {
+				if request.RetryMaxTimes > 0 && request.RetryTimes < request.RetryMaxTimes {
+					s.buildRequest(requestContext)
+					return
+				}
+				s.Logger.Error(err, "RetryTimes:", request.RetryTimes, request.RetryMaxTimes)
+				s.GetStats().IncRequestError()
+				return
+			}
 
+			err = requestContext.FirstResponse()
+
+			response := requestContext.Response
+			ctx = requestContext.GetContext()
+			if err != nil {
 				if request.ErrBack != nil {
 					request.ErrBack(ctx, response, err)
 				} else {
@@ -146,11 +183,6 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 					}
 				}()
 
-				// add referer to context
-				if request.Url != "" {
-					ctx = context.WithValue(ctx, "referer", request.Url)
-				}
-
 				e := request.CallBack(ctx, response)
 				if e != nil {
 					s.Logger.Error(e)
@@ -185,6 +217,12 @@ func (s *BaseSpider) YieldRequest(ctx context.Context, request *pkg.Request) (er
 	referer := ctx.Value("referer")
 	if referer != nil {
 		request.Referer = referer.(string)
+	}
+
+	// add cookies to request
+	cookies := ctx.Value("cookies")
+	if cookies != nil {
+		request.Cookies = cookies.([]*http.Cookie)
 	}
 
 	s.requestActiveChan <- struct{}{}

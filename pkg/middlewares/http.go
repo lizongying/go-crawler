@@ -4,6 +4,11 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/utils"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
 type HttpMiddleware struct {
@@ -29,13 +34,41 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 	request := c.Request
 	m.logger.DebugF("request: %+v", request)
 
-	ctx := context.Background()
+	if request.Method == "" {
+		request.Method = "GET"
+	}
+	request.CreateTime = utils.NowStr()
+	request.Checksum = utils.StrMd5(request.Method, request.Url, request.BodyStr)
+	if request.CanonicalHeaderKey {
+		headers := make(map[string][]string)
+		for k, v := range request.Header {
+			headers[http.CanonicalHeaderKey(k)] = v
+		}
+		request.Header = headers
+	}
 
-	err = m.httpClient.BuildRequest(ctx, request)
-	if err != nil {
-		m.logger.Error(err)
-		m.stats.IncRequestError()
-		return
+	if request.Request == nil {
+		Url, e := url.Parse(request.Url)
+		if e != nil {
+			err = e
+			m.logger.Error(err)
+			m.stats.IncRequestError()
+			return
+		}
+
+		var body io.Reader
+		if request.BodyStr != "" {
+			body = strings.NewReader(request.BodyStr)
+		}
+
+		request.Request, err = http.NewRequest(request.Method, Url.String(), body)
+		if err != nil {
+			m.logger.Error(err)
+			m.stats.IncRequestError()
+			return
+		}
+
+		request.Request.Header = request.Header
 	}
 
 	ok := m.spider.IsAllowedDomain(request.URL)
@@ -46,19 +79,6 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		return
 	}
 
-	c.Response, err = m.httpClient.BuildResponse(ctx, request)
-	if err != nil {
-		if request.RetryMaxTimes > 0 && request.RetryTimes < request.RetryMaxTimes {
-			err = c.FirstResponse()
-			return
-		}
-		m.logger.Error(err, "RetryTimes:", request.RetryTimes, request.RetryMaxTimes)
-		m.stats.IncRequestError()
-		return
-	}
-
-	m.stats.IncRequestSuccess()
-	err = c.FirstResponse()
 	return
 }
 

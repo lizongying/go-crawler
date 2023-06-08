@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -17,6 +18,12 @@ func (m *CookieMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		m.logger.Debug("exit ProcessRequest")
 	}()
 
+	err = c.NextRequest()
+	if err != nil {
+		m.logger.Debug(err)
+		return
+	}
+
 	request := c.Request
 	if m.enableCookie && len(request.Cookies) > 0 {
 		for _, cookie := range request.Cookies {
@@ -24,12 +31,18 @@ func (m *CookieMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		}
 	}
 
-	err = c.NextRequest()
-	if err != nil {
-		m.logger.Debug(err)
-		return
+	return
+}
+
+func (m *CookieMiddleware) ProcessResponse(c *pkg.Context) (err error) {
+	r := c.Response
+
+	// add cookies to context
+	if len(r.Cookies()) > 0 {
+		c.SetContext(context.WithValue(c.GetContext(), "cookies", r.Cookies()))
 	}
 
+	err = c.NextResponse()
 	return
 }
 

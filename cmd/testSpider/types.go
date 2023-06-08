@@ -35,4 +35,9 @@ type DataMysql struct {
 }
 
 type ExtraHttpAuth struct {
+	Count int
+}
+
+type ExtraCookie struct {
+	Count int
 }

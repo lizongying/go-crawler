@@ -27,12 +27,13 @@ request:
   retry_max_times: 10
   http_proto: 2.0
 dev_server: http://localhost:8081
+enable_ja3: false
 enable_retry: true
 enable_stats: true
 enable_filter: true
 enable_referer: true
 referrer_policy: NoReferrerPolicy
-enable_http_auth: true
+enable_http_auth: false
 enable_cookie: true
 enable_dump: true
 enable_url: true

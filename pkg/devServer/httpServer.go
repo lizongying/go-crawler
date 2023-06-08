@@ -16,9 +16,10 @@ import (
 )
 
 type HttpServer struct {
-	url    *url.URL
-	srv    *http.Server
-	logger *logger.Logger
+	url       *url.URL
+	enableJa3 bool
+	srv       *http.Server
+	logger    *logger.Logger
 
 	mux    *http.ServeMux
 	routes map[string]struct{}
@@ -78,7 +79,9 @@ func (h *HttpServer) Run() (err error) {
 			}
 			tlsListener := tls.NewListener(listener, &tls.Config{
 				GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
-					h.logger.Info("ja3", convertToJA3(info))
+					if h.enableJa3 {
+						h.logger.Info("ja3", convertToJA3(info))
+					}
 					return &cer, nil
 				},
 			})
@@ -123,11 +126,12 @@ func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger *logger.Logger
 	}
 	srv := &http.Server{}
 	httpServer = &HttpServer{
-		url:    devServer,
-		srv:    srv,
-		logger: logger,
-		mux:    http.NewServeMux(),
-		routes: make(map[string]struct{}),
+		url:       devServer,
+		enableJa3: config.GetEnableJa3(),
+		srv:       srv,
+		logger:    logger,
+		mux:       http.NewServeMux(),
+		routes:    make(map[string]struct{}),
 	}
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

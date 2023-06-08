@@ -13,7 +13,7 @@ import (
 const defaultHttpProto = "2.0"
 const defaultTimeout = time.Minute
 const defaultDevServer = "http://localhost:8081"
-
+const defaultEnableJa3 = false
 const defaultUrlLengthLimit = 2083
 const defaultEnableCookie = true
 const defaultEnableDump = true
@@ -22,7 +22,7 @@ const defaultEnableRetry = true
 const defaultEnableStats = true
 const defaultEnableFilter = true
 const defaultEnableReferer = true
-const defaultEnableHttpAuth = true
+const defaultEnableHttpAuth = false
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -62,6 +62,7 @@ type Config struct {
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
 	DevServer      string  `yaml:"dev_server" json:"-"`
+	EnableJa3      *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
 	EnableReferer  *bool   `yaml:"enable_referer,omitempty" json:"enable_referer"`
 	ReferrerPolicy *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
 	EnableHttpAuth *bool   `yaml:"enable_http_auth,omitempty" json:"enable_http_auth"`
@@ -110,6 +111,15 @@ func (c *Config) GetDevServer() (url *url.URL, err error) {
 
 	url, err = url.Parse(defaultDevServer)
 	return
+}
+
+func (c *Config) GetEnableJa3() bool {
+	if c.EnableJa3 == nil {
+		enableJa3 := defaultEnableJa3
+		c.EnableJa3 = &enableJa3
+	}
+
+	return *c.EnableJa3
 }
 
 func (c *Config) GetReferrerPolicy() pkg.ReferrerPolicy {

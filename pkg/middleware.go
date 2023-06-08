@@ -55,6 +55,15 @@ type Context struct {
 	processRequestIndex  uint8
 	processResponseIndex uint8
 	processItemIndex     uint8
+
+	ctx context.Context
+}
+
+func (m *Context) SetContext(ctx context.Context) {
+	m.ctx = ctx
+}
+func (m *Context) GetContext() context.Context {
+	return m.ctx
 }
 
 func (m *Context) FirstRequest() (err error) {

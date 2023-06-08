@@ -53,10 +53,11 @@
         * NoReferrerPolicy。不加入请求来源
     * httpAuth:150
         * 通过设置`username`、`password`添加httpAuth认证，
+        * 配置 enable_http_auth: false 是否开启httpAuth，默认关闭
     * http:160
     * dump:170
         * 在debug模式下打印item.data
-        * 默认启用
+        * 配置 enable_dump: true 是否开启打印item，默认开启
     * csv
         * 保存结果到csv文件。
         * 需在在ItemCsv中设置`FileName`，保存的文件名称，不包含.csv
@@ -97,7 +98,7 @@
         * enable_stats: true
         * enable_filter: true
         * enable_referer: true
-        * enable_http_auth: true
+        * enable_http_auth: false
         * enable_cookie: true
         * enable_dump: true
         * enable_url: true
@@ -123,6 +124,7 @@
 * request.retry_max_times: Request retry max times
 * request.http_proto: Request http proto
 * dev_server: devServer。如http`http://localhost:8081`，https`https://localhost:8081`。
+* enable_ja3: false devServer是否显示ja3指纹，默认关闭
 * enable_retry: true 是否开启重试，默认开启
 * enable_stats: true 是否开启统计，默认开启
 * enable_filter: true 是否开启过滤，默认开启

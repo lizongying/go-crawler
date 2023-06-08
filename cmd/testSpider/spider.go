@@ -151,6 +151,30 @@ func (s *Spider) ParseHttpAuth(ctx context.Context, response *pkg.Response) (err
 	return
 }
 
+func (s *Spider) ParseCookie(ctx context.Context, response *pkg.Response) (err error) {
+	extra := response.Request.Extra.(*ExtraCookie)
+	s.Logger.Info("extra", utils.JsonStr(extra))
+	s.Logger.Info("response", string(response.BodyBytes))
+
+	if extra.Count > 1 {
+		return
+	}
+
+	requestNext := new(pkg.Request)
+	requestNext.Url = response.Request.Url
+	requestNext.Extra = &ExtraCookie{
+		Count: extra.Count + 1,
+	}
+	requestNext.CallBack = s.ParseCookie
+	//requestNext.UniqueKey = "1"
+	err = s.YieldRequest(ctx, requestNext)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+
+	return
+}
+
 func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
 	s.Logger.Info("extra", utils.JsonStr(extra))
@@ -293,6 +317,22 @@ func (s *Spider) TestHttpAuth(ctx context.Context, _ string) (err error) {
 	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlHttpAuth)
 	request.Extra = &ExtraHttpAuth{}
 	request.CallBack = s.ParseHttpAuth
+	err = s.YieldRequest(ctx, request)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
+// TestCookie go run cmd/testSpider/*.go -c dev.yml -f TestCookie -m dev
+func (s *Spider) TestCookie(ctx context.Context, _ string) (err error) {
+	if s.Mode == "dev" {
+		s.AddDevServerRoutes(devServer.NewCookieHandler(s.Logger))
+	}
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlCookie)
+	request.Extra = &ExtraCookie{}
+	request.CallBack = s.ParseCookie
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.Logger.Error(err)
