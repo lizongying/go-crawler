@@ -56,6 +56,8 @@
         * 配置 enable_http_auth: false 是否开启httpAuth，默认关闭
     * compress:190
         * 配置 enable_compress: true 是否开启gzip/deflate解压缩，默认开启
+    * decode:200
+        * 配置 enable_decode: true 是否开启中文解码，默认开启
     * http:160
     * dump:170
         * 在debug模式下打印item.data
@@ -105,6 +107,9 @@
         * enable_dump: true
         * enable_url: true
         * enable_compress: true
+        * enable_decode: true
+* 爬虫结构
+    * 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
 
 ### args
 
@@ -139,6 +144,7 @@
 * enable_url: true 是否开启url长度限制，默认开启
 * url_length_limit: 2083 url长度限制，默认2083
 * enable_compress: true 是否开启gzip/deflate解压缩，默认开启
+* enable_decode: true 是否开启中文解码，默认开启
 
 ## Example
 
@@ -163,7 +169,6 @@ go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
     * media
     * proxy
     * random
-    * decode
     * redirect
     * downloadtimeout
     * defaultheaders

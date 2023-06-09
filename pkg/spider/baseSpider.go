@@ -403,5 +403,8 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	if config.GetEnableCompress() {
 		spider.SetMiddleware(new(middlewares.CompressMiddleware), 190)
 	}
+	if config.GetEnableDecode() {
+		spider.SetMiddleware(new(middlewares.DecodeMiddleware), 200)
+	}
 	return
 }
