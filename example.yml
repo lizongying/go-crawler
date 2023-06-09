@@ -38,3 +38,4 @@ enable_cookie: true
 enable_dump: true
 enable_url: true
 url_length_limit:
+enable_compress: true

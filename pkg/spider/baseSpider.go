@@ -400,5 +400,8 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	if config.GetEnableHttpAuth() {
 		spider.SetMiddleware(new(middlewares.HttpAuthMiddleware), 180)
 	}
+	if config.GetEnableCompress() {
+		spider.SetMiddleware(new(middlewares.CompressMiddleware), 190)
+	}
 	return
 }

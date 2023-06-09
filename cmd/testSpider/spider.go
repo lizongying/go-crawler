@@ -175,6 +175,19 @@ func (s *Spider) ParseCookie(ctx context.Context, response *pkg.Response) (err e
 	return
 }
 
+func (s *Spider) ParseGzip(ctx context.Context, response *pkg.Response) (err error) {
+	s.Logger.Info("response", string(response.BodyBytes))
+
+	return
+}
+
+func (s *Spider) ParseDeflate(ctx context.Context, response *pkg.Response) (err error) {
+	s.Logger.Info("header", response.Header)
+	s.Logger.Info("body", string(response.BodyBytes))
+
+	return
+}
+
 func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
 	s.Logger.Info("extra", utils.JsonStr(extra))
@@ -326,13 +339,40 @@ func (s *Spider) TestHttpAuth(ctx context.Context, _ string) (err error) {
 
 // TestCookie go run cmd/testSpider/*.go -c dev.yml -f TestCookie -m dev
 func (s *Spider) TestCookie(ctx context.Context, _ string) (err error) {
-	if s.Mode == "dev" {
-		s.AddDevServerRoutes(devServer.NewCookieHandler(s.Logger))
-	}
+	s.AddDevServerRoutes(devServer.NewCookieHandler(s.Logger))
+
 	request := new(pkg.Request)
 	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlCookie)
 	request.Extra = &ExtraCookie{}
 	request.CallBack = s.ParseCookie
+	err = s.YieldRequest(ctx, request)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
+// TestGzip go run cmd/testSpider/*.go -c dev.yml -f TestGzip -m dev
+func (s *Spider) TestGzip(ctx context.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewGzipHandler(s.Logger))
+
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGzip)
+	request.CallBack = s.ParseGzip
+	err = s.YieldRequest(ctx, request)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
+// TestDeflate go run cmd/testSpider/*.go -c dev.yml -f TestDeflate -m dev
+func (s *Spider) TestDeflate(ctx context.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewDeflateHandler(s.Logger))
+
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlDeflate)
+	request.CallBack = s.ParseDeflate
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.Logger.Error(err)

@@ -23,6 +23,7 @@ const defaultEnableStats = true
 const defaultEnableFilter = true
 const defaultEnableReferer = true
 const defaultEnableHttpAuth = false
+const defaultEnableCompress = true
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -73,6 +74,7 @@ type Config struct {
 	EnableUrl      *bool   `yaml:"enable_url,omitempty" json:"enable_url"`
 	UrlLengthLimit *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
 	EnableRetry    *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
+	EnableCompress *bool   `yaml:"enable_compress,omitempty" json:"enable_compress"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -217,6 +219,15 @@ func (c *Config) GetEnableRetry() bool {
 	if c.EnableRetry == nil {
 		enableRetry := defaultEnableRetry
 		c.EnableRetry = &enableRetry
+	}
+
+	return *c.EnableRetry
+}
+
+func (c *Config) GetEnableCompress() bool {
+	if c.EnableCompress == nil {
+		enableCompress := defaultEnableCompress
+		c.EnableCompress = &enableCompress
 	}
 
 	return *c.EnableRetry

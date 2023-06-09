@@ -76,6 +76,18 @@ func (s *BaseSpider) buildRequest(ctx pkg.Context) {
 	}
 }
 
+func (s *BaseSpider) handleError(c pkg.Context, err error, f func(context.Context, *pkg.Response, error)) {
+	//if errors.Is(err, pkg.ErrIgnoreRequest) {
+	//	s.Logger.Warn(err)
+	//}
+
+	if f != nil {
+		f(c.GetContext(), c.Response, err)
+	} else {
+		s.Logger.Warn("nil ErrBack")
+	}
+}
+
 func (s *BaseSpider) handleRequest(ctx context.Context) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -118,13 +130,14 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 
 			s.buildRequest(requestContext)
 
-			requestContext.Response, err = s.httpClient.BuildResponse(ctx, request)
+			requestContext.Response, err = s.httpClient.DoRequest(ctx, request)
 			if err != nil {
 				if request.RetryMaxTimes > 0 && request.RetryTimes < request.RetryMaxTimes {
 					s.buildRequest(requestContext)
 					return
 				}
-				s.Logger.Error(err, "RetryTimes:", request.RetryTimes, request.RetryMaxTimes)
+				err = errors.Join(err, errors.New("RetryMaxTimes"))
+				s.handleError(requestContext, err, request.ErrBack)
 				s.GetStats().IncRequestError()
 				return
 			}
@@ -139,12 +152,9 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 				} else {
 					e := errors.New("nil ErrBack")
 					err = errors.Join(err, e)
-
-					//if errors.Is(err, pkg.ErrIgnoreRequest) {
-					//	s.Logger.Warn(err)
-					//}
 					s.Logger.Debug(err)
-					s.Logger.Warn("RetryTimes:", request.RetryTimes)
+
+					s.handleError(requestContext, err, request.ErrBack)
 				}
 
 				return
@@ -159,39 +169,35 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 			if response == nil {
 				err = errors.New("nil response")
 				s.Logger.Error(err)
-				if request.ErrBack != nil {
-					request.ErrBack(ctx, response, err)
-				} else {
-					err = errors.New("nil ErrBack")
-					s.Logger.Warn(err)
-				}
+
+				s.handleError(requestContext, err, request.ErrBack)
 				return
 			}
 
 			if request.CallBack == nil {
 				e := errors.New("nil CallBack")
 				s.Logger.Error(e)
+
+				s.handleError(requestContext, err, request.ErrBack)
 				return
 			}
 
 			go func() {
 				defer func() {
-					if e := recover(); e != nil {
+					if r := recover(); r != nil {
 						buf := make([]byte, 1<<16)
 						runtime.Stack(buf, true)
-						s.Logger.Error(string(buf))
+						e := errors.New(string(buf))
+						s.Logger.Error(e)
+						s.handleError(requestContext, e, request.ErrBack)
 					}
 				}()
 
 				e := request.CallBack(ctx, response)
 				if e != nil {
 					s.Logger.Error(e)
-					if request.ErrBack != nil {
-						request.ErrBack(ctx, response, e)
-					} else {
-						e = errors.New("nil ErrBack")
-						s.Logger.Warn(e)
-					}
+
+					s.handleError(requestContext, e, request.ErrBack)
 					return
 				}
 			}()

@@ -18,6 +18,10 @@ func (h *CookieHandler) Pattern() string {
 
 func (h *CookieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("into CookieHandler")
+	defer func() {
+		h.logger.Info("exit CookieHandler")
+	}()
+
 	cookie := &http.Cookie{
 		Name:  "myCookie",
 		Value: "Hello, Cookie!",
