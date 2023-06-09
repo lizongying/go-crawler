@@ -43,7 +43,7 @@ func (m *DumpMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	}
 
 	m.logger.Debug("referer", item.GetReferer())
-	m.logger.Debug("data", utils.JsonStr(data))
+	m.logger.Info("data", utils.JsonStr(data))
 
 	//m.stats.IncItemSuccess()
 	err = c.NextItem()

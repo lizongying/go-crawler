@@ -16,6 +16,11 @@ func (h *BadGatewayHandler) Pattern() string {
 }
 
 func (h *BadGatewayHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+	h.logger.Info("into BadGatewayHandler")
+	defer func() {
+		h.logger.Info("exit BadGatewayHandler")
+	}()
+
 	w.WriteHeader(http.StatusBadGateway)
 	_, err := w.Write([]byte(`BadGateway`))
 	if err != nil {

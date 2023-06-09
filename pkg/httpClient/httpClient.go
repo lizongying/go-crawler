@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/lizongying/go-crawler/static"
@@ -16,12 +17,14 @@ import (
 )
 
 type HttpClient struct {
-	client      *http.Client
-	proxy       *url.URL
-	timeout     time.Duration
-	httpProto   string
-	logger      pkg.Logger
-	middlewares []pkg.Middleware
+	client           *http.Client
+	proxy            *url.URL
+	timeout          time.Duration
+	httpProto        string
+	logger           pkg.Logger
+	middlewares      []pkg.Middleware
+	redirectMaxTimes uint8
+	retryMaxTimes    uint8
 }
 
 func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
@@ -101,7 +104,11 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 	response.Response, err = client.Do(request.Request)
 	response.Request.SpendTime = time.Now().Sub(begin)
 	if err != nil {
-		if request.RetryTimes < request.RetryMaxTimes {
+		retryMaxTimes := h.retryMaxTimes
+		if request.RetryMaxTimes != nil {
+			retryMaxTimes = *request.RetryMaxTimes
+		}
+		if request.RetryTimes < retryMaxTimes {
 			return
 		}
 		h.logger.Error(err, "RetryTimes:", request.RetryTimes)
@@ -129,13 +136,30 @@ func (h *HttpClient) FromCrawler(spider pkg.Spider) pkg.HttpClient {
 	}
 
 	config := spider.GetConfig()
+	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 
 	h.client = http.DefaultClient
+	h.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		redirectMaxTimes := h.redirectMaxTimes
+
+		ctx := req.Context()
+		redirectMaxTimesVal := ctx.Value("redirect_max_times")
+		if redirectMaxTimesVal != nil {
+			redirectMaxTimes, _ = redirectMaxTimesVal.(uint8)
+		}
+
+		if uint8(len(via)) > redirectMaxTimes {
+			return errors.New(fmt.Sprintf("stopped after %d redirects", redirectMaxTimes))
+		}
+		return nil
+	}
 	h.proxy = config.GetProxy()
 	h.timeout = config.GetTimeout()
 	h.httpProto = config.GetHttpProto()
 	h.logger = spider.GetLogger()
 	h.middlewares = spider.SortedMiddlewares()
+	h.redirectMaxTimes = spider.GetConfig().GetRedirectMaxTimes()
+	h.retryMaxTimes = spider.GetConfig().GetRetryMaxTimes()
 
 	return h
 }

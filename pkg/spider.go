@@ -15,7 +15,7 @@ type SpiderInfo struct {
 
 	Concurrency   int
 	Interval      time.Duration
-	RetryMaxTimes int
+	RetryMaxTimes uint8
 	Timeout       time.Duration
 	Username      string
 	Password      string

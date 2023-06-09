@@ -40,7 +40,6 @@ const defaultMaxRequestActive = 1000
 const defaultChanItemMax = 1000 * 1000
 const defaultRequestConcurrency = 1
 const defaultRequestInterval = 1
-const defaultRequestRetryMaxTimes = 3
 
 type BaseSpider struct {
 	*pkg.SpiderInfo
@@ -215,6 +214,8 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.Logger.Info("browsers", s.spider.GetBrowsers())
 	s.Logger.Info("referrerPolicy", s.config.GetReferrerPolicy())
 	s.Logger.Info("urlLengthLimit", s.config.GetUrlLengthLimit())
+	s.Logger.Info("redirectMaxTimes", s.config.GetRedirectMaxTimes())
+	s.Logger.Info("retryMaxTimes", s.config.GetRetryMaxTimes())
 	if s.spider == nil {
 		err = errors.New("spider is empty")
 		s.Logger.Error(err)
@@ -328,13 +329,6 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	if len(config.Request.OkHttpCodes) > 0 {
 		okHttpCodes = config.Request.OkHttpCodes
 	}
-	retryMaxTimes := defaultRequestRetryMaxTimes
-	if config.Request.RetryMaxTimes > 0 {
-		retryMaxTimes = config.Request.RetryMaxTimes
-	}
-	if config.Request.RetryMaxTimes < 0 {
-		retryMaxTimes = 0
-	}
 	timeout := time.Minute
 	if config.Request.Timeout > 0 {
 		timeout = time.Second * time.Duration(config.Request.Timeout)
@@ -344,7 +338,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		SpiderInfo: &pkg.SpiderInfo{
 			Concurrency:   concurrency,
 			Interval:      time.Millisecond * time.Duration(interval),
-			RetryMaxTimes: retryMaxTimes,
+			RetryMaxTimes: config.GetRetryMaxTimes(),
 			Timeout:       timeout,
 		},
 		Stats:       &stats.Stats{},
@@ -373,38 +367,39 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	spider.Mode = cli.Mode
 	spider.httpClient = new(httpClient.HttpClient).FromCrawler(spider)
 
-	spider.
-		SetMiddleware(new(middlewares.HttpMiddleware), 160)
-
 	if config.GetEnableStats() {
-		spider.SetMiddleware(new(middlewares.StatsMiddleware), 100)
+		spider.SetMiddleware(new(middlewares.StatsMiddleware), 10)
 	}
 	if config.GetEnableFilter() {
-		spider.SetMiddleware(new(middlewares.FilterMiddleware), 110)
+		spider.SetMiddleware(new(middlewares.FilterMiddleware), 20)
+	}
+	if config.GetEnableRedirect() {
+		spider.SetMiddleware(new(middlewares.RedirectMiddleware), 30)
 	}
 	if config.GetEnableRetry() {
-		spider.SetMiddleware(new(middlewares.RetryMiddleware), 120)
+		spider.SetMiddleware(new(middlewares.RetryMiddleware), 40)
 	}
 	if config.GetEnableUrl() {
-		spider.SetMiddleware(new(middlewares.UrlMiddleware), 130)
+		spider.SetMiddleware(new(middlewares.UrlMiddleware), 50)
 	}
 	if config.GetEnableReferer() {
-		spider.SetMiddleware(new(middlewares.RefererMiddleware), 140)
+		spider.SetMiddleware(new(middlewares.RefererMiddleware), 60)
 	}
 	if config.GetEnableCookie() {
-		spider.SetMiddleware(new(middlewares.CookieMiddleware), 150)
+		spider.SetMiddleware(new(middlewares.CookieMiddleware), 70)
 	}
+	spider.SetMiddleware(new(middlewares.HttpMiddleware), 80)
 	if config.GetEnableDump() {
-		spider.SetMiddleware(new(middlewares.DumpMiddleware), 170)
+		spider.SetMiddleware(new(middlewares.DumpMiddleware), 90)
 	}
 	if config.GetEnableHttpAuth() {
-		spider.SetMiddleware(new(middlewares.HttpAuthMiddleware), 180)
+		spider.SetMiddleware(new(middlewares.HttpAuthMiddleware), 100)
 	}
 	if config.GetEnableCompress() {
-		spider.SetMiddleware(new(middlewares.CompressMiddleware), 190)
+		spider.SetMiddleware(new(middlewares.CompressMiddleware), 110)
 	}
 	if config.GetEnableDecode() {
-		spider.SetMiddleware(new(middlewares.DecodeMiddleware), 200)
+		spider.SetMiddleware(new(middlewares.DecodeMiddleware), 120)
 	}
 	return
 }

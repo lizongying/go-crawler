@@ -13,10 +13,9 @@ import (
 
 type HttpMiddleware struct {
 	pkg.UnimplementedMiddleware
-	httpClient pkg.HttpClient
-	logger     pkg.Logger
-	spider     pkg.Spider
-	stats      pkg.Stats
+	logger pkg.Logger
+	spider pkg.Spider
+	stats  pkg.Stats
 }
 
 func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
@@ -87,6 +86,5 @@ func (m *HttpMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 		return new(HttpMiddleware).FromCrawler(spider)
 	}
 	m.logger = spider.GetLogger()
-	m.httpClient = spider.GetHttpClient()
 	return m
 }

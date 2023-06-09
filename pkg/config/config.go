@@ -25,6 +25,9 @@ const defaultEnableReferer = true
 const defaultEnableHttpAuth = false
 const defaultEnableCompress = true
 const defaultEnableDecode = true
+const defaultEnableRedirect = true
+const defaultRedirectMaxTimes = uint8(1)
+const defaultRetryMaxTimes = uint8(10)
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -60,23 +63,25 @@ type Config struct {
 		Interval      int    `yaml:"interval" json:"-"`
 		Timeout       int    `yaml:"timeout" json:"-"`
 		OkHttpCodes   []int  `yaml:"ok_http_codes" json:"-"`
-		RetryMaxTimes int    `yaml:"retry_max_times" json:"-"`
+		RetryMaxTimes *uint8 `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
-	DevServer      string  `yaml:"dev_server" json:"-"`
-	EnableJa3      *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
-	EnableReferer  *bool   `yaml:"enable_referer,omitempty" json:"enable_referer"`
-	ReferrerPolicy *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
-	EnableHttpAuth *bool   `yaml:"enable_http_auth,omitempty" json:"enable_http_auth"`
-	EnableCookie   *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
-	EnableDump     *bool   `yaml:"enable_dump,omitempty" json:"enable_dump"`
-	EnableFilter   *bool   `yaml:"enable_filter,omitempty" json:"enable_filter"`
-	EnableStats    *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
-	EnableUrl      *bool   `yaml:"enable_url,omitempty" json:"enable_url"`
-	UrlLengthLimit *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
-	EnableRetry    *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
-	EnableCompress *bool   `yaml:"enable_compress,omitempty" json:"enable_compress"`
-	EnableDecode   *bool   `yaml:"enable_decode,omitempty" json:"enable_decode"`
+	DevServer        string  `yaml:"dev_server" json:"-"`
+	EnableJa3        *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
+	EnableReferer    *bool   `yaml:"enable_referer,omitempty" json:"enable_referer"`
+	ReferrerPolicy   *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
+	EnableHttpAuth   *bool   `yaml:"enable_http_auth,omitempty" json:"enable_http_auth"`
+	EnableCookie     *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
+	EnableDump       *bool   `yaml:"enable_dump,omitempty" json:"enable_dump"`
+	EnableFilter     *bool   `yaml:"enable_filter,omitempty" json:"enable_filter"`
+	EnableStats      *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
+	EnableUrl        *bool   `yaml:"enable_url,omitempty" json:"enable_url"`
+	UrlLengthLimit   *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
+	EnableRetry      *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
+	EnableCompress   *bool   `yaml:"enable_compress,omitempty" json:"enable_compress"`
+	EnableDecode     *bool   `yaml:"enable_decode,omitempty" json:"enable_decode"`
+	EnableRedirect   *bool   `yaml:"enable_redirect,omitempty" json:"enable_redirect"`
+	RedirectMaxTimes *uint8  `yaml:"redirect_max_times" json:"-"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -242,6 +247,33 @@ func (c *Config) GetEnableDecode() bool {
 	}
 
 	return *c.EnableDecode
+}
+
+func (c *Config) GetEnableRedirect() bool {
+	if c.EnableRedirect == nil {
+		enableRedirect := defaultEnableRedirect
+		c.EnableRedirect = &enableRedirect
+	}
+
+	return *c.EnableRedirect
+}
+
+func (c *Config) GetRedirectMaxTimes() uint8 {
+	if c.RedirectMaxTimes == nil {
+		redirectMaxTimes := defaultRedirectMaxTimes
+		c.RedirectMaxTimes = &redirectMaxTimes
+	}
+
+	return *c.RedirectMaxTimes
+}
+
+func (c *Config) GetRetryMaxTimes() uint8 {
+	if c.Request.RetryMaxTimes == nil {
+		retryMaxTimes := defaultRetryMaxTimes
+		c.Request.RetryMaxTimes = &retryMaxTimes
+	}
+
+	return *c.Request.RetryMaxTimes
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"net/http"
 )
 
 type RetryMiddleware struct {
@@ -12,32 +13,14 @@ type RetryMiddleware struct {
 	logger        pkg.Logger
 	spider        pkg.Spider
 	okHttpCodes   []int
-	retryMaxTimes int
+	retryMaxTimes uint8
 }
 
 func (m *RetryMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
 	m.spider = spider
 	m.okHttpCodes = spider.GetOkHttpCodes()
+	m.okHttpCodes = append(m.okHttpCodes, http.StatusMovedPermanently, http.StatusFound)
 	m.retryMaxTimes = spider.GetInfo().RetryMaxTimes
-	return
-}
-
-func (m *RetryMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	m.logger.Debug("enter ProcessRequest")
-	defer func() {
-		m.logger.Debug("exit ProcessRequest")
-	}()
-
-	request := c.Request
-
-	if request.RetryMaxTimes == 0 {
-		request.RetryMaxTimes = m.retryMaxTimes
-	}
-	if len(request.OkHttpCodes) == 0 {
-		request.OkHttpCodes = m.okHttpCodes
-	}
-
-	err = c.NextRequest()
 	return
 }
 
@@ -48,8 +31,18 @@ func (m *RetryMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 	request := c.Request
 	m.logger.Debug("after response")
 
-	if request.RetryMaxTimes > 0 && (response.Response == nil || !utils.InSlice(response.StatusCode, request.OkHttpCodes)) {
-		if request.RetryTimes < request.RetryMaxTimes {
+	retryMaxTimes := m.retryMaxTimes
+	if request.RetryMaxTimes != nil {
+		retryMaxTimes = *request.RetryMaxTimes
+	}
+
+	okHttpCodes := m.okHttpCodes
+	if len(request.OkHttpCodes) > 0 {
+		okHttpCodes = request.OkHttpCodes
+	}
+
+	if retryMaxTimes > 0 && (response.Response == nil || !utils.InSlice(response.StatusCode, okHttpCodes)) {
+		if request.RetryTimes < retryMaxTimes {
 			request.RetryTimes++
 			m.logger.Info(request.UniqueKey, "retry times:", request.RetryTimes, "SpendTime:", request.SpendTime)
 			err = c.FirstRequest()

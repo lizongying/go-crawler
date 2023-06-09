@@ -31,36 +31,51 @@
 * 中间件的order不能重复。编写的时候不要忘记`nextRequest()`/`nextResponse()`/`nextItem()`
 * 本框架舍弃了pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
-* 框架内置middleware，自定义middleware请参照以下order进行配置。
-    * stats:100
+* 框架内置middleware，自定义middleware请参照以下order进行配置。内置中间件order为10的倍数，自定义中间件请避开。
+    * stats:10
+        * 数据统计
+        * 配置 enable_stats: true 是否开启统计，默认开启
     * device:101
         * 修改request设备信息。修改header和tls信息，暂时只支持user-agent随机切换。需要设置`SetPlatforms`和`SetBrowsers`
           限定设备范围。默认不启用。
         * 启用方法。`spider.SetMiddleware(middlewares.NewDeviceMiddleware, 101)`
         * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
         * Browsers: Chrome/Edge/Safari/FireFox
-    * filter:110
+    * filter:20
         * 过滤重复请求。默认支持的是item保存成功后才会进入去重队列，防止出现请求失败后再次请求却被过滤的问题。所以当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
-    * retry:120
-        * 如果请求出错，会进行重试。默认启用，`RetryMaxTimes=3`
-    * url:130
-        * 通过设置`url_length_limit`限制url的长度，
-        * 默认url_length_limit=2083
-        * 默认启用
-    * referer:140
+        * 配置 enable_filter: true 是否开启过滤，默认开启
+    * retry:30
+        * 如果请求出错，会进行重试。
+        * `RetryMaxTimes=10`
+        * 配置 enable_retry: true 是否开启重试，默认开启
+    * url:40
+        * 限制url的长度
+        * 配置 enable_url: true 是否开启url长度限制，默认开启
+        * 配置 url_length_limit: 2083 url的最长长度默认为2083
+    * referer:50
         * 通过设置`referrer_policy`采用不同的referer策略，
         * DefaultReferrerPolicy。会加入请求来源，默认
         * NoReferrerPolicy。不加入请求来源
-    * httpAuth:150
+    * cookie:60
+        * 如果之前请求返回cookie，会自动加到后面的请求里
+        * 配置 enable_cookie: true 是否开启cookie支持，默认开启
+    * http:70
+        * 创建request
+    * httpAuth:90
         * 通过设置`username`、`password`添加httpAuth认证，
         * 配置 enable_http_auth: false 是否开启httpAuth，默认关闭
-    * compress:190
+    * compress:100
+        * 支持 gzip/deflate解压缩
         * 配置 enable_compress: true 是否开启gzip/deflate解压缩，默认开启
-    * decode:200
+    * decode:110
+        * 支持gbk、gb2310、big5中文解码
         * 配置 enable_decode: true 是否开启中文解码，默认开启
-    * http:160
-    * dump:170
-        * 在debug模式下打印item.data
+    * redirect:120
+        * 网址重定向，默认支持301、302
+        * 配置 enable_redirect: true 是否开启重定向，默认开启
+        * 配置 redirect_max_times: 1 重定向最大次数
+    * dump:80
+        * 控制台打印item.data
         * 配置 enable_dump: true 是否开启打印item，默认开启
     * csv
         * 保存结果到csv文件。
@@ -108,6 +123,7 @@
         * enable_url: true
         * enable_compress: true
         * enable_decode: true
+        * enable_redirect: true
 * 爬虫结构
     * 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
 
@@ -129,7 +145,7 @@
   it is 0.
 * request.timeout: Request timeout(seconds)
 * request.ok_http_codes: Request ok httpcodes
-* request.retry_max_times: Request retry max times
+* request.retry_max_times: Request retry max times，默认3
 * request.http_proto: Request http proto
 * dev_server: devServer。如http`http://localhost:8081`，https`https://localhost:8081`。
 * enable_ja3: false devServer是否显示ja3指纹，默认关闭
@@ -145,6 +161,8 @@
 * url_length_limit: 2083 url长度限制，默认2083
 * enable_compress: true 是否开启gzip/deflate解压缩，默认开启
 * enable_decode: true 是否开启中文解码，默认开启
+* enable_redirect: true 是否开启重定向，默认开启
+* redirect_max_times: 1 重定向最大次数，默认1
 
 ## Example
 
@@ -169,7 +187,6 @@ go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
     * media
     * proxy
     * random
-    * redirect
     * downloadtimeout
     * defaultheaders
 

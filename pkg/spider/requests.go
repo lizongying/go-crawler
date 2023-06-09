@@ -132,7 +132,11 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 
 			requestContext.Response, err = s.httpClient.DoRequest(ctx, request)
 			if err != nil {
-				if request.RetryMaxTimes > 0 && request.RetryTimes < request.RetryMaxTimes {
+				retryMaxTimes := s.RetryMaxTimes
+				if request.RetryMaxTimes != nil {
+					retryMaxTimes = *request.RetryMaxTimes
+				}
+				if request.RetryTimes < retryMaxTimes {
 					s.buildRequest(requestContext)
 					return
 				}

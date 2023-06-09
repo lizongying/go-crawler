@@ -16,6 +16,11 @@ func (*InternalServerErrorHandler) Pattern() string {
 }
 
 func (h *InternalServerErrorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("into InternalServerErrorHandler")
+	defer func() {
+		h.logger.Info("exit InternalServerErrorHandler")
+	}()
+
 	w.WriteHeader(http.StatusInternalServerError)
 	_, err := w.Write([]byte(`InternalServerError`))
 	if err != nil {

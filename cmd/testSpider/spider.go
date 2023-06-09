@@ -18,90 +18,6 @@ import (
 
 type Spider struct {
 	*spider.BaseSpider
-
-	collectionTest string
-	tableTest      string
-	topicTest      string
-	fileNameTest   string
-}
-
-func (s *Spider) ParseMysql(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
-	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
-
-	if extra.Count > 0 {
-		return
-	}
-	requestNext := new(pkg.Request)
-	requestNext.Url = response.Request.Url
-	requestNext.Extra = &ExtraOk{
-		Count: extra.Count + 1,
-	}
-	requestNext.CallBack = s.ParseMysql
-	//requestNext.UniqueKey = "1"
-	err = s.YieldRequest(ctx, requestNext)
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	err = s.YieldItem(ctx, &pkg.ItemMysql{
-		Update: true,
-		Table:  s.tableTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        3,
-			Data: &DataMysql{
-				Id: 3,
-				A:  0,
-				B:  2,
-				C:  "",
-				D:  "2",
-			},
-		},
-	})
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	return
-}
-
-func (s *Spider) ParseKafka(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
-	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
-
-	if extra.Count > 0 {
-		return
-	}
-	requestNext := new(pkg.Request)
-	requestNext.Url = response.Request.Url
-	requestNext.Extra = &ExtraOk{
-		Count: extra.Count + 1,
-	}
-	requestNext.CallBack = s.ParseKafka
-	//requestNext.UniqueKey = "1"
-	err = s.YieldRequest(ctx, requestNext)
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	err = s.YieldItem(ctx, &pkg.ItemKafka{
-		Topic: s.tableTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        3,
-			Data: &DataMysql{
-				Id: 3,
-				A:  0,
-				B:  2,
-				C:  "",
-				D:  "2",
-			},
-		},
-	})
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	return
 }
 
 func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
@@ -123,21 +39,6 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	requestNext.CallBack = s.ParseOk
 	//requestNext.UniqueKey = "1"
 	err = s.YieldRequest(ctx, requestNext)
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	err = s.YieldItem(ctx, &pkg.ItemMongo{
-		Update:     true,
-		Collection: s.collectionTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        extra.Count,
-			Data: &DataOk{
-				Id:    fmt.Sprintf(`%d,"%d"`, extra.Count, extra.Count),
-				Count: extra.Count,
-			},
-		},
-	})
 	if err != nil {
 		s.Logger.Error(err)
 	}
@@ -188,76 +89,10 @@ func (s *Spider) ParseDeflate(ctx context.Context, response *pkg.Response) (err 
 	return
 }
 
-func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
-	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
+func (s *Spider) ParseRedirect(ctx context.Context, response *pkg.Response) (err error) {
+	s.Logger.Info("header", response.Header)
+	s.Logger.Info("body", string(response.BodyBytes))
 
-	if extra.Count > 2 {
-		return
-	}
-	requestNext := new(pkg.Request)
-	requestNext.Url = response.Request.Url
-	requestNext.Extra = &ExtraOk{
-		Count: extra.Count + 1,
-	}
-	requestNext.CallBack = s.ParseCsv
-	//requestNext.UniqueKey = "1"
-	err = s.YieldRequest(ctx, requestNext)
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	err = s.YieldItem(ctx, &pkg.ItemCsv{
-		FileName: s.fileNameTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        extra.Count,
-			Data: &DataOk{
-				Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
-				Count: extra.Count,
-			},
-		},
-	})
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	return
-}
-
-func (s *Spider) ParseJsonl(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
-	s.Logger.Info("request", response.Request.Header)
-	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
-
-	if extra.Count > 2 {
-		return
-	}
-	requestNext := new(pkg.Request)
-	requestNext.Url = response.Request.Url
-	requestNext.Extra = &ExtraOk{
-		Count: extra.Count + 1,
-	}
-	requestNext.CallBack = s.ParseJsonl
-	//requestNext.UniqueKey = "1"
-	err = s.YieldRequest(ctx, requestNext)
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	err = s.YieldItem(ctx, &pkg.ItemJsonl{
-		FileName: s.fileNameTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        extra.Count,
-			Data: &DataOk{
-				Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
-				Count: extra.Count,
-			},
-		},
-	})
-	if err != nil {
-		s.Logger.Error(err)
-	}
 	return
 }
 
@@ -271,36 +106,6 @@ func (s *Spider) ParseImages(ctx context.Context, response *pkg.Response) (err e
 
 	s.Logger.Info("len", len(response.BodyBytes))
 
-	return
-}
-
-func (s *Spider) TestMysql(ctx context.Context, _ string) (err error) {
-	if s.Mode == "dev" {
-		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
-	}
-	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
-	request.Extra = &ExtraOk{}
-	request.CallBack = s.ParseMysql
-	err = s.YieldRequest(ctx, request)
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	return
-}
-
-func (s *Spider) TestKafka(ctx context.Context, _ string) (err error) {
-	if s.Mode == "dev" {
-		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
-	}
-	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
-	request.Extra = &ExtraOk{}
-	request.CallBack = s.ParseKafka
-	err = s.YieldRequest(ctx, request)
-	if err != nil {
-		s.Logger.Error(err)
-	}
 	return
 }
 
@@ -380,29 +185,14 @@ func (s *Spider) TestDeflate(ctx context.Context, _ string) (err error) {
 	return
 }
 
-func (s *Spider) TestCsv(ctx context.Context, _ string) (err error) {
-	if s.Mode == "dev" {
-		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
-	}
-	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
-	request.Extra = &ExtraOk{}
-	request.CallBack = s.ParseCsv
-	err = s.YieldRequest(ctx, request)
-	if err != nil {
-		s.Logger.Error(err)
-	}
-	return
-}
+// TestRedirect go run cmd/testSpider/*.go -c dev.yml -f TestRedirect -m dev
+func (s *Spider) TestRedirect(ctx context.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewRedirectHandler(s.Logger))
+	s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
 
-func (s *Spider) TestJsonl(ctx context.Context, _ string) (err error) {
-	if s.Mode == "dev" {
-		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
-	}
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
-	request.Extra = &ExtraOk{}
-	request.CallBack = s.ParseJsonl
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlRedirect)
+	request.CallBack = s.ParseRedirect
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.Logger.Error(err)
@@ -449,11 +239,6 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	baseSpider.
 		AddOkHttpCodes(201).
 		SetMiddleware(new(middlewares.DeviceMiddleware), 100)
-	//SetMiddleware(new(middlewares.MongoMiddleware), 141).
-	//SetMiddleware(new(middlewares.CsvMiddleware), 142)
-	//SetMiddleware(new(middlewares.JsonLinesMiddleware), 143).
-	//SetMiddleware(new(middlewares.MysqlMiddleware), 144).
-	//SetMiddleware(new(middlewares.KafkaMiddleware), 145)
 	//baseSpider.
 	//	AddOkHttpCodes(204).
 	//	SetMiddleware(middlewares.NewImageMiddleware, 111)
@@ -464,11 +249,7 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	baseSpider.Stats = &stats.ImageStats{}
 
 	spider = &Spider{
-		BaseSpider:     baseSpider,
-		collectionTest: "test",
-		tableTest:      "test",
-		topicTest:      "test",
-		fileNameTest:   "test",
+		BaseSpider: baseSpider,
 	}
 
 	return

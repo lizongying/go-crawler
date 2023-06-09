@@ -100,7 +100,6 @@ func (m *Context) NextResponse() (err error) {
 	if m.processResponseIndex >= uint8(len(m.Middlewares)) {
 		return
 	}
-
 	err = m.Middlewares[m.processResponseIndex].ProcessResponse(m)
 	return
 }

@@ -22,8 +22,10 @@ type RequestJson struct {
 	CanonicalHeaderKey bool   `json:"canonical_header_key,omitempty"` //canonical header key
 	ProxyEnable        bool   `json:"proxy_enable,omitempty"`
 	Proxy              string `json:"proxy,omitempty"`
-	RetryMaxTimes      int    `json:"retry_max_times,omitempty"`
-	RetryTimes         int    `json:"retry_times,omitempty"`
+	RetryMaxTimes      *uint8 `json:"retry_max_times,omitempty"`
+	RetryTimes         uint8  `json:"retry_times,omitempty"`
+	RedirectMaxTimes   *uint8 `json:"redirect_max_times,omitempty"`
+	RedirectTimes      uint8  `json:"redirect_times,omitempty"`
 	OkHttpCodes        []int  `json:"ok_http_codes,omitempty"`
 	Slot               string `json:"slot,omitempty"` // same slot same concurrency & delay
 	Concurrency        int    `json:"concurrency,omitempty"`
@@ -58,8 +60,10 @@ type Request struct {
 	CanonicalHeaderKey bool
 	ProxyEnable        bool
 	Proxy              *url.URL
-	RetryMaxTimes      int
-	RetryTimes         int
+	RetryMaxTimes      *uint8
+	RetryTimes         uint8
+	RedirectMaxTimes   *uint8
+	RedirectTimes      uint8
 	OkHttpCodes        []int
 	Slot               string
 	Concurrency        int
@@ -73,43 +77,47 @@ type Request struct {
 
 func (r *Request) Marshal(requestJson RequestJson) {
 	requestJson = RequestJson{
-		UniqueKey:     r.UniqueKey,
-		Checksum:      r.Checksum,
-		CreateTime:    r.CreateTime,
-		Skip:          r.Skip,
-		SkipFilter:    r.SkipFilter,
-		ProxyEnable:   r.ProxyEnable,
-		Proxy:         r.Proxy.String(),
-		RetryMaxTimes: r.RetryMaxTimes,
-		RetryTimes:    r.RetryTimes,
-		Slot:          r.Slot,
-		OkHttpCodes:   r.OkHttpCodes,
-		Concurrency:   r.Concurrency,
-		Interval:      int(r.Interval / time.Second),
-		Timeout:       int(r.Timeout / time.Second),
-		HttpProto:     r.HttpProto,
-		Extra:         r.Extra,
+		UniqueKey:        r.UniqueKey,
+		Checksum:         r.Checksum,
+		CreateTime:       r.CreateTime,
+		Skip:             r.Skip,
+		SkipFilter:       r.SkipFilter,
+		ProxyEnable:      r.ProxyEnable,
+		Proxy:            r.Proxy.String(),
+		RetryMaxTimes:    r.RetryMaxTimes,
+		RetryTimes:       r.RetryTimes,
+		RedirectMaxTimes: r.RedirectMaxTimes,
+		RedirectTimes:    r.RedirectTimes,
+		Slot:             r.Slot,
+		OkHttpCodes:      r.OkHttpCodes,
+		Concurrency:      r.Concurrency,
+		Interval:         int(r.Interval / time.Second),
+		Timeout:          int(r.Timeout / time.Second),
+		HttpProto:        r.HttpProto,
+		Extra:            r.Extra,
 	}
 }
 func (r *RequestJson) Unmarshal(request Request) (err error) {
 	proxy, err := url.Parse(r.Proxy)
 	request = Request{
-		UniqueKey:     r.UniqueKey,
-		Checksum:      r.Checksum,
-		CreateTime:    r.CreateTime,
-		Skip:          r.Skip,
-		SkipFilter:    r.SkipFilter,
-		ProxyEnable:   r.ProxyEnable,
-		Proxy:         proxy,
-		RetryMaxTimes: r.RetryMaxTimes,
-		RetryTimes:    r.RetryTimes,
-		Slot:          r.Slot,
-		OkHttpCodes:   r.OkHttpCodes,
-		Concurrency:   r.Concurrency,
-		Interval:      time.Second * time.Duration(r.Interval),
-		Timeout:       time.Second * time.Duration(r.Timeout),
-		HttpProto:     r.HttpProto,
-		Extra:         r.Extra,
+		UniqueKey:        r.UniqueKey,
+		Checksum:         r.Checksum,
+		CreateTime:       r.CreateTime,
+		Skip:             r.Skip,
+		SkipFilter:       r.SkipFilter,
+		ProxyEnable:      r.ProxyEnable,
+		Proxy:            proxy,
+		RetryMaxTimes:    r.RetryMaxTimes,
+		RetryTimes:       r.RetryTimes,
+		RedirectMaxTimes: r.RedirectMaxTimes,
+		RedirectTimes:    r.RedirectTimes,
+		Slot:             r.Slot,
+		OkHttpCodes:      r.OkHttpCodes,
+		Concurrency:      r.Concurrency,
+		Interval:         time.Second * time.Duration(r.Interval),
+		Timeout:          time.Second * time.Duration(r.Timeout),
+		HttpProto:        r.HttpProto,
+		Extra:            r.Extra,
 	}
 
 	return

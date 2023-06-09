@@ -12,4 +12,6 @@ type Config interface {
 	GetReferrerPolicy() ReferrerPolicy
 	GetUrlLengthLimit() int
 	GetEnableCookie() bool
+	GetRedirectMaxTimes() uint8
+	GetRetryMaxTimes() uint8
 }
