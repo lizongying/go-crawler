@@ -61,6 +61,9 @@
         * 配置 enable_cookie: true 是否开启cookie支持，默认开启
     * http:70
         * 创建request
+    * chrome:80
+        * 模拟chrome
+        * 配置 enable_chrome: true 模拟chrome，默认开启
     * httpAuth:90
         * 通过设置`username`、`password`添加httpAuth认证，
         * 配置 enable_http_auth: false 是否开启httpAuth，默认关闭
@@ -145,7 +148,7 @@
   it is 0.
 * request.timeout: Request timeout(seconds)
 * request.ok_http_codes: Request ok httpcodes
-* request.retry_max_times: Request retry max times，默认3
+* request.retry_max_times: Request retry max times，默认10
 * request.http_proto: Request http proto
 * dev_server: devServer。如http`http://localhost:8081`，https`https://localhost:8081`。
 * enable_ja3: false devServer是否显示ja3指纹，默认关闭
@@ -163,6 +166,7 @@
 * enable_decode: true 是否开启中文解码，默认开启
 * enable_redirect: true 是否开启重定向，默认开启
 * redirect_max_times: 1 重定向最大次数，默认1
+* enable_chrome: true 模拟chrome，默认开启
 
 ## Example
 
@@ -188,9 +192,7 @@ go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
     * proxy
     * random
     * downloadtimeout
-    * defaultheaders
 
-* once
 * cron
 * max request limit?
 

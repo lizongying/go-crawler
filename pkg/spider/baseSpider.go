@@ -389,17 +389,20 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		spider.SetMiddleware(new(middlewares.CookieMiddleware), 70)
 	}
 	spider.SetMiddleware(new(middlewares.HttpMiddleware), 80)
+	if config.GetEnableChrome() {
+		spider.SetMiddleware(new(middlewares.ChromeMiddleware), 90)
+	}
 	if config.GetEnableDump() {
-		spider.SetMiddleware(new(middlewares.DumpMiddleware), 90)
+		spider.SetMiddleware(new(middlewares.DumpMiddleware), 100)
 	}
 	if config.GetEnableHttpAuth() {
-		spider.SetMiddleware(new(middlewares.HttpAuthMiddleware), 100)
+		spider.SetMiddleware(new(middlewares.HttpAuthMiddleware), 110)
 	}
 	if config.GetEnableCompress() {
-		spider.SetMiddleware(new(middlewares.CompressMiddleware), 110)
+		spider.SetMiddleware(new(middlewares.CompressMiddleware), 120)
 	}
 	if config.GetEnableDecode() {
-		spider.SetMiddleware(new(middlewares.DecodeMiddleware), 120)
+		spider.SetMiddleware(new(middlewares.DecodeMiddleware), 130)
 	}
 	return
 }

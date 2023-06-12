@@ -68,7 +68,7 @@ func (m *Context) GetContext() context.Context {
 
 func (m *Context) FirstRequest() (err error) {
 	m.processRequestIndex = 0
-	if m.processRequestIndex >= uint8(len(m.Middlewares)) {
+	if m.processRequestIndex >= uint8(len(m.Middlewares)-1) {
 		return
 	}
 	err = m.Middlewares[0].ProcessRequest(m)
@@ -77,7 +77,7 @@ func (m *Context) FirstRequest() (err error) {
 
 func (m *Context) NextRequest() (err error) {
 	m.processRequestIndex++
-	if m.processRequestIndex >= uint8(len(m.Middlewares)) {
+	if m.processRequestIndex >= uint8(len(m.Middlewares)-1) {
 		return
 	}
 
@@ -87,7 +87,7 @@ func (m *Context) NextRequest() (err error) {
 
 func (m *Context) FirstResponse() (err error) {
 	m.processResponseIndex = 0
-	if m.processResponseIndex >= uint8(len(m.Middlewares)) {
+	if m.processResponseIndex >= uint8(len(m.Middlewares)-1) {
 		return
 	}
 
@@ -97,7 +97,7 @@ func (m *Context) FirstResponse() (err error) {
 
 func (m *Context) NextResponse() (err error) {
 	m.processResponseIndex++
-	if m.processResponseIndex >= uint8(len(m.Middlewares)) {
+	if m.processResponseIndex >= uint8(len(m.Middlewares)-1) {
 		return
 	}
 	err = m.Middlewares[m.processResponseIndex].ProcessResponse(m)
@@ -106,7 +106,7 @@ func (m *Context) NextResponse() (err error) {
 
 func (m *Context) FirstItem() (err error) {
 	m.processItemIndex = 0
-	if m.processItemIndex >= uint8(len(m.Middlewares)) {
+	if m.processItemIndex >= uint8(len(m.Middlewares)-1) {
 		return
 	}
 
@@ -116,7 +116,7 @@ func (m *Context) FirstItem() (err error) {
 
 func (m *Context) NextItem() (err error) {
 	m.processItemIndex++
-	if m.processItemIndex >= uint8(len(m.Middlewares)) {
+	if m.processItemIndex >= uint8(len(m.Middlewares)-1) {
 		return
 	}
 

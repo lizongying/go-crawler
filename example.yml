@@ -42,3 +42,4 @@ enable_compress: true
 enable_decode: true
 enable_redirect: true
 redirect_max_times: 1
+enable_chrome: true

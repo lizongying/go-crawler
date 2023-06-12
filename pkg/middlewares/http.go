@@ -31,7 +31,6 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 	}()
 
 	request := c.Request
-	m.logger.DebugF("request: %+v", request)
 
 	if request.Method == "" {
 		request.Method = "GET"
@@ -78,6 +77,7 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		return
 	}
 
+	err = c.NextRequest()
 	return
 }
 

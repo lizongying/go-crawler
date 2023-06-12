@@ -28,6 +28,7 @@ const defaultEnableDecode = true
 const defaultEnableRedirect = true
 const defaultRedirectMaxTimes = uint8(1)
 const defaultRetryMaxTimes = uint8(10)
+const defaultEnableChrome = true
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -82,6 +83,7 @@ type Config struct {
 	EnableDecode     *bool   `yaml:"enable_decode,omitempty" json:"enable_decode"`
 	EnableRedirect   *bool   `yaml:"enable_redirect,omitempty" json:"enable_redirect"`
 	RedirectMaxTimes *uint8  `yaml:"redirect_max_times" json:"-"`
+	EnableChrome     *bool   `yaml:"enable_chrome,omitempty" json:"enable_chrome"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -274,6 +276,15 @@ func (c *Config) GetRetryMaxTimes() uint8 {
 	}
 
 	return *c.Request.RetryMaxTimes
+}
+
+func (c *Config) GetEnableChrome() bool {
+	if c.EnableChrome == nil {
+		enableChrome := defaultEnableChrome
+		c.EnableChrome = &enableChrome
+	}
+
+	return *c.EnableChrome
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {
