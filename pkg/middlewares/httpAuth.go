@@ -19,14 +19,7 @@ func (m *HttpAuthMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (
 	return
 }
 
-func (m *HttpAuthMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	m.logger.Debug("enter ProcessRequest")
-	defer func() {
-		m.logger.Debug("exit ProcessRequest")
-	}()
-
-	request := c.Request
-
+func (m *HttpAuthMiddleware) ProcessRequest(request *pkg.Request) (err error) {
 	username := m.username
 	if request.Username != "" {
 		username = request.Username
@@ -39,9 +32,8 @@ func (m *HttpAuthMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 	if username != "" && password != "" {
 		request.SetBasicAuth(username, password)
 	}
-	m.logger.Info("header", request.Header)
+	m.logger.InfoF("BasicAuth %s:%s", password, username)
 
-	err = c.NextRequest()
 	return
 }
 

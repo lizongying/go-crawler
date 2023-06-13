@@ -24,17 +24,7 @@ func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err 
 	return
 }
 
-func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	m.logger.Debug("enter ProcessRequest")
-	defer func() {
-		m.logger.Debug("exit ProcessRequest")
-	}()
-
-	request := c.Request
-
-	if request.Method == "" {
-		request.Method = "GET"
-	}
+func (m *HttpMiddleware) ProcessRequest(request *pkg.Request) (err error) {
 	request.CreateTime = utils.NowStr()
 	request.Checksum = utils.StrMd5(request.Method, request.Url, request.BodyStr)
 	if request.CanonicalHeaderKey {
@@ -59,14 +49,21 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 			body = strings.NewReader(request.BodyStr)
 		}
 
-		request.Request, err = http.NewRequest(request.Method, Url.String(), body)
+		request.Request, err = http.NewRequestWithContext(context.Background(), request.Method, Url.String(), body)
 		if err != nil {
 			m.logger.Error(err)
 			m.stats.IncRequestError()
 			return
 		}
-
-		request.Request.Header = request.Header
+	}
+	if request.Header == nil {
+		request.Header = make(http.Header)
+	}
+	request.Request.Header = request.Header
+	if len(request.Cookies) > 0 {
+		for _, cookie := range request.Cookies {
+			request.AddCookie(cookie)
+		}
 	}
 
 	ok := m.spider.IsAllowedDomain(request.URL)
@@ -77,7 +74,6 @@ func (m *HttpMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		return
 	}
 
-	err = c.NextRequest()
 	return
 }
 

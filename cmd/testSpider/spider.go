@@ -9,7 +9,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
-	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
@@ -31,17 +30,17 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	//if extra.Count%1000 == 0 {
 	//	s.Logger.Info("extra", utils.JsonStr(extra))
 	//}
-	requestNext := new(pkg.Request)
-	requestNext.Url = response.Request.Url
-	requestNext.Extra = &ExtraOk{
-		Count: extra.Count + 1,
-	}
-	requestNext.CallBack = s.ParseOk
-	//requestNext.UniqueKey = "1"
-	err = s.YieldRequest(ctx, requestNext)
-	if err != nil {
-		s.Logger.Error(err)
-	}
+	//requestNext := new(pkg.Request)
+	//requestNext.Url = response.Request.Url
+	//requestNext.Extra = &ExtraOk{
+	//	Count: extra.Count + 1,
+	//}
+	//requestNext.CallBack = s.ParseOk
+	////requestNext.UniqueKey = "1"
+	//err = s.YieldRequest(ctx, requestNext)
+	//if err != nil {
+	//	s.Logger.Error(err)
+	//}
 	return
 }
 
@@ -109,14 +108,29 @@ func (s *Spider) ParseImages(ctx context.Context, response *pkg.Response) (err e
 	return
 }
 
+// TestUrl go run cmd/testSpider/*.go -c dev.yml -f TestUrl -m dev
+func (s *Spider) TestUrl(ctx context.Context, _ string) (err error) {
+	if s.Mode == "dev" {
+		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
+	}
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk+strings.Repeat("#", 10000))
+	request.Extra = &ExtraOk{}
+	request.CallBack = s.ParseOk
+	err = s.YieldRequest(ctx, request)
+	if err != nil {
+		s.Logger.Error(err)
+	}
+	return
+}
+
 // TestOk go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	if s.Mode == "dev" {
 		s.AddDevServerRoutes(devServer.NewOkHandler(s.Logger))
 	}
 	request := new(pkg.Request)
-	//request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk+strings.Repeat("#", 10000))
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ParseOk
 	err = s.YieldRequest(ctx, request)
@@ -236,9 +250,7 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	}
 	//baseSpider.Interval = 0
 	//baseSpider.SetRequestRate("*", time.Second*3, 1)
-	baseSpider.
-		AddOkHttpCodes(201).
-		SetMiddleware(new(middlewares.DeviceMiddleware), 100)
+	baseSpider.AddOkHttpCodes(201)
 	//baseSpider.
 	//	AddOkHttpCodes(204).
 	//	SetMiddleware(middlewares.NewImageMiddleware, 111)

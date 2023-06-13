@@ -45,14 +45,7 @@ func (m *DeviceMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (er
 	return
 }
 
-func (m *DeviceMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	m.logger.Debug("enter ProcessRequest")
-	defer func() {
-		m.logger.Debug("exit ProcessRequest")
-	}()
-
-	request := c.Request
-
+func (m *DeviceMiddleware) ProcessRequest(request *pkg.Request) (err error) {
 	platform := request.Platform
 	browser := request.Browser
 	var ua []device.Device
@@ -77,7 +70,6 @@ func (m *DeviceMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 		}
 	}
 
-	err = c.NextRequest()
 	return
 }
 

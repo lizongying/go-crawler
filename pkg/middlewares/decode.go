@@ -12,26 +12,28 @@ type DecodeMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *DecodeMiddleware) ProcessResponse(c *pkg.Context) (err error) {
-	r := c.Response
-
-	if strings.Contains(strings.ToUpper(r.Header.Get("Content-Type")), "=BIG5") {
+func (m *DecodeMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+	contentType := strings.ToUpper(response.Header.Get("Content-Type"))
+	if strings.Contains(contentType, "=BIG5") {
 		decoder := traditionalchinese.Big5.NewDecoder()
-		r.BodyBytes, _ = decoder.Bytes(r.BodyBytes)
+		response.BodyBytes, err = decoder.Bytes(response.BodyBytes)
 	}
-	if strings.Contains(strings.ToUpper(r.Header.Get("Content-Type")), "=GBK") {
+	if strings.Contains(contentType, "=GBK") {
 		decoder := simplifiedchinese.GBK.NewDecoder()
-		r.BodyBytes, _ = decoder.Bytes(r.BodyBytes)
+		response.BodyBytes, err = decoder.Bytes(response.BodyBytes)
 	}
-	if strings.Contains(strings.ToUpper(r.Header.Get("Content-Type")), "=GB18030") {
+	if strings.Contains(contentType, "=GB18030") {
 		decoder := simplifiedchinese.GB18030.NewDecoder()
-		r.BodyBytes, _ = decoder.Bytes(r.BodyBytes)
+		response.BodyBytes, err = decoder.Bytes(response.BodyBytes)
 	}
-	if strings.Contains(strings.ToUpper(r.Header.Get("Content-Type")), "=GB2312") {
+	if strings.Contains(contentType, "=GB2312") {
 		decoder := simplifiedchinese.HZGB2312.NewDecoder()
-		r.BodyBytes, _ = decoder.Bytes(r.BodyBytes)
+		response.BodyBytes, err = decoder.Bytes(response.BodyBytes)
 	}
-	err = c.NextResponse()
+
+	if err != nil {
+		m.logger.Error(err)
+	}
 	return
 }
 

@@ -34,11 +34,9 @@ type Spider interface {
 	DelAllowedDomain(string) error
 	CleanAllowedDomains()
 	GetMiddlewares() map[uint8]string
-	ReplaceMiddlewares(map[uint8]Middleware) error
 	SetMiddleware(Middleware, uint8) Spider
-	DelMiddleware(string)
+	DelMiddleware(int)
 	CleanMiddlewares()
-	SortedMiddlewares() []Middleware
 	SetItemDelay(time.Duration) Spider
 	SetItemConcurrency(int) Spider
 	SetRequestRate(string, time.Duration, int) Spider

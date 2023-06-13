@@ -9,14 +9,7 @@ type ChromeMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *ChromeMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	m.logger.Debug("enter ProcessRequest")
-	defer func() {
-		m.logger.Debug("exit ProcessRequest")
-	}()
-
-	request := c.Request
-
+func (m *ChromeMiddleware) ProcessRequest(request *pkg.Request) (err error) {
 	request.SetHeader("Accept", "*/*")
 	request.SetHeader("Cache-Control", "no-cache")
 	request.SetHeader("Content-Type", "text/plain;charset=UTF-8")
@@ -29,7 +22,6 @@ func (m *ChromeMiddleware) ProcessRequest(c *pkg.Context) (err error) {
 	request.SetHeader("Sec-Fetch-Site", "same-site")
 	request.SetHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
 
-	err = c.NextRequest()
 	return
 }
 

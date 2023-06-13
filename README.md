@@ -28,7 +28,7 @@
     * Id 保存主键
     * Data 完整数据
     * 内置item：ItemCsv、ItemJsonl、ItemMongo、ItemMysql、ItemKafka
-* 中间件的order不能重复。编写的时候不要忘记`nextRequest()`/`nextResponse()`/`nextItem()`
+* 中间件的order不能重复。编写的时候不要忘记`nextItem()`
 * 本框架舍弃了pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
 * 框架内置middleware，自定义middleware请参照以下order进行配置。内置中间件order为10的倍数，自定义中间件请避开。
@@ -38,9 +38,10 @@
     * device:101
         * 修改request设备信息。修改header和tls信息，暂时只支持user-agent随机切换。需要设置`SetPlatforms`和`SetBrowsers`
           限定设备范围。默认不启用。
-        * 启用方法。`spider.SetMiddleware(middlewares.NewDeviceMiddleware, 101)`
         * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
         * Browsers: Chrome/Edge/Safari/FireFox
+        * 配置 enable_device: false 随机模拟设备，默认关闭
+        * 代码 `spider.SetMiddleware(new(middlewares.DeviceMiddleware), 101)`
     * filter:20
         * 过滤重复请求。默认支持的是item保存成功后才会进入去重队列，防止出现请求失败后再次请求却被过滤的问题。所以当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
         * 配置 enable_filter: true 是否开启过滤，默认开启
@@ -117,16 +118,18 @@
     * 在不影响功能的情况下，可以考虑关闭一些用不到的中间件。可以在配置文件中修改，或者爬虫入口中修改
     * 配置文件:
         * enable_retry: false
-        * enable_stats: true
-        * enable_filter: true
-        * enable_referer: true
+        * enable_stats: false
+        * enable_filter: false
+        * enable_referer: false
         * enable_http_auth: false
-        * enable_cookie: true
-        * enable_dump: true
-        * enable_url: true
-        * enable_compress: true
-        * enable_decode: true
-        * enable_redirect: true
+        * enable_cookie: false
+        * enable_dump: false
+        * enable_url: false
+        * enable_compress: false
+        * enable_decode: false
+        * enable_redirect: false
+        * enable_chrome: false
+        * enable_device: false
 * 爬虫结构
     * 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
 
@@ -167,6 +170,7 @@
 * enable_redirect: true 是否开启重定向，默认开启
 * redirect_max_times: 1 重定向最大次数，默认1
 * enable_chrome: true 模拟chrome，默认开启
+* enable_device: false 随机模拟设备，默认关闭
 
 ## Example
 

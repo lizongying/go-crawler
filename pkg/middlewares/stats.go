@@ -33,24 +33,12 @@ func (m *StatsMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err
 	return
 }
 
-func (m *StatsMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	m.logger.Debug("enter ProcessRequest")
-	defer func() {
-		m.logger.Debug("exit ProcessRequest")
-	}()
-
-	r := c.Request
-	m.logger.DebugF("request: %+v", r)
-
+func (m *StatsMiddleware) ProcessRequest(request *pkg.Request) (err error) {
 	m.stats.IncRequestTotal()
-	err = c.NextRequest()
 	return
 }
 
-func (m *StatsMiddleware) ProcessResponse(c *pkg.Context) (err error) {
-	response := c.Response
-	m.logger.Debug("before response")
-
+func (m *StatsMiddleware) ProcessResponse(response *pkg.Response) (err error) {
 	if response == nil {
 		m.stats.IncStatusErr()
 	} else {
@@ -60,7 +48,6 @@ func (m *StatsMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 			m.stats.IncStatusErr()
 		}
 	}
-	err = c.NextResponse()
 	return
 }
 

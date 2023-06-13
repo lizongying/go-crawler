@@ -29,6 +29,7 @@ const defaultEnableRedirect = true
 const defaultRedirectMaxTimes = uint8(1)
 const defaultRetryMaxTimes = uint8(10)
 const defaultEnableChrome = true
+const defaultEnableDevice = false
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -84,6 +85,7 @@ type Config struct {
 	EnableRedirect   *bool   `yaml:"enable_redirect,omitempty" json:"enable_redirect"`
 	RedirectMaxTimes *uint8  `yaml:"redirect_max_times" json:"-"`
 	EnableChrome     *bool   `yaml:"enable_chrome,omitempty" json:"enable_chrome"`
+	EnableDevice     *bool   `yaml:"enable_device,omitempty" json:"enable_device"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -285,6 +287,15 @@ func (c *Config) GetEnableChrome() bool {
 	}
 
 	return *c.EnableChrome
+}
+
+func (c *Config) GetEnableDevice() bool {
+	if c.EnableDevice == nil {
+		enableDevice := defaultEnableDevice
+		c.EnableDevice = &enableDevice
+	}
+
+	return *c.EnableDevice
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

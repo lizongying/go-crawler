@@ -20,35 +20,24 @@ func (m *FilterMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (er
 	return
 }
 
-func (m *FilterMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	m.logger.Debug("enter ProcessRequest")
-	defer func() {
-		m.logger.Debug("exit ProcessRequest")
-	}()
-
-	r := c.Request
-	m.logger.DebugF("request: %+v", r)
-
-	if r.SkipFilter {
+func (m *FilterMiddleware) ProcessRequest(request *pkg.Request) (err error) {
+	if request.SkipFilter {
 		m.logger.Debug("SkipFilter")
-		err = c.NextRequest()
 		return
 	}
 
-	if r.UniqueKey == "" {
+	if request.UniqueKey == "" {
 		m.logger.Debug("UniqueKey is empty")
-		err = c.NextRequest()
 		return
 	}
 
-	if _, ok := m.ids.Load(r.UniqueKey); ok {
+	if _, ok := m.ids.Load(request.UniqueKey); ok {
 		err = pkg.ErrIgnoreRequest
-		m.logger.InfoF("%s in filter", r.UniqueKey)
+		m.logger.InfoF("%s in filter", request.UniqueKey)
 		m.stats.IncRequestIgnore()
 		return
 	}
 
-	err = c.NextRequest()
 	return
 }
 

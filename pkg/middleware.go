@@ -6,29 +6,32 @@ import (
 
 type Middleware interface {
 	SpiderStart(context.Context, Spider) error
-	ProcessRequest(*Context) error
-	ProcessResponse(*Context) error
+	ProcessRequest(*Request) error
+	ProcessResponse(*Response) error
 	ProcessItem(*Context) error
 	SpiderStop(context.Context) error
 	SetName(string)
 	GetName() string
+	SetOrder(uint8)
+	GetOrder() uint8
 	FromCrawler(Spider) Middleware
 }
 
 type UnimplementedMiddleware struct {
-	name string
+	name  string
+	order uint8
 }
 
 func (*UnimplementedMiddleware) SpiderStart(context.Context, Spider) (err error) {
 	return
 }
 
-func (*UnimplementedMiddleware) ProcessRequest(c *Context) error {
-	return c.NextRequest()
+func (*UnimplementedMiddleware) ProcessRequest(*Request) error {
+	return nil
 }
 
-func (*UnimplementedMiddleware) ProcessResponse(c *Context) error {
-	return c.NextResponse()
+func (*UnimplementedMiddleware) ProcessResponse(*Response) error {
+	return nil
 }
 
 func (*UnimplementedMiddleware) ProcessItem(c *Context) (err error) {
@@ -43,6 +46,12 @@ func (m *UnimplementedMiddleware) SetName(name string) {
 }
 func (m *UnimplementedMiddleware) GetName() string {
 	return m.name
+}
+func (m *UnimplementedMiddleware) SetOrder(order uint8) {
+	m.order = order
+}
+func (m *UnimplementedMiddleware) GetOrder() uint8 {
+	return m.order
 }
 
 type ProcessFunc func(*Context) error
@@ -64,44 +73,6 @@ func (m *Context) SetContext(ctx context.Context) {
 }
 func (m *Context) GetContext() context.Context {
 	return m.ctx
-}
-
-func (m *Context) FirstRequest() (err error) {
-	m.processRequestIndex = 0
-	if m.processRequestIndex >= uint8(len(m.Middlewares)-1) {
-		return
-	}
-	err = m.Middlewares[0].ProcessRequest(m)
-	return
-}
-
-func (m *Context) NextRequest() (err error) {
-	m.processRequestIndex++
-	if m.processRequestIndex >= uint8(len(m.Middlewares)-1) {
-		return
-	}
-
-	err = m.Middlewares[m.processRequestIndex].ProcessRequest(m)
-	return
-}
-
-func (m *Context) FirstResponse() (err error) {
-	m.processResponseIndex = 0
-	if m.processResponseIndex >= uint8(len(m.Middlewares)-1) {
-		return
-	}
-
-	err = m.Middlewares[0].ProcessResponse(m)
-	return
-}
-
-func (m *Context) NextResponse() (err error) {
-	m.processResponseIndex++
-	if m.processResponseIndex >= uint8(len(m.Middlewares)-1) {
-		return
-	}
-	err = m.Middlewares[m.processResponseIndex].ProcessResponse(m)
-	return
 }
 
 func (m *Context) FirstItem() (err error) {

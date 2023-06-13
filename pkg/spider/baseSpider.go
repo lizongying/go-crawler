@@ -66,7 +66,7 @@ type BaseSpider struct {
 	requestSlots          sync.Map
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
-	middlewares           map[uint8]pkg.Middleware
+	middlewares           []pkg.Middleware
 
 	devServer *devServer.HttpServer
 
@@ -75,6 +75,8 @@ type BaseSpider struct {
 	browsers    map[pkg.Browser]struct{}
 
 	config *config.Config
+
+	downloader *pkg.Downloader
 }
 
 func (s *BaseSpider) SetPlatforms(platforms ...pkg.Platform) pkg.Spider {
@@ -352,7 +354,6 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
-		middlewares:           make(map[uint8]pkg.Middleware),
 		requestChan:           make(chan *pkg.Request, defaultChanRequestMax),
 		requestActiveChan:     make(chan struct{}, defaultChanRequestMax),
 		itemChan:              make(chan pkg.Item, defaultChanItemMax),
@@ -366,6 +367,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	}
 	spider.Mode = cli.Mode
 	spider.httpClient = new(httpClient.HttpClient).FromCrawler(spider)
+	spider.downloader = new(pkg.Downloader).FromCrawler(spider)
 
 	if config.GetEnableStats() {
 		spider.SetMiddleware(new(middlewares.StatsMiddleware), 10)
@@ -373,9 +375,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	if config.GetEnableFilter() {
 		spider.SetMiddleware(new(middlewares.FilterMiddleware), 20)
 	}
-	if config.GetEnableRedirect() {
-		spider.SetMiddleware(new(middlewares.RedirectMiddleware), 30)
-	}
+	spider.SetMiddleware(new(middlewares.HttpMiddleware), 30)
 	if config.GetEnableRetry() {
 		spider.SetMiddleware(new(middlewares.RetryMiddleware), 40)
 	}
@@ -388,7 +388,9 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	if config.GetEnableCookie() {
 		spider.SetMiddleware(new(middlewares.CookieMiddleware), 70)
 	}
-	spider.SetMiddleware(new(middlewares.HttpMiddleware), 80)
+	if config.GetEnableRedirect() {
+		spider.SetMiddleware(new(middlewares.RedirectMiddleware), 80)
+	}
 	if config.GetEnableChrome() {
 		spider.SetMiddleware(new(middlewares.ChromeMiddleware), 90)
 	}
@@ -404,5 +406,10 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 	if config.GetEnableDecode() {
 		spider.SetMiddleware(new(middlewares.DecodeMiddleware), 130)
 	}
+	if config.GetEnableDevice() {
+		spider.SetMiddleware(new(middlewares.DeviceMiddleware), 140)
+	}
+
+	spider.downloader.SetMiddlewares(spider.middlewares)
 	return
 }

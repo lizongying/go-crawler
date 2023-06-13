@@ -26,19 +26,16 @@ func (m *ImageMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err
 	return
 }
 
-func (m *ImageMiddleware) ProcessResponse(c *pkg.Context) (err error) {
-	r := c.Response
-	m.logger.Debug("response body len:", len(r.BodyBytes))
-
-	if len(r.BodyBytes) == 0 {
+func (m *ImageMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+	if len(response.BodyBytes) == 0 {
 		err = errors.New("BodyBytes empty")
 		m.logger.Error(err)
 		return
 	}
 
-	extra, ok := r.Request.Extra.(pkg.OptionImage)
+	extra, ok := response.Request.Extra.(pkg.OptionImage)
 	if ok {
-		img, name, e := image.Decode(bytes.NewReader(r.BodyBytes))
+		img, name, e := image.Decode(bytes.NewReader(response.BodyBytes))
 		if e != nil {
 			err = e
 			m.logger.Error(err)
@@ -46,7 +43,7 @@ func (m *ImageMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 		}
 
 		rect := img.Bounds()
-		extra.SetName(utils.StrMd5(r.Request.URL.String()))
+		extra.SetName(utils.StrMd5(response.Request.URL.String()))
 		extra.SetExtension(name)
 		extra.SetWidth(rect.Dx())
 		extra.SetHeight(rect.Dy())
@@ -55,7 +52,6 @@ func (m *ImageMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 		}
 	}
 
-	err = c.NextResponse()
 	return
 }
 

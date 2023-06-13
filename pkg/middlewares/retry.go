@@ -24,12 +24,8 @@ func (m *RetryMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err
 	return
 }
 
-func (m *RetryMiddleware) ProcessResponse(c *pkg.Context) (err error) {
-	err = c.NextResponse()
-
-	response := c.Response
-	request := c.Request
-	m.logger.Debug("after response")
+func (m *RetryMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+	request := response.Request
 
 	retryMaxTimes := m.retryMaxTimes
 	if request.RetryMaxTimes != nil {
@@ -40,12 +36,11 @@ func (m *RetryMiddleware) ProcessResponse(c *pkg.Context) (err error) {
 	if len(request.OkHttpCodes) > 0 {
 		okHttpCodes = request.OkHttpCodes
 	}
-
 	if retryMaxTimes > 0 && (response.Response == nil || !utils.InSlice(response.StatusCode, okHttpCodes)) {
 		if request.RetryTimes < retryMaxTimes {
 			request.RetryTimes++
 			m.logger.Info(request.UniqueKey, "retry times:", request.RetryTimes, "SpendTime:", request.SpendTime)
-			err = c.FirstRequest()
+			err = pkg.ErrNeedRetry
 			return
 		}
 

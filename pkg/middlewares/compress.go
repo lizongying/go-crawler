@@ -3,6 +3,7 @@ package middlewares
 import (
 	"bytes"
 	"compress/flate"
+	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"io"
 )
@@ -12,37 +13,23 @@ type CompressMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *CompressMiddleware) ProcessRequest(c *pkg.Context) (err error) {
-	m.logger.Debug("enter ProcessRequest")
-	defer func() {
-		m.logger.Debug("exit ProcessRequest")
-	}()
-
-	err = c.NextRequest()
-	if err != nil {
-		m.logger.Debug(err)
-		return
-	}
-
-	// request := c.Request
-	// request.Header.Set("Accept-Encoding", "deflate")
-
-	return
-}
-
-func (m *CompressMiddleware) ProcessResponse(c *pkg.Context) (err error) {
-	r := c.Response
-
-	if r.Header.Get("Content-Encoding") == "deflate" {
-		reader := flate.NewReader(bytes.NewReader(r.BodyBytes))
+func (m *CompressMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+	if response.Header.Get("Content-Encoding") == "deflate" {
+		reader := flate.NewReader(bytes.NewReader(response.BodyBytes))
 		defer func() {
-			_ = reader.Close()
+			e := reader.Close()
+			if e != nil {
+				err = errors.Join(err, e)
+				m.logger.Error(err)
+			}
 		}()
 
-		r.BodyBytes, _ = io.ReadAll(reader)
+		response.BodyBytes, err = io.ReadAll(reader)
+		if err != nil {
+			m.logger.Error(err)
+		}
 	}
 
-	err = c.NextResponse()
 	return
 }
 

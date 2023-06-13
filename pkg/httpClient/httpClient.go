@@ -22,7 +22,6 @@ type HttpClient struct {
 	timeout          time.Duration
 	httpProto        string
 	logger           pkg.Logger
-	middlewares      []pkg.Middleware
 	redirectMaxTimes uint8
 	retryMaxTimes    uint8
 }
@@ -96,11 +95,15 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		client.Timeout = timeout
 	}
 
-	response = &pkg.Response{
-		Request: request,
+	if request.Request == nil {
+		err = errors.New("nil request")
+		return
 	}
 
 	begin := time.Now()
+	response = &pkg.Response{
+		Request: request,
+	}
 	response.Response, err = client.Do(request.Request)
 	response.Request.SpendTime = time.Now().Sub(begin)
 	if err != nil {
@@ -157,7 +160,6 @@ func (h *HttpClient) FromCrawler(spider pkg.Spider) pkg.HttpClient {
 	h.timeout = config.GetTimeout()
 	h.httpProto = config.GetHttpProto()
 	h.logger = spider.GetLogger()
-	h.middlewares = spider.SortedMiddlewares()
 	h.redirectMaxTimes = spider.GetConfig().GetRedirectMaxTimes()
 	h.retryMaxTimes = spider.GetConfig().GetRetryMaxTimes()
 

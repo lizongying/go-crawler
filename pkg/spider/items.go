@@ -39,7 +39,7 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 
 			requestContext := pkg.Context{
 				Item:        item,
-				Middlewares: s.SortedMiddlewares(),
+				Middlewares: s.middlewares,
 			}
 
 			err := requestContext.FirstItem()

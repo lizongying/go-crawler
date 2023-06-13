@@ -11,80 +11,57 @@ import (
 )
 
 func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
-	// TODO limit
 	s.Logger.DebugF("request: %+v", request)
 
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	requestContext := pkg.Context{
-		Request:     request,
-		Middlewares: s.SortedMiddlewares(),
+	err = s.downloader.ProcessRequest(request)
+	if err != nil {
+		s.handleError(request.Context(), response, err, request.ErrBack)
+		return
 	}
 
-	err = requestContext.FirstRequest()
-	response = requestContext.Response
+	response, err = s.httpClient.DoRequest(request.Context(), request)
 	if err != nil {
-		s.Logger.Error(err)
+		s.handleError(request.Context(), response, err, request.ErrBack)
+		return
+	}
 
-		//if errors.Is(err, pkg.ErrIgnoreRequest) {
-		//	s.Logger.Warn(err)
-		//}
-
-		if request.ErrBack != nil {
-			request.ErrBack(ctx, response, err)
-		} else {
-			s.Logger.Warn("nil ErrBack")
+	err = s.downloader.ProcessResponse(response)
+	if err != nil {
+		if errors.Is(err, pkg.ErrNeedRetry) {
+			return s.Request(request.Context(), request)
 		}
+		s.handleError(request.Context(), response, err, request.ErrBack)
 		return
 	}
 
 	if response == nil {
 		err = errors.New("nil response")
 		s.Logger.Error(err)
+		s.handleError(request.Context(), response, err, request.ErrBack)
 		return
 	}
 
-	if response != nil && response.Request == nil {
-		if request != nil {
-			response.Request = request
-		}
+	if response != nil && request != nil {
+		response.Request = request
 	}
 
 	return
 }
 
-func (s *BaseSpider) buildRequest(ctx pkg.Context) {
-	request := ctx.Request
-	err := ctx.FirstRequest()
-	if err != nil {
-		if request.ErrBack != nil {
-			request.ErrBack(nil, ctx.Response, err)
-		} else {
-			e := errors.New("nil ErrBack")
-			err = errors.Join(err, e)
-
-			//if errors.Is(err, pkg.ErrIgnoreRequest) {
-			//	s.Logger.Warn(err)
-			//}
-			s.Logger.Debug(err)
-			s.Logger.Warn("RetryTimes:", request.RetryTimes)
-		}
-
-		return
-	}
-}
-
-func (s *BaseSpider) handleError(c pkg.Context, err error, f func(context.Context, *pkg.Response, error)) {
-	//if errors.Is(err, pkg.ErrIgnoreRequest) {
-	//	s.Logger.Warn(err)
-	//}
-
-	if f != nil {
-		f(c.GetContext(), c.Response, err)
+func (s *BaseSpider) handleError(ctx context.Context, response *pkg.Response, err error, fn func(context.Context, *pkg.Response, error)) {
+	if fn != nil {
+		fn(ctx, response, err)
 	} else {
 		s.Logger.Warn("nil ErrBack")
+	}
+	if errors.Is(err, pkg.ErrIgnoreRequest) {
+		s.GetStats().IncRequestIgnore()
+	} else {
+		s.GetStats().IncRequestError()
 	}
 }
 
@@ -122,89 +99,39 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 				<-s.requestActiveChan
 			}()
 
-			requestContext := pkg.Context{
-				Request:     request,
-				Middlewares: s.SortedMiddlewares(),
-			}
-			requestContext.SetContext(ctx)
-
-			s.buildRequest(requestContext)
-
-			requestContext.Response, err = s.httpClient.DoRequest(ctx, request)
-			if err != nil {
-				retryMaxTimes := s.RetryMaxTimes
-				if request.RetryMaxTimes != nil {
-					retryMaxTimes = *request.RetryMaxTimes
-				}
-				if request.RetryTimes < retryMaxTimes {
-					s.buildRequest(requestContext)
-					return
-				}
-				err = errors.Join(err, errors.New("RetryMaxTimes"))
-				s.handleError(requestContext, err, request.ErrBack)
-				s.GetStats().IncRequestError()
-				return
-			}
-
-			err = requestContext.FirstResponse()
-
-			response := requestContext.Response
-			ctx = requestContext.GetContext()
-			if err != nil {
-				if request.ErrBack != nil {
-					request.ErrBack(ctx, response, err)
-				} else {
-					e := errors.New("nil ErrBack")
-					err = errors.Join(err, e)
-					s.Logger.Debug(err)
-
-					s.handleError(requestContext, err, request.ErrBack)
-				}
-
-				return
-			}
-
-			if response != nil {
-				if request.Request != nil {
-					response.Request = request
-				}
-			}
-
-			if response == nil {
-				err = errors.New("nil response")
+			response, e := s.Request(ctx, request)
+			if e != nil {
+				err = e
 				s.Logger.Error(err)
-
-				s.handleError(requestContext, err, request.ErrBack)
 				return
 			}
 
 			if request.CallBack == nil {
-				e := errors.New("nil CallBack")
-				s.Logger.Error(e)
+				err = errors.New("nil CallBack")
+				s.Logger.Error(err)
 
-				s.handleError(requestContext, err, request.ErrBack)
+				s.handleError(request.Context(), response, err, request.ErrBack)
 				return
 			}
 
-			go func() {
+			go func(response *pkg.Response) {
 				defer func() {
 					if r := recover(); r != nil {
 						buf := make([]byte, 1<<16)
 						runtime.Stack(buf, true)
-						e := errors.New(string(buf))
-						s.Logger.Error(e)
-						s.handleError(requestContext, e, request.ErrBack)
+						err = errors.New(string(buf))
+						s.Logger.Error(err)
+						s.handleError(response.Request.Context(), response, err, request.ErrBack)
 					}
 				}()
 
-				e := request.CallBack(ctx, response)
+				err = request.CallBack(response.Request.Context(), response)
 				if e != nil {
-					s.Logger.Error(e)
-
-					s.handleError(requestContext, e, request.ErrBack)
+					s.Logger.Error(err)
+					s.handleError(response.Request.Context(), response, err, request.ErrBack)
 					return
 				}
-			}()
+			}(response)
 		}(request)
 	}
 
