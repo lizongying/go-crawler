@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -11,7 +12,7 @@ type UrlMiddleware struct {
 	urlLengthLimit int
 }
 
-func (m *UrlMiddleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *UrlMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	if m.urlLengthLimit < len(request.Url) {
 		err = pkg.ErrUrlLengthLimit
 		m.logger.Error(err)

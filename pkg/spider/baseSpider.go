@@ -9,7 +9,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/devServer"
-	"github.com/lizongying/go-crawler/pkg/httpClient"
+	"github.com/lizongying/go-crawler/pkg/downloader"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/stats"
@@ -46,11 +46,10 @@ type BaseSpider struct {
 	spider pkg.Spider
 	Stats  pkg.Stats
 
-	MongoDb    *mongo.Database
-	Mysql      *sql.DB
-	Kafka      *kafka.Writer
-	Logger     pkg.Logger
-	httpClient pkg.HttpClient
+	MongoDb *mongo.Database
+	Mysql   *sql.DB
+	Kafka   *kafka.Writer
+	Logger  pkg.Logger
 
 	startFunc             string
 	args                  string
@@ -76,7 +75,7 @@ type BaseSpider struct {
 
 	config *config.Config
 
-	downloader *pkg.Downloader
+	downloader pkg.Downloader
 }
 
 func (s *BaseSpider) SetPlatforms(platforms ...pkg.Platform) pkg.Spider {
@@ -176,10 +175,6 @@ func (s *BaseSpider) GetConfig() pkg.Config {
 
 func (s *BaseSpider) GetLogger() pkg.Logger {
 	return s.Logger
-}
-
-func (s *BaseSpider) GetHttpClient() pkg.HttpClient {
-	return s.httpClient
 }
 
 func (s *BaseSpider) GetKafka() *kafka.Writer {
@@ -366,8 +361,7 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		config:    config,
 	}
 	spider.Mode = cli.Mode
-	spider.httpClient = new(httpClient.HttpClient).FromCrawler(spider)
-	spider.downloader = new(pkg.Downloader).FromCrawler(spider)
+	spider.downloader = new(downloader.Downloader).FromCrawler(spider)
 
 	if config.GetEnableStats() {
 		spider.SetMiddleware(new(middlewares.StatsMiddleware), 10)

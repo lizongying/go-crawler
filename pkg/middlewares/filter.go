@@ -20,7 +20,7 @@ func (m *FilterMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (er
 	return
 }
 
-func (m *FilterMiddleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *FilterMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	if request.SkipFilter {
 		m.logger.Debug("SkipFilter")
 		return

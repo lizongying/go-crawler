@@ -67,8 +67,8 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		MaxIdleConns:        1000,
 		MaxIdleConnsPerHost: 1000,
 		TLSClientConfig: &tls.Config{
-			RootCAs:            defaultCAs,
-			InsecureSkipVerify: true,
+			RootCAs: defaultCAs,
+			//InsecureSkipVerify: true,
 		},
 	}
 	if request.ProxyEnable {

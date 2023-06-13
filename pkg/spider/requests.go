@@ -17,41 +17,14 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 		ctx = context.Background()
 	}
 
-	err = s.downloader.ProcessRequest(request)
+	response, err = s.downloader.DoRequest(ctx, request)
 	if err != nil {
 		s.Logger.Error(err)
 		s.handleError(request.Context(), response, err, request.ErrBack)
 		return
 	}
 
-	s.Logger.InfoF("request %+v", request)
-	response, err = s.httpClient.DoRequest(request.Context(), request)
-	if err != nil {
-		s.Logger.Error(err)
-		s.handleError(request.Context(), response, err, request.ErrBack)
-		return
-	}
-
-	err = s.downloader.ProcessResponse(response)
-	if err != nil {
-		s.Logger.Error(err)
-		if errors.Is(err, pkg.ErrNeedRetry) {
-			return s.Request(request.Context(), request)
-		}
-		s.handleError(request.Context(), response, err, request.ErrBack)
-		return
-	}
-
-	if response == nil {
-		err = errors.New("nil response")
-		s.Logger.Error(err)
-		s.handleError(request.Context(), response, err, request.ErrBack)
-		return
-	}
-
-	if response != nil && request != nil {
-		response.Request = request
-	}
+	s.Logger.DebugF("request %+v", request)
 
 	return
 }

@@ -19,7 +19,7 @@ func (m *RedirectMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (
 	return
 }
 
-func (m *RedirectMiddleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *RedirectMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	if request.RedirectMaxTimes != nil {
 		ctx := context.WithValue(request.Context(), "redirect_max_times", *request.RedirectMaxTimes)
 		request.Request = request.WithContext(ctx)

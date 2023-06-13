@@ -6,8 +6,8 @@ import (
 
 type Middleware interface {
 	SpiderStart(context.Context, Spider) error
-	ProcessRequest(*Request) error
-	ProcessResponse(*Response) error
+	ProcessRequest(context.Context, *Request) error
+	ProcessResponse(context.Context, *Response) error
 	ProcessItem(*Context) error
 	SpiderStop(context.Context) error
 	SetName(string)
@@ -26,11 +26,11 @@ func (*UnimplementedMiddleware) SpiderStart(context.Context, Spider) (err error)
 	return
 }
 
-func (*UnimplementedMiddleware) ProcessRequest(*Request) error {
+func (*UnimplementedMiddleware) ProcessRequest(context.Context, *Request) error {
 	return nil
 }
 
-func (*UnimplementedMiddleware) ProcessResponse(*Response) error {
+func (*UnimplementedMiddleware) ProcessResponse(context.Context, *Response) error {
 	return nil
 }
 

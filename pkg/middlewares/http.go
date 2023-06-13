@@ -24,7 +24,11 @@ func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err 
 	return
 }
 
-func (m *HttpMiddleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Request) (err error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	request.CreateTime = utils.NowStr()
 	request.Checksum = utils.StrMd5(request.Method, request.Url, request.BodyStr)
 	if request.CanonicalHeaderKey {
@@ -49,7 +53,7 @@ func (m *HttpMiddleware) ProcessRequest(request *pkg.Request) (err error) {
 			body = strings.NewReader(request.BodyStr)
 		}
 
-		request.Request, err = http.NewRequestWithContext(context.Background(), request.Method, Url.String(), body)
+		request.Request, err = http.NewRequestWithContext(ctx, request.Method, Url.String(), body)
 		if err != nil {
 			m.logger.Error(err)
 			m.stats.IncRequestError()

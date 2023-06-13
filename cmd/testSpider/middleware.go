@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -9,7 +10,7 @@ type Middleware struct {
 	logger pkg.Logger
 }
 
-func (m *Middleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *Middleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	request.SetHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36")
 	return
 }

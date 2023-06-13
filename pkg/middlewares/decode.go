@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"context"
 	"github.com/lizongying/go-crawler/pkg"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/encoding/traditionalchinese"
@@ -12,7 +13,7 @@ type DecodeMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *DecodeMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+func (m *DecodeMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
 	contentType := strings.ToUpper(response.Header.Get("Content-Type"))
 	if strings.Contains(contentType, "=BIG5") {
 		decoder := traditionalchinese.Big5.NewDecoder()

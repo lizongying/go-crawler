@@ -3,6 +3,7 @@ package middlewares
 import (
 	"bytes"
 	"compress/flate"
+	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"io"
@@ -13,7 +14,7 @@ type CompressMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *CompressMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+func (m *CompressMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
 	if response.Header.Get("Content-Encoding") == "deflate" {
 		reader := flate.NewReader(bytes.NewReader(response.BodyBytes))
 		defer func() {

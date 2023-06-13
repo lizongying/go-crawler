@@ -10,7 +10,7 @@ type CookieMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *CookieMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+func (m *CookieMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
 	// add cookies to context
 	cookies := response.Cookies()
 	if len(cookies) > 0 {

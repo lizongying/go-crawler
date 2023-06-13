@@ -19,7 +19,7 @@ func (m *HttpAuthMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (
 	return
 }
 
-func (m *HttpAuthMiddleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	username := m.username
 	if request.Username != "" {
 		username = request.Username

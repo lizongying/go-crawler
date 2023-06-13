@@ -33,12 +33,12 @@ func (m *StatsMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err
 	return
 }
 
-func (m *StatsMiddleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *StatsMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	m.stats.IncRequestTotal()
 	return
 }
 
-func (m *StatsMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+func (m *StatsMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
 	if response == nil {
 		m.stats.IncStatusErr()
 	} else {

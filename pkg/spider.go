@@ -54,7 +54,6 @@ type Spider interface {
 	SetBrowsers(...Browser) Spider
 	GetConfig() Config
 	GetLogger() Logger
-	GetHttpClient() HttpClient
 	GetKafka() *kafka.Writer
 	GetMongoDb() *mongo.Database
 	GetMysql() *sql.DB

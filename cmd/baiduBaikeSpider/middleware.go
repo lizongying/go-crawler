@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"net/url"
@@ -13,7 +14,7 @@ type Middleware struct {
 	urlDetail string
 }
 
-func (m *Middleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *Middleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	_, ok := request.Extra.(*ExtraDetail)
 	if ok {
 		extra := request.Extra.(*ExtraDetail)

@@ -45,7 +45,7 @@ func (m *DeviceMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (er
 	return
 }
 
-func (m *DeviceMiddleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	platform := request.Platform
 	browser := request.Browser
 	var ua []device.Device

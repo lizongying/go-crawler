@@ -26,7 +26,7 @@ func (m *ImageMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err
 	return
 }
 
-func (m *ImageMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+func (m *ImageMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
 	if len(response.BodyBytes) == 0 {
 		err = errors.New("BodyBytes empty")
 		m.logger.Error(err)

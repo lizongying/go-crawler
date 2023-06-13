@@ -22,12 +22,12 @@ func (m *CustomMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (er
 	return
 }
 
-func (m *CustomMiddleware) ProcessRequest(request *pkg.Request) (err error) {
+func (m *CustomMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	m.logger.Debug("request", request)
 	return
 }
 
-func (m *CustomMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+func (m *CustomMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
 	m.logger.Debug("response", response)
 	return
 }

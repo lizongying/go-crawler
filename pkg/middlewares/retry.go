@@ -24,7 +24,7 @@ func (m *RetryMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err
 	return
 }
 
-func (m *RetryMiddleware) ProcessResponse(response *pkg.Response) (err error) {
+func (m *RetryMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
 	request := response.Request
 
 	retryMaxTimes := m.retryMaxTimes
