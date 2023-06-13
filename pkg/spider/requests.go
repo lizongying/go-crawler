@@ -19,18 +19,22 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 
 	err = s.downloader.ProcessRequest(request)
 	if err != nil {
+		s.Logger.Error(err)
 		s.handleError(request.Context(), response, err, request.ErrBack)
 		return
 	}
 
+	s.Logger.InfoF("request %+v", request)
 	response, err = s.httpClient.DoRequest(request.Context(), request)
 	if err != nil {
+		s.Logger.Error(err)
 		s.handleError(request.Context(), response, err, request.ErrBack)
 		return
 	}
 
 	err = s.downloader.ProcessResponse(response)
 	if err != nil {
+		s.Logger.Error(err)
 		if errors.Is(err, pkg.ErrNeedRetry) {
 			return s.Request(request.Context(), request)
 		}

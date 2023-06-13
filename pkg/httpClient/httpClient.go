@@ -44,8 +44,13 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		timeout = request.Timeout
 	}
 
-	pool := x509.NewCertPool()
-	pool.AppendCertsFromPEM(static.Cert)
+	// Get a copy of the default root CAs
+	defaultCAs, err := x509.SystemCertPool()
+	if err != nil {
+		defaultCAs = x509.NewCertPool()
+	}
+	defaultCAs.AppendCertsFromPEM(static.Cert)
+
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -62,8 +67,8 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		MaxIdleConns:        1000,
 		MaxIdleConnsPerHost: 1000,
 		TLSClientConfig: &tls.Config{
-			RootCAs: pool,
-			//InsecureSkipVerify: true,
+			RootCAs:            defaultCAs,
+			InsecureSkipVerify: true,
 		},
 	}
 	if request.ProxyEnable {

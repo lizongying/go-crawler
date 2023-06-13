@@ -34,6 +34,7 @@ func (s *BaseSpider) SetMiddleware(middleware pkg.Middleware, order uint8) pkg.S
 	})
 
 	s.middlewares = middlewaresNew
+	s.downloader.SetMiddlewares(s.middlewares)
 	return s
 }
 
@@ -46,9 +47,11 @@ func (s *BaseSpider) DelMiddleware(index int) {
 	}
 
 	s.middlewares = append(s.middlewares[:index], s.middlewares[index+1:]...)
+	s.downloader.SetMiddlewares(s.middlewares)
 	return
 }
 
 func (s *BaseSpider) CleanMiddlewares() {
 	s.middlewares = make([]pkg.Middleware, 0)
+	s.downloader.SetMiddlewares(s.middlewares)
 }

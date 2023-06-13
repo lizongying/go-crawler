@@ -77,7 +77,7 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 
 	baseSpider.Name = "baidu-baike"
 	baseSpider.
-		SetMiddleware(new(Middleware), 90).
+		SetMiddleware(new(Middleware), 9).
 		SetMiddleware(new(middlewares.MongoMiddleware), 141)
 	spider = &Spider{
 		BaseSpider:           baseSpider,

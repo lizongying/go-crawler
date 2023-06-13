@@ -20,13 +20,14 @@ type Downloader struct {
 
 func (d *Downloader) SetMiddlewares(middlewares []Middleware) {
 	d.middlewares = middlewares
+	var processRequestFns []func(*Request) error
+	var processResponseFns []func(*Response) error
 	for _, v := range middlewares {
-		d.setProcessRequestFns(v.ProcessRequest)
-		d.setProcessResponseFns(v.ProcessResponse)
+		processRequestFns = append(processRequestFns, v.ProcessRequest)
+		processResponseFns = append(processResponseFns, v.ProcessResponse)
 	}
-}
-func (d *Downloader) setProcessRequestFns(fns ...func(*Request) error) {
-	d.processRequestFns = append(d.processRequestFns, fns...)
+	d.processRequestFns = processRequestFns
+	d.processResponseFns = processResponseFns
 }
 
 func (d *Downloader) ProcessRequest(request *Request) (err error) {
@@ -41,10 +42,6 @@ func (d *Downloader) ProcessRequest(request *Request) (err error) {
 		}
 	}
 	return
-}
-
-func (d *Downloader) setProcessResponseFns(fns ...func(*Response) error) {
-	d.processResponseFns = append(d.processResponseFns, fns...)
 }
 
 func (d *Downloader) ProcessResponse(response *Response) (err error) {
