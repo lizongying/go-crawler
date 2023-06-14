@@ -16,7 +16,7 @@ func (m *DumpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err 
 }
 
 func (m *DumpMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
-	m.logger.InfoF("request: %+v", request)
+	m.logger.InfoF("request: %+v", *request)
 	return
 }
 

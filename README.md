@@ -29,7 +29,7 @@
     * Data 完整数据
     * 内置item：ItemCsv、ItemJsonl、ItemMongo、ItemMysql、ItemKafka
 * 中间件的order不能重复。编写的时候不要忘记`nextItem()`
-* 本框架舍弃了pipeline概念，功能合并到middleware。在很多情况下，功能会有交叉，合并后会更方便，同时编写也更简单。
+* pipeline。
 * middleware包括框架内置、自定义公共（internal/middlewares）和自定义爬虫内（和爬虫同module）。
 * 框架内置middleware，自定义middleware请参照以下order进行配置。内置中间件order为10的倍数，自定义中间件请避开。
     * stats:10
@@ -115,21 +115,23 @@
     * 可以自行搭建隧道代理 [go-proxy](https://github.com/lizongying/go-proxy)
       。这是一个随机切换的隧道代理，调用方无感知，方便使用。后期会加入一些其他的调用方式，比如维持原来的代理地址。
 * 增加爬虫性能
-    * 在不影响功能的情况下，可以考虑关闭一些用不到的中间件。可以在配置文件中修改，或者爬虫入口中修改
+    * 在不影响功能的情况下，可以考虑关闭一些用不到的中间件或pipeline。可以在配置文件中修改，或者爬虫入口中修改
     * 配置文件:
         * enable_retry: false
         * enable_stats: false
-        * enable_filter: false
         * enable_referer: false
         * enable_http_auth: false
         * enable_cookie: false
-        * enable_dump: false
         * enable_url: false
         * enable_compress: false
         * enable_decode: false
         * enable_redirect: false
         * enable_chrome: false
         * enable_device: false
+        * enable_dump_middleware: false
+        * enable_filter_middleware: false
+        * enable_dump_pipeline: false
+        * enable_filter_pipeline: false
 * 爬虫结构
     * 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
 
@@ -157,12 +159,10 @@
 * enable_ja3: false devServer是否显示ja3指纹，默认关闭
 * enable_retry: true 是否开启重试，默认开启
 * enable_stats: true 是否开启统计，默认开启
-* enable_filter: true 是否开启过滤，默认开启
 * enable_referer: true 是否开启referer，默认开启
 * referrer_policy: DefaultReferrerPolicy 来源政策，默认DefaultReferrerPolicy，可选DefaultReferrerPolicy、NoReferrerPolicy
 * enable_http_auth: true 是否开启httpAuth，默认开启
 * enable_cookie: true 是否开启cookie，默认开启
-* enable_dump: true 是否开启打印item，默认开启
 * enable_url: true 是否开启url长度限制，默认开启
 * url_length_limit: 2083 url长度限制，默认2083
 * enable_compress: true 是否开启gzip/deflate解压缩，默认开启
@@ -171,6 +171,10 @@
 * redirect_max_times: 1 重定向最大次数，默认1
 * enable_chrome: true 模拟chrome，默认开启
 * enable_device: false 随机模拟设备，默认关闭
+* enable_dump_middleware: true 是否开启打印request/response middleware，默认开启
+* enable_filter_middleware: true 是否开启过滤middleware，默认开启
+* enable_dump_pipeline: true 是否开启打印item pipeline，默认开启
+* enable_filter_pipeline: true 是否开启过滤pipeline，默认开启
 
 ## Example
 

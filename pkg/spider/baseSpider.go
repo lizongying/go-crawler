@@ -247,7 +247,6 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 
 	defer func() {
 		for _, v := range s.GetMiddlewares() {
-			s.Logger.Info("name", v.GetName())
 			e := v.SpiderStop(ctx)
 			if errors.Is(e, pkg.BreakErr) {
 				break

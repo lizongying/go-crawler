@@ -48,9 +48,7 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 	e.locker.Lock()
 	defer e.locker.Unlock()
 
-	if pipeline == nil {
-		pipeline = pipeline.FromCrawler(e.spider)
-	}
+	pipeline = pipeline.FromCrawler(e.spider)
 
 	name := reflect.TypeOf(pipeline).Elem().String()
 	pipeline.SetName(name)

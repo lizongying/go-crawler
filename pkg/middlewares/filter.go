@@ -34,8 +34,6 @@ func (m *FilterMiddleware) ProcessRequest(_ context.Context, request *pkg.Reques
 }
 
 func (m *FilterMiddleware) SpiderStop(_ context.Context) (err error) {
-	m.logger.Info("m", m)
-	m.logger.Info("m.filter", m.filter)
 	m.filter.Clean()
 	return
 }

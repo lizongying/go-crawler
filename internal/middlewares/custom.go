@@ -8,47 +8,34 @@ import (
 type CustomMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger pkg.Logger
-
-	spider pkg.Spider
 }
 
 func (m *CustomMiddleware) GetName() string {
 	return "custom"
 }
 
-func (m *CustomMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spider = spider
+func (m *CustomMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) error {
+	_ = m.FromCrawler(spider)
 	m.logger.Debug("start")
-	return
+	return nil
 }
 
-func (m *CustomMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *CustomMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) error {
 	m.logger.Debug("request", request)
-	return
+	return nil
 }
 
-func (m *CustomMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
+func (m *CustomMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) error {
 	m.logger.Debug("response", response)
-	return
+	return nil
 }
 
-func (m *CustomMiddleware) ProcessItem(c *pkg.Context) (err error) {
-	if err = c.NextItem(); err != nil {
-		m.logger.Error(err)
-	}
-	return
-}
-
-func (m *CustomMiddleware) SpiderStop(_ context.Context) (err error) {
+func (m *CustomMiddleware) SpiderStop(_ context.Context) error {
 	m.logger.Debug("stop")
-	return
+	return nil
 }
 
 func (m *CustomMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	m.logger = spider.GetLogger()
 	return m
-}
-
-func NewCustomMiddleware() pkg.Middleware {
-	return &CustomMiddleware{}
 }

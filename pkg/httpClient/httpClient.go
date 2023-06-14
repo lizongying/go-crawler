@@ -27,7 +27,7 @@ type HttpClient struct {
 }
 
 func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
-	h.logger.DebugF("request: %+v", request)
+	h.logger.DebugF("request: %+v", *request)
 
 	if ctx == nil {
 		ctx = context.Background()

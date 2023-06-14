@@ -51,8 +51,12 @@ func (d *Downloader) Download(ctx context.Context, request *pkg.Request) (respon
 		return
 	}
 
-	d.logger.Info("request.Request", request.Request)
-	d.logger.Info("request.Context()", request.Context())
+	if request.Request == nil {
+		err = errors.New("nil request.Request")
+		d.logger.Error(err)
+		return
+	}
+
 	response, err = d.httpClient.DoRequest(request.Context(), request)
 	if err != nil {
 		d.logger.Error(err)
@@ -115,9 +119,7 @@ func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
-	if middleware == nil {
-		middleware = middleware.FromCrawler(d.spider)
-	}
+	middleware = middleware.FromCrawler(d.spider)
 
 	name := reflect.TypeOf(middleware).Elem().String()
 	middleware.SetName(name)

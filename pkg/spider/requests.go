@@ -11,7 +11,12 @@ import (
 )
 
 func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
-	s.Logger.DebugF("request: %+v", request)
+	if request == nil {
+		err = errors.New("nil request")
+		return
+	}
+
+	s.Logger.DebugF("request: %+v", *request)
 
 	if ctx == nil {
 		ctx = context.Background()
@@ -20,11 +25,14 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 	response, err = s.Download(ctx, request)
 	if err != nil {
 		s.Logger.Error(err)
-		s.handleError(request.Context(), response, err, request.ErrBack)
+		if request != nil && request.Request != nil {
+			ctx = request.Context()
+		}
+		s.handleError(ctx, response, err, request.ErrBack)
 		return
 	}
 
-	s.Logger.DebugF("request %+v", request)
+	s.Logger.DebugF("request %+v", *request)
 
 	return
 }
