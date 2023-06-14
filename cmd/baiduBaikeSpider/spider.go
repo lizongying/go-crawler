@@ -6,7 +6,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/logger"
-	"github.com/lizongying/go-crawler/pkg/middlewares"
+	"github.com/lizongying/go-crawler/pkg/pipelines"
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
@@ -76,9 +76,8 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	}
 
 	baseSpider.Name = "baidu-baike"
-	baseSpider.
-		SetMiddleware(new(Middleware), 9).
-		SetMiddleware(new(middlewares.MongoMiddleware), 141)
+	baseSpider.SetMiddleware(new(Middleware), 9)
+	baseSpider.SetPipeline(new(pipelines.MongoPipeline), 141)
 	spider = &Spider{
 		BaseSpider:           baseSpider,
 		collectionBaiduBaike: "baidu_baike",

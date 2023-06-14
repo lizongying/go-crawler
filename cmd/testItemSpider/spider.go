@@ -283,11 +283,11 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	baseSpider.Name = "test"
 	baseSpider.AddDevServerRoutes(devServer.NewOkHandler(logger))
 
-	//baseSpider.SetMiddleware(new(middlewares.MongoMiddleware), 141)
-	//baseSpider.SetMiddleware(new(middlewares.CsvMiddleware), 142)
-	//baseSpider.SetMiddleware(new(middlewares.JsonLinesMiddleware), 143)
-	//baseSpider.SetMiddleware(new(middlewares.MysqlMiddleware), 144)
-	//baseSpider.SetMiddleware(new(middlewares.KafkaMiddleware), 145)
+	//baseSpider.SetPipeline(new(pipelines.MongoPipeline), 141)
+	//baseSpider.SetPipeline(new(pipelines.CsvPipeline), 142)
+	//baseSpider.SetPipeline(new(pipelines.JsonLinesPipeline), 143)
+	//baseSpider.SetPipeline(new(pipelines.MysqlPipeline), 144)
+	//baseSpider.SetPipeline(new(pipelines.KafkaPipeline), 145)
 
 	spider = &Spider{
 		BaseSpider:     baseSpider,

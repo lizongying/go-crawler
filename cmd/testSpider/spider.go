@@ -250,10 +250,8 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	}
 	//baseSpider.Interval = 0
 	//baseSpider.SetRequestRate("*", time.Second*3, 1)
-	baseSpider.AddOkHttpCodes(201)
-	//baseSpider.
-	//	AddOkHttpCodes(204).
-	//	SetMiddleware(middlewares.NewImageMiddleware, 111)
+	//baseSpider.AddOkHttpCodes(201)
+	//baseSpider.SetMiddleware(new(middlewares.ImageMiddleware), 111)
 
 	baseSpider.SetPlatforms(pkg.Windows, pkg.Mac, pkg.Android, pkg.Iphone, pkg.Ipad)
 	baseSpider.SetBrowsers(pkg.Chrome, pkg.Edge, pkg.Safari, pkg.FireFox)
