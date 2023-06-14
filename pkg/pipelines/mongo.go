@@ -1,4 +1,4 @@
-package middlewares
+package pipelines
 
 import (
 	"context"
@@ -11,29 +11,19 @@ import (
 	"time"
 )
 
-type MongoMiddleware struct {
-	pkg.UnimplementedMiddleware
-	logger pkg.Logger
-
-	mongoDb *mongo.Database
-	timeout time.Duration
-	spider  pkg.Spider
+type MongoPipeline struct {
+	pkg.UnimplementedPipeline
 	info    *pkg.SpiderInfo
 	stats   pkg.Stats
+	logger  pkg.Logger
+	mongoDb *mongo.Database
+	timeout time.Duration
 }
 
-func (m *MongoMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spider = spider
-	m.info = spider.GetInfo()
-	m.stats = spider.GetStats()
-	return
-}
-
-func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
-	item, ok := c.Item.(*pkg.ItemMongo)
+func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
+	itemMongo, ok := item.(*pkg.ItemMongo)
 	if !ok {
 		m.logger.Warn("item not support mongo")
-		err = c.NextItem()
 		return
 	}
 
@@ -41,15 +31,13 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
-	if item.Collection == "" {
+	if itemMongo.Collection == "" {
 		err = errors.New("collection is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
@@ -58,7 +46,6 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		err = errors.New("nil data")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
@@ -67,49 +54,49 @@ func (m *MongoMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
 	if m.info.Mode == "test" {
 		m.logger.Debug("current mode don't need save")
 		m.stats.IncItemIgnore()
-		err = c.NextItem()
 		return
 	}
 
-	ctx := context.Background()
-
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	res, err := m.mongoDb.Collection(item.Collection).InsertOne(ctx, bs)
+	res, err := m.mongoDb.Collection(itemMongo.Collection).InsertOne(ctx, bs)
 	if err != nil {
-		if item.Update && !reflect.ValueOf(item.Id).IsZero() && mongo.IsDuplicateKeyError(err) {
-			_, err = m.mongoDb.Collection(item.Collection).UpdateOne(ctx, bson.M{"_id": item.Id}, bson.M{"$set": item.Data})
+		if itemMongo.Update && !reflect.ValueOf(itemMongo.Id).IsZero() && mongo.IsDuplicateKeyError(err) {
+			_, err = m.mongoDb.Collection(itemMongo.Collection).UpdateOne(ctx, bson.M{"_id": itemMongo.Id}, bson.M{"$set": itemMongo.Data})
 			if err == nil {
-				m.logger.Info(item.Collection, "update success", item.Id)
+				m.logger.Info(itemMongo.Collection, "update success", itemMongo.Id)
 			}
 		}
 	} else {
-		m.logger.Info(item.Collection, "insert success", res.InsertedID)
+		m.logger.Info(itemMongo.Collection, "insert success", res.InsertedID)
 	}
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
 	m.stats.IncItemSuccess()
-	err = c.NextItem()
 	return
 }
 
-func (m *MongoMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *MongoPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(MongoMiddleware).FromCrawler(spider)
+		return new(MongoPipeline).FromCrawler(spider)
 	}
+
+	m.info = spider.GetInfo()
+	m.stats = spider.GetStats()
 	m.logger = spider.GetLogger()
 	m.mongoDb = spider.GetMongoDb()
 	m.timeout = time.Minute

@@ -33,10 +33,6 @@ type Spider interface {
 	SetAllowedDomain(string)
 	DelAllowedDomain(string) error
 	CleanAllowedDomains()
-	GetMiddlewares() map[uint8]string
-	SetMiddleware(Middleware, uint8) Spider
-	DelMiddleware(int)
-	CleanMiddlewares()
 	SetItemDelay(time.Duration) Spider
 	SetItemConcurrency(int) Spider
 	SetRequestRate(string, time.Duration, int) Spider
@@ -57,4 +53,5 @@ type Spider interface {
 	GetKafka() *kafka.Writer
 	GetMongoDb() *mongo.Database
 	GetMysql() *sql.DB
+	GetFilter() Filter
 }

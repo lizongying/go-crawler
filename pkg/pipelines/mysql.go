@@ -1,4 +1,4 @@
-package middlewares
+package pipelines
 
 import (
 	"context"
@@ -12,45 +12,33 @@ import (
 	"time"
 )
 
-type MysqlMiddleware struct {
-	pkg.UnimplementedMiddleware
-	logger pkg.Logger
-
-	mysql   *sql.DB
-	timeout time.Duration
-	spider  pkg.Spider
+type MysqlPipeline struct {
+	pkg.UnimplementedPipeline
 	info    *pkg.SpiderInfo
 	stats   pkg.Stats
+	logger  pkg.Logger
+	mysql   *sql.DB
+	timeout time.Duration
 }
 
-func (m *MysqlMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spider = spider
-	m.info = spider.GetInfo()
-	m.stats = spider.GetStats()
-	return
-}
-
-func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
-	item, ok := c.Item.(*pkg.ItemMysql)
-	if !ok {
-		m.logger.Warn("item not support mysql")
-		err = c.NextItem()
-		return
-	}
-
+func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
-	if item.Table == "" {
+	itemMysql, ok := item.(*pkg.ItemMysql)
+	if !ok {
+		m.logger.Warn("item not support mysql")
+		return
+	}
+
+	if itemMysql.Table == "" {
 		err = errors.New("table is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
@@ -59,24 +47,23 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		err = errors.New("nil data")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
 	if m.info.Mode == "test" {
 		m.logger.Debug("current mode don't need save")
 		m.stats.IncItemIgnore()
-		err = c.NextItem()
 		return
 	}
 
-	ctx := context.Background()
-
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	refType := reflect.TypeOf(item.Data).Elem()
-	refValue := reflect.ValueOf(item.Data).Elem()
+	refType := reflect.TypeOf(itemMysql.Data).Elem()
+	refValue := reflect.ValueOf(itemMysql.Data).Elem()
 	var columns []string
 	var values []any
 	for i := 0; i < refType.NumField(); i++ {
@@ -89,12 +76,11 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		values = append(values, value)
 	}
 
-	s := fmt.Sprintf(`INSERT %s SET %s`, item.Table, strings.Join(columns, ","))
+	s := fmt.Sprintf(`INSERT %s SET %s`, itemMysql.Table, strings.Join(columns, ","))
 	stmt, err := m.mysql.PrepareContext(ctx, s)
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 	res, err := stmt.ExecContext(ctx, values...)
@@ -103,18 +89,16 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		if !o {
 			m.logger.Error(e)
 			m.stats.IncItemError()
-			err = c.NextItem()
 			return
 		}
 
-		if item.Update && !reflect.ValueOf(item.Id).IsZero() && e.Number == 1062 {
-			s = fmt.Sprintf(`UPDATE %s SET %s WHERE id=?`, item.Table, strings.Join(columns, ","))
-			values = append(values, item.Id)
+		if itemMysql.Update && !reflect.ValueOf(itemMysql.Id).IsZero() && e.Number == 1062 {
+			s = fmt.Sprintf(`UPDATE %s SET %s WHERE id=?`, itemMysql.Table, strings.Join(columns, ","))
+			values = append(values, itemMysql.Id)
 			stmt, err = m.mysql.PrepareContext(ctx, s)
 			if err != nil {
 				m.logger.Error(err)
 				m.stats.IncItemError()
-				err = c.NextItem()
 				return
 			}
 
@@ -122,7 +106,6 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				m.stats.IncItemError()
-				err = c.NextItem()
 				return
 			}
 
@@ -130,15 +113,13 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				m.stats.IncItemError()
-				err = c.NextItem()
 				return
 			}
 
-			m.logger.Info(item.Table, "update success", item.Id)
+			m.logger.Info(itemMysql.Table, "update success", itemMysql.Id)
 		} else {
 			m.logger.Error(err)
 			m.stats.IncItemError()
-			err = c.NextItem()
 			return
 		}
 	} else {
@@ -146,22 +127,23 @@ func (m *MysqlMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		if e != nil {
 			m.logger.Error(e)
 			m.stats.IncItemError()
-			err = c.NextItem()
 			return
 		}
 
-		m.logger.Info(item.Table, "insert success", id)
+		m.logger.Info(itemMysql.Table, "insert success", id)
 	}
 
 	m.stats.IncItemSuccess()
-	err = c.NextItem()
 	return
 }
 
-func (m *MysqlMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *MysqlPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(MysqlMiddleware).FromCrawler(spider)
+		return new(MysqlPipeline).FromCrawler(spider)
 	}
+
+	m.info = spider.GetInfo()
+	m.stats = spider.GetStats()
 	m.logger = spider.GetLogger()
 	m.mysql = spider.GetMysql()
 	m.timeout = time.Minute

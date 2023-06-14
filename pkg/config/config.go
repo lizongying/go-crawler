@@ -16,11 +16,9 @@ const defaultDevServer = "http://localhost:8081"
 const defaultEnableJa3 = false
 const defaultUrlLengthLimit = 2083
 const defaultEnableCookie = true
-const defaultEnableDump = true
 const defaultEnableUrl = true
 const defaultEnableRetry = true
 const defaultEnableStats = true
-const defaultEnableFilter = true
 const defaultEnableReferer = true
 const defaultEnableHttpAuth = false
 const defaultEnableCompress = true
@@ -30,6 +28,10 @@ const defaultRedirectMaxTimes = uint8(1)
 const defaultRetryMaxTimes = uint8(10)
 const defaultEnableChrome = true
 const defaultEnableDevice = false
+const defaultEnableDumpMiddleware = true
+const defaultEnableFilterMiddleware = true
+const defaultEnableDumpPipeline = true
+const defaultEnableFilterPipeline = true
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -68,24 +70,26 @@ type Config struct {
 		RetryMaxTimes *uint8 `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
-	DevServer        string  `yaml:"dev_server" json:"-"`
-	EnableJa3        *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
-	EnableReferer    *bool   `yaml:"enable_referer,omitempty" json:"enable_referer"`
-	ReferrerPolicy   *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
-	EnableHttpAuth   *bool   `yaml:"enable_http_auth,omitempty" json:"enable_http_auth"`
-	EnableCookie     *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
-	EnableDump       *bool   `yaml:"enable_dump,omitempty" json:"enable_dump"`
-	EnableFilter     *bool   `yaml:"enable_filter,omitempty" json:"enable_filter"`
-	EnableStats      *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
-	EnableUrl        *bool   `yaml:"enable_url,omitempty" json:"enable_url"`
-	UrlLengthLimit   *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
-	EnableRetry      *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
-	EnableCompress   *bool   `yaml:"enable_compress,omitempty" json:"enable_compress"`
-	EnableDecode     *bool   `yaml:"enable_decode,omitempty" json:"enable_decode"`
-	EnableRedirect   *bool   `yaml:"enable_redirect,omitempty" json:"enable_redirect"`
-	RedirectMaxTimes *uint8  `yaml:"redirect_max_times" json:"-"`
-	EnableChrome     *bool   `yaml:"enable_chrome,omitempty" json:"enable_chrome"`
-	EnableDevice     *bool   `yaml:"enable_device,omitempty" json:"enable_device"`
+	DevServer              string  `yaml:"dev_server" json:"-"`
+	EnableJa3              *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
+	EnableReferer          *bool   `yaml:"enable_referer,omitempty" json:"enable_referer"`
+	ReferrerPolicy         *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
+	EnableHttpAuth         *bool   `yaml:"enable_http_auth,omitempty" json:"enable_http_auth"`
+	EnableCookie           *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
+	EnableStats            *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
+	EnableUrl              *bool   `yaml:"enable_url,omitempty" json:"enable_url"`
+	UrlLengthLimit         *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
+	EnableRetry            *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
+	EnableCompress         *bool   `yaml:"enable_compress,omitempty" json:"enable_compress"`
+	EnableDecode           *bool   `yaml:"enable_decode,omitempty" json:"enable_decode"`
+	EnableRedirect         *bool   `yaml:"enable_redirect,omitempty" json:"enable_redirect"`
+	RedirectMaxTimes       *uint8  `yaml:"redirect_max_times" json:"-"`
+	EnableChrome           *bool   `yaml:"enable_chrome,omitempty" json:"enable_chrome"`
+	EnableDevice           *bool   `yaml:"enable_device,omitempty" json:"enable_device"`
+	EnableDumpMiddleware   *bool   `yaml:"enable_dump_middleware,omitempty" json:"enable_dump_middleware"`
+	EnableFilterMiddleware *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
+	EnableDumpPipeline     *bool   `yaml:"enable_dump_pipeline,omitempty" json:"enable_dump_pipeline"`
+	EnableFilterPipeline   *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -163,15 +167,6 @@ func (c *Config) GetEnableCookie() bool {
 	return *c.EnableCookie
 }
 
-func (c *Config) GetEnableDump() bool {
-	if c.EnableDump == nil {
-		enableDump := defaultEnableDump
-		c.EnableDump = &enableDump
-	}
-
-	return *c.EnableDump
-}
-
 func (c *Config) GetEnableHttpAuth() bool {
 	if c.EnableHttpAuth == nil {
 		enableHttpAuth := defaultEnableHttpAuth
@@ -189,14 +184,37 @@ func (c *Config) GetEnableReferer() bool {
 
 	return *c.EnableReferer
 }
-
-func (c *Config) GetEnableFilter() bool {
-	if c.EnableFilter == nil {
-		enableFilter := defaultEnableFilter
-		c.EnableFilter = &enableFilter
+func (c *Config) GetEnableDumpMiddleware() bool {
+	if c.EnableDumpMiddleware == nil {
+		enableDumpMiddleware := defaultEnableDumpMiddleware
+		c.EnableDumpMiddleware = &enableDumpMiddleware
 	}
 
-	return *c.EnableFilter
+	return *c.EnableDumpMiddleware
+}
+func (c *Config) GetEnableFilterMiddleware() bool {
+	if c.EnableFilterMiddleware == nil {
+		enableFilterMiddleware := defaultEnableFilterMiddleware
+		c.EnableFilterMiddleware = &enableFilterMiddleware
+	}
+
+	return *c.EnableFilterMiddleware
+}
+func (c *Config) GetEnableDumpPipeline() bool {
+	if c.EnableDumpPipeline == nil {
+		enableDumpPipeline := defaultEnableDumpPipeline
+		c.EnableDumpPipeline = &enableDumpPipeline
+	}
+
+	return *c.EnableDumpPipeline
+}
+func (c *Config) GetEnableFilterPipeline() bool {
+	if c.EnableFilterPipeline == nil {
+		enableFilterPipeline := defaultEnableFilterPipeline
+		c.EnableFilterPipeline = &enableFilterPipeline
+	}
+
+	return *c.EnableFilterPipeline
 }
 
 func (c *Config) GetEnableStats() bool {

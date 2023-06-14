@@ -7,8 +7,7 @@ import (
 
 type RefererMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger pkg.Logger
-
+	logger        pkg.Logger
 	refererPolicy pkg.ReferrerPolicy
 }
 
@@ -38,6 +37,7 @@ func (m *RefererMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
 		return new(RefererMiddleware).FromCrawler(spider)
 	}
+
 	m.logger = spider.GetLogger()
 	m.refererPolicy = spider.GetConfig().GetReferrerPolicy()
 	return m

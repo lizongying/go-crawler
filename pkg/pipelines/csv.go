@@ -1,4 +1,4 @@
-package middlewares
+package pipelines
 
 import (
 	"context"
@@ -13,42 +13,31 @@ import (
 	"sync"
 )
 
-type CsvMiddleware struct {
-	pkg.UnimplementedMiddleware
-	logger pkg.Logger
-
-	spider pkg.Spider
+type CsvPipeline struct {
+	pkg.UnimplementedPipeline
 	files  sync.Map
 	stats  pkg.Stats
+	logger pkg.Logger
 }
 
-func (m *CsvMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spider = spider
-	m.stats = spider.GetStats()
-	return
-}
-
-func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
-	item, ok := c.Item.(*pkg.ItemCsv)
-	if !ok {
-		m.logger.Warn("item not support csv")
-		err = c.NextItem()
-		return
-	}
-
+func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
-	if item.FileName == "" {
+	itemCsv, ok := item.(*pkg.ItemCsv)
+	if !ok {
+		m.logger.Warn("item not support csv")
+		return
+	}
+
+	if itemCsv.FileName == "" {
 		err = errors.New("fileName is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
@@ -57,7 +46,6 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		err = errors.New("nil data")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
@@ -66,9 +54,9 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 
 	var lines []string
 	var columns []string
-	filename := fmt.Sprintf("%s.csv", item.FileName)
+	filename := fmt.Sprintf("%s.csv", itemCsv.FileName)
 	var file *os.File
-	fileValue, ok := m.files.Load(item.FileName)
+	fileValue, ok := m.files.Load(itemCsv.FileName)
 	create := false
 	if !ok {
 		if !utils.ExistsDir(filename) {
@@ -76,7 +64,6 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				m.stats.IncItemError()
-				err = c.NextItem()
 				return
 			}
 		}
@@ -85,7 +72,6 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				m.stats.IncItemError()
-				err = c.NextItem()
 				return
 			}
 			create = true
@@ -94,11 +80,10 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				m.stats.IncItemError()
-				err = c.NextItem()
 				return
 			}
 		}
-		m.files.Store(item.FileName, file)
+		m.files.Store(itemCsv.FileName, file)
 	} else {
 		file = fileValue.(*os.File)
 	}
@@ -134,16 +119,14 @@ func (m *CsvMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return err
 	}
 
 	m.stats.IncItemSuccess()
-	err = c.NextItem()
 	return
 }
 
-func (m *CsvMiddleware) SpiderStop(_ context.Context) (err error) {
+func (m *CsvPipeline) SpiderStop(_ context.Context) (err error) {
 	m.files.Range(func(key, value any) bool {
 		err = value.(*os.File).Close()
 		if err != nil {
@@ -154,10 +137,12 @@ func (m *CsvMiddleware) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func (m *CsvMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *CsvPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(CsvMiddleware).FromCrawler(spider)
+		return new(CsvPipeline).FromCrawler(spider)
 	}
+
+	m.stats = spider.GetStats()
 	m.logger = spider.GetLogger()
 	return m
 }

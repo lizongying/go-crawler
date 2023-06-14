@@ -30,6 +30,7 @@ func (m *ChromeMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
 		return new(ChromeMiddleware).FromCrawler(spider)
 	}
+
 	m.logger = spider.GetLogger()
 	return m
 }

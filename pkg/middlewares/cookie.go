@@ -25,6 +25,7 @@ func (m *CookieMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
 		return new(CookieMiddleware).FromCrawler(spider)
 	}
+
 	m.logger = spider.GetLogger()
 	return m
 }

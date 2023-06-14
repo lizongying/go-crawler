@@ -10,8 +10,11 @@ import (
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/downloader"
+	"github.com/lizongying/go-crawler/pkg/exporter"
+	"github.com/lizongying/go-crawler/pkg/filter"
 	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
+	"github.com/lizongying/go-crawler/pkg/pipelines"
 	"github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/segmentio/kafka-go"
@@ -65,7 +68,6 @@ type BaseSpider struct {
 	requestSlots          sync.Map
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
-	middlewares           []pkg.Middleware
 
 	devServer *devServer.HttpServer
 
@@ -75,7 +77,9 @@ type BaseSpider struct {
 
 	config *config.Config
 
-	downloader pkg.Downloader
+	pkg.Downloader
+	pkg.Exporter
+	filter pkg.Filter
 }
 
 func (s *BaseSpider) SetPlatforms(platforms ...pkg.Platform) pkg.Spider {
@@ -189,6 +193,10 @@ func (s *BaseSpider) GetMysql() *sql.DB {
 	return s.Mysql
 }
 
+func (s *BaseSpider) GetFilter() pkg.Filter {
+	return s.filter
+}
+
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	if s.spider == nil {
 		err = errors.New("nil spider")
@@ -205,7 +213,8 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.Logger.Info("args", s.args)
 	s.Logger.Info("mode", s.Mode)
 	s.Logger.Info("allowedDomains", s.spider.GetAllowedDomains())
-	s.Logger.Info("middlewares", s.spider.GetMiddlewares())
+	s.Logger.Info("middlewares", s.GetMiddlewareNames())
+	s.Logger.Info("pipelines", s.GetPipelineNames())
 	s.Logger.Info("okHttpCodes", s.okHttpCodes)
 	s.Logger.Info("platforms", s.spider.GetPlatforms())
 	s.Logger.Info("browsers", s.spider.GetBrowsers())
@@ -223,7 +232,13 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 		ctx = context.Background()
 	}
 
-	for _, v := range s.middlewares {
+	for _, v := range s.GetPipelines() {
+		e := v.SpiderStart(ctx, s)
+		if errors.Is(e, pkg.BreakErr) {
+			break
+		}
+	}
+	for _, v := range s.GetMiddlewares() {
 		e := v.SpiderStart(ctx, s)
 		if errors.Is(e, pkg.BreakErr) {
 			break
@@ -231,7 +246,14 @@ func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	}
 
 	defer func() {
-		for _, v := range s.middlewares {
+		for _, v := range s.GetMiddlewares() {
+			s.Logger.Info("name", v.GetName())
+			e := v.SpiderStop(ctx)
+			if errors.Is(e, pkg.BreakErr) {
+				break
+			}
+		}
+		for _, v := range s.GetPipelines() {
 			e := v.SpiderStop(ctx)
 			if errors.Is(e, pkg.BreakErr) {
 				break
@@ -359,37 +381,39 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		platforms: make(map[pkg.Platform]struct{}, 6),
 		browsers:  make(map[pkg.Browser]struct{}, 4),
 		config:    config,
+		filter:    new(filter.Filter),
 	}
 	spider.Mode = cli.Mode
-	spider.downloader = new(downloader.Downloader).FromCrawler(spider)
+	spider.Downloader = new(downloader.Downloader).FromCrawler(spider)
+	spider.Exporter = new(exporter.Exporter).FromCrawler(spider)
 
 	if config.GetEnableStats() {
 		spider.SetMiddleware(new(middlewares.StatsMiddleware), 10)
 	}
-	if config.GetEnableFilter() {
-		spider.SetMiddleware(new(middlewares.FilterMiddleware), 20)
+	if config.GetEnableDumpMiddleware() {
+		spider.SetMiddleware(new(middlewares.DumpMiddleware), 20)
 	}
-	spider.SetMiddleware(new(middlewares.HttpMiddleware), 30)
+	if config.GetEnableFilterMiddleware() {
+		spider.SetMiddleware(new(middlewares.FilterMiddleware), 30)
+	}
+	spider.SetMiddleware(new(middlewares.HttpMiddleware), 40)
 	if config.GetEnableRetry() {
-		spider.SetMiddleware(new(middlewares.RetryMiddleware), 40)
+		spider.SetMiddleware(new(middlewares.RetryMiddleware), 50)
 	}
 	if config.GetEnableUrl() {
-		spider.SetMiddleware(new(middlewares.UrlMiddleware), 50)
+		spider.SetMiddleware(new(middlewares.UrlMiddleware), 60)
 	}
 	if config.GetEnableReferer() {
-		spider.SetMiddleware(new(middlewares.RefererMiddleware), 60)
+		spider.SetMiddleware(new(middlewares.RefererMiddleware), 70)
 	}
 	if config.GetEnableCookie() {
-		spider.SetMiddleware(new(middlewares.CookieMiddleware), 70)
+		spider.SetMiddleware(new(middlewares.CookieMiddleware), 80)
 	}
 	if config.GetEnableRedirect() {
-		spider.SetMiddleware(new(middlewares.RedirectMiddleware), 80)
+		spider.SetMiddleware(new(middlewares.RedirectMiddleware), 90)
 	}
 	if config.GetEnableChrome() {
-		spider.SetMiddleware(new(middlewares.ChromeMiddleware), 90)
-	}
-	if config.GetEnableDump() {
-		spider.SetMiddleware(new(middlewares.DumpMiddleware), 100)
+		spider.SetMiddleware(new(middlewares.ChromeMiddleware), 100)
 	}
 	if config.GetEnableHttpAuth() {
 		spider.SetMiddleware(new(middlewares.HttpAuthMiddleware), 110)
@@ -404,6 +428,12 @@ func NewBaseSpider(cli *cli.Cli, config *config.Config, logger *logger.Logger, m
 		spider.SetMiddleware(new(middlewares.DeviceMiddleware), 140)
 	}
 
-	spider.downloader.SetMiddlewares(spider.middlewares)
+	if config.GetEnableDumpPipeline() {
+		spider.SetPipeline(new(pipelines.DumpPipeline), 10)
+	}
+	if config.GetEnableFilterPipeline() {
+		spider.SetPipeline(new(pipelines.FilterPipeline), 20)
+	}
+
 	return
 }

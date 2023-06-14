@@ -18,12 +18,6 @@ type HttpMiddleware struct {
 	stats  pkg.Stats
 }
 
-func (m *HttpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spider = spider
-	m.stats = spider.GetStats()
-	return
-}
-
 func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Request) (err error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -85,6 +79,9 @@ func (m *HttpMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
 		return new(HttpMiddleware).FromCrawler(spider)
 	}
+
+	m.spider = spider
 	m.logger = spider.GetLogger()
+	m.stats = spider.GetStats()
 	return m
 }

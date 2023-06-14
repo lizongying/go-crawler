@@ -7,9 +7,8 @@ import (
 
 type UrlMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger pkg.Logger
-
 	urlLengthLimit int
+	logger         pkg.Logger
 }
 
 func (m *UrlMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
@@ -26,7 +25,8 @@ func (m *UrlMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
 		return new(UrlMiddleware).FromCrawler(spider)
 	}
-	m.logger = spider.GetLogger()
+
 	m.urlLengthLimit = spider.GetConfig().GetUrlLengthLimit()
+	m.logger = spider.GetLogger()
 	return m
 }

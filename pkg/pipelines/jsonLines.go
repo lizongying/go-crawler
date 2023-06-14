@@ -1,4 +1,4 @@
-package middlewares
+package pipelines
 
 import (
 	"context"
@@ -11,42 +11,31 @@ import (
 	"sync"
 )
 
-type JsonLinesMiddleware struct {
-	pkg.UnimplementedMiddleware
-	logger pkg.Logger
-
-	spider pkg.Spider
+type JsonLinesPipeline struct {
+	pkg.UnimplementedPipeline
 	files  sync.Map
 	stats  pkg.Stats
+	logger pkg.Logger
 }
 
-func (m *JsonLinesMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spider = spider
-	m.stats = spider.GetStats()
-	return
-}
-
-func (m *JsonLinesMiddleware) ProcessItem(c *pkg.Context) (err error) {
-	item, ok := c.Item.(*pkg.ItemJsonl)
-	if !ok {
-		m.logger.Warn("item not support jsonl")
-		err = c.NextItem()
-		return
-	}
-
+func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
-	if item.FileName == "" {
+	itemJsonl, ok := item.(*pkg.ItemJsonl)
+	if !ok {
+		m.logger.Warn("item not support jsonl")
+		return
+	}
+
+	if itemJsonl.FileName == "" {
 		err = errors.New("fileName is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
@@ -55,20 +44,18 @@ func (m *JsonLinesMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		err = errors.New("nil data")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
-	filename := fmt.Sprintf("%s.jsonl", item.FileName)
+	filename := fmt.Sprintf("%s.jsonl", itemJsonl.FileName)
 	var file *os.File
-	fileValue, ok := m.files.Load(item.FileName)
+	fileValue, ok := m.files.Load(itemJsonl.FileName)
 	if !ok {
 		if !utils.ExistsDir(filename) {
 			err = os.MkdirAll(filepath.Dir(filename), 0744)
 			if err != nil {
 				m.logger.Error(err)
 				m.stats.IncItemError()
-				err = c.NextItem()
 				return
 			}
 		}
@@ -77,7 +64,6 @@ func (m *JsonLinesMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				m.stats.IncItemError()
-				err = c.NextItem()
 				return
 			}
 		} else {
@@ -85,11 +71,10 @@ func (m *JsonLinesMiddleware) ProcessItem(c *pkg.Context) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				m.stats.IncItemError()
-				err = c.NextItem()
 				return
 			}
 		}
-		m.files.Store(item.FileName, file)
+		m.files.Store(itemJsonl.FileName, file)
 	} else {
 		file = fileValue.(*os.File)
 	}
@@ -98,16 +83,14 @@ func (m *JsonLinesMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return err
 	}
 
 	m.stats.IncItemSuccess()
-	err = c.NextItem()
 	return
 }
 
-func (m *JsonLinesMiddleware) SpiderStop(_ context.Context) (err error) {
+func (m *JsonLinesPipeline) SpiderStop(_ context.Context) (err error) {
 	m.files.Range(func(key, value any) bool {
 		err = value.(*os.File).Close()
 		if err != nil {
@@ -118,10 +101,12 @@ func (m *JsonLinesMiddleware) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func (m *JsonLinesMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *JsonLinesPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(JsonLinesMiddleware).FromCrawler(spider)
+		return new(JsonLinesPipeline).FromCrawler(spider)
 	}
+
+	m.stats = spider.GetStats()
 	m.logger = spider.GetLogger()
 	return m
 }

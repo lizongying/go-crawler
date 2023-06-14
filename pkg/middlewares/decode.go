@@ -42,6 +42,7 @@ func (m *DecodeMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
 		return new(DecodeMiddleware).FromCrawler(spider)
 	}
+
 	m.logger = spider.GetLogger()
 	return m
 }

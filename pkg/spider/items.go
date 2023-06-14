@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (s *BaseSpider) handleItem(_ context.Context) {
+func (s *BaseSpider) handleItem(ctx context.Context) {
 	itemConcurrencyChanLen := 0
 	for item := range s.itemChan {
 		itemDelay := s.itemDelay
@@ -37,12 +37,7 @@ func (s *BaseSpider) handleItem(_ context.Context) {
 				<-s.itemActiveChan
 			}()
 
-			requestContext := pkg.Context{
-				Item:        item,
-				Middlewares: s.middlewares,
-			}
-
-			err := requestContext.FirstItem()
+			err := s.Export(ctx, item)
 			if err != nil {
 				s.Logger.Error(err)
 			}

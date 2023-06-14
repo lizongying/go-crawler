@@ -12,13 +12,6 @@ type HttpAuthMiddleware struct {
 	password string
 }
 
-func (m *HttpAuthMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	info := spider.GetInfo()
-	m.username = info.Username
-	m.password = info.Password
-	return
-}
-
 func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	username := m.username
 	if request.Username != "" {
@@ -41,6 +34,10 @@ func (m *HttpAuthMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
 		return new(HttpAuthMiddleware).FromCrawler(spider)
 	}
+
 	m.logger = spider.GetLogger()
+	info := spider.GetInfo()
+	m.username = info.Username
+	m.password = info.Password
 	return m
 }

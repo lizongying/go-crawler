@@ -17,7 +17,7 @@ func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (respons
 		ctx = context.Background()
 	}
 
-	response, err = s.downloader.DoRequest(ctx, request)
+	response, err = s.Download(ctx, request)
 	if err != nil {
 		s.Logger.Error(err)
 		s.handleError(request.Context(), response, err, request.ErrBack)

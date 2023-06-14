@@ -14,35 +14,9 @@ import (
 type DeviceMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger pkg.Logger
-	spider pkg.Spider
 	uaAll  map[string][]device.Device
 	ua     []device.Device
 	uaLen  int
-}
-
-func (m *DeviceMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spider = spider
-	platforms := spider.GetPlatforms()
-	browsers := spider.GetBrowsers()
-
-	devices, _ := device.NewDevicesFromBytes(static.Devices)
-	m.uaAll = devices.Devices
-
-	var ua []device.Device
-	if len(platforms) > 0 && len(browsers) > 0 {
-		for _, platform := range platforms {
-			for _, browser := range browsers {
-				u, ok := m.uaAll[fmt.Sprintf("%s-%s", platform, browser)]
-				if ok {
-					ua = append(ua, u...)
-				}
-			}
-		}
-	}
-	m.ua = ua
-	m.uaLen = len(ua)
-
-	return
 }
 
 func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
@@ -77,6 +51,26 @@ func (m *DeviceMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
 		return new(DeviceMiddleware).FromCrawler(spider)
 	}
+
 	m.logger = spider.GetLogger()
+	platforms := spider.GetPlatforms()
+	browsers := spider.GetBrowsers()
+
+	devices, _ := device.NewDevicesFromBytes(static.Devices)
+	m.uaAll = devices.Devices
+
+	var ua []device.Device
+	if len(platforms) > 0 && len(browsers) > 0 {
+		for _, platform := range platforms {
+			for _, browser := range browsers {
+				u, ok := m.uaAll[fmt.Sprintf("%s-%s", platform, browser)]
+				if ok {
+					ua = append(ua, u...)
+				}
+			}
+		}
+	}
+	m.ua = ua
+	m.uaLen = len(ua)
 	return m
 }

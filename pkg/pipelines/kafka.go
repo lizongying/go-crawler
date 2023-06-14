@@ -1,4 +1,4 @@
-package middlewares
+package pipelines
 
 import (
 	"context"
@@ -11,29 +11,19 @@ import (
 	"time"
 )
 
-type KafkaMiddleware struct {
-	pkg.UnimplementedMiddleware
-	logger pkg.Logger
-
-	kafkaWriter *kafka.Writer
-	timeout     time.Duration
-	spider      pkg.Spider
+type KafkaPipeline struct {
+	pkg.UnimplementedPipeline
 	info        *pkg.SpiderInfo
 	stats       pkg.Stats
+	logger      pkg.Logger
+	kafkaWriter *kafka.Writer
+	timeout     time.Duration
 }
 
-func (m *KafkaMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spider = spider
-	m.info = spider.GetInfo()
-	m.stats = spider.GetStats()
-	return
-}
-
-func (m *KafkaMiddleware) ProcessItem(c *pkg.Context) (err error) {
-	item, ok := c.Item.(*pkg.ItemKafka)
+func (m *KafkaPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
+	itemKafka, ok := item.(*pkg.ItemKafka)
 	if !ok {
 		m.logger.Warn("item not support kafka")
-		err = c.NextItem()
 		return
 	}
 
@@ -41,15 +31,13 @@ func (m *KafkaMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
-	if item.Topic == "" {
+	if itemKafka.Topic == "" {
 		err = errors.New("topic is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
@@ -58,7 +46,6 @@ func (m *KafkaMiddleware) ProcessItem(c *pkg.Context) (err error) {
 		err = errors.New("nil data")
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
@@ -67,48 +54,48 @@ func (m *KafkaMiddleware) ProcessItem(c *pkg.Context) (err error) {
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
 	if m.info.Mode == "test" {
 		m.logger.Debug("current mode don't need save")
 		m.stats.IncItemIgnore()
-		err = c.NextItem()
 		return
 	}
 
-	ctx := context.Background()
-
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	m.kafkaWriter.Topic = item.Topic
+	m.kafkaWriter.Topic = itemKafka.Topic
 	m.kafkaWriter.Logger = kafka.LoggerFunc(func(msg string, a ...interface{}) {
-		m.logger.Info(item.Topic, "insert success", a)
+		m.logger.Info(itemKafka.Topic, "insert success", a)
 	})
 	err = m.kafkaWriter.WriteMessages(ctx,
 		kafka.Message{
-			Key:   []byte(fmt.Sprint(item.Id)),
+			Key:   []byte(fmt.Sprint(itemKafka.Id)),
 			Value: bs,
 		},
 	)
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncItemError()
-		err = c.NextItem()
 		return
 	}
 
 	m.stats.IncItemSuccess()
-	err = c.NextItem()
 	return
 }
 
-func (m *KafkaMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *KafkaPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(KafkaMiddleware).FromCrawler(spider)
+		return new(KafkaPipeline).FromCrawler(spider)
 	}
+
+	m.info = spider.GetInfo()
+	m.stats = spider.GetStats()
 	m.logger = spider.GetLogger()
 	m.kafkaWriter = spider.GetKafka()
 	m.timeout = time.Minute

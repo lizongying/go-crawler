@@ -15,15 +15,7 @@ import (
 type ImageMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger pkg.Logger
-
-	spider pkg.Spider
 	stats  pkg.StatsWithImage
-}
-
-func (m *ImageMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spider = spider
-	m.stats, _ = spider.GetStats().(pkg.StatsWithImage)
-	return
 }
 
 func (m *ImageMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
@@ -59,6 +51,8 @@ func (m *ImageMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
 		return new(ImageMiddleware).FromCrawler(spider)
 	}
+
 	m.logger = spider.GetLogger()
+	m.stats, _ = spider.GetStats().(pkg.StatsWithImage)
 	return m
 }

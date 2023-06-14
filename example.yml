@@ -30,12 +30,10 @@ dev_server: http://localhost:8081
 enable_ja3: false
 enable_retry: true
 enable_stats: true
-enable_filter: true
 enable_referer: true
 referrer_policy: NoReferrerPolicy
 enable_http_auth: false
 enable_cookie: true
-enable_dump: true
 enable_url: true
 url_length_limit:
 enable_compress: true
@@ -44,3 +42,7 @@ enable_redirect: true
 redirect_max_times: 1
 enable_chrome: true
 enable_device: false
+enable_dump_middleware: true
+enable_filter_middleware: true
+enable_dump_pipeline: true
+enable_filter_pipeline: true

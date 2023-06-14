@@ -5,6 +5,9 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
+	"reflect"
+	"sort"
+	"sync"
 )
 
 type Downloader struct {
@@ -12,20 +15,9 @@ type Downloader struct {
 	processRequestFns  []func(context.Context, *pkg.Request) error
 	processResponseFns []func(context.Context, *pkg.Response) error
 	httpClient         pkg.HttpClient
-
-	logger pkg.Logger
-}
-
-func (d *Downloader) SetMiddlewares(middlewares []pkg.Middleware) {
-	d.middlewares = middlewares
-	var processRequestFns []func(context.Context, *pkg.Request) error
-	var processResponseFns []func(context.Context, *pkg.Response) error
-	for _, v := range middlewares {
-		processRequestFns = append(processRequestFns, v.ProcessRequest)
-		processResponseFns = append(processResponseFns, v.ProcessResponse)
-	}
-	d.processRequestFns = processRequestFns
-	d.processResponseFns = processResponseFns
+	spider             pkg.Spider
+	logger             pkg.Logger
+	locker             sync.Mutex
 }
 
 func (d *Downloader) processRequest(ctx context.Context, request *pkg.Request) (err error) {
@@ -42,7 +34,7 @@ func (d *Downloader) processRequest(ctx context.Context, request *pkg.Request) (
 	return
 }
 
-func (d *Downloader) DoRequest(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
+func (d *Downloader) Download(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -53,6 +45,14 @@ func (d *Downloader) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		return
 	}
 
+	if request == nil {
+		err = errors.New("nil request")
+		d.logger.Error(err)
+		return
+	}
+
+	d.logger.Info("request.Request", request.Request)
+	d.logger.Info("request.Context()", request.Context())
 	response, err = d.httpClient.DoRequest(request.Context(), request)
 	if err != nil {
 		d.logger.Error(err)
@@ -63,7 +63,7 @@ func (d *Downloader) DoRequest(ctx context.Context, request *pkg.Request) (respo
 	if err != nil {
 		d.logger.Error(err)
 		if errors.Is(err, pkg.ErrNeedRetry) {
-			return d.DoRequest(request.Context(), request)
+			return d.Download(request.Context(), request)
 		}
 		return
 	}
@@ -95,11 +95,85 @@ func (d *Downloader) processResponse(ctx context.Context, response *pkg.Response
 	return
 }
 
-func (d *Downloader) FromCrawler(spider pkg.Spider) *Downloader {
+func (d *Downloader) GetMiddlewareNames() (middlewares map[uint8]string) {
+	d.locker.Lock()
+	defer d.locker.Unlock()
+
+	middlewares = make(map[uint8]string)
+	for _, v := range d.middlewares {
+		middlewares[v.GetOrder()] = v.GetName()
+	}
+
+	return
+}
+
+func (d *Downloader) GetMiddlewares() []pkg.Middleware {
+	return d.middlewares
+}
+
+func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
+	d.locker.Lock()
+	defer d.locker.Unlock()
+
+	if middleware == nil {
+		middleware = middleware.FromCrawler(d.spider)
+	}
+
+	name := reflect.TypeOf(middleware).Elem().String()
+	middleware.SetName(name)
+	middleware.SetOrder(order)
+	for k, v := range d.middlewares {
+		if v.GetName() == name && v.GetOrder() != order {
+			d.DelMiddleware(k)
+			break
+		}
+	}
+
+	d.middlewares = append(d.middlewares, middleware)
+	sort.Slice(d.middlewares, func(i, j int) bool {
+		return d.middlewares[i].GetOrder() < d.middlewares[j].GetOrder()
+	})
+
+	var processRequestFns []func(context.Context, *pkg.Request) error
+	var processResponseFns []func(context.Context, *pkg.Response) error
+	for _, v := range d.middlewares {
+		processRequestFns = append(processRequestFns, v.ProcessRequest)
+		processResponseFns = append(processResponseFns, v.ProcessResponse)
+	}
+	d.processRequestFns = processRequestFns
+	d.processResponseFns = processResponseFns
+}
+
+func (d *Downloader) DelMiddleware(index int) {
+	d.locker.Lock()
+	defer d.locker.Unlock()
+
+	if index < 0 {
+		return
+	}
+	if index >= len(d.middlewares) {
+		return
+	}
+
+	d.middlewares = append(d.middlewares[:index], d.middlewares[index+1:]...)
+	return
+}
+
+func (d *Downloader) CleanMiddlewares() {
+	d.locker.Lock()
+	defer d.locker.Unlock()
+
+	d.middlewares = make([]pkg.Middleware, 0)
+}
+
+func (d *Downloader) FromCrawler(spider pkg.Spider) pkg.Downloader {
 	if d == nil {
 		return new(Downloader).FromCrawler(spider)
 	}
-	d.logger = spider.GetLogger()
+
 	d.httpClient = new(httpClient.HttpClient).FromCrawler(spider)
+	d.spider = spider
+	d.logger = spider.GetLogger()
+
 	return d
 }
