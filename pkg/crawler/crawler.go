@@ -196,6 +196,24 @@ func (c *Crawler) SetDownloader(downloader pkg.Downloader) {
 func (c *Crawler) SetExporter(exporter pkg.Exporter) {
 	c.Exporter = exporter
 }
+func (c *Crawler) GetRetryMaxTimes() uint8 {
+	return c.RetryMaxTimes
+}
+func (c *Crawler) SetRetryMaxTimes(RetryMaxTimes uint8) {
+	c.RetryMaxTimes = RetryMaxTimes
+}
+func (c *Crawler) GetTimeout() time.Duration {
+	return c.Timeout
+}
+func (c *Crawler) SetTimeout(timeout time.Duration) {
+	c.Timeout = timeout
+}
+func (c *Crawler) GetInterval() time.Duration {
+	return c.Interval
+}
+func (c *Crawler) SetInterval(interval time.Duration) {
+	c.Interval = interval
+}
 
 func (c *Crawler) Start(ctx context.Context) (err error) {
 	if c.spider == nil {

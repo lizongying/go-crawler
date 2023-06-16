@@ -52,6 +52,12 @@ type Crawler interface {
 	GetFilter() Filter
 	SetMiddleware(Middleware, uint8)
 	SetPipeline(Pipeline, uint8)
+	GetRetryMaxTimes() uint8
+	SetRetryMaxTimes(uint8)
+	GetTimeout() time.Duration
+	SetTimeout(time.Duration)
+	GetInterval() time.Duration
+	SetInterval(time.Duration)
 }
 
 type CrawlOption func(Crawler)
@@ -84,5 +90,20 @@ func WithMiddleware(middleware Middleware, order uint8) CrawlOption {
 func WithPipeline(pipeline Pipeline, order uint8) CrawlOption {
 	return func(crawler Crawler) {
 		crawler.SetPipeline(pipeline, order)
+	}
+}
+func WithRetryMaxTimes(retryMaxTimes uint8) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.SetRetryMaxTimes(retryMaxTimes)
+	}
+}
+func WithTimeout(timeout time.Duration) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.SetTimeout(timeout)
+	}
+}
+func WithInterval(timeout time.Duration) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.SetInterval(timeout)
 	}
 }
