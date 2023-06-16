@@ -14,8 +14,8 @@ func (m *CustomPipeline) GetName() string {
 	return "custom"
 }
 
-func (m *CustomPipeline) SpiderStart(_ context.Context, spider pkg.Spider) error {
-	_ = m.FromCrawler(spider)
+func (m *CustomPipeline) Start(_ context.Context, crawler pkg.Crawler) error {
+	_ = m.FromCrawler(crawler)
 	m.logger.Debug("start")
 	return nil
 }
@@ -25,16 +25,16 @@ func (m *CustomPipeline) ProcessItem(_ context.Context, _ pkg.Item) error {
 	return nil
 }
 
-func (m *CustomPipeline) SpiderStop(_ context.Context) error {
+func (m *CustomPipeline) Stop(_ context.Context) error {
 	m.logger.Debug("stop")
 	return nil
 }
 
-func (m *CustomPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
+func (m *CustomPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
 	if m == nil {
-		return new(CustomPipeline).FromCrawler(spider)
+		return new(CustomPipeline).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
+	m.logger = crawler.GetLogger()
 	return m
 }

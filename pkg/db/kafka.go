@@ -3,14 +3,14 @@ package db
 import (
 	"context"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/fx"
 	"strings"
 )
 
-func NewKafka(config *config.Config, logger *logger.Logger, lc fx.Lifecycle) (kafkaWriter *kafka.Writer, err error) {
+func NewKafka(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) (kafkaWriter *kafka.Writer, err error) {
 	if !config.KafkaEnable {
 		logger.Debug("Kafka Disable")
 		return

@@ -5,15 +5,15 @@ import (
 )
 
 type Middleware interface {
-	SpiderStart(context.Context, Spider) error
+	Start(context.Context, Crawler) error
 	ProcessRequest(context.Context, *Request) error
 	ProcessResponse(context.Context, *Response) error
-	SpiderStop(context.Context) error
+	Stop(context.Context) error
 	SetName(string)
 	GetName() string
 	SetOrder(uint8)
 	GetOrder() uint8
-	FromCrawler(Spider) Middleware
+	FromCrawler(Crawler) Middleware
 }
 
 type UnimplementedMiddleware struct {
@@ -21,8 +21,8 @@ type UnimplementedMiddleware struct {
 	order uint8
 }
 
-func (m *UnimplementedMiddleware) SpiderStart(_ context.Context, spider Spider) error {
-	_ = m.FromCrawler(spider)
+func (m *UnimplementedMiddleware) Start(_ context.Context, crawler Crawler) error {
+	_ = m.FromCrawler(crawler)
 	return nil
 }
 func (*UnimplementedMiddleware) ProcessRequest(context.Context, *Request) error {
@@ -31,7 +31,7 @@ func (*UnimplementedMiddleware) ProcessRequest(context.Context, *Request) error 
 func (*UnimplementedMiddleware) ProcessResponse(context.Context, *Response) error {
 	return nil
 }
-func (*UnimplementedMiddleware) SpiderStop(context.Context) error {
+func (*UnimplementedMiddleware) Stop(context.Context) error {
 	return nil
 }
 func (m *UnimplementedMiddleware) SetName(name string) {
@@ -47,9 +47,9 @@ func (m *UnimplementedMiddleware) GetOrder() uint8 {
 	return m.order
 }
 
-func (m *UnimplementedMiddleware) FromCrawler(spider Spider) Middleware {
+func (m *UnimplementedMiddleware) FromCrawler(crawler Crawler) Middleware {
 	if m == nil {
-		return new(UnimplementedMiddleware).FromCrawler(spider)
+		return new(UnimplementedMiddleware).FromCrawler(crawler)
 	}
 
 	return m

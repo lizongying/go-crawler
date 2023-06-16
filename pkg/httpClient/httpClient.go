@@ -138,12 +138,12 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 	return
 }
 
-func (h *HttpClient) FromCrawler(spider pkg.Spider) pkg.HttpClient {
+func (h *HttpClient) FromCrawler(crawler pkg.Crawler) pkg.HttpClient {
 	if h == nil {
-		return new(HttpClient).FromCrawler(spider)
+		return new(HttpClient).FromCrawler(crawler)
 	}
 
-	config := spider.GetConfig()
+	config := crawler.GetConfig()
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 
 	h.client = http.DefaultClient
@@ -164,9 +164,9 @@ func (h *HttpClient) FromCrawler(spider pkg.Spider) pkg.HttpClient {
 	h.proxy = config.GetProxy()
 	h.timeout = config.GetTimeout()
 	h.httpProto = config.GetHttpProto()
-	h.logger = spider.GetLogger()
-	h.redirectMaxTimes = spider.GetConfig().GetRedirectMaxTimes()
-	h.retryMaxTimes = spider.GetConfig().GetRetryMaxTimes()
+	h.logger = crawler.GetLogger()
+	h.redirectMaxTimes = config.GetRedirectMaxTimes()
+	h.retryMaxTimes = config.GetRetryMaxTimes()
 
 	return h
 }

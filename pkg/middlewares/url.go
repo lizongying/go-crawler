@@ -21,12 +21,12 @@ func (m *UrlMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) 
 	return
 }
 
-func (m *UrlMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *UrlMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(UrlMiddleware).FromCrawler(spider)
+		return new(UrlMiddleware).FromCrawler(crawler)
 	}
 
-	m.urlLengthLimit = spider.GetConfig().GetUrlLengthLimit()
-	m.logger = spider.GetLogger()
+	m.urlLengthLimit = crawler.GetConfig().GetUrlLengthLimit()
+	m.logger = crawler.GetLogger()
 	return m
 }

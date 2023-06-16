@@ -38,11 +38,11 @@ func (m *DecodeMiddleware) ProcessResponse(_ context.Context, response *pkg.Resp
 	return
 }
 
-func (m *DecodeMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *DecodeMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(DecodeMiddleware).FromCrawler(spider)
+		return new(DecodeMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
+	m.logger = crawler.GetLogger()
 	return m
 }

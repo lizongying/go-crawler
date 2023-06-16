@@ -47,14 +47,14 @@ func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request *pkg.Reques
 	return
 }
 
-func (m *DeviceMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *DeviceMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(DeviceMiddleware).FromCrawler(spider)
+		return new(DeviceMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
-	platforms := spider.GetPlatforms()
-	browsers := spider.GetBrowsers()
+	m.logger = crawler.GetLogger()
+	platforms := crawler.GetPlatforms()
+	browsers := crawler.GetBrowsers()
 
 	devices, _ := device.NewDevicesFromBytes(static.Devices)
 	m.uaAll = devices.Devices

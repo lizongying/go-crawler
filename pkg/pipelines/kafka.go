@@ -89,15 +89,15 @@ func (m *KafkaPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	return
 }
 
-func (m *KafkaPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
+func (m *KafkaPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
 	if m == nil {
-		return new(KafkaPipeline).FromCrawler(spider)
+		return new(KafkaPipeline).FromCrawler(crawler)
 	}
 
-	m.info = spider.GetInfo()
-	m.stats = spider.GetStats()
-	m.logger = spider.GetLogger()
-	m.kafkaWriter = spider.GetKafka()
+	m.info = crawler.GetInfo()
+	m.stats = crawler.GetStats()
+	m.logger = crawler.GetLogger()
+	m.kafkaWriter = crawler.GetKafka()
 	m.timeout = time.Minute
 	return m
 }

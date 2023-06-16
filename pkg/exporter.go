@@ -11,5 +11,5 @@ type Exporter interface {
 	SetPipeline(Pipeline, uint8)
 	DelPipeline(int)
 	CleanPipelines()
-	FromCrawler(Spider) Exporter
+	FromCrawler(Crawler) Exporter
 }

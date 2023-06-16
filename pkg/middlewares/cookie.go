@@ -21,11 +21,11 @@ func (m *CookieMiddleware) ProcessResponse(_ context.Context, response *pkg.Resp
 	return
 }
 
-func (m *CookieMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *CookieMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(CookieMiddleware).FromCrawler(spider)
+		return new(CookieMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
+	m.logger = crawler.GetLogger()
 	return m
 }

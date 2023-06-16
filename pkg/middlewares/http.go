@@ -13,9 +13,9 @@ import (
 
 type HttpMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger pkg.Logger
-	spider pkg.Spider
-	stats  pkg.Stats
+	logger  pkg.Logger
+	crawler pkg.Crawler
+	stats   pkg.Stats
 }
 
 func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Request) (err error) {
@@ -64,7 +64,7 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Reques
 		}
 	}
 
-	ok := m.spider.IsAllowedDomain(request.URL)
+	ok := m.crawler.IsAllowedDomain(request.URL)
 	if !ok {
 		err = errors.New("it's not a allowed domain")
 		m.logger.Error(err)
@@ -75,13 +75,13 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Reques
 	return
 }
 
-func (m *HttpMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *HttpMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(HttpMiddleware).FromCrawler(spider)
+		return new(HttpMiddleware).FromCrawler(crawler)
 	}
 
-	m.spider = spider
-	m.logger = spider.GetLogger()
-	m.stats = spider.GetStats()
+	m.crawler = crawler
+	m.logger = crawler.GetLogger()
+	m.stats = crawler.GetStats()
 	return m
 }

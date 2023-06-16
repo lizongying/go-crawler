@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	devServer2 "github.com/lizongying/go-crawler/internal/devServer"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
@@ -222,6 +221,7 @@ func (s *Spider) TestImages(ctx context.Context, _ string) (err error) {
 }
 
 func (s *Spider) Stop(ctx context.Context) (err error) {
+	err = s.Spider.Stop(ctx)
 	//err = pkg.DontStopErr
 
 	return
@@ -232,22 +232,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		err = errors.New("nil baseSpider")
 		return
 	}
-	//baseSpider.Username = "username"
-	//baseSpider.Password = "password"
-
-	logger := baseSpider.GetLogger()
-	if baseSpider.GetMode() == "dev" {
-		baseSpider.AddDevServerRoutes(devServer2.NewCustomHandler(logger))
-	}
-	//baseSpider.Interval = 0
-	//baseSpider.SetRequestRate("*", time.Second*3, 1)
-	//baseSpider.AddOkHttpCodes(201)
-	//baseSpider.SetMiddleware(new(middlewares.ImageMiddleware), 111)
-
-	baseSpider.SetPlatforms(pkg.Windows, pkg.Mac, pkg.Android, pkg.Iphone, pkg.Ipad)
-	baseSpider.SetBrowsers(pkg.Chrome, pkg.Edge, pkg.Safari, pkg.FireFox)
-
-	//baseSpider.Stats = &stats.ImageStats{}
 
 	spider = &Spider{
 		Spider: baseSpider,

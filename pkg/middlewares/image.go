@@ -47,12 +47,12 @@ func (m *ImageMiddleware) ProcessResponse(_ context.Context, response *pkg.Respo
 	return
 }
 
-func (m *ImageMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *ImageMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(ImageMiddleware).FromCrawler(spider)
+		return new(ImageMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
-	m.stats, _ = spider.GetStats().(pkg.StatsWithImage)
+	m.logger = crawler.GetLogger()
+	m.stats, _ = crawler.GetStats().(pkg.StatsWithImage)
 	return m
 }

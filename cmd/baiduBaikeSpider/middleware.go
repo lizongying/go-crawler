@@ -31,11 +31,11 @@ func (m *Middleware) ProcessRequest(_ context.Context, request *pkg.Request) (er
 	return
 }
 
-func (m *Middleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *Middleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(Middleware).FromCrawler(spider)
+		return new(Middleware).FromCrawler(crawler)
 	}
-	m.logger = spider.GetLogger()
+	m.logger = crawler.GetLogger()
 	m.urlDetail = "https://baike.baidu.com/item/%s%s"
 	return m
 }

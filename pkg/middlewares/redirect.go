@@ -51,13 +51,13 @@ func (m *RedirectMiddleware) ProcessRequest(_ context.Context, request *pkg.Requ
 //	return
 //}
 
-func (m *RedirectMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *RedirectMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(RedirectMiddleware).FromCrawler(spider)
+		return new(RedirectMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
+	m.logger = crawler.GetLogger()
 	m.redirectHttpCodes = []int{http.StatusMovedPermanently, http.StatusFound}
-	m.redirectMaxTimes = spider.GetConfig().GetRedirectMaxTimes()
+	m.redirectMaxTimes = crawler.GetConfig().GetRedirectMaxTimes()
 	return m
 }

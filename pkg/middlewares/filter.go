@@ -33,18 +33,18 @@ func (m *FilterMiddleware) ProcessRequest(_ context.Context, request *pkg.Reques
 	return
 }
 
-func (m *FilterMiddleware) SpiderStop(_ context.Context) (err error) {
+func (m *FilterMiddleware) Stop(_ context.Context) (err error) {
 	m.filter.Clean()
 	return
 }
 
-func (m *FilterMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *FilterMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(FilterMiddleware).FromCrawler(spider)
+		return new(FilterMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
-	m.filter = spider.GetFilter()
-	m.stats = spider.GetStats()
+	m.logger = crawler.GetLogger()
+	m.filter = crawler.GetFilter()
+	m.stats = crawler.GetStats()
 	return m
 }

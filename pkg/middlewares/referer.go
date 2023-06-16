@@ -33,12 +33,12 @@ func (m *RefererMiddleware) ProcessResponse(_ context.Context, response *pkg.Res
 	return
 }
 
-func (m *RefererMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *RefererMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(RefererMiddleware).FromCrawler(spider)
+		return new(RefererMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
-	m.refererPolicy = spider.GetConfig().GetReferrerPolicy()
+	m.logger = crawler.GetLogger()
+	m.refererPolicy = crawler.GetConfig().GetReferrerPolicy()
 	return m
 }

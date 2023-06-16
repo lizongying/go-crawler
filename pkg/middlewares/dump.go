@@ -10,21 +10,16 @@ type DumpMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *DumpMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.logger = spider.GetLogger()
-	return
-}
-
 func (m *DumpMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	m.logger.InfoF("request: %+v", *request)
 	return
 }
 
-func (m *DumpMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *DumpMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(DumpMiddleware).FromCrawler(spider)
+		return new(DumpMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
+	m.logger = crawler.GetLogger()
 	return m
 }

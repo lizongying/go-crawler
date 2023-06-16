@@ -90,15 +90,15 @@ func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	return
 }
 
-func (m *MongoPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
+func (m *MongoPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
 	if m == nil {
-		return new(MongoPipeline).FromCrawler(spider)
+		return new(MongoPipeline).FromCrawler(crawler)
 	}
 
-	m.info = spider.GetInfo()
-	m.stats = spider.GetStats()
-	m.logger = spider.GetLogger()
-	m.mongoDb = spider.GetMongoDb()
+	m.info = crawler.GetInfo()
+	m.stats = crawler.GetStats()
+	m.logger = crawler.GetLogger()
+	m.mongoDb = crawler.GetMongoDb()
 	m.timeout = time.Minute
 	return m
 }

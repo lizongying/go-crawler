@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/static"
 	"go.uber.org/fx"
 	"net"
@@ -19,7 +18,7 @@ type HttpServer struct {
 	url       *url.URL
 	enableJa3 bool
 	srv       *http.Server
-	logger    *logger.Logger
+	logger    pkg.Logger
 
 	mux    *http.ServeMux
 	routes map[string]struct{}
@@ -118,7 +117,7 @@ func (h *HttpServer) GetHost() (host string) {
 	return
 }
 
-func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger *logger.Logger) (httpServer *HttpServer) {
+func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (httpServer *HttpServer) {
 	devServer, err := config.GetDevServer()
 	if err != nil {
 		logger.Error(err)

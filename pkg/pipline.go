@@ -5,14 +5,14 @@ import (
 )
 
 type Pipeline interface {
-	SpiderStart(context.Context, Spider) error
+	Start(context.Context, Crawler) error
 	ProcessItem(context.Context, Item) error
-	SpiderStop(context.Context) error
+	Stop(context.Context) error
 	SetName(string)
 	GetName() string
 	SetOrder(uint8)
 	GetOrder() uint8
-	FromCrawler(Spider) Pipeline
+	FromCrawler(Crawler) Pipeline
 }
 
 type UnimplementedPipeline struct {
@@ -20,14 +20,14 @@ type UnimplementedPipeline struct {
 	order uint8
 }
 
-func (p *UnimplementedPipeline) SpiderStart(_ context.Context, spider Spider) error {
-	_ = p.FromCrawler(spider)
+func (p *UnimplementedPipeline) Start(_ context.Context, crawler Crawler) error {
+	_ = p.FromCrawler(crawler)
 	return nil
 }
 func (*UnimplementedPipeline) ProcessItem(context.Context, Item) error {
 	return nil
 }
-func (*UnimplementedPipeline) SpiderStop(context.Context) error {
+func (*UnimplementedPipeline) Stop(context.Context) error {
 	return nil
 }
 func (p *UnimplementedPipeline) SetName(name string) {
@@ -42,9 +42,9 @@ func (p *UnimplementedPipeline) SetOrder(order uint8) {
 func (p *UnimplementedPipeline) GetOrder() uint8 {
 	return p.order
 }
-func (p *UnimplementedPipeline) FromCrawler(spider Spider) Pipeline {
+func (p *UnimplementedPipeline) FromCrawler(crawler Crawler) Pipeline {
 	if p == nil {
-		return new(UnimplementedPipeline).FromCrawler(spider)
+		return new(UnimplementedPipeline).FromCrawler(crawler)
 	}
 
 	return p

@@ -2,15 +2,15 @@ package db
 
 import (
 	"context"
+	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.uber.org/fx"
 )
 
-func NewMongoDb(config *config.Config, logger *logger.Logger, lc fx.Lifecycle) (db *mongo.Database, err error) {
+func NewMongoDb(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) (db *mongo.Database, err error) {
 	if !config.MongoEnable {
 		logger.Debug("Mongo Disable")
 		return

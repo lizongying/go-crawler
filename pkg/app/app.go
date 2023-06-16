@@ -6,6 +6,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/crawler"
 	"github.com/lizongying/go-crawler/pkg/db"
 	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/logger"
@@ -13,61 +14,61 @@ import (
 	"go.uber.org/fx"
 )
 
-type App struct {
-	*fx.App
-}
-
-func NewApp(f func(*spider.BaseSpider, *logger.Logger) (pkg.Spider, error)) (app *App) {
-	app = &App{
-		App: fx.New(
-			fx.Provide(
-				cli.NewCli,
-				config.NewConfig,
-				db.NewMongoDb,
-				db.NewMysql,
-				db.NewKafka,
+func NewApp(newSpider pkg.NewSpider, crawlOptions ...pkg.CrawlOption) *fx.App {
+	return fx.New(
+		fx.Provide(
+			cli.NewCli,
+			config.NewConfig,
+			db.NewMongoDb,
+			db.NewMysql,
+			db.NewKafka,
+			fx.Annotate(
 				logger.NewLogger,
-				spider.NewBaseSpider,
-				devServer.NewHttpServer,
-				f,
+				fx.As(new(pkg.Logger)),
 			),
-			fx.Invoke(func(logger *logger.Logger, cli *cli.Cli, spider pkg.Spider, shutdowner fx.Shutdowner) {
-				ctx := context.Background()
-
-				if cli.Mode == "dev" {
-					err := spider.RunDevServer()
-					if err != nil {
-						logger.Error(err)
-						_ = shutdowner.Shutdown()
-						return
-					}
-				}
-
-				spider.SetSpider(spider)
-				err := spider.Start(ctx)
-				if err != nil {
-					logger.Error(err)
-					_ = shutdowner.Shutdown()
-					return
-				}
-
-				err = spider.Stop(ctx)
-				if errors.Is(err, pkg.DontStopErr) {
-					select {}
-				}
-				if err != nil {
-					return
-				}
-
-				err = shutdowner.Shutdown()
-				if err != nil {
-					return
-				}
-
-				return
-			}),
+			fx.Annotate(
+				spider.NewBaseSpider,
+				fx.As(new(pkg.Spider)),
+				fx.ResultTags(`name:"baseSpider"`),
+			),
+			devServer.NewHttpServer,
+			fx.Annotate(
+				newSpider,
+				fx.ParamTags(`name:"baseSpider"`),
+			),
+			crawler.NewCrawler,
 		),
-	}
+		fx.Invoke(func(logger pkg.Logger, spider pkg.Spider, crawler pkg.Crawler, shutdowner fx.Shutdowner) {
+			ctx := context.Background()
 
-	return
+			for _, v := range crawlOptions {
+				v(crawler)
+			}
+
+			logger.InfoF("crawler%+v", crawler)
+
+			crawler.SetSpider(spider)
+			err := crawler.Start(ctx)
+			if err != nil {
+				logger.Error(err)
+				_ = shutdowner.Shutdown()
+				return
+			}
+
+			err = crawler.Stop(ctx)
+			if errors.Is(err, pkg.DontStopErr) {
+				select {}
+			}
+			if err != nil {
+				return
+			}
+
+			err = shutdowner.Shutdown()
+			if err != nil {
+				return
+			}
+
+			return
+		}),
+	)
 }

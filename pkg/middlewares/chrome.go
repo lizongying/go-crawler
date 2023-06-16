@@ -26,11 +26,11 @@ func (m *ChromeMiddleware) ProcessRequest(_ context.Context, request *pkg.Reques
 	return
 }
 
-func (m *ChromeMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *ChromeMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(ChromeMiddleware).FromCrawler(spider)
+		return new(ChromeMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
+	m.logger = crawler.GetLogger()
 	return m
 }

@@ -7,14 +7,12 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
-	"github.com/lizongying/go-crawler/pkg/logger"
-	"github.com/lizongying/go-crawler/pkg/spider"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
 
 type Spider struct {
-	*spider.BaseSpider
-
+	pkg.Spider
+	logger         pkg.Logger
 	collectionTest string
 	tableTest      string
 	topicTest      string
@@ -23,8 +21,8 @@ type Spider struct {
 
 func (s *Spider) ParseMysql(ctx context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
-	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("extra", utils.JsonStr(extra))
+	s.logger.Info("response", string(response.BodyBytes))
 
 	if extra.Count > 0 {
 		return
@@ -38,7 +36,7 @@ func (s *Spider) ParseMysql(ctx context.Context, response *pkg.Response) (err er
 	//requestNext.UniqueKey = "1"
 	err = s.YieldRequest(ctx, requestNext)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	err = s.YieldItem(ctx, &pkg.ItemMysql{
 		Update: true,
@@ -56,15 +54,15 @@ func (s *Spider) ParseMysql(ctx context.Context, response *pkg.Response) (err er
 		},
 	})
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
 
 func (s *Spider) ParseKafka(ctx context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
-	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("extra", utils.JsonStr(extra))
+	s.logger.Info("response", string(response.BodyBytes))
 
 	if extra.Count > 0 {
 		return
@@ -78,7 +76,7 @@ func (s *Spider) ParseKafka(ctx context.Context, response *pkg.Response) (err er
 	//requestNext.UniqueKey = "1"
 	err = s.YieldRequest(ctx, requestNext)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	err = s.YieldItem(ctx, &pkg.ItemKafka{
 		Topic: s.tableTest,
@@ -95,15 +93,15 @@ func (s *Spider) ParseKafka(ctx context.Context, response *pkg.Response) (err er
 		},
 	})
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
 
 func (s *Spider) ParseMongo(ctx context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
-	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("extra", utils.JsonStr(extra))
+	s.logger.Info("response", string(response.BodyBytes))
 
 	if extra.Count > 0 {
 		return
@@ -117,7 +115,7 @@ func (s *Spider) ParseMongo(ctx context.Context, response *pkg.Response) (err er
 	//requestNext.UniqueKey = "1"
 	err = s.YieldRequest(ctx, requestNext)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	err = s.YieldItem(ctx, &pkg.ItemMongo{
 		Update:     true,
@@ -132,15 +130,15 @@ func (s *Spider) ParseMongo(ctx context.Context, response *pkg.Response) (err er
 		},
 	})
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
 
 func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
-	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("extra", utils.JsonStr(extra))
+	s.logger.Info("response", string(response.BodyBytes))
 
 	if extra.Count > 2 {
 		return
@@ -154,7 +152,7 @@ func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err erro
 	//requestNext.UniqueKey = "1"
 	err = s.YieldRequest(ctx, requestNext)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	err = s.YieldItem(ctx, &pkg.ItemCsv{
 		FileName: s.fileNameTest,
@@ -168,15 +166,15 @@ func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err erro
 		},
 	})
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
 
 func (s *Spider) ParseJsonl(ctx context.Context, response *pkg.Response) (err error) {
 	extra := response.Request.Extra.(*ExtraOk)
-	s.Logger.Info("extra", utils.JsonStr(extra))
-	s.Logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("extra", utils.JsonStr(extra))
+	s.logger.Info("response", string(response.BodyBytes))
 
 	if extra.Count > 2 {
 		return
@@ -190,7 +188,7 @@ func (s *Spider) ParseJsonl(ctx context.Context, response *pkg.Response) (err er
 	//requestNext.UniqueKey = "1"
 	err = s.YieldRequest(ctx, requestNext)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	err = s.YieldItem(ctx, &pkg.ItemJsonl{
 		FileName: s.fileNameTest,
@@ -204,7 +202,7 @@ func (s *Spider) ParseJsonl(ctx context.Context, response *pkg.Response) (err er
 		},
 	})
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
@@ -217,7 +215,7 @@ func (s *Spider) TestMongo(ctx context.Context, _ string) (err error) {
 	request.CallBack = s.ParseMongo
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
@@ -230,7 +228,7 @@ func (s *Spider) TestMysql(ctx context.Context, _ string) (err error) {
 	request.CallBack = s.ParseMysql
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
@@ -243,7 +241,7 @@ func (s *Spider) TestKafka(ctx context.Context, _ string) (err error) {
 	request.CallBack = s.ParseKafka
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
@@ -256,7 +254,7 @@ func (s *Spider) TestCsv(ctx context.Context, _ string) (err error) {
 	request.CallBack = s.ParseCsv
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
@@ -269,18 +267,18 @@ func (s *Spider) TestJsonl(ctx context.Context, _ string) (err error) {
 	request.CallBack = s.ParseJsonl
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 	}
 	return
 }
 
-func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg.Spider, err error) {
+func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	if baseSpider == nil {
 		err = errors.New("nil baseSpider")
-		logger.Error(err)
 		return
 	}
-	baseSpider.Name = "test"
+
+	logger := baseSpider.GetLogger()
 	baseSpider.AddDevServerRoutes(devServer.NewOkHandler(logger))
 
 	//baseSpider.SetPipeline(new(pipelines.MongoPipeline), 141)
@@ -290,12 +288,14 @@ func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg
 	//baseSpider.SetPipeline(new(pipelines.KafkaPipeline), 145)
 
 	spider = &Spider{
-		BaseSpider:     baseSpider,
+		Spider:         baseSpider,
+		logger:         logger,
 		collectionTest: "test",
 		tableTest:      "test",
 		topicTest:      "test",
 		fileNameTest:   "test",
 	}
+	spider.SetName("test")
 
 	return
 }

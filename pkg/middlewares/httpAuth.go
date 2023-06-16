@@ -30,13 +30,13 @@ func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request *pkg.Requ
 	return
 }
 
-func (m *HttpAuthMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *HttpAuthMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(HttpAuthMiddleware).FromCrawler(spider)
+		return new(HttpAuthMiddleware).FromCrawler(crawler)
 	}
 
-	m.logger = spider.GetLogger()
-	info := spider.GetInfo()
+	m.logger = crawler.GetLogger()
+	info := crawler.GetInfo()
 	m.username = info.Username
 	m.password = info.Password
 	return m

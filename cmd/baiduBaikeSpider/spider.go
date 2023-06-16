@@ -5,34 +5,32 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"github.com/lizongying/go-crawler/pkg/pipelines"
-	"github.com/lizongying/go-crawler/pkg/spider"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
 
 type Spider struct {
-	*spider.BaseSpider
-
+	pkg.Spider
+	logger               pkg.Logger
 	collectionBaiduBaike string
 }
 
 func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err error) {
-	s.Logger.Info(response.Request.Request.Header)
+	s.logger.Info(response.Request.Request.Header)
 	extra := response.Request.Extra.(*ExtraDetail)
-	s.Logger.Info("Detail", utils.JsonStr(extra))
+	s.logger.Info("Detail", utils.JsonStr(extra))
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	x, err := response.Xpath()
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 		return
 	}
 
 	content := x.FindNodeOne("//div[contains(@class, 'J-content')]").FindStrOne("string(.)")
-	s.Logger.Info(string(response.BodyBytes))
+	s.logger.Info(string(response.BodyBytes))
 	data := DataWord{
 		Id:      extra.Keyword,
 		Keyword: extra.Keyword,
@@ -49,7 +47,7 @@ func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err e
 	}
 	err = s.YieldItem(ctx, &item)
 	if err != nil {
-		s.Logger.Error(err)
+		s.logger.Error(err)
 		return err
 	}
 
@@ -68,24 +66,25 @@ func (s *Spider) Test(ctx context.Context, _ string) (err error) {
 	return
 }
 
-func NewSpider(baseSpider *spider.BaseSpider, logger *logger.Logger) (spider pkg.Spider, err error) {
+func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	if baseSpider == nil {
 		err = errors.New("nil baseSpider")
-		logger.Error(err)
 		return
 	}
 
-	baseSpider.Name = "baidu-baike"
-	baseSpider.SetMiddleware(new(Middleware), 9)
-	baseSpider.SetPipeline(new(pipelines.MongoPipeline), 141)
 	spider = &Spider{
-		BaseSpider:           baseSpider,
+		Spider:               baseSpider,
+		logger:               baseSpider.GetLogger(),
 		collectionBaiduBaike: "baidu_baike",
 	}
+	spider.SetName("baidu-baike")
 
 	return
 }
 
 func main() {
-	app.NewApp(NewSpider).Run()
+	app.NewApp(NewSpider,
+		pkg.WithMiddleware(new(Middleware), 9),
+		pkg.WithPipeline(new(pipelines.MongoPipeline), 141),
+	).Run()
 }

@@ -36,12 +36,12 @@ func (m *DumpPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error)
 	return
 }
 
-func (m *DumpPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
+func (m *DumpPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
 	if m == nil {
-		return new(DumpPipeline).FromCrawler(spider)
+		return new(DumpPipeline).FromCrawler(crawler)
 	}
 
-	m.stats = spider.GetStats()
-	m.logger = spider.GetLogger()
+	m.stats = crawler.GetStats()
+	m.logger = crawler.GetLogger()
 	return m
 }

@@ -28,12 +28,12 @@ func (m *FilterPipeline) ProcessItem(_ context.Context, item pkg.Item) (err erro
 	return
 }
 
-func (m *FilterPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
+func (m *FilterPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
 	if m == nil {
-		return new(FilterPipeline).FromCrawler(spider)
+		return new(FilterPipeline).FromCrawler(crawler)
 	}
 
-	m.filter = spider.GetFilter()
-	m.logger = spider.GetLogger()
+	m.filter = crawler.GetFilter()
+	m.logger = crawler.GetLogger()
 	return m
 }

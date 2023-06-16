@@ -11,5 +11,5 @@ type Downloader interface {
 	SetMiddleware(Middleware, uint8)
 	DelMiddleware(int)
 	CleanMiddlewares()
-	FromCrawler(Spider) Downloader
+	FromCrawler(Crawler) Downloader
 }

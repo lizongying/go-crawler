@@ -15,7 +15,7 @@ type Downloader struct {
 	processRequestFns  []func(context.Context, *pkg.Request) error
 	processResponseFns []func(context.Context, *pkg.Response) error
 	httpClient         pkg.HttpClient
-	spider             pkg.Spider
+	crawler            pkg.Crawler
 	logger             pkg.Logger
 	locker             sync.Mutex
 }
@@ -119,7 +119,7 @@ func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
-	middleware = middleware.FromCrawler(d.spider)
+	middleware = middleware.FromCrawler(d.crawler)
 
 	name := reflect.TypeOf(middleware).Elem().String()
 	middleware.SetName(name)
@@ -168,14 +168,14 @@ func (d *Downloader) CleanMiddlewares() {
 	d.middlewares = make([]pkg.Middleware, 0)
 }
 
-func (d *Downloader) FromCrawler(spider pkg.Spider) pkg.Downloader {
+func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	if d == nil {
-		return new(Downloader).FromCrawler(spider)
+		return new(Downloader).FromCrawler(crawler)
 	}
 
-	d.httpClient = new(httpClient.HttpClient).FromCrawler(spider)
-	d.spider = spider
-	d.logger = spider.GetLogger()
+	d.httpClient = new(httpClient.HttpClient).FromCrawler(crawler)
+	d.crawler = crawler
+	d.logger = crawler.GetLogger()
 
 	return d
 }

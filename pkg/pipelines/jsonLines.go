@@ -101,12 +101,12 @@ func (m *JsonLinesPipeline) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func (m *JsonLinesPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
+func (m *JsonLinesPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
 	if m == nil {
-		return new(JsonLinesPipeline).FromCrawler(spider)
+		return new(JsonLinesPipeline).FromCrawler(crawler)
 	}
 
-	m.stats = spider.GetStats()
-	m.logger = spider.GetLogger()
+	m.stats = crawler.GetStats()
+	m.logger = crawler.GetLogger()
 	return m
 }

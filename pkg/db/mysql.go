@@ -5,12 +5,12 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"go.uber.org/fx"
 )
 
-func NewMysql(config *config.Config, logger *logger.Logger, lc fx.Lifecycle) (db *sql.DB, err error) {
+func NewMysql(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) (db *sql.DB, err error) {
 	if !config.MysqlEnable {
 		logger.Debug("Mysql Disable")
 		return

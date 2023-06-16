@@ -137,15 +137,15 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	return
 }
 
-func (m *MysqlPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
+func (m *MysqlPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
 	if m == nil {
-		return new(MysqlPipeline).FromCrawler(spider)
+		return new(MysqlPipeline).FromCrawler(crawler)
 	}
 
-	m.info = spider.GetInfo()
-	m.stats = spider.GetStats()
-	m.logger = spider.GetLogger()
-	m.mysql = spider.GetMysql()
+	m.info = crawler.GetInfo()
+	m.stats = crawler.GetStats()
+	m.logger = crawler.GetLogger()
+	m.mysql = crawler.GetMysql()
 	m.timeout = time.Minute
 	return m
 }

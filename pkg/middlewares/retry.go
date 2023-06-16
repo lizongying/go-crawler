@@ -43,13 +43,13 @@ func (m *RetryMiddleware) ProcessResponse(_ context.Context, response *pkg.Respo
 	return
 }
 
-func (m *RetryMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *RetryMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(RetryMiddleware).FromCrawler(spider)
+		return new(RetryMiddleware).FromCrawler(crawler)
 	}
-	m.logger = spider.GetLogger()
-	m.okHttpCodes = spider.GetOkHttpCodes()
+	m.logger = crawler.GetLogger()
+	m.okHttpCodes = crawler.GetOkHttpCodes()
 	m.okHttpCodes = append(m.okHttpCodes, http.StatusMovedPermanently, http.StatusFound)
-	m.retryMaxTimes = spider.GetInfo().RetryMaxTimes
+	m.retryMaxTimes = crawler.GetInfo().RetryMaxTimes
 	return m
 }

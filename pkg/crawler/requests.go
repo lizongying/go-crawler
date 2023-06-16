@@ -1,4 +1,4 @@
-package spider
+package crawler
 
 import (
 	"context"
@@ -10,92 +10,92 @@ import (
 	"time"
 )
 
-func (s *BaseSpider) Request(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
+func (c *Crawler) Request(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
 	if request == nil {
 		err = errors.New("nil request")
 		return
 	}
 
-	s.Logger.DebugF("request: %+v", *request)
+	c.logger.DebugF("request: %+v", *request)
 
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	response, err = s.Download(ctx, request)
+	response, err = c.Download(ctx, request)
 	if err != nil {
-		s.Logger.Error(err)
+		c.logger.Error(err)
 		if request != nil && request.Request != nil {
 			ctx = request.Context()
 		}
-		s.handleError(ctx, response, err, request.ErrBack)
+		c.handleError(ctx, response, err, request.ErrBack)
 		return
 	}
 
-	s.Logger.DebugF("request %+v", *request)
+	c.logger.DebugF("request %+v", *request)
 
 	return
 }
 
-func (s *BaseSpider) handleError(ctx context.Context, response *pkg.Response, err error, fn func(context.Context, *pkg.Response, error)) {
+func (c *Crawler) handleError(ctx context.Context, response *pkg.Response, err error, fn func(context.Context, *pkg.Response, error)) {
 	if fn != nil {
 		fn(ctx, response, err)
 	} else {
-		s.Logger.Warn("nil ErrBack")
+		c.logger.Warn("nil ErrBack")
 	}
 	if errors.Is(err, pkg.ErrIgnoreRequest) {
-		s.GetStats().IncRequestIgnore()
+		c.GetStats().IncRequestIgnore()
 	} else {
-		s.GetStats().IncRequestError()
+		c.GetStats().IncRequestError()
 	}
 }
 
-func (s *BaseSpider) handleRequest(ctx context.Context) {
+func (c *Crawler) handleRequest(ctx context.Context) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	slot := "*"
-	value, _ := s.requestSlots.Load(slot)
+	value, _ := c.requestSlots.Load(slot)
 	requestSlot := value.(*rate.Limiter)
 
-	for request := range s.requestChan {
+	for request := range c.requestChan {
 		slot = request.Slot
 		if slot == "" {
 			slot = "*"
 		}
-		slotValue, ok := s.requestSlots.Load(slot)
+		slotValue, ok := c.requestSlots.Load(slot)
 		if !ok {
 			if request.Concurrency < 1 {
 				request.Concurrency = 1
 			}
 			requestSlot = rate.NewLimiter(rate.Every(request.Interval/time.Duration(request.Concurrency)), request.Concurrency)
-			s.requestSlots.Store(slot, requestSlot)
+			c.requestSlots.Store(slot, requestSlot)
 		}
 
 		requestSlot = slotValue.(*rate.Limiter)
 
 		err := requestSlot.Wait(ctx)
 		if err != nil {
-			s.Logger.Error(err)
+			c.logger.Error(err)
 		}
 		go func(request *pkg.Request) {
 			defer func() {
-				<-s.requestActiveChan
+				<-c.requestActiveChan
 			}()
 
-			response, e := s.Request(ctx, request)
+			response, e := c.Request(ctx, request)
 			if e != nil {
 				err = e
-				s.Logger.Error(err)
+				c.logger.Error(err)
 				return
 			}
 
 			if request.CallBack == nil {
 				err = errors.New("nil CallBack")
-				s.Logger.Error(err)
+				c.logger.Error(err)
 
-				s.handleError(request.Context(), response, err, request.ErrBack)
+				c.handleError(request.Context(), response, err, request.ErrBack)
 				return
 			}
 
@@ -105,15 +105,15 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 						buf := make([]byte, 1<<16)
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
-						s.Logger.Error(err)
-						s.handleError(response.Request.Context(), response, err, request.ErrBack)
+						c.logger.Error(err)
+						c.handleError(response.Request.Context(), response, err, request.ErrBack)
 					}
 				}()
 
 				err = request.CallBack(response.Request.Context(), response)
 				if e != nil {
-					s.Logger.Error(err)
-					s.handleError(response.Request.Context(), response, err, request.ErrBack)
+					c.logger.Error(err)
+					c.handleError(response.Request.Context(), response, err, request.ErrBack)
 					return
 				}
 			}(response)
@@ -123,15 +123,15 @@ func (s *BaseSpider) handleRequest(ctx context.Context) {
 	return
 }
 
-func (s *BaseSpider) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
-	if len(s.requestChan) == cap(s.requestChan) {
+func (c *Crawler) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
+	if len(c.requestChan) == cap(c.requestChan) {
 		err = errors.New("requestChan max limit")
-		s.Logger.Error(err)
+		c.logger.Error(err)
 		return
 	}
 
 	if request.Skip {
-		s.Logger.Debug("skip")
+		c.logger.Debug("skip")
 		return
 	}
 
@@ -147,13 +147,13 @@ func (s *BaseSpider) YieldRequest(ctx context.Context, request *pkg.Request) (er
 		request.Cookies = cookies.([]*http.Cookie)
 	}
 
-	s.requestActiveChan <- struct{}{}
-	s.requestChan <- request
+	c.requestActiveChan <- struct{}{}
+	c.requestChan <- request
 
 	return
 }
 
-func (s *BaseSpider) SetRequestRate(slot string, interval time.Duration, concurrency int) pkg.Spider {
+func (c *Crawler) SetRequestRate(slot string, interval time.Duration, concurrency int) pkg.Crawler {
 	if slot == "" {
 		slot = "*"
 	}
@@ -162,16 +162,16 @@ func (s *BaseSpider) SetRequestRate(slot string, interval time.Duration, concurr
 		concurrency = 1
 	}
 
-	slotValue, ok := s.requestSlots.Load(slot)
+	slotValue, ok := c.requestSlots.Load(slot)
 	if !ok {
 		requestSlot := rate.NewLimiter(rate.Every(interval/time.Duration(concurrency)), concurrency)
-		s.requestSlots.Store(slot, requestSlot)
-		return s
+		c.requestSlots.Store(slot, requestSlot)
+		return c
 	}
 
 	limiter := slotValue.(*rate.Limiter)
 	limiter.SetBurst(concurrency)
 	limiter.SetLimit(rate.Every(interval / time.Duration(concurrency)))
 
-	return s
+	return c
 }

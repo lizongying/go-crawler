@@ -24,9 +24,9 @@ type StatsMiddleware struct {
 	stats        pkg.Stats
 }
 
-func (m *StatsMiddleware) SpiderStart(_ context.Context, spider pkg.Spider) (err error) {
-	m.spiderInfo = spider.GetInfo()
-	m.stats = spider.GetStats()
+func (m *StatsMiddleware) Start(_ context.Context, crawler pkg.Crawler) (err error) {
+	m.spiderInfo = crawler.GetInfo()
+	m.stats = crawler.GetStats()
 	m.chanStop = make(chan struct{})
 	m.timer = time.NewTimer(m.interval)
 	go m.log()
@@ -117,11 +117,11 @@ func getKV(v reflect.Value, m map[string]uint32) {
 	}
 }
 
-func (m *StatsMiddleware) FromCrawler(spider pkg.Spider) pkg.Middleware {
+func (m *StatsMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
-		return new(StatsMiddleware).FromCrawler(spider)
+		return new(StatsMiddleware).FromCrawler(crawler)
 	}
-	m.logger = spider.GetLogger()
+	m.logger = crawler.GetLogger()
 	m.interval = time.Minute
 	return m
 }

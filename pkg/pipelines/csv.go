@@ -126,7 +126,7 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 	return
 }
 
-func (m *CsvPipeline) SpiderStop(_ context.Context) (err error) {
+func (m *CsvPipeline) Stop(_ context.Context) (err error) {
 	m.files.Range(func(key, value any) bool {
 		err = value.(*os.File).Close()
 		if err != nil {
@@ -137,12 +137,12 @@ func (m *CsvPipeline) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func (m *CsvPipeline) FromCrawler(spider pkg.Spider) pkg.Pipeline {
+func (m *CsvPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
 	if m == nil {
-		return new(CsvPipeline).FromCrawler(spider)
+		return new(CsvPipeline).FromCrawler(crawler)
 	}
 
-	m.stats = spider.GetStats()
-	m.logger = spider.GetLogger()
+	m.stats = crawler.GetStats()
+	m.logger = crawler.GetLogger()
 	return m
 }
