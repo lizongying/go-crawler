@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/pipelines"
 	"reflect"
 	"sort"
 	"sync"
@@ -101,5 +102,15 @@ func (e *Exporter) FromCrawler(crawler pkg.Crawler) pkg.Exporter {
 
 	e.crawler = crawler
 	e.logger = crawler.GetLogger()
+	config := crawler.GetConfig()
+
+	// set pipelines
+	if config.GetEnableDumpPipeline() {
+		e.SetPipeline(new(pipelines.DumpPipeline), 10)
+	}
+	if config.GetEnableFilterPipeline() {
+		e.SetPipeline(new(pipelines.FilterPipeline), 100)
+	}
+
 	return e
 }

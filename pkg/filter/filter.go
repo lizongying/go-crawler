@@ -1,11 +1,13 @@
 package filter
 
 import (
+	"github.com/lizongying/go-crawler/pkg"
 	"sync"
 )
 
 type Filter struct {
-	ids sync.Map
+	ids    sync.Map
+	logger pkg.Logger
 }
 
 func (f *Filter) Exists(uniqueKey any) bool {
@@ -23,4 +25,14 @@ func (f *Filter) Clean() {
 		f.ids.Delete(key)
 		return true
 	})
+}
+
+func (f *Filter) FromCrawler(crawler pkg.Crawler) pkg.Filter {
+	if f == nil {
+		return new(Filter).FromCrawler(crawler)
+	}
+
+	f.logger = crawler.GetLogger()
+
+	return f
 }

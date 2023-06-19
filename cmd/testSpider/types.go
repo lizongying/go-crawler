@@ -1,6 +1,8 @@
 package main
 
-import "github.com/lizongying/go-crawler/pkg"
+import (
+	"github.com/lizongying/go-crawler/pkg/image"
+)
 
 type ExtraNoLimit struct {
 	Count int
@@ -11,11 +13,11 @@ type DataNoLimit struct {
 }
 
 type ExtraTest struct {
-	*pkg.Image
+	*image.Image
 }
 
 type DataTest struct {
-	*pkg.Image
+	*image.Image
 }
 
 type ExtraOk struct {

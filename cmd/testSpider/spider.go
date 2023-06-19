@@ -8,6 +8,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/image"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strings"
 )
@@ -210,7 +211,7 @@ func (s *Spider) TestImages(ctx context.Context, _ string) (err error) {
 	request := new(pkg.Request)
 	request.Url = "https://chinese.aljazeera.net/wp-content/uploads/2023/03/1-126.jpg"
 	request.Extra = &ExtraTest{
-		Image: new(pkg.Image),
+		Image: new(image.Image),
 	}
 	request.CallBack = s.ParseImages
 	err = s.YieldRequest(ctx, request)

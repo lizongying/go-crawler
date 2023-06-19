@@ -13,7 +13,7 @@ import (
 
 type MongoPipeline struct {
 	pkg.UnimplementedPipeline
-	info    *pkg.SpiderInfo
+	crawler pkg.Crawler
 	stats   pkg.Stats
 	logger  pkg.Logger
 	mongoDb *mongo.Database
@@ -57,7 +57,7 @@ func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		return
 	}
 
-	if m.info.Mode == "test" {
+	if m.crawler.GetMode() == "test" {
 		m.logger.Debug("current mode don't need save")
 		m.stats.IncItemIgnore()
 		return
@@ -95,7 +95,7 @@ func (m *MongoPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
 		return new(MongoPipeline).FromCrawler(crawler)
 	}
 
-	m.info = crawler.GetInfo()
+	m.crawler = crawler
 	m.stats = crawler.GetStats()
 	m.logger = crawler.GetLogger()
 	m.mongoDb = crawler.GetMongoDb()

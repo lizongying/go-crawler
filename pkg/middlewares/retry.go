@@ -50,6 +50,6 @@ func (m *RetryMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	m.logger = crawler.GetLogger()
 	m.okHttpCodes = crawler.GetOkHttpCodes()
 	m.okHttpCodes = append(m.okHttpCodes, http.StatusMovedPermanently, http.StatusFound)
-	m.retryMaxTimes = crawler.GetInfo().RetryMaxTimes
+	m.retryMaxTimes = crawler.GetRetryMaxTimes()
 	return m
 }

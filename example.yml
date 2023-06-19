@@ -44,5 +44,6 @@ enable_chrome: true
 enable_device: false
 enable_dump_middleware: true
 enable_filter_middleware: true
+enable_image_middleware: false
 enable_dump_pipeline: true
 enable_filter_pipeline: true

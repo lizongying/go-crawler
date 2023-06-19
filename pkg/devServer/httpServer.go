@@ -117,7 +117,7 @@ func (h *HttpServer) GetHost() (host string) {
 	return
 }
 
-func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (httpServer *HttpServer) {
+func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (httpServer pkg.DevServer) {
 	devServer, err := config.GetDevServer()
 	if err != nil {
 		logger.Error(err)

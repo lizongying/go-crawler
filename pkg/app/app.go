@@ -18,7 +18,6 @@ func NewApp(newSpider pkg.NewSpider, crawlOptions ...pkg.CrawlOption) *fx.App {
 	return fx.New(
 		fx.Provide(
 			cli.NewCli,
-			config.NewConfig,
 			db.NewMongoDb,
 			db.NewMysql,
 			db.NewKafka,
@@ -26,6 +25,11 @@ func NewApp(newSpider pkg.NewSpider, crawlOptions ...pkg.CrawlOption) *fx.App {
 				logger.NewLogger,
 				fx.As(new(pkg.Logger)),
 			),
+			config.NewConfig,
+			//fx.Annotate(
+			//	config.NewConfig,
+			//	fx.As(new(pkg.Config)),
+			//),
 			fx.Annotate(
 				spider.NewBaseSpider,
 				fx.As(new(pkg.Spider)),
@@ -44,8 +48,6 @@ func NewApp(newSpider pkg.NewSpider, crawlOptions ...pkg.CrawlOption) *fx.App {
 			for _, v := range crawlOptions {
 				v(crawler)
 			}
-
-			logger.InfoF("crawler%+v", crawler)
 
 			crawler.SetSpider(spider)
 			err := crawler.Start(ctx)

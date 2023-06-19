@@ -1,4 +1,4 @@
-package crawler
+package scheduler
 
 import (
 	"context"
@@ -10,92 +10,92 @@ import (
 	"time"
 )
 
-func (c *Crawler) Request(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
+func (s *Scheduler) Request(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
 	if request == nil {
 		err = errors.New("nil request")
 		return
 	}
 
-	c.logger.DebugF("request: %+v", *request)
+	s.logger.DebugF("request: %+v", *request)
 
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	response, err = c.Download(ctx, request)
+	response, err = s.Download(ctx, request)
 	if err != nil {
-		c.logger.Error(err)
+		s.logger.Error(err)
 		if request != nil && request.Request != nil {
 			ctx = request.Context()
 		}
-		c.handleError(ctx, response, err, request.ErrBack)
+		s.handleError(ctx, response, err, request.ErrBack)
 		return
 	}
 
-	c.logger.DebugF("request %+v", *request)
+	s.logger.DebugF("request %+v", *request)
 
 	return
 }
 
-func (c *Crawler) handleError(ctx context.Context, response *pkg.Response, err error, fn func(context.Context, *pkg.Response, error)) {
+func (s *Scheduler) handleError(ctx context.Context, response *pkg.Response, err error, fn func(context.Context, *pkg.Response, error)) {
 	if fn != nil {
 		fn(ctx, response, err)
 	} else {
-		c.logger.Warn("nil ErrBack")
+		s.logger.Warn("nil ErrBack")
 	}
 	if errors.Is(err, pkg.ErrIgnoreRequest) {
-		c.GetStats().IncRequestIgnore()
+		s.crawler.GetStats().IncRequestIgnore()
 	} else {
-		c.GetStats().IncRequestError()
+		s.crawler.GetStats().IncRequestError()
 	}
 }
 
-func (c *Crawler) handleRequest(ctx context.Context) {
+func (s *Scheduler) handleRequest(ctx context.Context) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	slot := "*"
-	value, _ := c.requestSlots.Load(slot)
+	value, _ := s.requestSlots.Load(slot)
 	requestSlot := value.(*rate.Limiter)
 
-	for request := range c.requestChan {
+	for request := range s.requestChan {
 		slot = request.Slot
 		if slot == "" {
 			slot = "*"
 		}
-		slotValue, ok := c.requestSlots.Load(slot)
+		slotValue, ok := s.requestSlots.Load(slot)
 		if !ok {
 			if request.Concurrency < 1 {
 				request.Concurrency = 1
 			}
 			requestSlot = rate.NewLimiter(rate.Every(request.Interval/time.Duration(request.Concurrency)), request.Concurrency)
-			c.requestSlots.Store(slot, requestSlot)
+			s.requestSlots.Store(slot, requestSlot)
 		}
 
 		requestSlot = slotValue.(*rate.Limiter)
 
 		err := requestSlot.Wait(ctx)
 		if err != nil {
-			c.logger.Error(err)
+			s.logger.Error(err)
 		}
 		go func(request *pkg.Request) {
 			defer func() {
-				<-c.requestActiveChan
+				<-s.requestActiveChan
 			}()
 
-			response, e := c.Request(ctx, request)
+			response, e := s.Request(ctx, request)
 			if e != nil {
 				err = e
-				c.logger.Error(err)
+				s.logger.Error(err)
 				return
 			}
 
 			if request.CallBack == nil {
 				err = errors.New("nil CallBack")
-				c.logger.Error(err)
+				s.logger.Error(err)
 
-				c.handleError(request.Context(), response, err, request.ErrBack)
+				s.handleError(request.Context(), response, err, request.ErrBack)
 				return
 			}
 
@@ -105,15 +105,15 @@ func (c *Crawler) handleRequest(ctx context.Context) {
 						buf := make([]byte, 1<<16)
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
-						c.logger.Error(err)
-						c.handleError(response.Request.Context(), response, err, request.ErrBack)
+						s.logger.Error(err)
+						s.handleError(response.Request.Context(), response, err, request.ErrBack)
 					}
 				}()
 
 				err = request.CallBack(response.Request.Context(), response)
 				if e != nil {
-					c.logger.Error(err)
-					c.handleError(response.Request.Context(), response, err, request.ErrBack)
+					s.logger.Error(err)
+					s.handleError(response.Request.Context(), response, err, request.ErrBack)
 					return
 				}
 			}(response)
@@ -123,15 +123,15 @@ func (c *Crawler) handleRequest(ctx context.Context) {
 	return
 }
 
-func (c *Crawler) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
-	if len(c.requestChan) == cap(c.requestChan) {
+func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
+	if len(s.requestChan) == cap(s.requestChan) {
 		err = errors.New("requestChan max limit")
-		c.logger.Error(err)
+		s.logger.Error(err)
 		return
 	}
 
 	if request.Skip {
-		c.logger.Debug("skip")
+		s.logger.Debug("skip")
 		return
 	}
 
@@ -147,13 +147,13 @@ func (c *Crawler) YieldRequest(ctx context.Context, request *pkg.Request) (err e
 		request.Cookies = cookies.([]*http.Cookie)
 	}
 
-	c.requestActiveChan <- struct{}{}
-	c.requestChan <- request
+	s.requestActiveChan <- struct{}{}
+	s.requestChan <- request
 
 	return
 }
 
-func (c *Crawler) SetRequestRate(slot string, interval time.Duration, concurrency int) pkg.Crawler {
+func (s *Scheduler) SetRequestRate(slot string, interval time.Duration, concurrency int) {
 	if slot == "" {
 		slot = "*"
 	}
@@ -162,16 +162,16 @@ func (c *Crawler) SetRequestRate(slot string, interval time.Duration, concurrenc
 		concurrency = 1
 	}
 
-	slotValue, ok := c.requestSlots.Load(slot)
+	slotValue, ok := s.requestSlots.Load(slot)
 	if !ok {
 		requestSlot := rate.NewLimiter(rate.Every(interval/time.Duration(concurrency)), concurrency)
-		c.requestSlots.Store(slot, requestSlot)
-		return c
+		s.requestSlots.Store(slot, requestSlot)
+		return
 	}
 
 	limiter := slotValue.(*rate.Limiter)
 	limiter.SetBurst(concurrency)
 	limiter.SetLimit(rate.Every(interval / time.Duration(concurrency)))
 
-	return c
+	return
 }

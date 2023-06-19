@@ -18,29 +18,19 @@ type Crawler interface {
 	DelAllowedDomain(string) error
 	CleanAllowedDomains()
 	IsAllowedDomain(*url.URL) bool
-
-	SetItemDelay(time.Duration) Crawler
-	SetItemConcurrency(int) Crawler
-	SetRequestRate(string, time.Duration, int) Crawler
-
-	Request(context.Context, *Request) (*Response, error)
-	YieldRequest(context.Context, *Request) error
-	YieldItem(context.Context, Item) error
-	SetDownloader(Downloader)
-	SetExporter(Exporter)
-
-	GetInfo() *SpiderInfo
-	GetStats() Stats
-	GetLogger() Logger
-	SetLogger(logger Logger)
-	SetSpider(spider Spider)
-	Start(ctx context.Context) error
-	Stop(ctx context.Context) error
+	GetUsername() string
+	SetUsername(string)
+	GetPassword() string
+	SetPassword(string)
+	GetSpider() Spider
+	SetSpider(Spider)
+	Start(context.Context) error
+	Stop(context.Context) error
 	RunDevServer() error
 	GetDevServerHost() string
-	AddDevServerRoutes(routes ...Route)
-	AddOkHttpCodes(httpCodes ...int)
-	GetOkHttpCodes() []int
+	AddDevServerRoutes(...Route)
+	GetLogger() Logger
+	SetLogger(Logger)
 	GetPlatforms() []Platform
 	SetPlatforms(...Platform)
 	GetBrowsers() []Browser
@@ -50,46 +40,66 @@ type Crawler interface {
 	GetMongoDb() *mongo.Database
 	GetMysql() *sql.DB
 	GetFilter() Filter
-	SetMiddleware(Middleware, uint8)
-	SetPipeline(Pipeline, uint8)
+	SetFilter(Filter)
 	GetRetryMaxTimes() uint8
 	SetRetryMaxTimes(uint8)
 	GetTimeout() time.Duration
 	SetTimeout(time.Duration)
-	GetInterval() time.Duration
-	SetInterval(time.Duration)
+	GetOkHttpCodes() []int
+	SetOkHttpCodes(...int)
+	GetScheduler() Scheduler
+	SetScheduler(Scheduler)
+	YieldItem(context.Context, Item) error
+	Request(context.Context, *Request) (*Response, error)
+	YieldRequest(context.Context, *Request) error
+	GetStats() Stats
 }
 
 type CrawlOption func(Crawler)
 
-func WithLogger(logger Logger) CrawlOption {
-	return func(crawler Crawler) {
-		crawler.SetLogger(logger)
-	}
-}
 func WithMode(mode string) CrawlOption {
 	return func(crawler Crawler) {
 		crawler.SetMode(mode)
 	}
 }
+func WithPlatforms(platforms ...Platform) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.SetPlatforms(platforms...)
+	}
+}
+func WithBrowsers(browsers ...Browser) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.SetBrowsers(browsers...)
+	}
+}
+func WithLogger(logger Logger) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.SetLogger(logger)
+	}
+}
+func WithFilter(filter Filter) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.SetFilter(filter)
+	}
+}
 func WithDownloader(downloader Downloader) CrawlOption {
 	return func(crawler Crawler) {
-		crawler.SetDownloader(downloader)
+		crawler.GetScheduler().SetDownloader(downloader)
 	}
 }
 func WithExporter(exporter Exporter) CrawlOption {
 	return func(crawler Crawler) {
-		crawler.SetExporter(exporter)
+		crawler.GetScheduler().SetExporter(exporter)
 	}
 }
 func WithMiddleware(middleware Middleware, order uint8) CrawlOption {
 	return func(crawler Crawler) {
-		crawler.SetMiddleware(middleware, order)
+		crawler.GetScheduler().GetDownloader().SetMiddleware(middleware, order)
 	}
 }
 func WithPipeline(pipeline Pipeline, order uint8) CrawlOption {
 	return func(crawler Crawler) {
-		crawler.SetPipeline(pipeline, order)
+		crawler.GetScheduler().GetExporter().SetPipeline(pipeline, order)
 	}
 }
 func WithRetryMaxTimes(retryMaxTimes uint8) CrawlOption {
@@ -104,6 +114,11 @@ func WithTimeout(timeout time.Duration) CrawlOption {
 }
 func WithInterval(timeout time.Duration) CrawlOption {
 	return func(crawler Crawler) {
-		crawler.SetInterval(timeout)
+		crawler.GetScheduler().SetInterval(timeout)
+	}
+}
+func WithOkHttpCodes(httpCodes ...int) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.SetOkHttpCodes(httpCodes...)
 	}
 }

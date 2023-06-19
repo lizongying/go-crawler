@@ -85,6 +85,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 func main() {
 	app.NewApp(NewSpider,
 		pkg.WithMiddleware(new(Middleware), 9),
-		pkg.WithPipeline(new(pipelines.MongoPipeline), 141),
+		pkg.WithPipeline(new(pipelines.MongoPipeline), 11),
 	).Run()
 }

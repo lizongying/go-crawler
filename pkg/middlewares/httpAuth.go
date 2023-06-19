@@ -7,9 +7,9 @@ import (
 
 type HttpAuthMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger   pkg.Logger
 	username string
 	password string
+	logger   pkg.Logger
 }
 
 func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
@@ -35,9 +35,8 @@ func (m *HttpAuthMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 		return new(HttpAuthMiddleware).FromCrawler(crawler)
 	}
 
+	m.username = crawler.GetUsername()
+	m.password = crawler.GetPassword()
 	m.logger = crawler.GetLogger()
-	info := crawler.GetInfo()
-	m.username = info.Username
-	m.password = info.Password
 	return m
 }

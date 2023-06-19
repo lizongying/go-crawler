@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
+	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"reflect"
 	"sort"
 	"sync"
@@ -176,6 +177,52 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	d.httpClient = new(httpClient.HttpClient).FromCrawler(crawler)
 	d.crawler = crawler
 	d.logger = crawler.GetLogger()
+	config := crawler.GetConfig()
+
+	// set middlewares
+	if config.GetEnableStats() {
+		d.SetMiddleware(new(middlewares.StatsMiddleware), 10)
+	}
+	if config.GetEnableDumpMiddleware() {
+		d.SetMiddleware(new(middlewares.DumpMiddleware), 20)
+	}
+	if config.GetEnableFilterMiddleware() {
+		d.SetMiddleware(new(middlewares.FilterMiddleware), 30)
+	}
+	if config.GetEnableImageMiddleware() {
+		d.SetMiddleware(new(middlewares.ImageMiddleware), 40)
+	}
+	d.SetMiddleware(new(middlewares.HttpMiddleware), 50)
+	if config.GetEnableRetry() {
+		d.SetMiddleware(new(middlewares.RetryMiddleware), 60)
+	}
+	if config.GetEnableUrl() {
+		d.SetMiddleware(new(middlewares.UrlMiddleware), 70)
+	}
+	if config.GetEnableReferer() {
+		d.SetMiddleware(new(middlewares.RefererMiddleware), 80)
+	}
+	if config.GetEnableCookie() {
+		d.SetMiddleware(new(middlewares.CookieMiddleware), 90)
+	}
+	if config.GetEnableRedirect() {
+		d.SetMiddleware(new(middlewares.RedirectMiddleware), 100)
+	}
+	if config.GetEnableChrome() {
+		d.SetMiddleware(new(middlewares.ChromeMiddleware), 110)
+	}
+	if config.GetEnableHttpAuth() {
+		d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 120)
+	}
+	if config.GetEnableCompress() {
+		d.SetMiddleware(new(middlewares.CompressMiddleware), 130)
+	}
+	if config.GetEnableDecode() {
+		d.SetMiddleware(new(middlewares.DecodeMiddleware), 140)
+	}
+	if config.GetEnableDevice() {
+		d.SetMiddleware(new(middlewares.DeviceMiddleware), 150)
+	}
 
 	return d
 }

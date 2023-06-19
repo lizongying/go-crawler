@@ -20,12 +20,11 @@ type StatsMiddleware struct {
 	statusOK     int
 	statusIgnore int
 	statusErr    int
-	spiderInfo   *pkg.SpiderInfo
+	crawler      pkg.Crawler
 	stats        pkg.Stats
 }
 
 func (m *StatsMiddleware) Start(_ context.Context, crawler pkg.Crawler) (err error) {
-	m.spiderInfo = crawler.GetInfo()
 	m.stats = crawler.GetStats()
 	m.chanStop = make(chan struct{})
 	m.timer = time.NewTimer(m.interval)
@@ -58,7 +57,7 @@ func (m *StatsMiddleware) SpiderStop(_ context.Context) (err error) {
 	kv := make(map[string]uint32)
 	getKV(reflect.ValueOf(m.stats).Elem(), kv)
 	var sl []any
-	sl = append(sl, m.spiderInfo.Name)
+	sl = append(sl, m.crawler.GetSpider().GetName())
 	keys := make([]string, 0)
 	for k := range kv {
 		keys = append(keys, k)
@@ -80,7 +79,7 @@ func (m *StatsMiddleware) log() {
 			kv := make(map[string]uint32)
 			getKV(reflect.ValueOf(m.stats).Elem(), kv)
 			var sl []any
-			sl = append(sl, m.spiderInfo.Name)
+			sl = append(sl, m.crawler.GetSpider().GetName())
 			keys := make([]string, 0)
 			for k := range kv {
 				keys = append(keys, k)
@@ -121,6 +120,8 @@ func (m *StatsMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	if m == nil {
 		return new(StatsMiddleware).FromCrawler(crawler)
 	}
+
+	m.crawler = crawler
 	m.logger = crawler.GetLogger()
 	m.interval = time.Minute
 	return m

@@ -25,7 +25,7 @@ func (m *ImageMiddleware) ProcessResponse(_ context.Context, response *pkg.Respo
 		return
 	}
 
-	extra, ok := response.Request.Extra.(pkg.OptionImage)
+	extra, ok := response.Request.Extra.(pkg.Image)
 	if ok {
 		img, name, e := image.Decode(bytes.NewReader(response.BodyBytes))
 		if e != nil {

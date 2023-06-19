@@ -162,7 +162,7 @@ func (h *HttpClient) FromCrawler(crawler pkg.Crawler) pkg.HttpClient {
 		return nil
 	}
 	h.proxy = config.GetProxy()
-	h.timeout = config.GetTimeout()
+	h.timeout = config.GetRequestTimeout()
 	h.httpProto = config.GetHttpProto()
 	h.logger = crawler.GetLogger()
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()

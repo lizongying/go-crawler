@@ -31,12 +31,13 @@ func (s *BaseSpider) GetName() string {
 func (s *BaseSpider) SetName(name string) {
 	s.name = name
 }
+func (s *BaseSpider) Stop(ctx context.Context) (err error) {
+	s.logger.Debug("BaseSpider Wait for stop")
+	defer func() {
+		s.logger.Info("BaseSpider Stopped")
+	}()
 
-func (s *BaseSpider) Start(ctx context.Context) error {
-	return nil
-}
-func (s *BaseSpider) Stop(ctx context.Context) error {
-	return nil
+	return
 }
 
 func NewBaseSpider(crawler pkg.Crawler, logger pkg.Logger) (spider pkg.Spider, err error) {
