@@ -48,6 +48,78 @@
     * Id 保存主键
     * Data 完整数据
     * 内置item：ItemCsv、ItemJsonl、ItemMongo、ItemMysql、ItemKafka，需要开启相应pipeline，进行保存
+* middleware包括框架内置、公共自定义（internal/middlewares，internal/pipelines）和爬虫内自定义（和爬虫同module）。
+* middleware/pipeline的order不能重复。相同order，后面的middleware/pipeline会替换前面的middleware/pipeline
+* 框架内置middleware，自定义middleware请参照以下order进行配置。内置中间件order为10的倍数，自定义中间件请避开。
+    * stats:10
+        * 数据统计
+        * 配置 enable_stats_middleware: true 是否开启统计，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.StatsMiddleware), 10)`
+    * dump:20
+        * 控制台打印item.data
+        * 配置 enable_dump_middleware: true 是否开启打印request/response，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.DumpMiddleware), 20)`
+    * filter:30
+        * 过滤重复请求。默认支持的是item保存成功后才会进入去重队列，防止出现请求失败后再次请求却被过滤的问题。
+          当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
+        * 配置 enable_filter_middleware: true 是否开启过滤，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.FilterMiddleware), 30)`
+    * image:40
+        * 自动添加图片的宽高等信息
+        * 配置 enable_image_middleware: false 是否开启图片处理，默认未开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.ImageMiddleware), 40)`
+    * http:50
+        * 创建request
+        * 配置 enable_http_middleware: true 是否开启创建http request，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.HttpMiddleware), 50)`
+    * retry:60
+        * 如果请求出错，会进行重试。
+        * `RetryMaxTimes=10`
+        * 配置 enable_retry_middleware: true 是否开启重试，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.RetryMiddleware), 60)`
+    * url:70
+        * 限制url的长度
+        * 配置 enable_url_middleware: true 是否开启url长度限制，默认开启
+        * 配置 url_length_limit: 2083 url的最长长度默认为2083
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.UrlMiddleware), 70)`
+    * referer:80
+        * 通过设置`referrer_policy`采用不同的referer策略，
+        * DefaultReferrerPolicy。默认会加入请求来源
+        * NoReferrerPolicy。不加入请求来源
+        * 配置 enable_referer_middleware: true 是否开启自动添加referer，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.RefererMiddleware), 80)`
+    * cookie:90
+        * 如果之前请求返回cookie，会自动加到后面的请求里
+        * 配置 enable_cookie_middleware: true 是否开启cookie支持，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.CookieMiddleware), 90)`
+    * redirect:100
+        * 网址重定向，默认支持301、302
+        * 配置 enable_redirect_middleware: true 是否开启重定向，默认开启
+        * 配置 redirect_max_times: 1 重定向最大次数
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.RedirectMiddleware), 100)`
+    * chrome:110
+        * 模拟chrome
+        * 配置 enable_chrome_middleware: true 模拟chrome，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.ChromeMiddleware), 110)`
+    * httpAuth:120
+        * 通过`username`、`password`添加httpAuth认证。需要设置`SetUsername`和`SetPassword`
+        * 配置 enable_http_auth_middleware: true 是否开启httpAuth，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.HttpAuthMiddleware), 120)`
+    * compress:130
+        * 支持 gzip/deflate解压缩
+        * 配置 enable_compress_middleware: true 是否开启gzip/deflate解压缩，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.CompressMiddleware), 130)`
+    * decode:140
+        * 支持gbk、gb2310、big5中文解码
+        * 配置 enable_decode_middleware: true 是否开启中文解码，默认开启
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.DecodeMiddleware), 140)`
+    * device:150
+        * 修改request设备信息。修改header和tls信息，暂时只支持user-agent随机切换。需要设置`SetPlatforms`和`SetBrowsers`
+          限定设备范围。默认不启用。
+        * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
+        * Browsers: Chrome/Edge/Safari/FireFox
+        * 配置 enable_device_middleware: false 随机模拟设备，默认关闭
+        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.DeviceMiddleware), 150)`
 * pipeline用于处理item。
     * dump:10
         * 控制台打印item详细
@@ -60,84 +132,23 @@
     * csv
         * 保存结果到csv文件。
         * 需在在ItemCsv中设置`FileName`，保存的文件名称，不包含.csv
-        * 启用方法。在NewApp中`WithPipeline(pipelines.NewCsvPipeline, 11)`，
-          或在NewSpider中`spider.SetPipeline(pipelines.NewCsvPipeline, 11)`
+        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewCsvPipeline, 11)`
     * jsonLines
         * 保存结果到jsonlines文件。
         * 需在在ItemJsonl中设置`FileName`，保存的文件名称，不包含.jsonl
-        * 启用方法。在NewApp中`WithPipeline(pipelines.NewJsonLinesPipeline, 12)`，
-          或在NewSpider中`spider.SetPipeline(pipelines.NewJsonLinesPipeline, 12)`
+        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewJsonLinesPipeline, 12)`
     * mongo
         * 保存结果到mongo。
         * 需在在ItemMongo中设置`Collection`，保存的collection
-        * 启用方法。在NewApp中`WithPipeline(pipelines.NewMongoPipeline, 13)`，
-          或在NewSpider中`spider.SetPipeline(pipelines.NewMongoPipeline, 13)`
+        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewMongoPipeline, 13)`
     * mysql
         * 保存结果到mysql。
         * 需在在ItemMysql中设置`table`，保存的table
-        * 启用方法。在NewApp中`WithPipeline(pipelines.NewMysqlPipeline, 14)`，
-          或在NewSpider中`spider.SetPipeline(pipelines.NewMysqlPipeline, 14)`
+        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewMysqlPipeline, 14)`
     * kafka
         * 保存结果到kafka。
         * 需在在ItemKafka中设置`Topic`，保存的topic
-        * 启用方法。在NewApp中`WithPipeline(pipelines.NewKafkaPipeline, 15)`，
-          或在NewSpider中`spider.SetPipeline(pipelines.NewKafkaPipeline, 15)`
-* middleware包括框架内置、公共自定义（internal/middlewares，internal/pipelines）和爬虫内自定义（和爬虫同module）。
-* middleware/pipeline的order不能重复。相同order，后面的middleware/pipeline会替换前面的middleware/pipeline
-* 框架内置middleware，自定义middleware请参照以下order进行配置。内置中间件order为10的倍数，自定义中间件请避开。
-    * stats:10
-        * 数据统计
-        * 配置 enable_stats: true 是否开启统计，默认开启
-    * dump:20
-        * 控制台打印item.data
-        * 配置 enable_dump_middleware: true 是否开启打印request/response，默认开启
-    * filter:30
-        * 过滤重复请求。默认支持的是item保存成功后才会进入去重队列，防止出现请求失败后再次请求却被过滤的问题。
-          当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
-        * 配置 enable_filter_middleware: true 是否开启过滤，默认开启
-    * image:40
-        * 自动添加图片的宽高等信息
-        * 配置 enable_image_middleware: false 是否开启图片处理，默认未开启
-    * http:50
-        * 创建request
-    * retry:60
-        * 如果请求出错，会进行重试。
-        * `RetryMaxTimes=10`
-        * 配置 enable_retry: true 是否开启重试，默认开启
-    * url:70
-        * 限制url的长度
-        * 配置 enable_url: true 是否开启url长度限制，默认开启
-        * 配置 url_length_limit: 2083 url的最长长度默认为2083
-    * referer:80
-        * 通过设置`referrer_policy`采用不同的referer策略，
-        * DefaultReferrerPolicy。会加入请求来源，默认
-        * NoReferrerPolicy。不加入请求来源
-    * cookie:90
-        * 如果之前请求返回cookie，会自动加到后面的请求里
-        * 配置 enable_cookie: true 是否开启cookie支持，默认开启
-    * redirect:100
-        * 网址重定向，默认支持301、302
-        * 配置 enable_redirect: true 是否开启重定向，默认开启
-        * 配置 redirect_max_times: 1 重定向最大次数
-    * chrome:110
-        * 模拟chrome
-        * 配置 enable_chrome: true 模拟chrome，默认开启
-    * httpAuth:120
-        * 通过设置`username`、`password`添加httpAuth认证，
-        * 配置 enable_http_auth: false 是否开启httpAuth，默认关闭
-    * compress:130
-        * 支持 gzip/deflate解压缩
-        * 配置 enable_compress: true 是否开启gzip/deflate解压缩，默认开启
-    * decode:140
-        * 支持gbk、gb2310、big5中文解码
-        * 配置 enable_decode: true 是否开启中文解码，默认开启
-    * device:150
-        * 修改request设备信息。修改header和tls信息，暂时只支持user-agent随机切换。需要设置`SetPlatforms`和`SetBrowsers`
-          限定设备范围。默认不启用。
-        * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
-        * Browsers: Chrome/Edge/Safari/FireFox
-        * 配置 enable_device: false 随机模拟设备，默认关闭
-        * 代码 `spider.SetMiddleware(new(middlewares.DeviceMiddleware), 101)`
+        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewKafkaPipeline, 15)`
 * 在配置文件中可以配置全局request参数，在具体request中可以覆盖此配置
 * 解析模块
     * query选择器 [go-query](https://github.com/lizongying/go-query)
@@ -154,19 +165,21 @@
 * 增加爬虫性能
     * 在不影响功能的情况下，可以考虑关闭一些用不到的中间件或pipeline。可以在配置文件中修改，或者爬虫入口中修改
     * 配置文件:
-        * enable_retry: false
-        * enable_stats: false
-        * enable_referer: false
-        * enable_http_auth: false
-        * enable_cookie: false
-        * enable_url: false
-        * enable_compress: false
-        * enable_decode: false
-        * enable_redirect: false
-        * enable_chrome: false
-        * enable_device: false
+        * enable_stats_middleware: false
         * enable_dump_middleware: false
         * enable_filter_middleware: false
+        * enable_image_middleware: false
+        * enable_http_middleware: false
+        * enable_retry_middleware: false
+        * enable_referer_middleware: false
+        * enable_http_auth_middleware: false
+        * enable_cookie_middleware: false
+        * enable_url_middleware: false
+        * enable_compress_middleware: false
+        * enable_decode_middleware: false
+        * enable_redirect_middleware: false
+        * enable_chrome_middleware: false
+        * enable_device_middleware: false
         * enable_dump_pipeline: false
         * enable_filter_pipeline: false
 * 爬虫结构
@@ -181,9 +194,12 @@
 
 ### config
 
+* mongo.example.uri: mongo uri
+* mongo.example.database: mongo database
 * log.filename: Log file path. You can replace {name} with -ldflags.
 * log.long_file: If set to true, the full file path is logged.
 * log.level: DEBUG/INFO/WARN/ERROR
+* proxy.example: proxy
 * request.concurrency: Number of request concurrency
 * request.interval: Request interval(Millisecond). If set to 0, it is the default interval(1000). If set to a negative
   number,
@@ -194,22 +210,24 @@
 * request.http_proto: Request http proto
 * dev_server: devServer。如http`http://localhost:8081`，https`https://localhost:8081`。
 * enable_ja3: false devServer是否显示ja3指纹，默认关闭
-* enable_retry: true 是否开启重试，默认开启
-* enable_stats: true 是否开启统计，默认开启
-* enable_referer: true 是否开启referer，默认开启
-* referrer_policy: DefaultReferrerPolicy 来源政策，默认DefaultReferrerPolicy，可选DefaultReferrerPolicy、NoReferrerPolicy
-* enable_http_auth: true 是否开启httpAuth，默认开启
-* enable_cookie: true 是否开启cookie，默认开启
-* enable_url: true 是否开启url长度限制，默认开启
-* url_length_limit: 2083 url长度限制，默认2083
-* enable_compress: true 是否开启gzip/deflate解压缩，默认开启
-* enable_decode: true 是否开启中文解码，默认开启
-* enable_redirect: true 是否开启重定向，默认开启
-* redirect_max_times: 1 重定向最大次数，默认1
-* enable_chrome: true 模拟chrome，默认开启
-* enable_device: false 随机模拟设备，默认关闭
+* enable_stats_middleware: true 是否开启统计，默认开启
 * enable_dump_middleware: true 是否开启打印request/response middleware，默认开启
 * enable_filter_middleware: true 是否开启过滤middleware，默认开启
+* enable_image_middleware: true 是否开启image，默认开启
+* enable_http_middleware: true 是否开启http，默认开启
+* enable_retry_middleware: true 是否开启重试，默认开启
+* enable_referer_middleware: true 是否开启referer，默认开启
+* referrer_policy: DefaultReferrerPolicy 来源政策，默认DefaultReferrerPolicy，可选DefaultReferrerPolicy、NoReferrerPolicy
+* enable_http_auth_middleware: true 是否开启httpAuth，默认开启
+* enable_cookie_middleware: true 是否开启cookie，默认开启
+* enable_url_middleware: true 是否开启url长度限制，默认开启
+* url_length_limit: 2083 url长度限制，默认2083
+* enable_compress_middleware: true 是否开启gzip/deflate解压缩，默认开启
+* enable_decode_middleware: true 是否开启中文解码，默认开启
+* enable_redirect_middleware: true 是否开启重定向，默认开启
+* redirect_max_times: 1 重定向最大次数，默认1
+* enable_chrome_middleware: true 模拟chrome，默认开启
+* enable_device_middleware: false 随机模拟设备，默认关闭
 * enable_dump_pipeline: true 是否开启打印item pipeline，默认开启
 * enable_filter_pipeline: true 是否开启过滤pipeline，默认开启
 

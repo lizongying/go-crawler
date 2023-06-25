@@ -14,20 +14,21 @@ type Config interface {
 	GetRedirectMaxTimes() uint8
 	GetRetryMaxTimes() uint8
 
-	GetEnableStats() bool
+	GetEnableStatsMiddleware() bool
 	GetEnableDumpMiddleware() bool
 	GetEnableFilterMiddleware() bool
 	GetEnableImageMiddleware() bool
-	GetEnableRetry() bool
-	GetEnableUrl() bool
-	GetEnableReferer() bool
-	GetEnableCookie() bool
-	GetEnableRedirect() bool
-	GetEnableChrome() bool
-	GetEnableHttpAuth() bool
-	GetEnableCompress() bool
-	GetEnableDecode() bool
-	GetEnableDevice() bool
+	GetEnableHttpMiddleware() bool
+	GetEnableRetryMiddleware() bool
+	GetEnableUrlMiddleware() bool
+	GetEnableRefererMiddleware() bool
+	GetEnableCookieMiddleware() bool
+	GetEnableRedirectMiddleware() bool
+	GetEnableChromeMiddleware() bool
+	GetEnableHttpAuthMiddleware() bool
+	GetEnableCompressMiddleware() bool
+	GetEnableDecodeMiddleware() bool
+	GetEnableDeviceMiddleware() bool
 
 	GetEnableDumpPipeline() bool
 	GetEnableFilterPipeline() bool

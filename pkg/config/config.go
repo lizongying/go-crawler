@@ -14,22 +14,23 @@ const defaultHttpProto = "2.0"
 const defaultDevServer = "http://localhost:8081"
 const defaultEnableJa3 = false
 const defaultUrlLengthLimit = 2083
-const defaultEnableCookie = true
-const defaultEnableUrl = true
-const defaultEnableRetry = true
-const defaultEnableStats = true
-const defaultEnableReferer = true
-const defaultEnableHttpAuth = false
-const defaultEnableCompress = true
-const defaultEnableDecode = true
-const defaultEnableRedirect = true
+const defaultEnableCookieMiddleware = true
+const defaultEnableUrlMiddleware = true
+const defaultEnableRetryMiddleware = true
+const defaultEnableStatsMiddleware = true
+const defaultEnableRefererMiddleware = true
+const defaultEnableHttpAuthMiddleware = false
+const defaultEnableCompressMiddleware = true
+const defaultEnableDecodeMiddleware = true
+const defaultEnableRedirectMiddleware = true
 const defaultRedirectMaxTimes = uint8(1)
 const defaultRetryMaxTimes = uint8(10)
-const defaultEnableChrome = true
-const defaultEnableDevice = false
+const defaultEnableChromeMiddleware = true
+const defaultEnableDeviceMiddleware = false
 const defaultEnableDumpMiddleware = true
 const defaultEnableFilterMiddleware = true
-const defaultEnableImageMiddleware = false
+const defaultEnableImageMiddleware = true
+const defaultEnableHttpMiddleware = true
 const defaultEnableDumpPipeline = true
 const defaultEnableFilterPipeline = true
 const defaultRequestConcurrency = uint8(1) // should bigger than 1
@@ -73,27 +74,28 @@ type Config struct {
 		RetryMaxTimes *uint8 `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
-	DevServer              string  `yaml:"dev_server" json:"-"`
-	EnableJa3              *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
-	EnableReferer          *bool   `yaml:"enable_referer,omitempty" json:"enable_referer"`
-	ReferrerPolicy         *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
-	EnableHttpAuth         *bool   `yaml:"enable_http_auth,omitempty" json:"enable_http_auth"`
-	EnableCookie           *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
-	EnableStats            *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
-	EnableUrl              *bool   `yaml:"enable_url,omitempty" json:"enable_url"`
-	UrlLengthLimit         *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
-	EnableRetry            *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
-	EnableCompress         *bool   `yaml:"enable_compress,omitempty" json:"enable_compress"`
-	EnableDecode           *bool   `yaml:"enable_decode,omitempty" json:"enable_decode"`
-	EnableRedirect         *bool   `yaml:"enable_redirect,omitempty" json:"enable_redirect"`
-	RedirectMaxTimes       *uint8  `yaml:"redirect_max_times" json:"-"`
-	EnableChrome           *bool   `yaml:"enable_chrome,omitempty" json:"enable_chrome"`
-	EnableDevice           *bool   `yaml:"enable_device,omitempty" json:"enable_device"`
-	EnableDumpMiddleware   *bool   `yaml:"enable_dump_middleware,omitempty" json:"enable_dump_middleware"`
-	EnableFilterMiddleware *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
-	EnableImageMiddleware  *bool   `yaml:"enable_image_middleware,omitempty" json:"enable_image_middleware"`
-	EnableDumpPipeline     *bool   `yaml:"enable_dump_pipeline,omitempty" json:"enable_dump_pipeline"`
-	EnableFilterPipeline   *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
+	DevServer                string  `yaml:"dev_server" json:"-"`
+	EnableJa3                *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
+	EnableRefererMiddleware  *bool   `yaml:"enable_referer,omitempty" json:"enable_referer"`
+	ReferrerPolicy           *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
+	EnableHttpAuthMiddleware *bool   `yaml:"enable_http_auth,omitempty" json:"enable_http_auth"`
+	EnableCookieMiddleware   *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
+	EnableStatsMiddleware    *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
+	EnableDumpMiddleware     *bool   `yaml:"enable_dump_middleware,omitempty" json:"enable_dump_middleware"`
+	EnableFilterMiddleware   *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
+	EnableImageMiddleware    *bool   `yaml:"enable_image_middleware,omitempty" json:"enable_image_middleware"`
+	EnableHttpMiddleware     *bool   `yaml:"enable_http_middleware,omitempty" json:"enable_http_middleware"`
+	EnableRetryMiddleware    *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
+	EnableUrlMiddleware      *bool   `yaml:"enable_url,omitempty" json:"enable_url"`
+	UrlLengthLimit           *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
+	EnableCompressMiddleware *bool   `yaml:"enable_compress,omitempty" json:"enable_compress"`
+	EnableDecodeMiddleware   *bool   `yaml:"enable_decode,omitempty" json:"enable_decode"`
+	EnableRedirectMiddleware *bool   `yaml:"enable_redirect,omitempty" json:"enable_redirect"`
+	RedirectMaxTimes         *uint8  `yaml:"redirect_max_times" json:"-"`
+	EnableChromeMiddleware   *bool   `yaml:"enable_chrome,omitempty" json:"enable_chrome"`
+	EnableDeviceMiddleware   *bool   `yaml:"enable_device,omitempty" json:"enable_device"`
+	EnableDumpPipeline       *bool   `yaml:"enable_dump_pipeline,omitempty" json:"enable_dump_pipeline"`
+	EnableFilterPipeline     *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -154,31 +156,31 @@ func (c *Config) GetReferrerPolicy() pkg.ReferrerPolicy {
 	return pkg.DefaultReferrerPolicy
 }
 
-func (c *Config) GetEnableCookie() bool {
-	if c.EnableCookie == nil {
-		enableCookie := defaultEnableCookie
-		c.EnableCookie = &enableCookie
+func (c *Config) GetEnableCookieMiddleware() bool {
+	if c.EnableCookieMiddleware == nil {
+		enableCookieMiddleware := defaultEnableCookieMiddleware
+		c.EnableCookieMiddleware = &enableCookieMiddleware
 	}
 
-	return *c.EnableCookie
+	return *c.EnableCookieMiddleware
 }
 
-func (c *Config) GetEnableHttpAuth() bool {
-	if c.EnableHttpAuth == nil {
-		enableHttpAuth := defaultEnableHttpAuth
-		c.EnableHttpAuth = &enableHttpAuth
+func (c *Config) GetEnableHttpAuthMiddleware() bool {
+	if c.EnableHttpAuthMiddleware == nil {
+		enableHttpAuthMiddleware := defaultEnableHttpAuthMiddleware
+		c.EnableHttpAuthMiddleware = &enableHttpAuthMiddleware
 	}
 
-	return *c.EnableHttpAuth
+	return *c.EnableHttpAuthMiddleware
 }
 
-func (c *Config) GetEnableReferer() bool {
-	if c.EnableReferer == nil {
-		enableReferer := defaultEnableReferer
-		c.EnableReferer = &enableReferer
+func (c *Config) GetEnableRefererMiddleware() bool {
+	if c.EnableRefererMiddleware == nil {
+		enableRefererMiddleware := defaultEnableRefererMiddleware
+		c.EnableRefererMiddleware = &enableRefererMiddleware
 	}
 
-	return *c.EnableReferer
+	return *c.EnableRefererMiddleware
 }
 func (c *Config) GetEnableDumpMiddleware() bool {
 	if c.EnableDumpMiddleware == nil {
@@ -221,22 +223,22 @@ func (c *Config) GetEnableFilterPipeline() bool {
 	return *c.EnableFilterPipeline
 }
 
-func (c *Config) GetEnableStats() bool {
-	if c.EnableStats == nil {
-		enableStats := defaultEnableStats
-		c.EnableStats = &enableStats
+func (c *Config) GetEnableStatsMiddleware() bool {
+	if c.EnableStatsMiddleware == nil {
+		enableStatsMiddleware := defaultEnableStatsMiddleware
+		c.EnableStatsMiddleware = &enableStatsMiddleware
 	}
 
-	return *c.EnableStats
+	return *c.EnableStatsMiddleware
 }
 
-func (c *Config) GetEnableUrl() bool {
-	if c.EnableUrl == nil {
-		enableUrl := defaultEnableUrl
-		c.EnableUrl = &enableUrl
+func (c *Config) GetEnableUrlMiddleware() bool {
+	if c.EnableUrlMiddleware == nil {
+		enableUrlMiddleware := defaultEnableUrlMiddleware
+		c.EnableUrlMiddleware = &enableUrlMiddleware
 	}
 
-	return *c.EnableUrl
+	return *c.EnableUrlMiddleware
 }
 
 func (c *Config) GetUrlLengthLimit() int {
@@ -248,40 +250,40 @@ func (c *Config) GetUrlLengthLimit() int {
 	return *c.UrlLengthLimit
 }
 
-func (c *Config) GetEnableRetry() bool {
-	if c.EnableRetry == nil {
-		enableRetry := defaultEnableRetry
-		c.EnableRetry = &enableRetry
+func (c *Config) GetEnableRetryMiddleware() bool {
+	if c.EnableRetryMiddleware == nil {
+		enableRetryMiddleware := defaultEnableRetryMiddleware
+		c.EnableRetryMiddleware = &enableRetryMiddleware
 	}
 
-	return *c.EnableRetry
+	return *c.EnableRetryMiddleware
 }
 
-func (c *Config) GetEnableCompress() bool {
-	if c.EnableCompress == nil {
-		enableCompress := defaultEnableCompress
-		c.EnableCompress = &enableCompress
+func (c *Config) GetEnableCompressMiddleware() bool {
+	if c.EnableCompressMiddleware == nil {
+		enableCompressMiddleware := defaultEnableCompressMiddleware
+		c.EnableCompressMiddleware = &enableCompressMiddleware
 	}
 
-	return *c.EnableCompress
+	return *c.EnableCompressMiddleware
 }
 
-func (c *Config) GetEnableDecode() bool {
-	if c.EnableDecode == nil {
-		enableDecode := defaultEnableDecode
-		c.EnableDecode = &enableDecode
+func (c *Config) GetEnableDecodeMiddleware() bool {
+	if c.EnableDecodeMiddleware == nil {
+		enableDecodeMiddleware := defaultEnableDecodeMiddleware
+		c.EnableDecodeMiddleware = &enableDecodeMiddleware
 	}
 
-	return *c.EnableDecode
+	return *c.EnableDecodeMiddleware
 }
 
-func (c *Config) GetEnableRedirect() bool {
-	if c.EnableRedirect == nil {
-		enableRedirect := defaultEnableRedirect
-		c.EnableRedirect = &enableRedirect
+func (c *Config) GetEnableRedirectMiddleware() bool {
+	if c.EnableRedirectMiddleware == nil {
+		enableRedirectMiddleware := defaultEnableRedirectMiddleware
+		c.EnableRedirectMiddleware = &enableRedirectMiddleware
 	}
 
-	return *c.EnableRedirect
+	return *c.EnableRedirectMiddleware
 }
 
 func (c *Config) GetRedirectMaxTimes() uint8 {
@@ -302,22 +304,31 @@ func (c *Config) GetRetryMaxTimes() uint8 {
 	return *c.Request.RetryMaxTimes
 }
 
-func (c *Config) GetEnableChrome() bool {
-	if c.EnableChrome == nil {
-		enableChrome := defaultEnableChrome
-		c.EnableChrome = &enableChrome
+func (c *Config) GetEnableChromeMiddleware() bool {
+	if c.EnableChromeMiddleware == nil {
+		enableChromeMiddleware := defaultEnableChromeMiddleware
+		c.EnableChromeMiddleware = &enableChromeMiddleware
 	}
 
-	return *c.EnableChrome
+	return *c.EnableChromeMiddleware
 }
 
-func (c *Config) GetEnableDevice() bool {
-	if c.EnableDevice == nil {
-		enableDevice := defaultEnableDevice
-		c.EnableDevice = &enableDevice
+func (c *Config) GetEnableDeviceMiddleware() bool {
+	if c.EnableDeviceMiddleware == nil {
+		enableDeviceMiddleware := defaultEnableDeviceMiddleware
+		c.EnableDeviceMiddleware = &enableDeviceMiddleware
 	}
 
-	return *c.EnableDevice
+	return *c.EnableDeviceMiddleware
+}
+
+func (c *Config) GetEnableHttpMiddleware() bool {
+	if c.EnableHttpMiddleware == nil {
+		enableHttpMiddleware := defaultEnableHttpMiddleware
+		c.EnableHttpMiddleware = &enableHttpMiddleware
+	}
+
+	return *c.EnableHttpMiddleware
 }
 
 func (c *Config) GetRequestConcurrency() uint8 {

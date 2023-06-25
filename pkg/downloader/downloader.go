@@ -180,7 +180,7 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	config := crawler.GetConfig()
 
 	// set middlewares
-	if config.GetEnableStats() {
+	if config.GetEnableStatsMiddleware() {
 		d.SetMiddleware(new(middlewares.StatsMiddleware), 10)
 	}
 	if config.GetEnableDumpMiddleware() {
@@ -192,35 +192,37 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	if config.GetEnableImageMiddleware() {
 		d.SetMiddleware(new(middlewares.ImageMiddleware), 40)
 	}
-	d.SetMiddleware(new(middlewares.HttpMiddleware), 50)
-	if config.GetEnableRetry() {
+	if config.GetEnableHttpMiddleware() {
+		d.SetMiddleware(new(middlewares.HttpMiddleware), 50)
+	}
+	if config.GetEnableRetryMiddleware() {
 		d.SetMiddleware(new(middlewares.RetryMiddleware), 60)
 	}
-	if config.GetEnableUrl() {
+	if config.GetEnableUrlMiddleware() {
 		d.SetMiddleware(new(middlewares.UrlMiddleware), 70)
 	}
-	if config.GetEnableReferer() {
+	if config.GetEnableRefererMiddleware() {
 		d.SetMiddleware(new(middlewares.RefererMiddleware), 80)
 	}
-	if config.GetEnableCookie() {
+	if config.GetEnableCookieMiddleware() {
 		d.SetMiddleware(new(middlewares.CookieMiddleware), 90)
 	}
-	if config.GetEnableRedirect() {
+	if config.GetEnableRedirectMiddleware() {
 		d.SetMiddleware(new(middlewares.RedirectMiddleware), 100)
 	}
-	if config.GetEnableChrome() {
+	if config.GetEnableChromeMiddleware() {
 		d.SetMiddleware(new(middlewares.ChromeMiddleware), 110)
 	}
-	if config.GetEnableHttpAuth() {
+	if config.GetEnableHttpAuthMiddleware() {
 		d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 120)
 	}
-	if config.GetEnableCompress() {
+	if config.GetEnableCompressMiddleware() {
 		d.SetMiddleware(new(middlewares.CompressMiddleware), 130)
 	}
-	if config.GetEnableDecode() {
+	if config.GetEnableDecodeMiddleware() {
 		d.SetMiddleware(new(middlewares.DecodeMiddleware), 140)
 	}
-	if config.GetEnableDevice() {
+	if config.GetEnableDeviceMiddleware() {
 		d.SetMiddleware(new(middlewares.DeviceMiddleware), 150)
 	}
 

@@ -232,6 +232,12 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		return
 	}
 
+	err = c.spider.Start(ctx)
+	if err != nil {
+		c.logger.Error(err)
+		return
+	}
+
 	params := []reflect.Value{
 		reflect.ValueOf(ctx),
 		reflect.ValueOf(c.args),
