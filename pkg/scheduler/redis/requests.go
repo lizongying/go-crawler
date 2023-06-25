@@ -1,7 +1,8 @@
-package scheduler
+package redis
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"golang.org/x/time/rate"
@@ -59,7 +60,11 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 	value, _ := s.requestSlots.Load(slot)
 	requestSlot := value.(*rate.Limiter)
 
-	for request := range s.requestChan {
+	for {
+		req, _ := s.redis.BLPop(ctx, 0, s.requestKey).Result()
+		var requestJson pkg.RequestJson
+		_ = json.Unmarshal([]byte(req[1]), &requestJson)
+		request, _ := requestJson.Unmarshal()
 		slot = request.Slot
 		if slot == "" {
 			slot = "*"
@@ -117,14 +122,15 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 					return
 				}
 			}(response)
-		}(request)
+		}(&request)
 	}
 
 	return
 }
 
 func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
-	if len(s.requestChan) == cap(s.requestChan) {
+	l, err := s.redis.LLen(ctx, s.requestKey).Result()
+	if int(l) >= defaultRequestMax {
 		err = errors.New("requestChan max limit")
 		s.logger.Error(err)
 		return
@@ -148,7 +154,21 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err
 	}
 
 	s.requestActiveChan <- struct{}{}
-	s.requestChan <- request
+	s.redis.RPush(ctx, s.requestKey, request)
+
+	return
+}
+
+func (s *Scheduler) YieldExtra(ctx context.Context, extra any) (err error) {
+	l, err := s.redis.LLen(ctx, s.requestKey).Result()
+	if int(l) >= defaultRequestMax {
+		err = errors.New("requestChan max limit")
+		s.logger.Error(err)
+		return
+	}
+
+	s.requestActiveChan <- struct{}{}
+	s.redis.RPush(ctx, s.requestKey, extra)
 
 	return
 }

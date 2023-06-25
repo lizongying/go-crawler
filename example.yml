@@ -8,6 +8,12 @@ mysql:
   example:
     uri: root@tcp(127.0.0.1:3306)
     database: crawler
+redis_enable: false
+redis:
+  example:
+    addr: 127.0.0.1:6379
+    password:
+    db: 0
 kafka_enable: false
 kafka:
   example:
@@ -30,6 +36,7 @@ dev_server: http://localhost:8081
 enable_ja3: false
 enable_stats_middleware: true
 enable_dump_middleware: true
+filter: memory
 enable_filter_middleware: true
 enable_image_middleware: true
 enable_http_middleware: true

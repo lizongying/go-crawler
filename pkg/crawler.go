@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"database/sql"
+	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"
@@ -37,6 +38,7 @@ type Crawler interface {
 	SetBrowsers(...Browser)
 	GetConfig() Config
 	GetKafka() *kafka.Writer
+	GetRedis() *redis.Client
 	GetMongoDb() *mongo.Database
 	GetMysql() *sql.DB
 	GetFilter() Filter

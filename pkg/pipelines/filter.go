@@ -12,7 +12,11 @@ type FilterPipeline struct {
 	logger pkg.Logger
 }
 
-func (m *FilterPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+func (m *FilterPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
@@ -25,7 +29,7 @@ func (m *FilterPipeline) ProcessItem(_ context.Context, item pkg.Item) (err erro
 		return
 	}
 
-	m.filter.ExistsOrStore(uniqueKey)
+	err = m.filter.Store(ctx, uniqueKey)
 	return
 }
 

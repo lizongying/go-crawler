@@ -8,9 +8,10 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/filter"
-	"github.com/lizongying/go-crawler/pkg/scheduler"
+	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
 	"github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
 	"reflect"
@@ -43,6 +44,7 @@ type Crawler struct {
 
 	MongoDb *mongo.Database
 	Mysql   *sql.DB
+	Redis   *redis.Client
 	Kafka   *kafka.Writer
 	logger  pkg.Logger
 
@@ -171,6 +173,9 @@ func (c *Crawler) GetMongoDb() *mongo.Database {
 func (c *Crawler) GetMysql() *sql.DB {
 	return c.Mysql
 }
+func (c *Crawler) GetRedis() *redis.Client {
+	return c.Redis
+}
 
 func (c *Crawler) GetFilter() pkg.Filter {
 	return c.filter
@@ -279,7 +284,7 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	return c.spider.Stop(ctx)
 }
 
-func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, kafka *kafka.Writer, devServer pkg.DevServer) (crawler pkg.Crawler, err error) {
+func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, devServer pkg.DevServer) (crawler pkg.Crawler, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	crawler = &Crawler{
@@ -300,6 +305,7 @@ func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb 
 		MongoDb:               mongoDb,
 		Mysql:                 mysql,
 		Kafka:                 kafka,
+		Redis:                 redis,
 		Stats:                 &stats.Stats{},
 	}
 
@@ -314,8 +320,13 @@ func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb 
 		}
 	}
 
-	crawler.SetFilter(new(filter.Filter).FromCrawler(crawler))
-	crawler.SetScheduler(new(scheduler.Scheduler).FromCrawler(crawler))
+	if config.GetFilter() == pkg.FilterMemory {
+		crawler.SetFilter(new(filter.MemoryFilter).FromCrawler(crawler))
+	}
+	if config.GetFilter() == pkg.FilterRedis {
+		crawler.SetFilter(new(filter.RedisFilter).FromCrawler(crawler))
+	}
+	crawler.SetScheduler(new(memory.Scheduler).FromCrawler(crawler))
 
 	return crawler, nil
 }

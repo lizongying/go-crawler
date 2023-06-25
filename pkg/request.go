@@ -147,7 +147,7 @@ func (r *Request) Marshal() (requestJson RequestJson, err error) {
 	return
 }
 
-func (r *RequestJson) Unmarshal(request Request) (err error) {
+func (r *RequestJson) Unmarshal() (request Request, err error) {
 	proxy, err := url.Parse(r.Proxy)
 	request = Request{
 		UniqueKey:          r.UniqueKey,

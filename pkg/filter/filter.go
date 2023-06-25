@@ -1,35 +1,37 @@
 package filter
 
 import (
+	"context"
 	"github.com/lizongying/go-crawler/pkg"
 	"sync"
 )
 
-type Filter struct {
+type MemoryFilter struct {
 	ids    sync.Map
 	logger pkg.Logger
 }
 
-func (f *Filter) Exists(uniqueKey any) bool {
-	_, ok := f.ids.Load(uniqueKey)
-	return ok
+func (f *MemoryFilter) IsExist(_ context.Context, uniqueKey any) (ok bool, err error) {
+	_, ok = f.ids.Load(uniqueKey)
+	return
 }
 
-func (f *Filter) ExistsOrStore(uniqueKey any) bool {
-	_, ok := f.ids.LoadOrStore(uniqueKey, struct{}{})
-	return ok
+func (f *MemoryFilter) Store(_ context.Context, uniqueKey any) (err error) {
+	f.ids.Store(uniqueKey, struct{}{})
+	return
 }
 
-func (f *Filter) Clean() {
+func (f *MemoryFilter) Clean(_ context.Context) (err error) {
 	f.ids.Range(func(key, _ any) bool {
 		f.ids.Delete(key)
 		return true
 	})
+	return
 }
 
-func (f *Filter) FromCrawler(crawler pkg.Crawler) pkg.Filter {
+func (f *MemoryFilter) FromCrawler(crawler pkg.Crawler) pkg.Filter {
 	if f == nil {
-		return new(Filter).FromCrawler(crawler)
+		return new(MemoryFilter).FromCrawler(crawler)
 	}
 
 	f.logger = crawler.GetLogger()

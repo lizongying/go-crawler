@@ -12,7 +12,11 @@ type FilterMiddleware struct {
 	filter pkg.Filter
 }
 
-func (m *FilterMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *FilterMiddleware) ProcessRequest(ctx context.Context, request *pkg.Request) (err error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	if request.SkipFilter {
 		m.logger.Debug("SkipFilter")
 		return
@@ -23,7 +27,13 @@ func (m *FilterMiddleware) ProcessRequest(_ context.Context, request *pkg.Reques
 		return
 	}
 
-	if m.filter.ExistsOrStore(request.UniqueKey) {
+	ok, e := m.filter.IsExist(ctx, request.UniqueKey)
+	if err != nil {
+		err = e
+		return
+	}
+
+	if ok {
 		err = pkg.ErrIgnoreRequest
 		m.logger.InfoF("%s in filter", request.UniqueKey)
 		m.stats.IncRequestIgnore()
@@ -33,8 +43,12 @@ func (m *FilterMiddleware) ProcessRequest(_ context.Context, request *pkg.Reques
 	return
 }
 
-func (m *FilterMiddleware) Stop(_ context.Context) (err error) {
-	m.filter.Clean()
+func (m *FilterMiddleware) Stop(ctx context.Context) (err error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	err = m.filter.Clean(ctx)
 	return
 }
 

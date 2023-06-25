@@ -230,6 +230,7 @@
 * enable_device_middleware: false 随机模拟设备，默认关闭
 * enable_dump_pipeline: true 是否开启打印item pipeline，默认开启
 * enable_filter_pipeline: true 是否开启过滤pipeline，默认开启
+* filter: memory 过滤方式，默认使用内存过滤，可选member、redis
 
 ## Example
 

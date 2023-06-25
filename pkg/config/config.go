@@ -36,6 +36,7 @@ const defaultEnableFilterPipeline = true
 const defaultRequestConcurrency = uint8(1) // should bigger than 1
 const defaultRequestInterval = uint(1000)  // millisecond
 const defaultRequestTimeout = uint(60)     //second
+const defaultFilterType = pkg.FilterMemory
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -52,6 +53,14 @@ type Config struct {
 			Database string `yaml:"database" json:"-"`
 		} `yaml:"example" json:"-"`
 	} `yaml:"mysql" json:"-"`
+	RedisEnable bool `yaml:"redis_enable" json:"-"`
+	Redis       struct {
+		Example struct {
+			Addr     string `yaml:"addr" json:"-"`
+			Password string `yaml:"password" json:"-"`
+			Db       int    `yaml:"db" json:"-"`
+		} `yaml:"example" json:"-"`
+	} `yaml:"redis" json:"-"`
 	KafkaEnable bool `yaml:"kafka_enable" json:"-"`
 	Kafka       struct {
 		Example struct {
@@ -82,6 +91,7 @@ type Config struct {
 	EnableCookieMiddleware   *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
 	EnableStatsMiddleware    *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
 	EnableDumpMiddleware     *bool   `yaml:"enable_dump_middleware,omitempty" json:"enable_dump_middleware"`
+	Filter                   *string `yaml:"filter,omitempty" json:"filter"`
 	EnableFilterMiddleware   *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
 	EnableImageMiddleware    *bool   `yaml:"enable_image_middleware,omitempty" json:"enable_image_middleware"`
 	EnableHttpMiddleware     *bool   `yaml:"enable_http_middleware,omitempty" json:"enable_http_middleware"`
@@ -364,6 +374,25 @@ func (c *Config) GetOkHttpCodes() []int {
 	}
 
 	return c.Request.OkHttpCodes
+}
+
+func (c *Config) GetFilter() pkg.FilterType {
+	if c.Filter == nil {
+		filterType := string(defaultFilterType)
+		c.Filter = &filterType
+	}
+	if *c.Filter != "" {
+		switch pkg.FilterType(*c.Filter) {
+		case pkg.FilterMemory:
+			return pkg.FilterMemory
+		case pkg.FilterRedis:
+			return pkg.FilterRedis
+		default:
+			return pkg.FilterUnknown
+		}
+	}
+
+	return pkg.FilterUnknown
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {
