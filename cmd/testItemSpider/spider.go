@@ -295,7 +295,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		topicTest:      "test",
 		fileNameTest:   "test",
 	}
-	spider.SetName("test")
+	spider.SetName("test-item")
 
 	return
 }

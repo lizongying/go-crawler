@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const defaultChanRequestMax = 1000 * 1000
+const defaultRequestMax = 1000 * 1000
 const defaultChanItemMax = 1000 * 1000
 const defaultMaxRequestActive = 1000
 
@@ -78,23 +78,6 @@ func (s *Scheduler) Start(ctx context.Context) (err error) {
 		}
 	}
 
-	defer func() {
-		for _, v := range s.GetMiddlewares() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("middlewares break", v.GetName())
-				break
-			}
-		}
-		for _, v := range s.GetPipelines() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("pipeline break", v.GetName())
-				break
-			}
-		}
-	}()
-
 	s.itemTimer = time.NewTimer(s.itemDelay)
 	if s.itemConcurrency < 1 {
 		s.itemConcurrency = 1
@@ -121,6 +104,20 @@ func (s *Scheduler) Start(ctx context.Context) (err error) {
 func (s *Scheduler) Stop(ctx context.Context) (err error) {
 	s.logger.Debug("Scheduler wait for stop")
 	defer func() {
+		for _, v := range s.GetMiddlewares() {
+			e := v.Stop(ctx)
+			if errors.Is(e, pkg.BreakErr) {
+				s.logger.Debug("middlewares break", v.GetName())
+				break
+			}
+		}
+		for _, v := range s.GetPipelines() {
+			e := v.Stop(ctx)
+			if errors.Is(e, pkg.BreakErr) {
+				s.logger.Debug("pipeline break", v.GetName())
+				break
+			}
+		}
 		s.logger.Info("Scheduler Stopped")
 	}()
 
@@ -152,8 +149,8 @@ func (s *Scheduler) FromCrawler(crawler pkg.Crawler) pkg.Scheduler {
 	config := crawler.GetConfig()
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
-	s.requestChan = make(chan *pkg.Request, defaultChanRequestMax)
-	s.requestActiveChan = make(chan struct{}, defaultChanRequestMax)
+	s.requestChan = make(chan *pkg.Request, defaultRequestMax)
+	s.requestActiveChan = make(chan struct{}, defaultRequestMax)
 	s.itemChan = make(chan pkg.Item, defaultChanItemMax)
 	s.itemActiveChan = make(chan struct{}, defaultChanItemMax)
 

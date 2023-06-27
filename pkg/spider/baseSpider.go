@@ -22,9 +22,10 @@ func init() {
 
 type BaseSpider struct {
 	pkg.Crawler
-	name   string
-	fns    map[string]func(context.Context, *pkg.Response) error
-	logger pkg.Logger
+	name      string
+	callbacks map[string]pkg.Callback
+	errbacks  map[string]pkg.Errback
+	logger    pkg.Logger
 }
 
 func (s *BaseSpider) GetName() string {
@@ -34,24 +35,28 @@ func (s *BaseSpider) SetName(name string) {
 	s.name = name
 }
 func (s *BaseSpider) register() {
-	s.fns = make(map[string]func(context.Context, *pkg.Response) error)
+	s.callbacks = make(map[string]pkg.Callback)
+	s.errbacks = make(map[string]pkg.Errback)
 	rt := reflect.TypeOf(s)
 	rv := reflect.ValueOf(s)
 	l := rt.NumMethod()
 	for i := 0; i < l; i++ {
 		name := rt.Method(i).Name
-		fn, ok := rv.Method(i).Interface().(func(context.Context, *pkg.Response) error)
+		callback, ok := rv.Method(i).Interface().(pkg.Callback)
 		if ok {
-			s.fns[name] = fn
+			s.callbacks[name] = callback
+		}
+		errback, ok := rv.Method(i).Interface().(pkg.Errback)
+		if ok {
+			s.errbacks[name] = errback
 		}
 	}
 }
-func (s *BaseSpider) GetFn(name string) func(context.Context, *pkg.Response) error {
-	fn, ok := s.fns[name]
-	if ok {
-		return fn
-	}
-	return nil
+func (s *BaseSpider) GetCallbacks() map[string]pkg.Callback {
+	return s.callbacks
+}
+func (s *BaseSpider) GetErrbacks() map[string]pkg.Errback {
+	return s.errbacks
 }
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	s.register()

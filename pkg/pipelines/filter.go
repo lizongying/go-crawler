@@ -28,6 +28,7 @@ func (m *FilterPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err er
 		m.logger.Debug("uniqueKey is empty")
 		return
 	}
+	m.logger.Info("uniqueKey", uniqueKey)
 
 	err = m.filter.Store(ctx, uniqueKey)
 	return

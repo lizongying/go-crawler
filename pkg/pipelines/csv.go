@@ -49,8 +49,12 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 		return
 	}
 
-	refType := reflect.TypeOf(data).Elem()
-	refValue := reflect.ValueOf(data).Elem()
+	refType := reflect.TypeOf(data)
+	refValue := reflect.ValueOf(data)
+	if reflect.ValueOf(data).Kind() == reflect.Ptr {
+		refType = refType.Elem()
+		refValue = refValue.Elem()
+	}
 
 	var lines []string
 	var columns []string

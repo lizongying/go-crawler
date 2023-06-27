@@ -81,23 +81,6 @@ func (s *Scheduler) Start(ctx context.Context) (err error) {
 		}
 	}
 
-	defer func() {
-		for _, v := range s.GetMiddlewares() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("middlewares break", v.GetName())
-				break
-			}
-		}
-		for _, v := range s.GetPipelines() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("pipeline break", v.GetName())
-				break
-			}
-		}
-	}()
-
 	s.itemTimer = time.NewTimer(s.itemDelay)
 	if s.itemConcurrency < 1 {
 		s.itemConcurrency = 1
@@ -124,6 +107,20 @@ func (s *Scheduler) Start(ctx context.Context) (err error) {
 func (s *Scheduler) Stop(ctx context.Context) (err error) {
 	s.logger.Debug("Scheduler wait for stop")
 	defer func() {
+		for _, v := range s.GetMiddlewares() {
+			e := v.Stop(ctx)
+			if errors.Is(e, pkg.BreakErr) {
+				s.logger.Debug("middlewares break", v.GetName())
+				break
+			}
+		}
+		for _, v := range s.GetPipelines() {
+			e := v.Stop(ctx)
+			if errors.Is(e, pkg.BreakErr) {
+				s.logger.Debug("pipeline break", v.GetName())
+				break
+			}
+		}
 		s.logger.Info("Scheduler Stopped")
 	}()
 

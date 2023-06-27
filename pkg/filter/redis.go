@@ -13,6 +13,11 @@ type RedisFilter struct {
 	logger pkg.Logger
 }
 
+func (f *RedisFilter) SpiderOpened(spider pkg.Spider) {
+	f.key = fmt.Sprintf("crawler:%s:filter", spider.GetName())
+	f.logger.Debug("filter key", f.key)
+}
+
 func (f *RedisFilter) IsExist(ctx context.Context, uniqueKey any) (ok bool, err error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -36,7 +41,7 @@ func (f *RedisFilter) Clean(ctx context.Context) (err error) {
 		ctx = context.Background()
 	}
 
-	err = f.rdb.Del(ctx, f.key).Err()
+	//err = f.rdb.Del(ctx, f.key).Err()
 	return
 }
 
@@ -45,9 +50,9 @@ func (f *RedisFilter) FromCrawler(crawler pkg.Crawler) pkg.Filter {
 		return new(RedisFilter).FromCrawler(crawler)
 	}
 
-	f.key = fmt.Sprintf("crawler:%s:filter", crawler.GetSpider().GetName())
+	crawler.GetSignal().RegisterSpiderOpened(f.SpiderOpened)
+
 	f.rdb = crawler.GetRedis()
 	f.logger = crawler.GetLogger()
-
 	return f
 }

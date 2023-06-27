@@ -64,7 +64,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		req, _ := s.redis.BLPop(ctx, 0, s.requestKey).Result()
 		var requestJson pkg.RequestJson
 		_ = json.Unmarshal([]byte(req[1]), &requestJson)
-		request, _ := requestJson.Unmarshal()
+		request, _ := requestJson.Unmarshal(s.crawler.GetSpider().GetCallbacks(), s.crawler.GetSpider().GetErrbacks())
 		slot = request.Slot
 		if slot == "" {
 			slot = "*"

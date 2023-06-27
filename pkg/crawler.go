@@ -55,6 +55,10 @@ type Crawler interface {
 	Request(context.Context, *Request) (*Response, error)
 	YieldRequest(context.Context, *Request) error
 	GetStats() Stats
+	GetCallbacks() map[string]Callback
+	GetErrbacks() map[string]Errback
+	GetSignal() Signal
+	SetSignal(Signal)
 }
 
 type CrawlOption func(Crawler)

@@ -31,6 +31,10 @@ func (i *ItemUnimplemented) GetReferer() string {
 	return i.referer
 }
 
+type ItemNone struct {
+	ItemUnimplemented
+}
+
 type ItemMongo struct {
 	ItemUnimplemented
 	Update     bool

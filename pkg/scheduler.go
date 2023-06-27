@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+type SchedulerType string
+
+const (
+	SchedulerUnknown SchedulerType = ""
+	SchedulerMemory  SchedulerType = "memory"
+	SchedulerRedis   SchedulerType = "redis"
+)
+
 type Scheduler interface {
 	GetDownloader() Downloader
 	SetDownloader(Downloader)

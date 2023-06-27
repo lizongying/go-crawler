@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"reflect"
 	"time"
 )
 
@@ -55,12 +54,6 @@ func (s *Scheduler) YieldItem(ctx context.Context, item pkg.Item) (err error) {
 	data := item.GetData()
 	if data == nil {
 		err = errors.New("nil data")
-		s.logger.Error(err)
-		return
-	}
-
-	if reflect.ValueOf(data).Kind() != reflect.Ptr {
-		err = errors.New("data should be ptr")
 		s.logger.Error(err)
 		return
 	}

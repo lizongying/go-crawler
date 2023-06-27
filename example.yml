@@ -8,7 +8,7 @@ mysql:
   example:
     uri: root@tcp(127.0.0.1:3306)
     database: crawler
-redis_enable: false
+redis_enable: true
 redis:
   example:
     addr: 127.0.0.1:6379
@@ -36,6 +36,7 @@ dev_server: http://localhost:8081
 enable_ja3: false
 enable_stats_middleware: true
 enable_dump_middleware: true
+scheduler: memory
 filter: memory
 enable_filter_middleware: true
 enable_image_middleware: true

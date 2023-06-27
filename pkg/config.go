@@ -36,4 +36,5 @@ type Config interface {
 	GetRequestConcurrency() uint8
 	GetRequestInterval() uint
 	GetOkHttpCodes() []int
+	GetFilter() FilterType
 }

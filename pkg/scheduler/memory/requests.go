@@ -124,7 +124,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 }
 
 func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
-	if len(s.requestChan) == cap(s.requestChan) {
+	if len(s.requestChan) >= defaultRequestMax {
 		err = errors.New("requestChan max limit")
 		s.logger.Error(err)
 		return

@@ -9,6 +9,8 @@ import (
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/filter"
 	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
+	redis2 "github.com/lizongying/go-crawler/pkg/scheduler/redis"
+	"github.com/lizongying/go-crawler/pkg/signals"
 	"github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/redis/go-redis/v9"
@@ -50,6 +52,7 @@ type Crawler struct {
 
 	pkg.Scheduler
 	pkg.Stats
+	pkg.Signal
 }
 
 func (c *Crawler) GetMode() string {
@@ -108,6 +111,7 @@ func (c *Crawler) GetSpider() pkg.Spider {
 }
 func (c *Crawler) SetSpider(spider pkg.Spider) {
 	c.spider = spider
+	c.Signal.SetSpider(spider)
 }
 
 func (c *Crawler) GetUsername() string {
@@ -158,6 +162,13 @@ func (c *Crawler) SetOkHttpCodes(httpCodes ...int) {
 	}
 }
 
+func (c *Crawler) GetCallbacks() map[string]pkg.Callback {
+	return c.spider.GetCallbacks()
+}
+func (c *Crawler) GetErrbacks() map[string]pkg.Errback {
+	return c.spider.GetErrbacks()
+}
+
 func (c *Crawler) GetConfig() pkg.Config {
 	return c.config
 }
@@ -201,6 +212,12 @@ func (c *Crawler) GetScheduler() pkg.Scheduler {
 func (c *Crawler) SetScheduler(scheduler pkg.Scheduler) {
 	c.Scheduler = scheduler
 }
+func (c *Crawler) GetSignal() pkg.Signal {
+	return c.Signal
+}
+func (c *Crawler) SetSignal(signal pkg.Signal) {
+	c.Signal = signal
+}
 func (c *Crawler) Start(ctx context.Context) (err error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -230,6 +247,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	c.logger.Info("urlLengthLimit", c.config.GetUrlLengthLimit())
 	c.logger.Info("redirectMaxTimes", c.config.GetRedirectMaxTimes())
 	c.logger.Info("retryMaxTimes", c.config.GetRetryMaxTimes())
+	c.logger.Info("filter", c.config.GetFilter())
 
 	err = c.Scheduler.Start(ctx)
 	if err != nil {
@@ -242,6 +260,8 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		c.logger.Error(err)
 		return
 	}
+
+	c.Signal.SpiderOpened()
 
 	params := []reflect.Value{
 		reflect.ValueOf(ctx),
@@ -268,7 +288,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 func (c *Crawler) Stop(ctx context.Context) (err error) {
 	c.logger.Debug("Wait for stop")
 	defer func() {
-		c.logger.Info("Stopped")
+		c.logger.Info("Crawler Stopped")
 	}()
 
 	if ctx == nil {
@@ -311,6 +331,7 @@ func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb 
 
 	crawler.SetMode(cli.Mode)
 	crawler.SetLogger(logger)
+	crawler.SetSignal(new(signals.Signal).FromCrawler(crawler))
 
 	if cli.Mode == "dev" {
 		err = crawler.RunDevServer()
@@ -320,13 +341,21 @@ func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb 
 		}
 	}
 
-	if config.GetFilter() == pkg.FilterMemory {
+	switch config.GetFilter() {
+	case pkg.FilterMemory:
 		crawler.SetFilter(new(filter.MemoryFilter).FromCrawler(crawler))
-	}
-	if config.GetFilter() == pkg.FilterRedis {
+	case pkg.FilterRedis:
 		crawler.SetFilter(new(filter.RedisFilter).FromCrawler(crawler))
+	default:
 	}
-	crawler.SetScheduler(new(memory.Scheduler).FromCrawler(crawler))
+
+	switch config.GetScheduler() {
+	case pkg.SchedulerMemory:
+		crawler.SetScheduler(new(memory.Scheduler).FromCrawler(crawler))
+	case pkg.SchedulerRedis:
+		crawler.SetScheduler(new(redis2.Scheduler).FromCrawler(crawler))
+	default:
+	}
 
 	return crawler, nil
 }

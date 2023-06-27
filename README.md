@@ -46,8 +46,8 @@
     * `GetReferer()` 可以获取到referer。
     * UniqueKey 唯一键，不会保存到数据库。可以用作过滤等其他用途。
     * Id 保存主键
-    * Data 完整数据
-    * 内置item：ItemCsv、ItemJsonl、ItemMongo、ItemMysql、ItemKafka，需要开启相应pipeline，进行保存
+    * Data 完整数据。指针类型，必须要有
+    * 内置item：ItemNone、ItemCsv、ItemJsonl、ItemMongo、ItemMysql、ItemKafka，需要开启相应pipeline，进行保存
 * middleware包括框架内置、公共自定义（internal/middlewares，internal/pipelines）和爬虫内自定义（和爬虫同module）。
 * middleware/pipeline的order不能重复。相同order，后面的middleware/pipeline会替换前面的middleware/pipeline
 * 框架内置middleware，自定义middleware请参照以下order进行配置。内置中间件order为10的倍数，自定义中间件请避开。
@@ -230,6 +230,7 @@
 * enable_device_middleware: false 随机模拟设备，默认关闭
 * enable_dump_pipeline: true 是否开启打印item pipeline，默认开启
 * enable_filter_pipeline: true 是否开启过滤pipeline，默认开启
+* scheduler: memory 调度方式，默认使用内存调度，即单机调度，可选member、redis。选择redis后可以实现集群调度
 * filter: memory 过滤方式，默认使用内存过滤，可选member、redis
 
 ## Example

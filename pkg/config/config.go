@@ -37,6 +37,7 @@ const defaultRequestConcurrency = uint8(1) // should bigger than 1
 const defaultRequestInterval = uint(1000)  // millisecond
 const defaultRequestTimeout = uint(60)     //second
 const defaultFilterType = pkg.FilterMemory
+const defaultSchedulerType = pkg.SchedulerMemory
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -91,6 +92,7 @@ type Config struct {
 	EnableCookieMiddleware   *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
 	EnableStatsMiddleware    *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
 	EnableDumpMiddleware     *bool   `yaml:"enable_dump_middleware,omitempty" json:"enable_dump_middleware"`
+	Scheduler                *string `yaml:"scheduler,omitempty" json:"scheduler"`
 	Filter                   *string `yaml:"filter,omitempty" json:"filter"`
 	EnableFilterMiddleware   *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
 	EnableImageMiddleware    *bool   `yaml:"enable_image_middleware,omitempty" json:"enable_image_middleware"`
@@ -375,7 +377,24 @@ func (c *Config) GetOkHttpCodes() []int {
 
 	return c.Request.OkHttpCodes
 }
+func (c *Config) GetScheduler() pkg.SchedulerType {
+	if c.Scheduler == nil {
+		schedulerType := string(defaultSchedulerType)
+		c.Scheduler = &schedulerType
+	}
+	if *c.Scheduler != "" {
+		switch pkg.SchedulerType(*c.Scheduler) {
+		case pkg.SchedulerMemory:
+			return pkg.SchedulerMemory
+		case pkg.SchedulerRedis:
+			return pkg.SchedulerRedis
+		default:
+			return pkg.SchedulerUnknown
+		}
+	}
 
+	return pkg.SchedulerUnknown
+}
 func (c *Config) GetFilter() pkg.FilterType {
 	if c.Filter == nil {
 		filterType := string(defaultFilterType)
