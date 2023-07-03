@@ -16,8 +16,13 @@ type Spider struct {
 }
 
 func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err error) {
-	s.logger.Info(response.Request.Request.Header)
-	extra := response.Request.Extra.(*ExtraDetail)
+	//s.logger.Info(response.Request.Request.Header)
+	var extra ExtraDetail
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("Detail", utils.JsonStr(extra))
 	if ctx == nil {
 		ctx = context.Background()
@@ -30,7 +35,7 @@ func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err e
 	}
 
 	content := x.FindNodeOne("//div[contains(@class, 'J-content')]").FindStrOne("string(.)")
-	s.logger.Info(string(response.BodyBytes))
+	//s.logger.Info(string(response.BodyBytes))
 	data := DataWord{
 		Id:      extra.Keyword,
 		Keyword: extra.Keyword,
@@ -85,6 +90,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 func main() {
 	app.NewApp(NewSpider,
 		pkg.WithMiddleware(new(Middleware), 9),
-		pkg.WithPipeline(new(pipelines.MongoPipeline), 11),
+		pkg.WithPipeline(new(pipelines.MongoPipeline), 101),
 	).Run()
 }

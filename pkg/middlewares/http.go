@@ -25,7 +25,7 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Reques
 
 	request.CreateTime = utils.NowStr()
 	request.Checksum = utils.StrMd5(request.Method, request.Url, request.BodyStr)
-	if request.CanonicalHeaderKey {
+	if request.GetCanonicalHeaderKey() {
 		headers := make(map[string][]string)
 		for k, v := range request.Header {
 			headers[http.CanonicalHeaderKey(k)] = v

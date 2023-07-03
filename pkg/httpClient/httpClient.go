@@ -71,7 +71,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 			//InsecureSkipVerify: true,
 		},
 	}
-	if request.ProxyEnable {
+	if request.GetProxyEnable() {
 		proxy := h.proxy
 		if request.Proxy != nil {
 			proxy = request.Proxy

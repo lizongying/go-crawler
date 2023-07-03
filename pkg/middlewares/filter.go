@@ -17,7 +17,7 @@ func (m *FilterMiddleware) ProcessRequest(ctx context.Context, request *pkg.Requ
 		ctx = context.Background()
 	}
 
-	if request.SkipFilter {
+	if request.GetSkipFilter() {
 		m.logger.Debug("SkipFilter")
 		return
 	}

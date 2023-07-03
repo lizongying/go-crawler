@@ -218,6 +218,26 @@ func (c *Crawler) GetSignal() pkg.Signal {
 func (c *Crawler) SetSignal(signal pkg.Signal) {
 	c.Signal = signal
 }
+func (s *Crawler) registerParser() {
+	callbacks := make(map[string]pkg.Callback)
+	errbacks := make(map[string]pkg.Errback)
+	rt := reflect.TypeOf(s.spider)
+	rv := reflect.ValueOf(s.spider)
+	l := rt.NumMethod()
+	for i := 0; i < l; i++ {
+		name := rt.Method(i).Name
+		callback, ok := rv.Method(i).Interface().(func(context.Context, *pkg.Response) error)
+		if ok {
+			callbacks[name] = callback
+		}
+		errback, ok := rv.Method(i).Interface().(func(context.Context, *pkg.Response, error))
+		if ok {
+			errbacks[name] = errback
+		}
+	}
+	s.spider.SetCallbacks(callbacks)
+	s.spider.SetErrbacks(errbacks)
+}
 func (c *Crawler) Start(ctx context.Context) (err error) {
 	if ctx == nil {
 		ctx = context.Background()
@@ -249,19 +269,21 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	c.logger.Info("retryMaxTimes", c.config.GetRetryMaxTimes())
 	c.logger.Info("filter", c.config.GetFilter())
 
-	err = c.Scheduler.Start(ctx)
-	if err != nil {
-		c.logger.Error(err)
-		return
-	}
-
+	// must start before scheduler
 	err = c.spider.Start(ctx)
 	if err != nil {
 		c.logger.Error(err)
 		return
 	}
+	c.registerParser()
 
 	c.Signal.SpiderOpened()
+
+	err = c.Scheduler.Start(ctx)
+	if err != nil {
+		c.logger.Error(err)
+		return
+	}
 
 	params := []reflect.Value{
 		reflect.ValueOf(ctx),

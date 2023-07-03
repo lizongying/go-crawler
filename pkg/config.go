@@ -31,6 +31,7 @@ type Config interface {
 	GetEnableDeviceMiddleware() bool
 
 	GetEnableDumpPipeline() bool
+	GetEnableImagePipeline() bool
 	GetEnableFilterPipeline() bool
 
 	GetRequestConcurrency() uint8

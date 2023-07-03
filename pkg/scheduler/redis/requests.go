@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"golang.org/x/time/rate"
 	"net/http"
+	"reflect"
 	"runtime"
 	"time"
 )
@@ -25,6 +26,11 @@ func (s *Scheduler) Request(ctx context.Context, request *pkg.Request) (response
 
 	response, err = s.Download(ctx, request)
 	if err != nil {
+		if errors.Is(err, pkg.ErrIgnoreRequest) {
+			s.logger.Info(err)
+			return
+		}
+
 		s.logger.Error(err)
 		if request != nil && request.Request != nil {
 			ctx = request.Context()
@@ -61,26 +67,49 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 	requestSlot := value.(*rate.Limiter)
 
 	for {
-		req, _ := s.redis.BLPop(ctx, 0, s.requestKey).Result()
+		req, err := s.redis.BLPop(ctx, 0, s.requestKey).Result()
+		if err != nil {
+			s.logger.Warn(err)
+			continue
+		}
+		if len(req) == 0 {
+			err = errors.New("req is empty")
+			s.logger.Warn(err)
+			continue
+		}
+		//s.logger.DebugF("request: %s", req[1])
 		var requestJson pkg.RequestJson
-		_ = json.Unmarshal([]byte(req[1]), &requestJson)
-		request, _ := requestJson.Unmarshal(s.crawler.GetSpider().GetCallbacks(), s.crawler.GetSpider().GetErrbacks())
+		err = json.Unmarshal([]byte(req[1]), &requestJson)
+		if err != nil {
+			s.logger.Warn(err)
+			continue
+		}
+
+		requestJson.SetCallbacks(s.crawler.GetSpider().GetCallbacks())
+		requestJson.SetErrbacks(s.crawler.GetSpider().GetErrbacks())
+		request, err := requestJson.ToRequest()
+		s.logger.DebugF("request: %+v", request)
+		if err != nil {
+			s.logger.Warn(err)
+			continue
+		}
 		slot = request.Slot
 		if slot == "" {
 			slot = "*"
 		}
 		slotValue, ok := s.requestSlots.Load(slot)
 		if !ok {
-			if request.Concurrency < 1 {
-				request.Concurrency = 1
+			concurrency := request.GetConcurrency()
+			if concurrency < 1 {
+				concurrency = 1
 			}
-			requestSlot = rate.NewLimiter(rate.Every(request.Interval/time.Duration(request.Concurrency)), request.Concurrency)
+			requestSlot = rate.NewLimiter(rate.Every(request.Interval/time.Duration(concurrency)), int(concurrency))
 			s.requestSlots.Store(slot, requestSlot)
 		}
 
 		requestSlot = slotValue.(*rate.Limiter)
 
-		err := requestSlot.Wait(ctx)
+		err = requestSlot.Wait(ctx)
 		if err != nil {
 			s.logger.Error(err)
 		}
@@ -90,6 +119,10 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			}()
 
 			response, e := s.Request(ctx, request)
+			if errors.Is(e, pkg.ErrIgnoreRequest) {
+				return
+			}
+
 			if e != nil {
 				err = e
 				s.logger.Error(err)
@@ -122,7 +155,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 					return
 				}
 			}(response)
-		}(&request)
+		}(request)
 	}
 
 	return
@@ -136,7 +169,13 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err
 		return
 	}
 
-	if request.Skip {
+	if reflect.ValueOf(request.Extra).Kind() != reflect.Ptr {
+		err = errors.New("request.Extra must be pointer")
+		s.logger.Error(err)
+		return
+	}
+
+	if request.GetSkip() {
 		s.logger.Debug("skip")
 		return
 	}
@@ -154,7 +193,17 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err
 	}
 
 	s.requestActiveChan <- struct{}{}
-	s.redis.RPush(ctx, s.requestKey, request)
+	bs, err := request.Marshal()
+	s.logger.Info("request:", string(bs))
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
+	err = s.redis.RPush(ctx, s.requestKey, bs).Err()
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 
 	return
 }

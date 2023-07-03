@@ -55,4 +55,5 @@ redirect_max_times: 1
 enable_chrome_middleware: true
 enable_device_middleware: false
 enable_dump_pipeline: true
+enable_image_pipeline: true
 enable_filter_pipeline: true

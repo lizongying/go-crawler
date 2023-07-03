@@ -1,4 +1,4 @@
-package image
+package media
 
 type Image struct {
 	Name      string

@@ -13,6 +13,7 @@ type Response struct {
 	*http.Response
 	Request   *Request
 	BodyBytes []byte
+	Images    []Image
 }
 
 // Xpath returns a xpath selector

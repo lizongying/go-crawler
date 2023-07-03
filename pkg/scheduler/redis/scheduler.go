@@ -144,15 +144,21 @@ func (s *Scheduler) Stop(ctx context.Context) (err error) {
 
 	return
 }
+func (s *Scheduler) SpiderOpened(spider pkg.Spider) {
+	s.requestKey = fmt.Sprintf("crawler:%s:request", spider.GetName())
+	s.logger.Info("request key", s.requestKey)
+	//err = s.redis.Del(ctx, s.requestKey).Err()
+}
 func (s *Scheduler) FromCrawler(crawler pkg.Crawler) pkg.Scheduler {
 	if s == nil {
 		return new(Scheduler).FromCrawler(crawler)
 	}
 
+	crawler.GetSignal().RegisterSpiderOpened(s.SpiderOpened)
+
 	config := crawler.GetConfig()
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
-	s.requestKey = fmt.Sprintf("crawler:%s:request", crawler.GetSpider().GetName())
 	s.requestActiveChan = make(chan struct{}, defaultRequestMax)
 	s.itemChan = make(chan pkg.Item, defaultChanItemMax)
 	s.itemActiveChan = make(chan struct{}, defaultChanItemMax)

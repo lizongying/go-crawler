@@ -20,7 +20,12 @@ type Spider struct {
 }
 
 func (s *Spider) ParseMysql(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
+	var extra ExtraOk
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("extra", utils.JsonStr(extra))
 	s.logger.Info("response", string(response.BodyBytes))
 
@@ -60,7 +65,12 @@ func (s *Spider) ParseMysql(ctx context.Context, response *pkg.Response) (err er
 }
 
 func (s *Spider) ParseKafka(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
+	var extra ExtraOk
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("extra", utils.JsonStr(extra))
 	s.logger.Info("response", string(response.BodyBytes))
 
@@ -99,7 +109,12 @@ func (s *Spider) ParseKafka(ctx context.Context, response *pkg.Response) (err er
 }
 
 func (s *Spider) ParseMongo(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
+	var extra ExtraOk
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("extra", utils.JsonStr(extra))
 	s.logger.Info("response", string(response.BodyBytes))
 
@@ -136,7 +151,12 @@ func (s *Spider) ParseMongo(ctx context.Context, response *pkg.Response) (err er
 }
 
 func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
+	var extra ExtraOk
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("extra", utils.JsonStr(extra))
 	s.logger.Info("response", string(response.BodyBytes))
 
@@ -172,7 +192,12 @@ func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err erro
 }
 
 func (s *Spider) ParseJsonl(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
+	var extra ExtraOk
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("extra", utils.JsonStr(extra))
 	s.logger.Info("response", string(response.BodyBytes))
 

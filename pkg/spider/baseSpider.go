@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"log"
-	"reflect"
 	"runtime"
 )
 
@@ -34,32 +33,19 @@ func (s *BaseSpider) GetName() string {
 func (s *BaseSpider) SetName(name string) {
 	s.name = name
 }
-func (s *BaseSpider) register() {
-	s.callbacks = make(map[string]pkg.Callback)
-	s.errbacks = make(map[string]pkg.Errback)
-	rt := reflect.TypeOf(s)
-	rv := reflect.ValueOf(s)
-	l := rt.NumMethod()
-	for i := 0; i < l; i++ {
-		name := rt.Method(i).Name
-		callback, ok := rv.Method(i).Interface().(pkg.Callback)
-		if ok {
-			s.callbacks[name] = callback
-		}
-		errback, ok := rv.Method(i).Interface().(pkg.Errback)
-		if ok {
-			s.errbacks[name] = errback
-		}
-	}
-}
 func (s *BaseSpider) GetCallbacks() map[string]pkg.Callback {
 	return s.callbacks
 }
 func (s *BaseSpider) GetErrbacks() map[string]pkg.Errback {
 	return s.errbacks
 }
+func (s *BaseSpider) SetCallbacks(callbacks map[string]pkg.Callback) {
+	s.callbacks = callbacks
+}
+func (s *BaseSpider) SetErrbacks(errbacks map[string]pkg.Errback) {
+	s.errbacks = errbacks
+}
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
-	s.register()
 	return
 }
 func (s *BaseSpider) Stop(ctx context.Context) (err error) {

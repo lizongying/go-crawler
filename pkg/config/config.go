@@ -32,6 +32,7 @@ const defaultEnableFilterMiddleware = true
 const defaultEnableImageMiddleware = true
 const defaultEnableHttpMiddleware = true
 const defaultEnableDumpPipeline = true
+const defaultEnableImagePipeline = true
 const defaultEnableFilterPipeline = true
 const defaultRequestConcurrency = uint8(1) // should bigger than 1
 const defaultRequestInterval = uint(1000)  // millisecond
@@ -107,6 +108,7 @@ type Config struct {
 	EnableChromeMiddleware   *bool   `yaml:"enable_chrome,omitempty" json:"enable_chrome"`
 	EnableDeviceMiddleware   *bool   `yaml:"enable_device,omitempty" json:"enable_device"`
 	EnableDumpPipeline       *bool   `yaml:"enable_dump_pipeline,omitempty" json:"enable_dump_pipeline"`
+	EnableImagePipeline      *bool   `yaml:"enable_image_pipeline,omitempty" json:"enable_image_pipeline"`
 	EnableFilterPipeline     *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
 }
 
@@ -225,6 +227,14 @@ func (c *Config) GetEnableDumpPipeline() bool {
 	}
 
 	return *c.EnableDumpPipeline
+}
+func (c *Config) GetEnableImagePipeline() bool {
+	if c.EnableImagePipeline == nil {
+		enableImagePipeline := defaultEnableImagePipeline
+		c.EnableImagePipeline = &enableImagePipeline
+	}
+
+	return *c.EnableImagePipeline
 }
 func (c *Config) GetEnableFilterPipeline() bool {
 	if c.EnableFilterPipeline == nil {

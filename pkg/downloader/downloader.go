@@ -42,7 +42,11 @@ func (d *Downloader) Download(ctx context.Context, request *pkg.Request) (respon
 
 	err = d.processRequest(ctx, request)
 	if err != nil {
-		d.logger.Error(err)
+		if errors.Is(err, pkg.ErrIgnoreRequest) {
+			d.logger.Debug(err)
+		} else {
+			d.logger.Error(err)
+		}
 		return
 	}
 
@@ -133,6 +137,7 @@ func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
 	}
 
 	d.middlewares = append(d.middlewares, middleware)
+
 	sort.Slice(d.middlewares, func(i, j int) bool {
 		return d.middlewares[i].GetOrder() < d.middlewares[j].GetOrder()
 	})

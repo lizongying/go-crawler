@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/media"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"image"
 	_ "image/gif"
@@ -15,18 +16,19 @@ import (
 type ImageMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger pkg.Logger
-	stats  pkg.StatsWithImage
+
+	stats pkg.StatsWithImage
 }
 
-func (m *ImageMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
+func (m *ImageMiddleware) ProcessResponse(ctx context.Context, response *pkg.Response) (err error) {
 	if len(response.BodyBytes) == 0 {
 		err = errors.New("BodyBytes empty")
 		m.logger.Error(err)
 		return
 	}
 
-	extra, ok := response.Request.Extra.(pkg.Image)
-	if ok {
+	isImage := response.Request.GetImage()
+	if isImage {
 		img, name, e := image.Decode(bytes.NewReader(response.BodyBytes))
 		if e != nil {
 			err = e
@@ -35,10 +37,13 @@ func (m *ImageMiddleware) ProcessResponse(_ context.Context, response *pkg.Respo
 		}
 
 		rect := img.Bounds()
-		extra.SetName(utils.StrMd5(response.Request.URL.String()))
-		extra.SetExtension(name)
-		extra.SetWidth(rect.Dx())
-		extra.SetHeight(rect.Dy())
+
+		i := new(media.Image)
+		i.SetName(utils.StrMd5(response.Request.URL.String()))
+		i.SetExtension(name)
+		i.SetWidth(rect.Dx())
+		i.SetHeight(rect.Dy())
+		response.Images = append(response.Images, i)
 		if m.stats != nil {
 			m.stats.IncImageTotal()
 		}
@@ -53,6 +58,7 @@ func (m *ImageMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	}
 
 	m.logger = crawler.GetLogger()
+
 	m.stats, _ = crawler.GetStats().(pkg.StatsWithImage)
 	return m
 }

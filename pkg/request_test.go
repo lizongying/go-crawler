@@ -38,7 +38,7 @@ func TestRequestJson_Unmarshal(t *testing.T) {
 	request := RequestJson{
 		SpendTime:     uint(time.Minute),
 		Proxy:         proxy.String(),
-		RetryMaxTimes: retryMaxTimes,
+		RetryMaxTimes: &retryMaxTimes,
 		Platform:      []string{string(Ipad), string(Iphone)},
 		CallBack:      "C",
 		ErrBack:       "E",
@@ -47,6 +47,8 @@ func TestRequestJson_Unmarshal(t *testing.T) {
 	callbacks["C"] = (&A{}).C
 	errbacks := make(map[string]Errback)
 	errbacks["E"] = (&A{}).E
-	r, e := request.Unmarshal(callbacks, errbacks)
+	request.SetCallbacks(callbacks)
+	request.SetErrbacks(errbacks)
+	r, e := request.ToRequest()
 	t.Logf("%+v %+v", r, e)
 }

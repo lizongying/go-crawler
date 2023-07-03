@@ -7,7 +7,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
-	"github.com/lizongying/go-crawler/pkg/pipelines"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strconv"
 )
@@ -30,7 +29,7 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	item := pkg.ItemJsonl{
 		ItemUnimplemented: pkg.ItemUnimplemented{
 			UniqueKey: response.Request.UniqueKey,
-			Data: DataImage{
+			Data: &DataImage{
 				DataOk: DataOk{
 					Count: extra.Count,
 				},
@@ -38,7 +37,7 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 		},
 		FileName: "image",
 	}
-	item.SetImagesRequest([]*pkg.Request{new(pkg.Request).SetUrl("https://www.bing.com/th?id=OHR.ClamBears_ZH-CN5686721500_UHD.jpg&w=3840&h=2160&c=8&rs=1&o=3&r=0")})
+	item.SetImagesRequest([]*pkg.Request{new(pkg.Request).SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetDevServerHost(), devServer.UrlFile))})
 	err = s.YieldItem(ctx, &item)
 	if err != nil {
 		s.logger.Error(err)
@@ -64,9 +63,10 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	return
 }
 
-// TestOk go run cmd/testSchedulerSpider/*.go -c dev.yml -f TestOk -m dev
+// TestOk go run cmd/testFileSpider/*.go -c dev.yml -f TestOk -m dev
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewFileHandler(s.logger))
 	request := new(pkg.Request)
 	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
 	request.Extra = &ExtraOk{}
@@ -101,5 +101,5 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider, pkg.WithPipeline(new(pipelines.JsonLinesPipeline), 102)).Run()
+	app.NewApp(NewSpider).Run()
 }

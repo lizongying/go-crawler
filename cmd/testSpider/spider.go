@@ -8,7 +8,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
-	"github.com/lizongying/go-crawler/pkg/image"
+	"github.com/lizongying/go-crawler/pkg/media"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strings"
 )
@@ -19,7 +19,12 @@ type Spider struct {
 }
 
 func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraOk)
+	var extra ExtraOk
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("extra", utils.JsonStr(extra))
 	s.logger.Info("response", string(response.BodyBytes))
 
@@ -44,14 +49,24 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 }
 
 func (s *Spider) ParseHttpAuth(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraHttpAuth)
+	var extra ExtraHttpAuth
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("extra", utils.JsonStr(extra))
 	s.logger.Info("response", string(response.BodyBytes))
 	return
 }
 
 func (s *Spider) ParseCookie(ctx context.Context, response *pkg.Response) (err error) {
-	extra := response.Request.Extra.(*ExtraCookie)
+	var extra ExtraCookie
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("extra", utils.JsonStr(extra))
 	s.logger.Info("response", string(response.BodyBytes))
 
@@ -211,7 +226,7 @@ func (s *Spider) TestImages(ctx context.Context, _ string) (err error) {
 	request := new(pkg.Request)
 	request.Url = "https://chinese.aljazeera.net/wp-content/uploads/2023/03/1-126.jpg"
 	request.Extra = &ExtraTest{
-		Image: new(image.Image),
+		Image: new(media.Image),
 	}
 	request.CallBack = s.ParseImages
 	err = s.YieldRequest(ctx, request)

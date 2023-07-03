@@ -17,11 +17,6 @@
 
 ## Usage
 
-* 为了方便开发调试，增加了本地devServer，在`-m dev`模式下会默认启用。可以自定义route，仅需要实现`pkg.Route`
-  ，然后在spider中通过`AddDevServerRoutes(...pkg.Route)`注册到devServer即可。
-    * 支持http和https，可以设置`dev_server`。如http`http://localhost:8081`，https`https://localhost:8081`。
-    * 默认显示ja3指纹。
-    * 可以通过tls工具`tls`生成服务器的私钥和证书。
 * 基本架构
     * spider-baseSpider-crawler
     * spider主要是发起请求和回调解析方法。需要给spider起个名字，`spider.SetName(name)`
@@ -54,77 +49,80 @@
     * stats:10
         * 数据统计
         * 配置 enable_stats_middleware: true 是否开启统计，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.StatsMiddleware), 10)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.StatsMiddleware), 10)`
     * dump:20
         * 控制台打印item.data
         * 配置 enable_dump_middleware: true 是否开启打印request/response，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.DumpMiddleware), 20)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DumpMiddleware), 20)`
     * filter:30
         * 过滤重复请求。默认支持的是item保存成功后才会进入去重队列，防止出现请求失败后再次请求却被过滤的问题。
           当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
         * 配置 enable_filter_middleware: true 是否开启过滤，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.FilterMiddleware), 30)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FilterMiddleware), 30)`
     * image:40
         * 自动添加图片的宽高等信息
         * 配置 enable_image_middleware: false 是否开启图片处理，默认未开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.ImageMiddleware), 40)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ImageMiddleware), 40)`
     * http:50
         * 创建request
         * 配置 enable_http_middleware: true 是否开启创建http request，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.HttpMiddleware), 50)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpMiddleware), 50)`
     * retry:60
         * 如果请求出错，会进行重试。
         * `RetryMaxTimes=10`
         * 配置 enable_retry_middleware: true 是否开启重试，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.RetryMiddleware), 60)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RetryMiddleware), 60)`
     * url:70
         * 限制url的长度
         * 配置 enable_url_middleware: true 是否开启url长度限制，默认开启
         * 配置 url_length_limit: 2083 url的最长长度默认为2083
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.UrlMiddleware), 70)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.UrlMiddleware), 70)`
     * referer:80
         * 通过设置`referrer_policy`采用不同的referer策略，
         * DefaultReferrerPolicy。默认会加入请求来源
         * NoReferrerPolicy。不加入请求来源
         * 配置 enable_referer_middleware: true 是否开启自动添加referer，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.RefererMiddleware), 80)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RefererMiddleware), 80)`
     * cookie:90
         * 如果之前请求返回cookie，会自动加到后面的请求里
         * 配置 enable_cookie_middleware: true 是否开启cookie支持，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.CookieMiddleware), 90)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CookieMiddleware), 90)`
     * redirect:100
         * 网址重定向，默认支持301、302
         * 配置 enable_redirect_middleware: true 是否开启重定向，默认开启
         * 配置 redirect_max_times: 1 重定向最大次数
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.RedirectMiddleware), 100)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RedirectMiddleware), 100)`
     * chrome:110
         * 模拟chrome
         * 配置 enable_chrome_middleware: true 模拟chrome，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.ChromeMiddleware), 110)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ChromeMiddleware), 110)`
     * httpAuth:120
         * 通过`username`、`password`添加httpAuth认证。需要设置`SetUsername`和`SetPassword`
         * 配置 enable_http_auth_middleware: true 是否开启httpAuth，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.HttpAuthMiddleware), 120)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpAuthMiddleware), 120)`
     * compress:130
         * 支持 gzip/deflate解压缩
         * 配置 enable_compress_middleware: true 是否开启gzip/deflate解压缩，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.CompressMiddleware), 130)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CompressMiddleware), 130)`
     * decode:140
         * 支持gbk、gb2310、big5中文解码
         * 配置 enable_decode_middleware: true 是否开启中文解码，默认开启
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.DecodeMiddleware), 140)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DecodeMiddleware), 140)`
     * device:150
         * 修改request设备信息。修改header和tls信息，暂时只支持user-agent随机切换。需要设置`SetPlatforms`和`SetBrowsers`
           限定设备范围。默认不启用。
         * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
         * Browsers: Chrome/Edge/Safari/FireFox
         * 配置 enable_device_middleware: false 随机模拟设备，默认关闭
-        * 启用方法：在NewApp中加入crawler选项`WithMiddleware(new(middlewares.DeviceMiddleware), 150)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DeviceMiddleware), 150)`
 * pipeline用于处理item。
     * dump:10
         * 控制台打印item详细
         * 配置 enable_dump_pipeline: true 是否开启打印item详细，默认启用
-    * filter:100
+    * image:20
+        * 下载images并保存到item
+        * 配置 enable_image_pipeline: true 是否开启下载images，默认启用
+    * filter:200
         * filter可能有不同的实现
         * 用户过滤重复请求，需要middleware同时开启filter。默认支持的是item保存成功后才会进入去重队列。
           当请求速度大于保存速度的时候可能会有请求不被过滤的情况，如果不需要判断item，可以在middleware中进行进入去重队列操作
@@ -132,23 +130,25 @@
     * csv
         * 保存结果到csv文件。
         * 需在在ItemCsv中设置`FileName`，保存的文件名称，不包含.csv
-        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewCsvPipeline, 11)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.CsvPipeline), 101)`
     * jsonLines
         * 保存结果到jsonlines文件。
         * 需在在ItemJsonl中设置`FileName`，保存的文件名称，不包含.jsonl
-        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewJsonLinesPipeline, 12)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.JsonLinesPipeline), 102)`
     * mongo
         * 保存结果到mongo。
         * 需在在ItemMongo中设置`Collection`，保存的collection
-        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewMongoPipeline, 13)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.MongoPipeline), 103)`
     * mysql
         * 保存结果到mysql。
         * 需在在ItemMysql中设置`table`，保存的table
-        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewMysqlPipeline, 14)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.MysqlPipeline), 104)`
     * kafka
         * 保存结果到kafka。
         * 需在在ItemKafka中设置`Topic`，保存的topic
-        * 启用方法：在NewApp中加入crawler选项`WithPipeline(pipelines.NewKafkaPipeline, 15)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.KafkaPipeline), 105)`
+* 信号
+    *
 * 在配置文件中可以配置全局request参数，在具体request中可以覆盖此配置
 * 解析模块
     * query选择器 [go-query](https://github.com/lizongying/go-query)
@@ -181,10 +181,31 @@
         * enable_chrome_middleware: false
         * enable_device_middleware: false
         * enable_dump_pipeline: false
+        * enable_image_pipeline: false
         * enable_filter_pipeline: false
 * 爬虫结构
     * 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
-
+* 为了方便开发调试，增加了本地devServer，在`-m dev`模式下会默认启用。可以自定义route，仅需要实现`pkg.Route`
+  ，然后在spider中通过`AddDevServerRoutes(...pkg.Route)`注册到devServer即可。
+    * 支持http和https，可以设置`dev_server`。如http`http://localhost:8081`，https`https://localhost:8081`。
+    * 默认显示ja3指纹。
+    * 可以通过tls工具`tls`生成服务器的私钥和证书。
+    * Handler devServer内置了多种handler，可以模拟各种网络情景
+        * BadGatewayHandler 模拟返回502状态码
+        * Big5Handler 模拟big5编码
+        * CookieHandler 模拟返回cookie
+        * DeflateHandler 模拟Deflate压缩
+        * FileHandler 模拟输出文件
+        * Gb2312Handler 模拟gb2312编码
+        * Gb18030Handler 模拟gb18030编码
+        * GbkHandler 模拟gbk编码
+        * GzipHandler 模拟gzip压缩
+        * HttpAuthHandler 模拟http-auth认证
+        * InternalServerErrorHandler 模拟返回500状态码
+        * OkHandler 模拟正常输出，返回200状态码
+        * RateLimiterHandler 模拟速率限制，暂时只是基于全部请求，不区分用户。后面可以和HttpAuthHandler配合使用。
+        * RedirectHandler 模拟302临时跳转，需要同时开启OkHandler
+    
 ### args
 
 * -c config file. must set it. 配置文件，必须配置。
@@ -229,6 +250,7 @@
 * enable_chrome_middleware: true 模拟chrome，默认开启
 * enable_device_middleware: false 随机模拟设备，默认关闭
 * enable_dump_pipeline: true 是否开启打印item pipeline，默认开启
+* enable_image_pipeline: true 是否开启下载images pipeline，默认开启
 * enable_filter_pipeline: true 是否开启过滤pipeline，默认开启
 * scheduler: memory 调度方式，默认使用内存调度，即单机调度，可选member、redis。选择redis后可以实现集群调度
 * filter: memory 过滤方式，默认使用内存过滤，可选member、redis
@@ -263,4 +285,5 @@ go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
 * cron
 * max request limit?
 * multi-spider
+* devServer独立拆分
 

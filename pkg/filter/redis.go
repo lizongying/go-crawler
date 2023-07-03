@@ -7,6 +7,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const CleanFilterOnSpiderOpened = true
+
 type RedisFilter struct {
 	key    string
 	rdb    *redis.Client
@@ -16,6 +18,13 @@ type RedisFilter struct {
 func (f *RedisFilter) SpiderOpened(spider pkg.Spider) {
 	f.key = fmt.Sprintf("crawler:%s:filter", spider.GetName())
 	f.logger.Debug("filter key", f.key)
+	ctx := context.Background()
+	if CleanFilterOnSpiderOpened {
+		err := f.rdb.Del(ctx, f.key).Err()
+		if err != nil {
+			f.logger.Error(err)
+		}
+	}
 }
 
 func (f *RedisFilter) IsExist(ctx context.Context, uniqueKey any) (ok bool, err error) {

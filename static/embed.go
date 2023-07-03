@@ -1,6 +1,7 @@
 package static
 
 import (
+	"embed"
 	_ "embed"
 )
 
@@ -12,3 +13,6 @@ var Cert []byte
 
 //go:embed tls/key.pem
 var Key []byte
+
+//go:embed statics
+var Statics embed.FS

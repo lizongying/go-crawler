@@ -6,6 +6,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"golang.org/x/time/rate"
 	"net/http"
+	"reflect"
 	"runtime"
 	"time"
 )
@@ -24,6 +25,11 @@ func (s *Scheduler) Request(ctx context.Context, request *pkg.Request) (response
 
 	response, err = s.Download(ctx, request)
 	if err != nil {
+		if errors.Is(err, pkg.ErrIgnoreRequest) {
+			s.logger.Info(err)
+			return
+		}
+
 		s.logger.Error(err)
 		if request != nil && request.Request != nil {
 			ctx = request.Context()
@@ -66,10 +72,11 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		}
 		slotValue, ok := s.requestSlots.Load(slot)
 		if !ok {
-			if request.Concurrency < 1 {
-				request.Concurrency = 1
+			concurrency := request.GetConcurrency()
+			if concurrency < 1 {
+				concurrency = 1
 			}
-			requestSlot = rate.NewLimiter(rate.Every(request.Interval/time.Duration(request.Concurrency)), request.Concurrency)
+			requestSlot = rate.NewLimiter(rate.Every(request.Interval/time.Duration(concurrency)), int(concurrency))
 			s.requestSlots.Store(slot, requestSlot)
 		}
 
@@ -85,6 +92,10 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			}()
 
 			response, e := s.Request(ctx, request)
+			if errors.Is(e, pkg.ErrIgnoreRequest) {
+				return
+			}
+
 			if e != nil {
 				err = e
 				s.logger.Error(err)
@@ -130,7 +141,13 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err
 		return
 	}
 
-	if request.Skip {
+	if reflect.ValueOf(request.Extra).Kind() != reflect.Ptr {
+		err = errors.New("request.Extra must be pointer")
+		s.logger.Error(err)
+		return
+	}
+
+	if request.GetSkip() {
 		s.logger.Debug("skip")
 		return
 	}

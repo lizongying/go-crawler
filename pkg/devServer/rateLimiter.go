@@ -41,6 +41,6 @@ func (h *RateLimiterHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 func NewRateLimiterHandler(logger *logger.Logger) *RateLimiterHandler {
 	return &RateLimiterHandler{
 		logger:  logger,
-		limiter: rate.NewLimiter(3, 6),
+		limiter: rate.NewLimiter(3, 6), // rate 3/s
 	}
 }

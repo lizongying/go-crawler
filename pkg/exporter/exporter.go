@@ -66,6 +66,7 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 	sort.Slice(e.pipelines, func(i, j int) bool {
 		return e.pipelines[i].GetOrder() < e.pipelines[j].GetOrder()
 	})
+
 	var processItemFns []func(context.Context, pkg.Item) error
 	for _, v := range e.pipelines {
 		processItemFns = append(processItemFns, v.ProcessItem)
@@ -108,8 +109,11 @@ func (e *Exporter) FromCrawler(crawler pkg.Crawler) pkg.Exporter {
 	if config.GetEnableDumpPipeline() {
 		e.SetPipeline(new(pipelines.DumpPipeline), 10)
 	}
+	if config.GetEnableImagePipeline() {
+		e.SetPipeline(new(pipelines.ImagePipeline), 20)
+	}
 	if config.GetEnableFilterPipeline() {
-		e.SetPipeline(new(pipelines.FilterPipeline), 100)
+		e.SetPipeline(new(pipelines.FilterPipeline), 200)
 	}
 
 	return e
