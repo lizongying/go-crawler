@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func NewKafka(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) (kafkaWriter *kafka.Writer, err error) {
+func NewKafkaReader(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) (kafkaReader *kafka.Reader, err error) {
 	if !config.KafkaEnable {
 		logger.Debug("Kafka Disable")
 		return
@@ -21,18 +21,18 @@ func NewKafka(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) (kafkaW
 		return
 	}
 
-	kafkaWriter = &kafka.Writer{
-		Addr:                   kafka.TCP(strings.Split(uri, ",")...),
-		AllowAutoTopicCreation: true,
-	}
+	kafkaReader = kafka.NewReader(kafka.ReaderConfig{
+		Brokers:  strings.Split(uri, ","),
+		MaxBytes: 10e6, // 10MB
+	})
 
 	lc.Append(fx.Hook{
 		OnStop: func(_ context.Context) (err error) {
-			if kafkaWriter == nil {
+			if kafkaReader == nil {
 				return
 			}
 
-			err = kafkaWriter.Close()
+			err = kafkaReader.Close()
 			if err != nil {
 				logger.Error(err)
 				return

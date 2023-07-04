@@ -16,11 +16,12 @@ import (
 
 type FileMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger     pkg.Logger
-	s3         *s3.Client
-	stats      pkg.StatsWithImage
-	bucketName string
-	key        string
+	logger         pkg.Logger
+	s3             *s3.Client
+	stats          pkg.StatsWithImage
+	bucketName     string
+	key            string
+	ContenttypeMap map[string]string
 }
 
 func (m *FileMiddleware) ProcessResponse(ctx context.Context, response *pkg.Response) (err error) {
@@ -34,9 +35,13 @@ func (m *FileMiddleware) ProcessResponse(ctx context.Context, response *pkg.Resp
 	if isImage {
 		i := new(media.File)
 		i.SetName(utils.StrMd5(response.Request.URL.String()))
+		ext := ""
+		if e, ok := m.ContenttypeMap[response.Header.Get("Content-Type")]; ok {
+			ext = e
+		}
 
 		if m.s3 != nil {
-			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.Request.URL.String()), "")
+			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.Request.URL.String()), ext)
 			storePath := fmt.Sprintf("s3://%s/%s", m.bucketName, key)
 			uploadParams := &s3.PutObjectInput{
 				Bucket: &m.bucketName,
@@ -73,5 +78,8 @@ func (m *FileMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
 	m.s3 = crawler.GetS3()
 	m.stats, _ = crawler.GetStats().(pkg.StatsWithImage)
 	m.bucketName = "crawler"
+	m.ContenttypeMap = map[string]string{
+		"image/jpeg": "jpeg",
+	}
 	return m
 }

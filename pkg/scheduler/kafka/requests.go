@@ -1,10 +1,11 @@
-package redis
+package kafka
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/segmentio/kafka-go"
 	"golang.org/x/time/rate"
 	"net/http"
 	"reflect"
@@ -67,19 +68,19 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 	requestSlot := value.(*rate.Limiter)
 
 	for {
-		req, err := s.redis.BLPop(ctx, 0, s.requestKey).Result()
+		req, err := s.kafkaReader.FetchMessage(ctx)
 		if err != nil {
 			s.logger.Warn(err)
 			continue
 		}
-		if len(req) == 0 {
+		if len(req.Value) == 0 {
 			err = errors.New("req is empty")
 			s.logger.Warn(err)
 			continue
 		}
 		//s.logger.DebugF("request: %s", req[1])
 		var requestJson pkg.RequestJson
-		err = json.Unmarshal([]byte(req[1]), &requestJson)
+		err = json.Unmarshal(req.Value, &requestJson)
 		if err != nil {
 			s.logger.Warn(err)
 			continue
@@ -162,13 +163,6 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 }
 
 func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
-	l, err := s.redis.LLen(ctx, s.requestKey).Result()
-	if int(l) >= defaultRequestMax {
-		err = errors.New("requestChan max limit")
-		s.logger.Error(err)
-		return
-	}
-
 	if reflect.ValueOf(request.Extra).Kind() != reflect.Ptr {
 		err = errors.New("request.Extra must be pointer")
 		s.logger.Error(err)
@@ -199,7 +193,9 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err
 		s.logger.Error(err)
 		return
 	}
-	err = s.redis.RPush(ctx, s.requestKey, bs).Err()
+	err = s.kafkaWriter.WriteMessages(ctx, kafka.Message{
+		Value: bs,
+	})
 	if err != nil {
 		s.logger.Error(err)
 		return
@@ -209,20 +205,15 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err
 }
 
 func (s *Scheduler) YieldExtra(ctx context.Context, extra any) (err error) {
-	l, err := s.redis.LLen(ctx, s.requestKey).Result()
-	if int(l) >= defaultRequestMax {
-		err = errors.New("requestChan max limit")
-		s.logger.Error(err)
-		return
-	}
-
 	s.requestActiveChan <- struct{}{}
 	bs, err := json.Marshal(extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.redis.RPush(ctx, s.requestKey, bs)
+	err = s.kafkaWriter.WriteMessages(ctx, kafka.Message{
+		Value: bs,
+	})
 
 	return
 }

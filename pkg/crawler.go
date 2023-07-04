@@ -39,6 +39,7 @@ type Crawler interface {
 	SetBrowsers(...Browser)
 	GetConfig() Config
 	GetKafka() *kafka.Writer
+	GetKafkaReader() *kafka.Reader
 	GetRedis() *redis.Client
 	GetMongoDb() *mongo.Database
 	GetMysql() *sql.DB

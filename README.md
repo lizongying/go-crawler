@@ -195,14 +195,14 @@
 * 文件下载
     * 如果要保存到s3等对象存储，需要设定相应配置项
     * files
-        * item需要设置images request。
+        * item需要设置files request。
           如`item.SetFilesRequest([]*pkg.Request{new(pkg.Request).SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetDevServerHost(), devServer.UrlFile))})`
-        * item.Data需要实现pkg.File，用于保存结果。
+        * item.Data需要实现pkg.File的slice，字段名必须是`Files`，用于保存结果。
           如`type DataFile struct {Files []*media.File}`
     * images
         * item需要设置images request。
           如`item.SetImagesRequest([]*pkg.Request{new(pkg.Request).SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetDevServerHost(), devServer.UrlFile))})`
-        * item.Data需要实现pkg.Image，用于保存结果。
+        * item.Data需要实现pkg.Image的slice，字段名必须是`Images`，用于保存结果。
           如`type DataImage struct {Images []*media.Image}`
 * 爬虫结构
     * 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
@@ -293,7 +293,7 @@
 * enable_file_pipeline: true 是否开启下载files pipeline，默认开启
 * enable_image_pipeline: true 是否开启下载images pipeline，默认开启
 * enable_filter_pipeline: true 是否开启过滤pipeline，默认开启
-* scheduler: memory 调度方式，默认使用内存调度，即单机调度，可选member、redis。选择redis后可以实现集群调度
+* scheduler: memory 调度方式，默认使用内存调度，即单机调度，可选member、redis、kafka。选择redis、kafka后可以实现集群调度
 * filter: memory 过滤方式，默认使用内存过滤，可选member、redis
 
 ## Example
@@ -317,8 +317,6 @@ go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
 
 * middlewares
     * robots
-    * file
-    * media
     * proxy
     * random
     * downloadtimeout

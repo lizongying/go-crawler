@@ -9,6 +9,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/filter"
+	kafka2 "github.com/lizongying/go-crawler/pkg/scheduler/kafka"
 	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
 	redis2 "github.com/lizongying/go-crawler/pkg/scheduler/redis"
 	"github.com/lizongying/go-crawler/pkg/signals"
@@ -45,12 +46,13 @@ type Crawler struct {
 
 	config pkg.Config
 
-	MongoDb *mongo.Database
-	Mysql   *sql.DB
-	Redis   *redis.Client
-	Kafka   *kafka.Writer
-	S3      *s3.Client
-	logger  pkg.Logger
+	MongoDb     *mongo.Database
+	Mysql       *sql.DB
+	Redis       *redis.Client
+	Kafka       *kafka.Writer
+	KafkaReader *kafka.Reader
+	S3          *s3.Client
+	logger      pkg.Logger
 
 	pkg.Scheduler
 	pkg.Stats
@@ -178,11 +180,12 @@ func (c *Crawler) GetConfig() pkg.Config {
 func (c *Crawler) GetKafka() *kafka.Writer {
 	return c.Kafka
 }
-
+func (c *Crawler) GetKafkaReader() *kafka.Reader {
+	return c.KafkaReader
+}
 func (c *Crawler) GetMongoDb() *mongo.Database {
 	return c.MongoDb
 }
-
 func (c *Crawler) GetMysql() *sql.DB {
 	return c.Mysql
 }
@@ -330,7 +333,7 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	return c.spider.Stop(ctx)
 }
 
-func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, s3 *s3.Client, devServer pkg.DevServer) (crawler pkg.Crawler, err error) {
+func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, s3 *s3.Client, devServer pkg.DevServer) (crawler pkg.Crawler, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	crawler = &Crawler{
@@ -351,6 +354,7 @@ func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb 
 		MongoDb:               mongoDb,
 		Mysql:                 mysql,
 		Kafka:                 kafka,
+		KafkaReader:           kafkaReader,
 		Redis:                 redis,
 		S3:                    s3,
 		Stats:                 &stats.Stats{},
@@ -381,6 +385,8 @@ func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb 
 		crawler.SetScheduler(new(memory.Scheduler).FromCrawler(crawler))
 	case pkg.SchedulerRedis:
 		crawler.SetScheduler(new(redis2.Scheduler).FromCrawler(crawler))
+	case pkg.SchedulerKafka:
+		crawler.SetScheduler(new(kafka2.Scheduler).FromCrawler(crawler))
 	default:
 	}
 

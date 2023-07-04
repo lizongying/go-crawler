@@ -11,6 +11,7 @@ const (
 	SchedulerUnknown SchedulerType = ""
 	SchedulerMemory  SchedulerType = "memory"
 	SchedulerRedis   SchedulerType = "redis"
+	SchedulerKafka   SchedulerType = "kafka"
 )
 
 type Scheduler interface {
