@@ -109,8 +109,11 @@ func (e *Exporter) FromCrawler(crawler pkg.Crawler) pkg.Exporter {
 	if config.GetEnableDumpPipeline() {
 		e.SetPipeline(new(pipelines.DumpPipeline), 10)
 	}
+	if config.GetEnableFilePipeline() {
+		e.SetPipeline(new(pipelines.FilePipeline), 20)
+	}
 	if config.GetEnableImagePipeline() {
-		e.SetPipeline(new(pipelines.ImagePipeline), 20)
+		e.SetPipeline(new(pipelines.ImagePipeline), 30)
 	}
 	if config.GetEnableFilterPipeline() {
 		e.SetPipeline(new(pipelines.FilterPipeline), 200)

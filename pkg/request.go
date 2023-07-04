@@ -50,6 +50,7 @@ type Request struct {
 	HttpProto          string
 	Platform           []Platform
 	Browser            []Browser
+	File               *bool
 	Image              *bool
 	Extra              any
 }
@@ -139,7 +140,15 @@ func MapToStruct(data map[string]interface{}, obj interface{}) error {
 
 	return nil
 }
-
+func (r *Request) SetFile(isFile bool) {
+	r.File = &isFile
+}
+func (r *Request) GetFile() bool {
+	if r.File == nil {
+		return false
+	}
+	return *r.File
+}
 func (r *Request) SetImage(isImage bool) {
 	r.Image = &isImage
 }

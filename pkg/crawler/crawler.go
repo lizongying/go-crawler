@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
@@ -48,6 +49,7 @@ type Crawler struct {
 	Mysql   *sql.DB
 	Redis   *redis.Client
 	Kafka   *kafka.Writer
+	S3      *s3.Client
 	logger  pkg.Logger
 
 	pkg.Scheduler
@@ -187,7 +189,9 @@ func (c *Crawler) GetMysql() *sql.DB {
 func (c *Crawler) GetRedis() *redis.Client {
 	return c.Redis
 }
-
+func (c *Crawler) GetS3() *s3.Client {
+	return c.S3
+}
 func (c *Crawler) GetFilter() pkg.Filter {
 	return c.filter
 }
@@ -218,11 +222,11 @@ func (c *Crawler) GetSignal() pkg.Signal {
 func (c *Crawler) SetSignal(signal pkg.Signal) {
 	c.Signal = signal
 }
-func (s *Crawler) registerParser() {
+func (c *Crawler) registerParser() {
 	callbacks := make(map[string]pkg.Callback)
 	errbacks := make(map[string]pkg.Errback)
-	rt := reflect.TypeOf(s.spider)
-	rv := reflect.ValueOf(s.spider)
+	rt := reflect.TypeOf(c.spider)
+	rv := reflect.ValueOf(c.spider)
 	l := rt.NumMethod()
 	for i := 0; i < l; i++ {
 		name := rt.Method(i).Name
@@ -235,8 +239,8 @@ func (s *Crawler) registerParser() {
 			errbacks[name] = errback
 		}
 	}
-	s.spider.SetCallbacks(callbacks)
-	s.spider.SetErrbacks(errbacks)
+	c.spider.SetCallbacks(callbacks)
+	c.spider.SetErrbacks(errbacks)
 }
 func (c *Crawler) Start(ctx context.Context) (err error) {
 	if ctx == nil {
@@ -326,7 +330,7 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	return c.spider.Stop(ctx)
 }
 
-func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, devServer pkg.DevServer) (crawler pkg.Crawler, err error) {
+func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, s3 *s3.Client, devServer pkg.DevServer) (crawler pkg.Crawler, err error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 
 	crawler = &Crawler{
@@ -348,6 +352,7 @@ func NewCrawler(cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb 
 		Mysql:                 mysql,
 		Kafka:                 kafka,
 		Redis:                 redis,
+		S3:                    s3,
 		Stats:                 &stats.Stats{},
 	}
 

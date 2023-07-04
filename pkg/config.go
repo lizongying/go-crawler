@@ -17,6 +17,7 @@ type Config interface {
 	GetEnableStatsMiddleware() bool
 	GetEnableDumpMiddleware() bool
 	GetEnableFilterMiddleware() bool
+	GetEnableFileMiddleware() bool
 	GetEnableImageMiddleware() bool
 	GetEnableHttpMiddleware() bool
 	GetEnableRetryMiddleware() bool
@@ -31,6 +32,7 @@ type Config interface {
 	GetEnableDeviceMiddleware() bool
 
 	GetEnableDumpPipeline() bool
+	GetEnableFilePipeline() bool
 	GetEnableImagePipeline() bool
 	GetEnableFilterPipeline() bool
 

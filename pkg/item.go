@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"reflect"
-	"strings"
 )
 
 type Item interface {
@@ -11,6 +10,10 @@ type Item interface {
 	GetData() any
 	SetReferer(string)
 	GetReferer() string
+	SetFilesRequest([]*Request)
+	GetFilesRequest() []*Request
+	SetFiles([]File)
+	GetFiles() []File
 	SetImagesRequest([]*Request)
 	GetImagesRequest() []*Request
 	SetImages([]Image)
@@ -18,6 +21,7 @@ type Item interface {
 }
 
 type ItemUnimplemented struct {
+	files     []*Request
 	images    []*Request
 	referer   string
 	UniqueKey string
@@ -40,6 +44,15 @@ func (i *ItemUnimplemented) SetReferer(referer string) {
 func (i *ItemUnimplemented) GetReferer() string {
 	return i.referer
 }
+func (i *ItemUnimplemented) SetFilesRequest(files []*Request) {
+	for _, v := range files {
+		v.SetFile(true)
+		i.files = append(i.files, v)
+	}
+}
+func (i *ItemUnimplemented) GetFilesRequest() []*Request {
+	return i.files
+}
 func (i *ItemUnimplemented) SetImagesRequest(images []*Request) {
 	for _, v := range images {
 		v.SetImage(true)
@@ -49,58 +62,44 @@ func (i *ItemUnimplemented) SetImagesRequest(images []*Request) {
 func (i *ItemUnimplemented) GetImagesRequest() []*Request {
 	return i.images
 }
+func (i *ItemUnimplemented) SetFiles(files []File) {
+	if len(files) == 0 {
+		return
+	}
 
+	f := reflect.ValueOf(i.Data).Elem().FieldByName("Files")
+	if f.IsValid() && f.Type().Kind() == reflect.Slice {
+		for _, file := range files {
+			f.Set(reflect.Append(f, reflect.ValueOf(file)))
+		}
+	}
+}
+func (i *ItemUnimplemented) GetFiles() []File {
+	f := reflect.ValueOf(i.Data).Elem().FieldByName("Files")
+	if f.IsValid() && f.Type().Kind() == reflect.Slice {
+		return f.Interface().([]File)
+	}
+
+	return nil
+}
 func (i *ItemUnimplemented) SetImages(images []Image) {
 	if len(images) == 0 {
 		return
 	}
 
-	t := reflect.TypeOf(i.Data).Elem()
-	v := reflect.ValueOf(i.Data).Elem()
-	l := t.NumField()
-
-	for idx := 0; idx < l; idx++ {
-		if t.Field(idx).Tag.Get("images") != "" {
-			names := strings.Split(t.Field(idx).Tag.Get("images"), ",")
-			if t.Field(idx).Type.Kind() != reflect.Slice {
-				continue
-			}
-
-			elemType := t.Field(idx).Type.Elem()
-
-			for _, image := range images {
-				vv := reflect.New(elemType.Elem())
-				for _, name := range names {
-					f := vv.Elem().FieldByName(name)
-					if !f.IsValid() || !f.CanSet() {
-						continue
-					}
-					switch name {
-					case "Name":
-						f.SetString(image.GetName())
-					case "Extension":
-						f.SetString(image.GetExtension())
-					case "Width":
-						f.SetInt(int64(image.GetWidth()))
-					case "Height":
-						f.SetInt(int64(image.GetHeight()))
-					}
-				}
-				v.Field(idx).Set(reflect.Append(v.Field(idx), vv))
-			}
-			break
+	img := reflect.ValueOf(i.Data).Elem().FieldByName("Images")
+	if img.IsValid() && img.Type().Kind() == reflect.Slice {
+		for _, image := range images {
+			img.Set(reflect.Append(img, reflect.ValueOf(image)))
 		}
 	}
 }
 func (i *ItemUnimplemented) GetImages() []Image {
-	t := reflect.TypeOf(i.Data).Elem()
-	v := reflect.ValueOf(i.Data).Elem()
-	l := t.NumField()
-	for idx := 0; idx < l; idx++ {
-		if t.Field(idx).Tag.Get("images") != "" {
-			return v.Field(idx).Interface().([]Image)
-		}
+	img := reflect.ValueOf(i.Data).Elem().FieldByName("Images")
+	if img.IsValid() && img.Type().Kind() == reflect.Slice {
+		return img.Interface().([]Image)
 	}
+
 	return nil
 }
 

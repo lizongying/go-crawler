@@ -194,41 +194,44 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	if config.GetEnableFilterMiddleware() {
 		d.SetMiddleware(new(middlewares.FilterMiddleware), 30)
 	}
+	if config.GetEnableFileMiddleware() {
+		d.SetMiddleware(new(middlewares.FileMiddleware), 40)
+	}
 	if config.GetEnableImageMiddleware() {
-		d.SetMiddleware(new(middlewares.ImageMiddleware), 40)
+		d.SetMiddleware(new(middlewares.ImageMiddleware), 50)
 	}
 	if config.GetEnableHttpMiddleware() {
-		d.SetMiddleware(new(middlewares.HttpMiddleware), 50)
+		d.SetMiddleware(new(middlewares.HttpMiddleware), 60)
 	}
 	if config.GetEnableRetryMiddleware() {
-		d.SetMiddleware(new(middlewares.RetryMiddleware), 60)
+		d.SetMiddleware(new(middlewares.RetryMiddleware), 70)
 	}
 	if config.GetEnableUrlMiddleware() {
-		d.SetMiddleware(new(middlewares.UrlMiddleware), 70)
+		d.SetMiddleware(new(middlewares.UrlMiddleware), 80)
 	}
 	if config.GetEnableRefererMiddleware() {
-		d.SetMiddleware(new(middlewares.RefererMiddleware), 80)
+		d.SetMiddleware(new(middlewares.RefererMiddleware), 90)
 	}
 	if config.GetEnableCookieMiddleware() {
-		d.SetMiddleware(new(middlewares.CookieMiddleware), 90)
+		d.SetMiddleware(new(middlewares.CookieMiddleware), 100)
 	}
 	if config.GetEnableRedirectMiddleware() {
-		d.SetMiddleware(new(middlewares.RedirectMiddleware), 100)
+		d.SetMiddleware(new(middlewares.RedirectMiddleware), 110)
 	}
 	if config.GetEnableChromeMiddleware() {
-		d.SetMiddleware(new(middlewares.ChromeMiddleware), 110)
+		d.SetMiddleware(new(middlewares.ChromeMiddleware), 120)
 	}
 	if config.GetEnableHttpAuthMiddleware() {
-		d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 120)
+		d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 130)
 	}
 	if config.GetEnableCompressMiddleware() {
-		d.SetMiddleware(new(middlewares.CompressMiddleware), 130)
+		d.SetMiddleware(new(middlewares.CompressMiddleware), 140)
 	}
 	if config.GetEnableDecodeMiddleware() {
-		d.SetMiddleware(new(middlewares.DecodeMiddleware), 140)
+		d.SetMiddleware(new(middlewares.DecodeMiddleware), 150)
 	}
 	if config.GetEnableDeviceMiddleware() {
-		d.SetMiddleware(new(middlewares.DeviceMiddleware), 150)
+		d.SetMiddleware(new(middlewares.DeviceMiddleware), 160)
 	}
 
 	return d

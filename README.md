@@ -59,67 +59,74 @@
           当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
         * 配置 enable_filter_middleware: true 是否开启过滤，默认开启
         * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FilterMiddleware), 30)`
-    * image:40
+    * file:40
+        * 自动添加文件信息
+        * 配置 enable_file_middleware: false 是否开启文件处理，默认未开启
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FileMiddleware), 40)`
+    * image:50
         * 自动添加图片的宽高等信息
         * 配置 enable_image_middleware: false 是否开启图片处理，默认未开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ImageMiddleware), 40)`
-    * http:50
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ImageMiddleware), 50)`
+    * http:60
         * 创建request
         * 配置 enable_http_middleware: true 是否开启创建http request，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpMiddleware), 50)`
-    * retry:60
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpMiddleware), 60)`
+    * retry:70
         * 如果请求出错，会进行重试。
         * `RetryMaxTimes=10`
         * 配置 enable_retry_middleware: true 是否开启重试，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RetryMiddleware), 60)`
-    * url:70
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RetryMiddleware), 70)`
+    * url:80
         * 限制url的长度
         * 配置 enable_url_middleware: true 是否开启url长度限制，默认开启
         * 配置 url_length_limit: 2083 url的最长长度默认为2083
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.UrlMiddleware), 70)`
-    * referer:80
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.UrlMiddleware), 80)`
+    * referer:90
         * 通过设置`referrer_policy`采用不同的referer策略，
         * DefaultReferrerPolicy。默认会加入请求来源
         * NoReferrerPolicy。不加入请求来源
         * 配置 enable_referer_middleware: true 是否开启自动添加referer，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RefererMiddleware), 80)`
-    * cookie:90
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RefererMiddleware), 90)`
+    * cookie:100
         * 如果之前请求返回cookie，会自动加到后面的请求里
         * 配置 enable_cookie_middleware: true 是否开启cookie支持，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CookieMiddleware), 90)`
-    * redirect:100
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CookieMiddleware), 100)`
+    * redirect:110
         * 网址重定向，默认支持301、302
         * 配置 enable_redirect_middleware: true 是否开启重定向，默认开启
         * 配置 redirect_max_times: 1 重定向最大次数
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RedirectMiddleware), 100)`
-    * chrome:110
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RedirectMiddleware), 110)`
+    * chrome:120
         * 模拟chrome
         * 配置 enable_chrome_middleware: true 模拟chrome，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ChromeMiddleware), 110)`
-    * httpAuth:120
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ChromeMiddleware), 120)`
+    * httpAuth:130
         * 通过`username`、`password`添加httpAuth认证。需要设置`SetUsername`和`SetPassword`
         * 配置 enable_http_auth_middleware: true 是否开启httpAuth，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpAuthMiddleware), 120)`
-    * compress:130
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpAuthMiddleware), 130)`
+    * compress:140
         * 支持 gzip/deflate解压缩
         * 配置 enable_compress_middleware: true 是否开启gzip/deflate解压缩，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CompressMiddleware), 130)`
-    * decode:140
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CompressMiddleware), 140)`
+    * decode:150
         * 支持gbk、gb2310、big5中文解码
         * 配置 enable_decode_middleware: true 是否开启中文解码，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DecodeMiddleware), 140)`
-    * device:150
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DecodeMiddleware), 150)`
+    * device:160
         * 修改request设备信息。修改header和tls信息，暂时只支持user-agent随机切换。需要设置`SetPlatforms`和`SetBrowsers`
           限定设备范围。默认不启用。
         * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
         * Browsers: Chrome/Edge/Safari/FireFox
         * 配置 enable_device_middleware: false 随机模拟设备，默认关闭
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DeviceMiddleware), 150)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DeviceMiddleware), 160)`
 * pipeline用于处理item。
     * dump:10
         * 控制台打印item详细
         * 配置 enable_dump_pipeline: true 是否开启打印item详细，默认启用
-    * image:20
+    * file:20
+        * 下载files并保存到item
+        * 配置 enable_file_pipeline: true 是否开启下载files，默认启用
+    * image:30
         * 下载images并保存到item
         * 配置 enable_image_pipeline: true 是否开启下载images，默认启用
     * filter:200
@@ -168,6 +175,7 @@
         * enable_stats_middleware: false
         * enable_dump_middleware: false
         * enable_filter_middleware: false
+        * enable_file_middleware: false
         * enable_image_middleware: false
         * enable_http_middleware: false
         * enable_retry_middleware: false
@@ -181,8 +189,21 @@
         * enable_chrome_middleware: false
         * enable_device_middleware: false
         * enable_dump_pipeline: false
+        * enable_file_pipeline: false
         * enable_image_pipeline: false
         * enable_filter_pipeline: false
+* 文件下载
+    * 如果要保存到s3等对象存储，需要设定相应配置项
+    * files
+        * item需要设置images request。
+          如`item.SetFilesRequest([]*pkg.Request{new(pkg.Request).SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetDevServerHost(), devServer.UrlFile))})`
+        * item.Data需要实现pkg.File，用于保存结果。
+          如`type DataFile struct {Files []*media.File}`
+    * images
+        * item需要设置images request。
+          如`item.SetImagesRequest([]*pkg.Request{new(pkg.Request).SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetDevServerHost(), devServer.UrlFile))})`
+        * item.Data需要实现pkg.Image，用于保存结果。
+          如`type DataImage struct {Images []*media.Image}`
 * 爬虫结构
     * 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
 * 为了方便开发调试，增加了本地devServer，在`-m dev`模式下会默认启用。可以自定义route，仅需要实现`pkg.Route`
@@ -205,16 +226,34 @@
         * OkHandler 模拟正常输出，返回200状态码
         * RateLimiterHandler 模拟速率限制，暂时只是基于全部请求，不区分用户。后面可以和HttpAuthHandler配合使用。
         * RedirectHandler 模拟302临时跳转，需要同时开启OkHandler
-    
+
 ### args
 
-* -c config file. must set it. 配置文件，必须配置。
-* -f start func. default `Test`. 入口方法，默认`Test`。
-* -a args. json string. 额外的参数，用于入口方法调用，非必须项。
-* -m mode. default `test`. 启动模式，如`dev`,`prod`等，默认`test`
+默认使用环境变量，启动参数会将其覆盖
+
+* CRAWLER_CONFIG_FILE -c config file. 配置文件，必须配置。
+* CRAWLER_START_FUNC -f start func. default `Test`. 入口方法，默认`Test`。
+* CRAWLER_ARGS -a args. json string. 额外的参数，用于入口方法调用，非必须项。
+* CRAWLER_MODE -m mode. default `test`. 启动模式，如`dev`,`prod`等，默认`test`
 
 ### config
 
+* mysql_enable: false 是否启用mysql
+* mysql.example.uri: root@tcp(127.0.0.1:3306)
+* mysql.example.database: crawler
+* redis_enable: true 是否启用redis
+* redis.example.addr: 127.0.0.1:6377
+* redis.example.password: password
+* redis.example.db: 0
+* s3_enable: 是否启用s3，包括cos、oss、minio等对象存储
+* s3.example.endpoint: s3 endpoint
+* s3.example.region: s3区域
+* s3.example.id: s3 id
+* s3.example.key: s3 key
+* s3.example.bucket: s3 bucket
+* kafka_enable: 是否启用kafka
+* kafka.example.uri: kafka uri 如localhost:9092
+* mongo_enable: true 是否启用mongo
 * mongo.example.uri: mongo uri
 * mongo.example.database: mongo database
 * log.filename: Log file path. You can replace {name} with -ldflags.
@@ -234,6 +273,7 @@
 * enable_stats_middleware: true 是否开启统计，默认开启
 * enable_dump_middleware: true 是否开启打印request/response middleware，默认开启
 * enable_filter_middleware: true 是否开启过滤middleware，默认开启
+* enable_file_middleware: true 是否开启file，默认开启
 * enable_image_middleware: true 是否开启image，默认开启
 * enable_http_middleware: true 是否开启http，默认开启
 * enable_retry_middleware: true 是否开启重试，默认开启
@@ -250,6 +290,7 @@
 * enable_chrome_middleware: true 模拟chrome，默认开启
 * enable_device_middleware: false 随机模拟设备，默认关闭
 * enable_dump_pipeline: true 是否开启打印item pipeline，默认开启
+* enable_file_pipeline: true 是否开启下载files pipeline，默认开启
 * enable_image_pipeline: true 是否开启下载images pipeline，默认开启
 * enable_filter_pipeline: true 是否开启过滤pipeline，默认开启
 * scheduler: memory 调度方式，默认使用内存调度，即单机调度，可选member、redis。选择redis后可以实现集群调度

@@ -29,9 +29,11 @@ const defaultEnableChromeMiddleware = true
 const defaultEnableDeviceMiddleware = false
 const defaultEnableDumpMiddleware = true
 const defaultEnableFilterMiddleware = true
+const defaultEnableFileMiddleware = true
 const defaultEnableImageMiddleware = true
 const defaultEnableHttpMiddleware = true
 const defaultEnableDumpPipeline = true
+const defaultEnableFilePipeline = true
 const defaultEnableImagePipeline = true
 const defaultEnableFilterPipeline = true
 const defaultRequestConcurrency = uint8(1) // should bigger than 1
@@ -63,6 +65,15 @@ type Config struct {
 			Db       int    `yaml:"db" json:"-"`
 		} `yaml:"example" json:"-"`
 	} `yaml:"redis" json:"-"`
+	S3Enable bool `yaml:"s3_enable" json:"-"`
+	S3       struct {
+		Example struct {
+			Endpoint string `yaml:"endpoint" json:"-"`
+			Region   string `yaml:"region" json:"-"`
+			Id       string `yaml:"id" json:"-"`
+			Key      string `yaml:"key" json:"-"`
+		} `yaml:"example" json:"-"`
+	} `yaml:"s3" json:"-"`
 	KafkaEnable bool `yaml:"kafka_enable" json:"-"`
 	Kafka       struct {
 		Example struct {
@@ -96,6 +107,7 @@ type Config struct {
 	Scheduler                *string `yaml:"scheduler,omitempty" json:"scheduler"`
 	Filter                   *string `yaml:"filter,omitempty" json:"filter"`
 	EnableFilterMiddleware   *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
+	EnableFileMiddleware     *bool   `yaml:"enable_file_middleware,omitempty" json:"enable_file_middleware"`
 	EnableImageMiddleware    *bool   `yaml:"enable_image_middleware,omitempty" json:"enable_image_middleware"`
 	EnableHttpMiddleware     *bool   `yaml:"enable_http_middleware,omitempty" json:"enable_http_middleware"`
 	EnableRetryMiddleware    *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
@@ -108,6 +120,7 @@ type Config struct {
 	EnableChromeMiddleware   *bool   `yaml:"enable_chrome,omitempty" json:"enable_chrome"`
 	EnableDeviceMiddleware   *bool   `yaml:"enable_device,omitempty" json:"enable_device"`
 	EnableDumpPipeline       *bool   `yaml:"enable_dump_pipeline,omitempty" json:"enable_dump_pipeline"`
+	EnableFilePipeline       *bool   `yaml:"enable_file_pipeline,omitempty" json:"enable_file_pipeline"`
 	EnableImagePipeline      *bool   `yaml:"enable_image_pipeline,omitempty" json:"enable_image_pipeline"`
 	EnableFilterPipeline     *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
 }
@@ -212,13 +225,21 @@ func (c *Config) GetEnableFilterMiddleware() bool {
 
 	return *c.EnableFilterMiddleware
 }
+func (c *Config) GetEnableFileMiddleware() bool {
+	if c.EnableFileMiddleware == nil {
+		enableFileMiddleware := defaultEnableFileMiddleware
+		c.EnableFileMiddleware = &enableFileMiddleware
+	}
+
+	return *c.EnableFileMiddleware
+}
 func (c *Config) GetEnableImageMiddleware() bool {
 	if c.EnableImageMiddleware == nil {
 		enableImageMiddleware := defaultEnableImageMiddleware
 		c.EnableImageMiddleware = &enableImageMiddleware
 	}
 
-	return *c.EnableFilterMiddleware
+	return *c.EnableImageMiddleware
 }
 func (c *Config) GetEnableDumpPipeline() bool {
 	if c.EnableDumpPipeline == nil {
@@ -227,6 +248,14 @@ func (c *Config) GetEnableDumpPipeline() bool {
 	}
 
 	return *c.EnableDumpPipeline
+}
+func (c *Config) GetEnableFilePipeline() bool {
+	if c.EnableFilePipeline == nil {
+		enableFilePipeline := defaultEnableFilePipeline
+		c.EnableFilePipeline = &enableFilePipeline
+	}
+
+	return *c.EnableFilePipeline
 }
 func (c *Config) GetEnableImagePipeline() bool {
 	if c.EnableImagePipeline == nil {

@@ -1,9 +1,9 @@
 package cli
 
 import (
-	"errors"
 	"flag"
 	"log"
+	"os"
 )
 
 type Cli struct {
@@ -14,25 +14,31 @@ type Cli struct {
 }
 
 func NewCli() (c *Cli, err error) {
-	configFilePtr := flag.String("c", "", "config file")
-	startFuncPtr := flag.String("f", "Test", "start func")
-	argsPtr := flag.String("a", "", "args")
-	modePtr := flag.String("m", "test", "mode")
+	configFilePtr := flag.String("c", os.Getenv("CRAWLER_CONFIG_FILE"), "config file")
+	startFuncPtr := flag.String("f", os.Getenv("CRAWLER_START_FUNC"), "start func")
+	argsPtr := flag.String("a", os.Getenv("CRAWLER_ARGS"), "args")
+	modePtr := flag.String("m", os.Getenv("CRAWLER_MODE"), "mode")
 
 	flag.Parse()
 
+	configFile := *configFilePtr
 	startFunc := *startFuncPtr
 	if startFunc == "" {
-		err = errors.New("start func is empty")
-		return
+		startFunc = "Test"
 	}
-	log.Printf("func=%s\n", startFunc)
+	args := *argsPtr
+	mode := *modePtr
+	if mode == "" {
+		mode = "test"
+	}
+
+	log.Printf("func=%s, args=%s\n", startFunc, args)
 
 	c = &Cli{
-		ConfigFile: *configFilePtr,
+		ConfigFile: configFile,
 		StartFunc:  startFunc,
-		Args:       *argsPtr,
-		Mode:       *modePtr,
+		Args:       args,
+		Mode:       mode,
 	}
 
 	return
