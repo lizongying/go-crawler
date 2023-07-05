@@ -59,8 +59,9 @@ func (s *Scheduler) YieldItem(ctx context.Context, item pkg.Item) (err error) {
 		return
 	}
 
-	if reflect.ValueOf(data).Kind() != reflect.Ptr {
-		err = errors.New("item.Data must be pointer")
+	dataValue := reflect.ValueOf(data)
+	if !dataValue.IsNil() && dataValue.Kind() != reflect.Ptr {
+		err = errors.New("item.Data must be a pointer")
 		s.logger.Error(err)
 		return
 	}

@@ -2,12 +2,12 @@ package pipelines
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/segmentio/kafka-go"
-	"go.mongodb.org/mongo-driver/bson"
 	"time"
 )
 
@@ -50,7 +50,7 @@ func (m *KafkaPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	}
 
 	m.logger.Debug("Data", utils.JsonStr(data))
-	bs, err := bson.Marshal(data)
+	bs, err := json.Marshal(data)
 	if err != nil {
 		m.logger.Error(err)
 		m.stats.IncItemError()

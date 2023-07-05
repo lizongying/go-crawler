@@ -163,8 +163,9 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 }
 
 func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
-	if reflect.ValueOf(request.Extra).Kind() != reflect.Ptr {
-		err = errors.New("request.Extra must be pointer")
+	extraValue := reflect.ValueOf(request.Extra)
+	if !extraValue.IsNil() && extraValue.Kind() != reflect.Ptr {
+		err = errors.New("request.Extra must be a pointer")
 		s.logger.Error(err)
 		return
 	}

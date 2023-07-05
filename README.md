@@ -137,22 +137,27 @@
     * csv
         * 保存结果到csv文件。
         * 需在在ItemCsv中设置`FileName`，保存的文件名称，不包含.csv
+        * tag `column:""`
         * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.CsvPipeline), 101)`
     * jsonLines
         * 保存结果到jsonlines文件。
         * 需在在ItemJsonl中设置`FileName`，保存的文件名称，不包含.jsonl
+        * tag `json:""`
         * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.JsonLinesPipeline), 102)`
     * mongo
         * 保存结果到mongo。
         * 需在在ItemMongo中设置`Collection`，保存的collection
+        * tag `bson:""`
         * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.MongoPipeline), 103)`
     * mysql
         * 保存结果到mysql。
         * 需在在ItemMysql中设置`table`，保存的table
+        * tag `column:""`
         * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.MysqlPipeline), 104)`
     * kafka
         * 保存结果到kafka。
         * 需在在ItemKafka中设置`Topic`，保存的topic
+        * tag `json:""`
         * 启用方法：在NewApp中加入crawler选项`pkg.WithPipeline(new(pipelines.KafkaPipeline), 105)`
 * 信号
     *
