@@ -106,6 +106,11 @@ func WithMiddleware(middleware Middleware, order uint8) CrawlOption {
 		crawler.GetScheduler().GetDownloader().SetMiddleware(middleware, order)
 	}
 }
+func WithRobotsTxt() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithRobotsTxt()
+	}
+}
 func WithPipeline(pipeline Pipeline, order uint8) CrawlOption {
 	return func(crawler Crawler) {
 		crawler.GetScheduler().GetExporter().SetPipeline(pipeline, order)

@@ -16,6 +16,8 @@ type Config interface {
 
 	GetEnableStatsMiddleware() bool
 	GetEnableDumpMiddleware() bool
+	GetEnableProxyMiddleware() bool
+	GetEnableRobotsTxtMiddleware() bool
 	GetEnableFilterMiddleware() bool
 	GetEnableFileMiddleware() bool
 	GetEnableImageMiddleware() bool

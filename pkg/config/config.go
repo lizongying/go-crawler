@@ -32,6 +32,8 @@ const defaultEnableFilterMiddleware = true
 const defaultEnableFileMiddleware = true
 const defaultEnableImageMiddleware = true
 const defaultEnableHttpMiddleware = true
+const defaultEnableProxyMiddleware = true
+const defaultEnableRobotsTxtMiddleware = false
 const defaultEnableDumpPipeline = true
 const defaultEnableFilePipeline = true
 const defaultEnableImagePipeline = true
@@ -96,33 +98,35 @@ type Config struct {
 		RetryMaxTimes *uint8 `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
-	DevServer                string  `yaml:"dev_server" json:"-"`
-	EnableJa3                *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
-	EnableRefererMiddleware  *bool   `yaml:"enable_referer,omitempty" json:"enable_referer"`
-	ReferrerPolicy           *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
-	EnableHttpAuthMiddleware *bool   `yaml:"enable_http_auth,omitempty" json:"enable_http_auth"`
-	EnableCookieMiddleware   *bool   `yaml:"enable_cookie,omitempty" json:"enable_cookie"`
-	EnableStatsMiddleware    *bool   `yaml:"enable_stats,omitempty" json:"enable_stats"`
-	EnableDumpMiddleware     *bool   `yaml:"enable_dump_middleware,omitempty" json:"enable_dump_middleware"`
-	Scheduler                *string `yaml:"scheduler,omitempty" json:"scheduler"`
-	Filter                   *string `yaml:"filter,omitempty" json:"filter"`
-	EnableFilterMiddleware   *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
-	EnableFileMiddleware     *bool   `yaml:"enable_file_middleware,omitempty" json:"enable_file_middleware"`
-	EnableImageMiddleware    *bool   `yaml:"enable_image_middleware,omitempty" json:"enable_image_middleware"`
-	EnableHttpMiddleware     *bool   `yaml:"enable_http_middleware,omitempty" json:"enable_http_middleware"`
-	EnableRetryMiddleware    *bool   `yaml:"enable_retry,omitempty" json:"enable_retry"`
-	EnableUrlMiddleware      *bool   `yaml:"enable_url,omitempty" json:"enable_url"`
-	UrlLengthLimit           *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
-	EnableCompressMiddleware *bool   `yaml:"enable_compress,omitempty" json:"enable_compress"`
-	EnableDecodeMiddleware   *bool   `yaml:"enable_decode,omitempty" json:"enable_decode"`
-	EnableRedirectMiddleware *bool   `yaml:"enable_redirect,omitempty" json:"enable_redirect"`
-	RedirectMaxTimes         *uint8  `yaml:"redirect_max_times" json:"-"`
-	EnableChromeMiddleware   *bool   `yaml:"enable_chrome,omitempty" json:"enable_chrome"`
-	EnableDeviceMiddleware   *bool   `yaml:"enable_device,omitempty" json:"enable_device"`
-	EnableDumpPipeline       *bool   `yaml:"enable_dump_pipeline,omitempty" json:"enable_dump_pipeline"`
-	EnableFilePipeline       *bool   `yaml:"enable_file_pipeline,omitempty" json:"enable_file_pipeline"`
-	EnableImagePipeline      *bool   `yaml:"enable_image_pipeline,omitempty" json:"enable_image_pipeline"`
-	EnableFilterPipeline     *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
+	DevServer                 string  `yaml:"dev_server" json:"-"`
+	EnableJa3                 *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
+	EnableRefererMiddleware   *bool   `yaml:"enable_referer_middleware,omitempty" json:"enable_referer_middleware"`
+	ReferrerPolicy            *string `yaml:"referrer_policy_middleware,omitempty" json:"referrer_policy_middleware"`
+	EnableHttpAuthMiddleware  *bool   `yaml:"enable_http_auth_middleware,omitempty" json:"enable_http_auth_middleware"`
+	EnableCookieMiddleware    *bool   `yaml:"enable_cookie_middleware,omitempty" json:"enable_cookie_middleware"`
+	EnableStatsMiddleware     *bool   `yaml:"enable_stats_middleware,omitempty" json:"enable_stats_middleware"`
+	EnableDumpMiddleware      *bool   `yaml:"enable_dump_middleware,omitempty" json:"enable_dump_middleware"`
+	Scheduler                 *string `yaml:"scheduler,omitempty" json:"scheduler"`
+	Filter                    *string `yaml:"filter,omitempty" json:"filter"`
+	EnableFilterMiddleware    *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
+	EnableFileMiddleware      *bool   `yaml:"enable_file_middleware,omitempty" json:"enable_file_middleware"`
+	EnableImageMiddleware     *bool   `yaml:"enable_image_middleware,omitempty" json:"enable_image_middleware"`
+	EnableHttpMiddleware      *bool   `yaml:"enable_http_middleware,omitempty" json:"enable_http_middleware"`
+	EnableRetryMiddleware     *bool   `yaml:"enable_retry_middleware,omitempty" json:"enable_retry_middleware"`
+	EnableUrlMiddleware       *bool   `yaml:"enable_url_middleware,omitempty" json:"enable_url_middleware"`
+	UrlLengthLimit            *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
+	EnableCompressMiddleware  *bool   `yaml:"enable_compress_middleware,omitempty" json:"enable_compress_middleware"`
+	EnableDecodeMiddleware    *bool   `yaml:"enable_decode_middleware,omitempty" json:"enable_decode_middleware"`
+	EnableRedirectMiddleware  *bool   `yaml:"enable_redirect_middleware,omitempty" json:"enable_redirect_middleware"`
+	RedirectMaxTimes          *uint8  `yaml:"redirect_max_times" json:"-"`
+	EnableChromeMiddleware    *bool   `yaml:"enable_chrome_middleware,omitempty" json:"enable_chrome_middleware"`
+	EnableDeviceMiddleware    *bool   `yaml:"enable_device_middleware,omitempty" json:"enable_device_middleware"`
+	EnableProxyMiddleware     *bool   `yaml:"enable_proxy_middleware,omitempty" json:"enable_proxy_middleware"`
+	EnableRobotsTxtMiddleware *bool   `yaml:"enable_robots_txt_middleware,omitempty" json:"enable_robots_txt_middleware"`
+	EnableDumpPipeline        *bool   `yaml:"enable_dump_pipeline,omitempty" json:"enable_dump_pipeline"`
+	EnableFilePipeline        *bool   `yaml:"enable_file_pipeline,omitempty" json:"enable_file_pipeline"`
+	EnableImagePipeline       *bool   `yaml:"enable_image_pipeline,omitempty" json:"enable_image_pipeline"`
+	EnableFilterPipeline      *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -336,7 +340,22 @@ func (c *Config) GetEnableRedirectMiddleware() bool {
 
 	return *c.EnableRedirectMiddleware
 }
+func (c *Config) GetEnableProxyMiddleware() bool {
+	if c.EnableProxyMiddleware == nil {
+		enableProxyMiddleware := defaultEnableProxyMiddleware
+		c.EnableProxyMiddleware = &enableProxyMiddleware
+	}
 
+	return *c.EnableProxyMiddleware
+}
+func (c *Config) GetEnableRobotsTxtMiddleware() bool {
+	if c.EnableRobotsTxtMiddleware == nil {
+		enableRobotsTxtMiddleware := defaultEnableRobotsTxtMiddleware
+		c.EnableRobotsTxtMiddleware = &enableRobotsTxtMiddleware
+	}
+
+	return *c.EnableRobotsTxtMiddleware
+}
 func (c *Config) GetRedirectMaxTimes() uint8 {
 	if c.RedirectMaxTimes == nil {
 		redirectMaxTimes := defaultRedirectMaxTimes

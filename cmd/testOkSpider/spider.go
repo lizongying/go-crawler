@@ -36,7 +36,8 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	}
 
 	requestNext := new(pkg.Request)
-	requestNext.Url = response.Request.Url
+	//requestNext.Url = response.Request.Url
+	requestNext.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGb2312)
 	requestNext.Extra = &ExtraOk{
 		Count: extra.Count + 1,
 	}
@@ -75,10 +76,12 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		logger: baseSpider.GetLogger(),
 	}
 	spider.SetName("test-ok")
+	spider.SetHost(spider.GetDevServerHost())
+	spider.AddDevServerRoutes(devServer.NewRobotsTxtHandler(baseSpider.GetLogger()))
 
 	return
 }
 
 func main() {
-	app.NewApp(NewSpider).Run()
+	app.NewApp(NewSpider, pkg.WithRobotsTxt()).Run()
 }

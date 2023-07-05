@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /ok
+
+Disallow: /gb2312

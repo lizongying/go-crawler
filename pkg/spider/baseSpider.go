@@ -22,6 +22,7 @@ func init() {
 type BaseSpider struct {
 	pkg.Crawler
 	name      string
+	host      string
 	callbacks map[string]pkg.Callback
 	errbacks  map[string]pkg.Errback
 	logger    pkg.Logger
@@ -32,6 +33,12 @@ func (s *BaseSpider) GetName() string {
 }
 func (s *BaseSpider) SetName(name string) {
 	s.name = name
+}
+func (s *BaseSpider) GetHost() string {
+	return s.host
+}
+func (s *BaseSpider) SetHost(host string) {
+	s.host = host
 }
 func (s *BaseSpider) GetCallbacks() map[string]pkg.Callback {
 	return s.callbacks

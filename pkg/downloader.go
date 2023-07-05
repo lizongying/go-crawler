@@ -9,6 +9,7 @@ type Downloader interface {
 	GetMiddlewareNames() map[uint8]string
 	GetMiddlewares() []Middleware
 	SetMiddleware(Middleware, uint8)
+	WithRobotsTxt()
 	DelMiddleware(int)
 	CleanMiddlewares()
 	FromCrawler(Crawler) Downloader

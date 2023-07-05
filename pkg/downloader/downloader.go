@@ -67,6 +67,7 @@ func (d *Downloader) Download(ctx context.Context, request *pkg.Request) (respon
 		d.logger.Error(err)
 		return
 	}
+	d.logger.Debug("StatusCode", response.StatusCode)
 
 	err = d.processResponse(ctx, response)
 	if err != nil {
@@ -174,6 +175,10 @@ func (d *Downloader) CleanMiddlewares() {
 	d.middlewares = make([]pkg.Middleware, 0)
 }
 
+func (d *Downloader) WithRobotsTxt() {
+	d.SetMiddleware(new(middlewares.RobotsTxtMiddleware), 40)
+}
+
 func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	if d == nil {
 		return new(Downloader).FromCrawler(crawler)
@@ -191,47 +196,53 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	if config.GetEnableDumpMiddleware() {
 		d.SetMiddleware(new(middlewares.DumpMiddleware), 20)
 	}
+	if config.GetEnableProxyMiddleware() {
+		d.SetMiddleware(new(middlewares.ProxyMiddleware), 30)
+	}
+	if config.GetEnableRobotsTxtMiddleware() {
+		d.WithRobotsTxt()
+	}
 	if config.GetEnableFilterMiddleware() {
-		d.SetMiddleware(new(middlewares.FilterMiddleware), 30)
+		d.SetMiddleware(new(middlewares.FilterMiddleware), 50)
 	}
 	if config.GetEnableFileMiddleware() {
-		d.SetMiddleware(new(middlewares.FileMiddleware), 40)
+		d.SetMiddleware(new(middlewares.FileMiddleware), 60)
 	}
 	if config.GetEnableImageMiddleware() {
-		d.SetMiddleware(new(middlewares.ImageMiddleware), 50)
+		d.SetMiddleware(new(middlewares.ImageMiddleware), 70)
 	}
 	if config.GetEnableHttpMiddleware() {
-		d.SetMiddleware(new(middlewares.HttpMiddleware), 60)
+		d.SetMiddleware(new(middlewares.HttpMiddleware), 80)
 	}
 	if config.GetEnableRetryMiddleware() {
-		d.SetMiddleware(new(middlewares.RetryMiddleware), 70)
+		d.SetMiddleware(new(middlewares.RetryMiddleware), 90)
 	}
 	if config.GetEnableUrlMiddleware() {
-		d.SetMiddleware(new(middlewares.UrlMiddleware), 80)
+		d.SetMiddleware(new(middlewares.UrlMiddleware), 100)
 	}
 	if config.GetEnableRefererMiddleware() {
-		d.SetMiddleware(new(middlewares.RefererMiddleware), 90)
+		d.SetMiddleware(new(middlewares.RefererMiddleware), 110)
 	}
 	if config.GetEnableCookieMiddleware() {
-		d.SetMiddleware(new(middlewares.CookieMiddleware), 100)
+		d.SetMiddleware(new(middlewares.CookieMiddleware), 120)
 	}
 	if config.GetEnableRedirectMiddleware() {
-		d.SetMiddleware(new(middlewares.RedirectMiddleware), 110)
+		d.SetMiddleware(new(middlewares.RedirectMiddleware), 130)
 	}
 	if config.GetEnableChromeMiddleware() {
-		d.SetMiddleware(new(middlewares.ChromeMiddleware), 120)
+		d.SetMiddleware(new(middlewares.ChromeMiddleware), 140)
 	}
 	if config.GetEnableHttpAuthMiddleware() {
-		d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 130)
+		d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 150)
 	}
 	if config.GetEnableCompressMiddleware() {
-		d.SetMiddleware(new(middlewares.CompressMiddleware), 140)
+		d.SetMiddleware(new(middlewares.CompressMiddleware), 160)
 	}
 	if config.GetEnableDecodeMiddleware() {
-		d.SetMiddleware(new(middlewares.DecodeMiddleware), 150)
+		d.SetMiddleware(new(middlewares.DecodeMiddleware), 170)
 	}
 	if config.GetEnableDeviceMiddleware() {
-		d.SetMiddleware(new(middlewares.DeviceMiddleware), 160)
+		d.SetMiddleware(new(middlewares.DeviceMiddleware), 180)
 	}
 
 	return d

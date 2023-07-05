@@ -54,71 +54,79 @@
         * 控制台打印item.data
         * 配置 enable_dump_middleware: true 是否开启打印request/response，默认开启
         * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DumpMiddleware), 20)`
-    * filter:30
+    * proxy:30
+        * 切换代理
+        * 配置 enable_proxy_middleware: true 代理，默认开启
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ProxyMiddleware), 30)`
+    * robotsTxt:40
+        * robots.txt支持
+        * 配置 enable_robots_txt_middleware: false robots.txt支持。默认关闭
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RobotsTxtMiddleware), 40)`
+    * filter:50
         * 过滤重复请求。默认支持的是item保存成功后才会进入去重队列，防止出现请求失败后再次请求却被过滤的问题。
           当请求速度大于保存速度的时候可能会有请求不被过滤的情况。
         * 配置 enable_filter_middleware: true 是否开启过滤，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FilterMiddleware), 30)`
-    * file:40
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FilterMiddleware), 50)`
+    * file:60
         * 自动添加文件信息
         * 配置 enable_file_middleware: false 是否开启文件处理，默认未开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FileMiddleware), 40)`
-    * image:50
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FileMiddleware), 60)`
+    * image:70
         * 自动添加图片的宽高等信息
         * 配置 enable_image_middleware: false 是否开启图片处理，默认未开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ImageMiddleware), 50)`
-    * http:60
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ImageMiddleware), 70)`
+    * http:80
         * 创建request
         * 配置 enable_http_middleware: true 是否开启创建http request，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpMiddleware), 60)`
-    * retry:70
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpMiddleware), 80)`
+    * retry:90
         * 如果请求出错，会进行重试。
         * `RetryMaxTimes=10`
         * 配置 enable_retry_middleware: true 是否开启重试，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RetryMiddleware), 70)`
-    * url:80
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RetryMiddleware), 90)`
+    * url:100
         * 限制url的长度
         * 配置 enable_url_middleware: true 是否开启url长度限制，默认开启
         * 配置 url_length_limit: 2083 url的最长长度默认为2083
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.UrlMiddleware), 80)`
-    * referer:90
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.UrlMiddleware), 100)`
+    * referer:110
         * 通过设置`referrer_policy`采用不同的referer策略，
         * DefaultReferrerPolicy。默认会加入请求来源
         * NoReferrerPolicy。不加入请求来源
         * 配置 enable_referer_middleware: true 是否开启自动添加referer，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RefererMiddleware), 90)`
-    * cookie:100
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RefererMiddleware), 110)`
+    * cookie:120
         * 如果之前请求返回cookie，会自动加到后面的请求里
         * 配置 enable_cookie_middleware: true 是否开启cookie支持，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CookieMiddleware), 100)`
-    * redirect:110
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CookieMiddleware), 120)`
+    * redirect:130
         * 网址重定向，默认支持301、302
         * 配置 enable_redirect_middleware: true 是否开启重定向，默认开启
         * 配置 redirect_max_times: 1 重定向最大次数
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RedirectMiddleware), 110)`
-    * chrome:120
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RedirectMiddleware), 130)`
+    * chrome:140
         * 模拟chrome
         * 配置 enable_chrome_middleware: true 模拟chrome，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ChromeMiddleware), 120)`
-    * httpAuth:130
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ChromeMiddleware), 140)`
+    * httpAuth:150
         * 通过`username`、`password`添加httpAuth认证。需要设置`SetUsername`和`SetPassword`
-        * 配置 enable_http_auth_middleware: true 是否开启httpAuth，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpAuthMiddleware), 130)`
-    * compress:140
+        * 配置 enable_http_auth_middleware: false 是否开启httpAuth，默认关闭
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpAuthMiddleware), 150)`
+    * compress:160
         * 支持 gzip/deflate解压缩
         * 配置 enable_compress_middleware: true 是否开启gzip/deflate解压缩，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CompressMiddleware), 140)`
-    * decode:150
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CompressMiddleware), 160)`
+    * decode:170
         * 支持gbk、gb2310、big5中文解码
         * 配置 enable_decode_middleware: true 是否开启中文解码，默认开启
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DecodeMiddleware), 150)`
-    * device:160
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DecodeMiddleware), 170)`
+    * device:180
         * 修改request设备信息。修改header和tls信息，暂时只支持user-agent随机切换。需要设置`SetPlatforms`和`SetBrowsers`
           限定设备范围。默认不启用。
         * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
         * Browsers: Chrome/Edge/Safari/FireFox
         * 配置 enable_device_middleware: false 随机模拟设备，默认关闭
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DeviceMiddleware), 160)`
+        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DeviceMiddleware), 180)`
 * pipeline用于处理item。
     * dump:10
         * 控制台打印item详细
@@ -193,6 +201,8 @@
         * enable_redirect_middleware: false
         * enable_chrome_middleware: false
         * enable_device_middleware: false
+        * enable_proxy_middleware: false
+        * enable_robots_txt_middleware: false
         * enable_dump_pipeline: false
         * enable_file_pipeline: false
         * enable_image_pipeline: false
@@ -232,6 +242,7 @@
         * OkHandler 模拟正常输出，返回200状态码
         * RateLimiterHandler 模拟速率限制，暂时只是基于全部请求，不区分用户。后面可以和HttpAuthHandler配合使用。
         * RedirectHandler 模拟302临时跳转，需要同时开启OkHandler
+        * RobotsTxtHandler 返回robots.txt
 
 ### args
 
@@ -285,7 +296,7 @@
 * enable_retry_middleware: true 是否开启重试，默认开启
 * enable_referer_middleware: true 是否开启referer，默认开启
 * referrer_policy: DefaultReferrerPolicy 来源政策，默认DefaultReferrerPolicy，可选DefaultReferrerPolicy、NoReferrerPolicy
-* enable_http_auth_middleware: true 是否开启httpAuth，默认开启
+* enable_http_auth_middleware: false 是否开启httpAuth，默认关闭
 * enable_cookie_middleware: true 是否开启cookie，默认开启
 * enable_url_middleware: true 是否开启url长度限制，默认开启
 * url_length_limit: 2083 url长度限制，默认2083
@@ -295,6 +306,8 @@
 * redirect_max_times: 1 重定向最大次数，默认1
 * enable_chrome_middleware: true 模拟chrome，默认开启
 * enable_device_middleware: false 随机模拟设备，默认关闭
+* enable_proxy_middleware: true 代理，默认开启
+* enable_robots_txt_middleware: false robots.txt支持。默认关闭
 * enable_dump_pipeline: true 是否开启打印item pipeline，默认开启
 * enable_file_pipeline: true 是否开启下载files pipeline，默认开启
 * enable_image_pipeline: true 是否开启下载images pipeline，默认开启
@@ -418,11 +431,9 @@ go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
 ## TODO
 
 * middlewares
-    * robots
-    * proxy
-    * random
     * downloadtimeout
 
+* AutoThrottle
 * cron
 * max request limit?
 * multi-spider

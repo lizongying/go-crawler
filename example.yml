@@ -53,7 +53,7 @@ enable_http_middleware: true
 enable_retry_middleware: true
 enable_referer_middleware: true
 referrer_policy: NoReferrerPolicy
-enable_http_auth_middleware: true
+enable_http_auth_middleware: false
 enable_cookie_middleware: true
 enable_url_middleware: true
 url_length_limit:
@@ -63,6 +63,8 @@ enable_redirect_middleware: true
 redirect_max_times: 1
 enable_chrome_middleware: true
 enable_device_middleware: false
+enable_proxy_middleware: true
+enable_robots_txt_middleware: false
 enable_dump_pipeline: true
 enable_file_pipeline: true
 enable_image_pipeline: true
