@@ -427,6 +427,8 @@ func (c *Config) GetScheduler() pkg.SchedulerType {
 			return pkg.SchedulerMemory
 		case pkg.SchedulerRedis:
 			return pkg.SchedulerRedis
+		case pkg.SchedulerKafka:
+			return pkg.SchedulerKafka
 		default:
 			return pkg.SchedulerUnknown
 		}

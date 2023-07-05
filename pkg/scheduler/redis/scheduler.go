@@ -146,7 +146,7 @@ func (s *Scheduler) Stop(ctx context.Context) (err error) {
 }
 func (s *Scheduler) SpiderOpened(spider pkg.Spider) {
 	s.requestKey = fmt.Sprintf("crawler:%s:request", spider.GetName())
-	s.logger.Info("request key", s.requestKey)
+	s.logger.Debug("request key", s.requestKey)
 	//err = s.redis.Del(ctx, s.requestKey).Err()
 }
 func (s *Scheduler) FromCrawler(crawler pkg.Crawler) pkg.Scheduler {

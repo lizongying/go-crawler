@@ -17,9 +17,9 @@ func (h *OkHandler) Pattern() string {
 }
 
 func (h *OkHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
-	h.logger.Info("into OkHandler")
+	h.logger.Debug("into OkHandler")
 	defer func() {
-		h.logger.Info("exit OkHandler")
+		h.logger.Debug("exit OkHandler")
 	}()
 
 	w.WriteHeader(http.StatusOK)

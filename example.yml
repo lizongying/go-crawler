@@ -1,4 +1,4 @@
-mongo_enable: true
+mongo_enable: false
 mongo:
   example:
     uri: mongodb://127.0.0.1:27017
@@ -8,7 +8,7 @@ mysql:
   example:
     uri: root@tcp(127.0.0.1:3306)
     database: crawler
-redis_enable: true
+redis_enable: false
 redis:
   example:
     addr: 127.0.0.1:6379
@@ -29,7 +29,7 @@ kafka:
 log:
   filename: /tmp/spider_{name}.log
   long_file: true
-  level: debug
+  level: info
 proxy:
   example:
 request:
@@ -40,7 +40,7 @@ request:
     - 200
   retry_max_times: 10
   http_proto: 2.0
-dev_server: http://localhost:8081
+dev_server: https://localhost:8081
 enable_ja3: false
 enable_stats_middleware: true
 enable_dump_middleware: true

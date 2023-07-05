@@ -7,9 +7,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
-	"github.com/lizongying/go-crawler/pkg/pipelines"
-	"github.com/lizongying/go-crawler/pkg/utils"
-	"strconv"
 )
 
 type Spider struct {
@@ -20,43 +17,30 @@ type Spider struct {
 func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
 	var extra ExtraOk
 	_ = response.Request.GetExtra(&extra)
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", string(response.BodyBytes))
 
-	if extra.Count > 0 {
-		return
-	}
-
-	item := pkg.ItemJsonl{
+	item := pkg.ItemNone{
 		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: response.Request.UniqueKey,
-			Data: &DataImage{
-				DataOk: DataOk{
-					Count: extra.Count,
-				},
+			Data: &DataOk{
+				Count: extra.Count,
 			},
 		},
-		FileName: "image",
 	}
-	item.SetImagesRequest([]*pkg.Request{new(pkg.Request).SetUrl("https://www.bing.com/th?id=OHR.ClamBears_ZH-CN5686721500_UHD.jpg&w=3840&h=2160&c=8&rs=1&o=3&r=0")})
 	err = s.YieldItem(ctx, &item)
 	if err != nil {
 		s.logger.Error(err)
 		return err
 	}
 
-	//if extra.Count%1000 == 0 {
-	//	s.logger.Info("extra", utils.JsonStr(extra))
-	//}
+	if extra.Count > 0 {
+		return
+	}
+
 	requestNext := new(pkg.Request)
 	requestNext.Url = response.Request.Url
-	count := extra.Count + 1
 	requestNext.Extra = &ExtraOk{
-		Count: count,
+		Count: extra.Count + 1,
 	}
 	requestNext.CallBack = s.ParseOk
-	requestNext.UniqueKey = strconv.Itoa(count)
-	//requestNext.UniqueKey = "2"
 	err = s.YieldRequest(ctx, requestNext)
 	if err != nil {
 		s.logger.Error(err)
@@ -64,24 +48,19 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	return
 }
 
-// TestOk go run cmd/testSchedulerSpider/*.go -c dev.yml -f TestOk -m dev
+// TestOk go run cmd/testOkSpider/*.go -c example.yml -f TestOk -m dev
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
+	// mock server
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
+
 	request := new(pkg.Request)
 	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
 	request.Extra = &ExtraOk{}
-	request.UniqueKey = "0"
 	request.CallBack = s.ParseOk
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)
 	}
-	return
-}
-
-func (s *Spider) Stop(ctx context.Context) (err error) {
-	//err = pkg.DontStopErr
-
 	return
 }
 
@@ -95,11 +74,11 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),
 	}
-	spider.SetName("test-scheduler")
+	spider.SetName("test-ok")
 
 	return
 }
 
 func main() {
-	app.NewApp(NewSpider, pkg.WithPipeline(new(pipelines.JsonLinesPipeline), 102)).Run()
+	app.NewApp(NewSpider).Run()
 }

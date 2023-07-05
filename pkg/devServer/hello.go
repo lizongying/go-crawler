@@ -17,6 +17,11 @@ func (*HelloHandler) Pattern() string {
 }
 
 func (h *HelloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("into HelloHandler")
+	defer func() {
+		h.logger.Info("exit HelloHandler")
+	}()
+
 	h.logger.InfoF("request: %+v", r)
 	body, _ := io.ReadAll(r.Body)
 	h.logger.InfoF("body: %s", string(body))

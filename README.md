@@ -221,6 +221,7 @@
         * Gb18030Handler 模拟gb18030编码
         * GbkHandler 模拟gbk编码
         * GzipHandler 模拟gzip压缩
+        * HelloHandler 打印request header和body
         * HttpAuthHandler 模拟http-auth认证
         * InternalServerErrorHandler 模拟返回500状态码
         * OkHandler 模拟正常输出，返回200状态码
@@ -238,6 +239,9 @@
 
 ### config
 
+* mongo_enable: true 是否启用mongo
+* mongo.example.uri: mongo uri
+* mongo.example.database: mongo database
 * mysql_enable: false 是否启用mysql
 * mysql.example.uri: root@tcp(127.0.0.1:3306)
 * mysql.example.database: crawler
@@ -253,9 +257,6 @@
 * s3.example.bucket: s3 bucket
 * kafka_enable: 是否启用kafka
 * kafka.example.uri: kafka uri 如localhost:9092
-* mongo_enable: true 是否启用mongo
-* mongo.example.uri: mongo uri
-* mongo.example.database: mongo database
 * log.filename: Log file path. You can replace {name} with -ldflags.
 * log.long_file: If set to true, the full file path is logged.
 * log.level: DEBUG/INFO/WARN/ERROR
@@ -298,7 +299,103 @@
 
 ## Example
 
-可以按照以下示例进行开发
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/app"
+	"github.com/lizongying/go-crawler/pkg/devServer"
+)
+
+type ExtraOk struct {
+	Count int
+}
+
+type DataOk struct {
+	Count int
+}
+
+type Spider struct {
+	pkg.Spider
+	logger pkg.Logger
+}
+
+func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
+	var extra ExtraOk
+	_ = response.Request.GetExtra(&extra)
+
+	item := pkg.ItemNone{
+		ItemUnimplemented: pkg.ItemUnimplemented{
+			Data: &DataOk{
+				Count: extra.Count,
+			},
+		},
+	}
+	err = s.YieldItem(ctx, &item)
+	if err != nil {
+		s.logger.Error(err)
+		return err
+	}
+
+	if extra.Count > 0 {
+		return
+	}
+
+	requestNext := new(pkg.Request)
+	requestNext.Url = response.Request.Url
+	requestNext.Extra = &ExtraOk{
+		Count: extra.Count + 1,
+	}
+	requestNext.CallBack = s.ParseOk
+	err = s.YieldRequest(ctx, requestNext)
+	if err != nil {
+		s.logger.Error(err)
+	}
+	return
+}
+
+// TestOk go run cmd/testOkSpider/*.go -c example.yml -f TestOk -m dev
+func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
+	// mock server
+	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
+
+	request := new(pkg.Request)
+	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
+	request.Extra = &ExtraOk{}
+	request.CallBack = s.ParseOk
+	err = s.YieldRequest(ctx, request)
+	if err != nil {
+		s.logger.Error(err)
+	}
+	return
+}
+
+func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
+	if baseSpider == nil {
+		err = errors.New("nil baseSpider")
+		return
+	}
+
+	spider = &Spider{
+		Spider: baseSpider,
+		logger: baseSpider.GetLogger(),
+	}
+	spider.SetName("test-ok")
+
+	return
+}
+
+func main() {
+	app.NewApp(NewSpider).Run()
+}
+
+```
+
+更多示例可以按照以下项目
 
 [go-crawler-example](https://github.com/lizongying/go-crawler-example)
 

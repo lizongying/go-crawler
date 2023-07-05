@@ -21,6 +21,7 @@ func NewApp(newSpider pkg.NewSpider, crawlOptions ...pkg.CrawlOption) *fx.App {
 			db.NewMongoDb,
 			db.NewMysql,
 			db.NewKafka,
+			db.NewKafkaReader,
 			db.NewRedis,
 			db.NewS3,
 			fx.Annotate(

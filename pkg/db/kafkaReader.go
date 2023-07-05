@@ -24,6 +24,7 @@ func NewKafkaReader(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) (
 	kafkaReader = kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  strings.Split(uri, ","),
 		MaxBytes: 10e6, // 10MB
+		Topic:    "test",
 	})
 
 	lc.Append(fx.Hook{

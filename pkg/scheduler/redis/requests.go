@@ -194,7 +194,7 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err
 
 	s.requestActiveChan <- struct{}{}
 	bs, err := request.Marshal()
-	s.logger.Info("request:", string(bs))
+	s.logger.Debug("request:", string(bs))
 	if err != nil {
 		s.logger.Error(err)
 		return

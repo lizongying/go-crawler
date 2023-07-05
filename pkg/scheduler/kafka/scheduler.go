@@ -149,6 +149,12 @@ func (s *Scheduler) SpiderOpened(spider pkg.Spider) {
 	s.requestKey = fmt.Sprintf("crawler-%s-request", spider.GetName())
 	s.logger.Info("request key", s.requestKey)
 	s.kafkaWriter.Topic = s.requestKey
+	s.kafkaReader = kafka.NewReader(kafka.ReaderConfig{
+		Brokers:  s.kafkaReader.Config().Brokers,
+		MaxBytes: 10e6, // 10MB
+		Topic:    s.requestKey,
+		GroupID:  "crawler",
+	})
 }
 func (s *Scheduler) FromCrawler(crawler pkg.Crawler) pkg.Scheduler {
 	if s == nil {
