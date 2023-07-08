@@ -83,5 +83,5 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider, pkg.WithRobotsTxt()).Run()
+	app.NewApp(NewSpider, pkg.WithRobotsTxtMiddleware()).Run()
 }

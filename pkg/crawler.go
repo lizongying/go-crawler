@@ -106,14 +106,154 @@ func WithMiddleware(middleware Middleware, order uint8) CrawlOption {
 		crawler.GetScheduler().GetDownloader().SetMiddleware(middleware, order)
 	}
 }
-func WithRobotsTxt() CrawlOption {
+func WithStatsMiddleware() CrawlOption {
 	return func(crawler Crawler) {
-		crawler.GetScheduler().GetDownloader().WithRobotsTxt()
+		crawler.GetScheduler().GetDownloader().WithStatsMiddleware()
+	}
+}
+func WithDumpMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithDumpMiddleware()
+	}
+}
+func WithProxyMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithProxyMiddleware()
+	}
+}
+func WithRobotsTxtMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithRobotsTxtMiddleware()
+	}
+}
+func WithFilterMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithFilterMiddleware()
+	}
+}
+func WithFileMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithFileMiddleware()
+	}
+}
+func WithImageMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithImageMiddleware()
+	}
+}
+func WithHttpMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithHttpMiddleware()
+	}
+}
+func WithRetryMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithRetryMiddleware()
+	}
+}
+func WithUrlMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithUrlMiddleware()
+	}
+}
+func WithRefererMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithRefererMiddleware()
+	}
+}
+func WithCookieMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithCookieMiddleware()
+	}
+}
+func WithRedirectMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithRedirectMiddleware()
+	}
+}
+func WithChromeMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithChromeMiddleware()
+	}
+}
+func WithHttpAuthMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithHttpAuthMiddleware()
+	}
+}
+func WithCompressMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithCompressMiddleware()
+	}
+}
+func WithDecodeMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithDecodeMiddleware()
+	}
+}
+func WithDeviceMiddleware() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithDeviceMiddleware()
+	}
+}
+func WithCustomMiddleware(middleware Middleware) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetDownloader().WithCustomMiddleware(middleware)
 	}
 }
 func WithPipeline(pipeline Pipeline, order uint8) CrawlOption {
 	return func(crawler Crawler) {
 		crawler.GetScheduler().GetExporter().SetPipeline(pipeline, order)
+	}
+}
+func WithDumpPipeline() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithDumpPipeline()
+	}
+}
+func WithFilePipeline() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithFilePipeline()
+	}
+}
+func WithImagePipeline() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithImagePipeline()
+	}
+}
+func WithFilterPipeline() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithFilterPipeline()
+	}
+}
+func WithCsvPipeline() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithCsvPipeline()
+	}
+}
+func WithJsonLinesPipeline() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithJsonLinesPipeline()
+	}
+}
+func WithMongoPipeline() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithMongoPipeline()
+	}
+}
+func WithMysqlPipeline() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithMysqlPipeline()
+	}
+}
+func WithKafkaPipeline() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithKafkaPipeline()
+	}
+}
+func WithCustomPipeline(pipeline Pipeline) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.GetScheduler().GetExporter().WithCustomPipeline(pipeline)
 	}
 }
 func WithRetryMaxTimes(retryMaxTimes uint8) CrawlOption {

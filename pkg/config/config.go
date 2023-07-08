@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -38,11 +39,17 @@ const defaultEnableDumpPipeline = true
 const defaultEnableFilePipeline = true
 const defaultEnableImagePipeline = true
 const defaultEnableFilterPipeline = true
+const defaultEnableCsvPipeline = false
+const defaultEnableJsonLinesPipeline = false
+const defaultEnableMongoPipeline = false
+const defaultEnableMysqlPipeline = false
+const defaultEnableKafkaPipeline = false
 const defaultRequestConcurrency = uint8(1) // should bigger than 1
 const defaultRequestInterval = uint(1000)  // millisecond
 const defaultRequestTimeout = uint(60)     //second
 const defaultFilterType = pkg.FilterMemory
 const defaultSchedulerType = pkg.SchedulerMemory
+const defaultLogLongFile = true
 
 type Config struct {
 	MongoEnable bool `yaml:"mongo_enable" json:"-"`
@@ -83,9 +90,9 @@ type Config struct {
 		} `yaml:"example" json:"-"`
 	} `yaml:"kafka" json:"-"`
 	Log struct {
-		Filename string `yaml:"filename" json:"-"`
-		LongFile bool   `yaml:"long_file" json:"-"`
-		Level    string `yaml:"level" json:"-"`
+		Filename string  `yaml:"filename" json:"-"`
+		LongFile *bool   `yaml:"long_file" json:"-"`
+		Level    *string `yaml:"level" json:"-"`
 	} `yaml:"log" json:"-"`
 	Proxy struct {
 		Example string `yaml:"example" json:"-"`
@@ -127,6 +134,11 @@ type Config struct {
 	EnableFilePipeline        *bool   `yaml:"enable_file_pipeline,omitempty" json:"enable_file_pipeline"`
 	EnableImagePipeline       *bool   `yaml:"enable_image_pipeline,omitempty" json:"enable_image_pipeline"`
 	EnableFilterPipeline      *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
+	EnableCsvPipeline         *bool   `yaml:"enable_csv_pipeline,omitempty" json:"enable_csv_pipeline"`
+	EnableJsonLinesPipeline   *bool   `yaml:"enable_json_lines_pipeline,omitempty" json:"enable_json_lines_pipeline"`
+	EnableMongoPipeline       *bool   `yaml:"enable_mongo_pipeline,omitempty" json:"enable_mongo_pipeline"`
+	EnableMysqlPipeline       *bool   `yaml:"enable_mysql_pipeline,omitempty" json:"enable_mysql_pipeline"`
+	EnableKafkaPipeline       *bool   `yaml:"enable_kafka_pipeline,omitempty" json:"enable_kafka_pipeline"`
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -195,7 +207,6 @@ func (c *Config) GetEnableCookieMiddleware() bool {
 
 	return *c.EnableCookieMiddleware
 }
-
 func (c *Config) GetEnableHttpAuthMiddleware() bool {
 	if c.EnableHttpAuthMiddleware == nil {
 		enableHttpAuthMiddleware := defaultEnableHttpAuthMiddleware
@@ -277,7 +288,46 @@ func (c *Config) GetEnableFilterPipeline() bool {
 
 	return *c.EnableFilterPipeline
 }
+func (c *Config) GetEnableCsvPipeline() bool {
+	if c.EnableCsvPipeline == nil {
+		enableCsvPipeline := defaultEnableCsvPipeline
+		c.EnableCsvPipeline = &enableCsvPipeline
+	}
 
+	return *c.EnableCsvPipeline
+}
+func (c *Config) GetEnableJsonLinesPipeline() bool {
+	if c.EnableJsonLinesPipeline == nil {
+		enableJsonLinesPipeline := defaultEnableJsonLinesPipeline
+		c.EnableJsonLinesPipeline = &enableJsonLinesPipeline
+	}
+
+	return *c.EnableJsonLinesPipeline
+}
+func (c *Config) GetEnableMongoPipeline() bool {
+	if c.EnableMongoPipeline == nil {
+		enableMongoPipeline := defaultEnableMongoPipeline
+		c.EnableMongoPipeline = &enableMongoPipeline
+	}
+
+	return *c.EnableMongoPipeline
+}
+func (c *Config) GetEnableMysqlPipeline() bool {
+	if c.EnableMysqlPipeline == nil {
+		enableMysqlPipeline := defaultEnableMysqlPipeline
+		c.EnableMysqlPipeline = &enableMysqlPipeline
+	}
+
+	return *c.EnableMysqlPipeline
+}
+func (c *Config) GetEnableKafkaPipeline() bool {
+	if c.EnableKafkaPipeline == nil {
+		enableKafkaPipeline := defaultEnableKafkaPipeline
+		c.EnableKafkaPipeline = &enableKafkaPipeline
+	}
+
+	return *c.EnableKafkaPipeline
+}
 func (c *Config) GetEnableStatsMiddleware() bool {
 	if c.EnableStatsMiddleware == nil {
 		enableStatsMiddleware := defaultEnableStatsMiddleware
@@ -399,6 +449,25 @@ func (c *Config) GetEnableHttpMiddleware() bool {
 	}
 
 	return *c.EnableHttpMiddleware
+}
+func (c *Config) GetLogLongFile() bool {
+	if c.Log.LongFile == nil {
+		logLongFile := defaultLogLongFile
+		c.Log.LongFile = &logLongFile
+	}
+
+	return *c.Log.LongFile
+}
+func (c *Config) GetLogLevel() pkg.Level {
+	if c.Log.Level == nil {
+		return pkg.LevelInfo
+	}
+
+	if level, ok := pkg.LevelMap[strings.ToUpper(*c.Log.Level)]; ok {
+		return level
+	}
+
+	return pkg.LevelInfo
 }
 
 func (c *Config) GetRequestConcurrency() uint8 {

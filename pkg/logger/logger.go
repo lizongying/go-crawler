@@ -124,18 +124,9 @@ func (l *Logger) ErrorF(format string, v ...any) {
 }
 
 func NewLogger(config *config.Config) (logger *Logger, err error) {
-	levelStr := config.Log.Level
-	level := pkg.LevelInfo
-	if levelStr != "" {
-		l, ok := pkg.LevelMap[strings.ToUpper(levelStr)]
-		if ok {
-			level = l
-		}
-	}
-
 	logger = &Logger{
-		longFile: config.Log.LongFile,
-		level:    level,
+		longFile: config.GetLogLongFile(),
+		level:    config.GetLogLevel(),
 	}
 	filename := config.Log.Filename
 	if filename == "" {

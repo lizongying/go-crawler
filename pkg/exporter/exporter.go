@@ -95,7 +95,36 @@ func (e *Exporter) CleanPipelines() {
 
 	e.pipelines = make([]pkg.Pipeline, 0)
 }
-
+func (e *Exporter) WithDumpPipeline() {
+	e.SetPipeline(new(pipelines.DumpPipeline), 10)
+}
+func (e *Exporter) WithFilePipeline() {
+	e.SetPipeline(new(pipelines.FilePipeline), 20)
+}
+func (e *Exporter) WithImagePipeline() {
+	e.SetPipeline(new(pipelines.ImagePipeline), 30)
+}
+func (e *Exporter) WithFilterPipeline() {
+	e.SetPipeline(new(pipelines.FilterPipeline), 200)
+}
+func (e *Exporter) WithCsvPipeline() {
+	e.SetPipeline(new(pipelines.CsvPipeline), 101)
+}
+func (e *Exporter) WithJsonLinesPipeline() {
+	e.SetPipeline(new(pipelines.JsonLinesPipeline), 102)
+}
+func (e *Exporter) WithMongoPipeline() {
+	e.SetPipeline(new(pipelines.MongoPipeline), 103)
+}
+func (e *Exporter) WithMysqlPipeline() {
+	e.SetPipeline(new(pipelines.MysqlPipeline), 104)
+}
+func (e *Exporter) WithKafkaPipeline() {
+	e.SetPipeline(new(pipelines.KafkaPipeline), 105)
+}
+func (e *Exporter) WithCustomPipeline(pipeline pkg.Pipeline) {
+	e.SetPipeline(pipeline, 110)
+}
 func (e *Exporter) FromCrawler(crawler pkg.Crawler) pkg.Exporter {
 	if e == nil {
 		return new(Exporter).FromCrawler(crawler)
@@ -107,17 +136,31 @@ func (e *Exporter) FromCrawler(crawler pkg.Crawler) pkg.Exporter {
 
 	// set pipelines
 	if config.GetEnableDumpPipeline() {
-		e.SetPipeline(new(pipelines.DumpPipeline), 10)
+		e.WithDumpPipeline()
 	}
 	if config.GetEnableFilePipeline() {
-		e.SetPipeline(new(pipelines.FilePipeline), 20)
+		e.WithFilePipeline()
 	}
 	if config.GetEnableImagePipeline() {
-		e.SetPipeline(new(pipelines.ImagePipeline), 30)
+		e.WithImagePipeline()
 	}
 	if config.GetEnableFilterPipeline() {
-		e.SetPipeline(new(pipelines.FilterPipeline), 200)
+		e.WithFilterPipeline()
 	}
-
+	if config.GetEnableCsvPipeline() {
+		e.WithCsvPipeline()
+	}
+	if config.GetEnableJsonLinesPipeline() {
+		e.WithJsonLinesPipeline()
+	}
+	if config.GetEnableMongoPipeline() {
+		e.WithMongoPipeline()
+	}
+	if config.GetEnableMysqlPipeline() {
+		e.WithMysqlPipeline()
+	}
+	if config.GetEnableKafkaPipeline() {
+		e.WithKafkaPipeline()
+	}
 	return e
 }

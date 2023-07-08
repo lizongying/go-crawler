@@ -37,6 +37,11 @@ type Config interface {
 	GetEnableFilePipeline() bool
 	GetEnableImagePipeline() bool
 	GetEnableFilterPipeline() bool
+	GetEnableCsvPipeline() bool
+	GetEnableJsonLinesPipeline() bool
+	GetEnableMongoPipeline() bool
+	GetEnableMysqlPipeline() bool
+	GetEnableKafkaPipeline() bool
 
 	GetRequestConcurrency() uint8
 	GetRequestInterval() uint

@@ -1,47 +1,69 @@
 # go-crawler
 
-这是一个真正的爬虫框架，它具有简单易用的编写方式，并提供出色的性能。灵感来源于scrapy，它融合了scrapy的优秀特点，并进行了进一步的优化。
-这个框架的目标是提供一个功能强大、易于使用的爬虫框架，让您能够快速构建高效的网络爬虫应用。
+基于golang实现的爬虫框架，编写简单，性能强劲，内置了丰富的实用中间件，支持多种解析、保存方式。
 
 [go-crawler](https://github.com/lizongying/go-crawler)
 [document](https://pkg.go.dev/github.com/lizongying/go-crawler)
 
 ## Feature
 
-* 编写爬虫变得简单而直观，同时保持强大的性能表现。
-* 框架提供了简单且灵活的中间件机制，使您能够自定义和扩展爬虫的功能。
-* 内置多种实用的中间件，让您能够更轻松地进行爬虫开发。这些中间件包括各种常用的功能，减少额外的工作量。
-* 支持多种解析方式，您可以选择适合您的需求的解析器，从而简化页面解析的过程。
-* 同样，框架也支持多种保存方式，让您根据具体情况选择最适合的保存方式，提高数据存储的灵活性。
-* 提供了广泛的配置选项，让您能够灵活地调整爬虫的行为。
-* 具备内置的devServer，轻松进行调试和开发。
+* 编写简单，性能强劲。
+* 内置多种实用中间件，开发起来更轻松。
+* 支持多种解析方式，解析页面更简单。
+* 支持多种保存方式，数据存储更灵活。
+* 提供了丰富的配置选项，配置更自由。
+* 组件支持自定义，扩展功能更简单。
+* 内置开发服务，调试开发更方便。
 
 ## Usage
 
 * 基本架构
-    * Spider（爬虫）：Spider是发起请求并处理回调解析方法的核心组件。
-      您可以为每个Spider设置一个名称，使用spider.SetName(name)方法进行命名。
-    * BaseSpider（基础爬虫）：BaseSpider实现了Spider的公共方法，避免了在每个Spider中重复编写相同的代码。其中包括GetName和SetName等方法。
-    * Crawler（爬虫处理器）：Crawler集成了Spider、Downloader（下载器）、Exporter（数据导出器）、Scheduler（调度器）等组件，是爬虫处理逻辑的中心。
-      它负责协调这些组件的工作，并提供统一的接口供Spider调用。
-    * 由于方法的继承关系，实际上Spider可以直接调用BaseSpider和Crawler中的部分方法，提高了代码的复用性和灵活性。
-      这样的架构使得爬虫的编写更加简洁、可维护性更高，同时提供了基础功能和处理逻辑的封装，让开发者可以专注于具体的爬虫业务逻辑。
+    * Spider：在Spider里可以发起请求和解析内容。您需要使用`spider.SetName(name)`方法为每个Spider设置一个唯一名称。
+    * BaseSpider：BaseSpider实现了Spider的公共方法，避免了在每个Spider中重复编写相同的代码。
+    * Crawler：Crawler集成了Spider、Downloader（下载器）、Exporter（导出器）、Scheduler（调度器）等组件，是爬虫的逻辑处理中心。
 * crawler选项。
-  这些选项提供了便捷的方式来配置爬虫框架的各个方面，包括模式、平台、浏览器、日志记录器、过滤器、下载器、导出器、中间件、Pipeline等，
-  可以灵活地设置和定制爬虫的行为和功能。
-    * WithMode 设置爬虫的模式（Mode），会执行SetMode
-    * WithPlatforms 设置爬虫的平台（Platforms），会执行SetPlatforms
-    * WithBrowsers 设置爬虫的浏览器（Browsers），会执行SetBrowsers
-    * WithLogger 设置爬虫的日志记录器（Logger），会执行SetLogger
-    * WithFilter 设置爬虫的过滤器（Filter），会执行SetFilter
-    * WithDownloader 设置爬虫的下载器（Downloader），会执行SetDownloader
-    * WithExporter 设置爬虫的导出器（Exporter），会执行SetExporter
-    * WithMiddleware 设置爬虫的中间件（Middleware），会执行SetMiddleware
-    * WithPipeline 设置爬虫的Pipeline，会执行SetPipeline
-    * WithRetryMaxTimes 设置请求的最大重试次数（RetryMaxTimes），会执行SetRetryMaxTimes
-    * WithTimeout 设置请求的超时时间（Timeout），会执行SetTimeout
-    * WithInterval 设置请求的间隔时间（Interval），会执行SetInterval
-    * WithOkHttpCodes 设置正常的HTTP状态码（OkHttpCodes），会执行SetOkHttpCodes
+    * WithMode 设置模式（Mode）。
+    * WithPlatforms 设置浏览器平台（Platforms）。
+    * WithBrowsers 设置浏览器（Browsers）。
+    * WithLogger 设置日志（Logger）。
+    * WithFilter 设置过滤器（Filter）。
+    * WithDownloader 设置下载器（Downloader）。
+    * WithExporter 设置导出器（Exporter）。
+    * WithMiddleware 设置中间件（Middleware）。
+    * WithStatsMiddleware 设置统计中间件，用于记录和统计爬虫的性能和运行情况。
+    * WithDumpMiddleware 设置打印中间件。
+    * WithProxyMiddleware 设置代理中间件，用于使用代理服务器进行爬取。
+    * WithRobotsTxtMiddleware 设置开启robots.txt支持中间件，用于遵守网站的 robots.txt 规则。
+    * WithFilterMiddleware 设置过滤器中间件，用于过滤已处理的请求。
+    * WithFileMiddleware 设置文件中间件，用于处理文件下载请求。
+    * WithImageMiddleware 设置图像中间件，用于处理图像下载请求。
+    * WithHttpMiddleware 设置 HTTP 中间件。
+    * WithRetryMiddleware 设置重试中间件，用于在请求失败时进行自动重试。
+    * WithUrlMiddleware 设置 URL 中间件。
+    * WithRefererMiddleware 设置 Referer 中间件，用于自动设置请求的 Referer 头。
+    * WithCookieMiddleware 设置 Cookie 中间件，用于处理请求和响应中的 Cookie，自动在接下来的请求设置之前的 Cookie。
+    * WithRedirectMiddleware 设置重定向中间件，用于自动处理请求的重定向，跟随重定向链接并获取最终响应。
+    * WithChromeMiddleware 设置 Chrome 中间件，用于模拟 Chrome 浏览器。
+    * WithHttpAuthMiddleware 设置开启HTTP认证中间件，用于处理需要认证的网站。
+    * WithCompressMiddleware 设置压缩中间件，用于处理请求和响应的压缩。当爬虫发送请求或接收响应时，该中间件可以自动处理压缩算法，解压缩请求或响应的内容。
+    * WithDecodeMiddleware 设置解码中间件，用于处理请求和响应的解码操作。该中间件可以处理请求或响应中的编码内容。
+    * WithDeviceMiddleware 设置开启设备模拟中间件
+    * WithCustomMiddleware 设置自定义中间件，允许用户定义自己的中间件组件。
+    * WithPipeline 设置Pipeline，用于处理爬取的数据并进行后续操作。
+    * WithDumpPipeline 设置打印管道。
+    * WithFilePipeline 设置文件管道，用于处理爬取的文件数据，将文件保存到指定位置。
+    * WithImagePipeline 设置图像管道，用于处理爬取的图像数据，将保存图像到指定位置。
+    * WithFilterPipeline 设置过滤器管道，用于过滤爬取过的数据。
+    * WithCsvPipeline 设置 CSV 数据处理管道，将爬取的数据保存为 CSV 格式。
+    * WithJsonLinesPipeline 设置 JSON Lines 数据处理管道，将爬取的数据保存为 JSON Lines 格式。
+    * WithMongoPipeline 设置 MongoDB 数据处理管道，将爬取的数据保存到 MongoDB 数据库。
+    * WithMysqlPipeline 设置 MySQL 数据处理管道，将爬取的数据保存到 MySQL 数据库。
+    * WithKafkaPipeline 设置 Kafka 数据处理管道，将爬取的数据发送到 Kafka 消息队列。
+    * WithCustomPipeline 设置自定义数据处理管道。
+    * WithRetryMaxTimes 设置请求的最大重试次数（RetryMaxTimes）。
+    * WithTimeout 设置请求的超时时间（Timeout）。
+    * WithInterval 设置请求的间隔时间（Interval）。
+    * WithOkHttpCodes 设置正常的HTTP状态码（OkHttpCodes）。
 * Item类需要实现Item接口（可以组合ItemUnimplemented）
     * `GetReferer()` 可以获取到referer。
     * UniqueKey属性作为唯一键用于过滤和其他用途
@@ -50,132 +72,149 @@
     * 内置Item实现：框架提供了一些内置的Item实现，如ItemNone、ItemCsv、ItemJsonl、ItemMongo、ItemMysql、ItemKafka等。
       您可以根据需要开启相应的Pipeline，以实现数据的保存功能。
 * middleware/pipeline包括框架内置、公共自定义（internal/middlewares，internal/pipelines）和爬虫内自定义（和爬虫同module）。
-* 对于中间件和Pipeline的顺序（order）是非常重要的。
-  在框架中，确保不同中间件和Pipeline的order值不重复。如果有重复的order值，后面的中间件或Pipeline将替换前面的中间件或Pipeline。
-  这种设计允许开发者对中间件和Pipeline的顺序进行精确控制，确保它们按照期望的顺序依次执行。
-  通过合理设置order值，可以确保中间件和Pipeline按照特定的逻辑顺序进行处理，从而满足爬虫功能和业务需求。
-* 在框架中，内置的中间件具有预定义的order值，这些order值是10的倍数。为了避免与内置中间件的order冲突，建议自定义中间件时选择不同的order值。
-  内置中间件的order值：内置中间件的order值是10的倍数，例如10、20、30等。这些值是框架预留的，用于内置中间件的顺序控制。
-  自定义中间件的order值：当您定义自己的中间件时，请选择避开内置中间件的order值。例如，您可以选择使用11、12、13等不同的order值来定义自定义中间件。
-  中间件的顺序配置：根据中间件的功能和需求，按照预期的执行顺序进行配置。确保较低order值的中间件先执行，然后依次执行较高order值的中间件。
-    * stats:10
+* 请确保不同中间件和Pipeline的order值不重复。如果有重复的order值，后面的中间件或Pipeline将替换前面的中间件或Pipeline。
+* 在框架中，内置的中间件具有预定义的order值，这些order值是10的倍数，例如10、20、30等。
+  为了避免与内置中间件的order冲突，建议自定义中间件时选择不同的order值。
+  当您定义自己的中间件时，请选择避开内置中间件的order值。例如，您可以选择使用11、12、13等不同的order值来定义自定义中间件。
+  根据中间件的功能和需求，按照预期的执行顺序进行配置。确保较低order值的中间件先执行，然后依次执行较高order值的中间件。
+  内置的中间件和自定义中间件使用默认的order值即可。
+  如果需要改变默认的order值，需要在NewApp中加入crawler选项`pkg.WithMiddleware(new(middleware), order)`启用该中间件并应用该order值。
+    * stats: 10
         * 数据统计中间件，用于统计爬虫的请求、响应和处理情况。
         * 可以通过配置项enable_stats_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.StatsMiddleware), 10)`
-    * dump:20
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.StatsMiddleware), 10)`
+    * dump: 20
         * 控制台打印item.data中间件，用于打印请求和响应的详细信息。
         * 可以通过配置项enable_dump_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DumpMiddleware), 20)`
-    * proxy:30
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DumpMiddleware), 20)`
+    * proxy: 30
         * 用于切换请求使用的代理。
         * 可以通过配置项enable_proxy_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ProxyMiddleware), 30)`
-    * robotsTxt:40
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ProxyMiddleware), 30)`
+    * robotsTxt: 40
         * robots.txt支持中间件，用于支持爬取网站的robots.txt文件。
         * 可以通过配置项enable_robots_txt_middleware来启用或禁用，默认禁用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RobotsTxtMiddleware), 40)`
-    * filter:50
+        * 在NewApp中加入crawler选项`pkg.WithRobotsTxt()`
+          或`pkg.WithMiddleware(new(middlewares.RobotsTxtMiddleware), 40)`
+    * filter: 50
         * 过滤重复请求中间件，用于过滤重复的请求。默认只有在Item保存成功后才会进入去重队列。
         * 可以通过配置项enable_filter_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FilterMiddleware), 50)`
-    * file:60
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FilterMiddleware), 50)`
+    * file: 60
         * 自动添加文件信息中间件，用于自动添加文件信息到请求中。
         * 可以通过配置项enable_file_middleware来启用或禁用，默认禁用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FileMiddleware), 60)`
-    * image:70
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FileMiddleware), 60)`
+    * image: 70
         * 自动添加图片的宽高等信息中间件
         * 用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ImageMiddleware), 70)`
-    * http:80
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ImageMiddleware), 70)`
+    * http: 80
         * 创建请求中间件，用于创建HTTP请求。
         * 可以通过配置项enable_http_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpMiddleware), 80)`
-    * retry:90
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpMiddleware), 80)`
+    * retry: 90
         * 请求重试中间件，用于在请求失败时进行重试。
         * 默认最大重试次数为10。可以通过配置项enable_retry_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RetryMiddleware), 90)`
-    * url:100
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RetryMiddleware), 90)`
+    * url: 100
         * 限制URL长度中间件，用于限制请求的URL长度。
         * 可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.UrlMiddleware), 100)`
-    * referer:110
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.UrlMiddleware), 100)`
+    * referer: 110
         * 自动添加Referer中间件，用于自动添加Referer到请求中。
         * 可以根据referrer_policy配置项选择不同的Referer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源
         * 配置 enable_referer_middleware: true 是否开启自动添加referer，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RefererMiddleware), 110)`
-    * cookie:120
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RefererMiddleware), 110)`
+    * cookie: 120
         * 自动添加Cookie中间件，用于自动添加之前请求返回的Cookie到后续请求中。
         * 可以通过配置项enable_cookie_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CookieMiddleware), 120)`
-    * redirect:130
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CookieMiddleware), 120)`
+    * redirect: 130
         * 网址重定向中间件，用于处理网址重定向，默认支持301和302重定向。
         * 可以通过配置项enable_redirect_middleware和redirect_max_times来启用和设置最大重定向次数，默认启用和最大次数为1。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RedirectMiddleware), 130)`
-    * chrome:140
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RedirectMiddleware), 130)`
+    * chrome: 140
         * 模拟Chrome中间件，用于模拟Chrome浏览器。
         * 可以通过配置项enable_chrome_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ChromeMiddleware), 140)`
-    * httpAuth:150
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ChromeMiddleware), 140)`
+    * httpAuth: 150
         * HTTP认证中间件，通过提供用户名（username）和密码（password）进行HTTP认证。
         * 需要在具体的请求中设置用户名和密码。可以通过配置项enable_http_auth_middleware来启用或禁用，默认禁用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpAuthMiddleware), 150)`
-    * compress:160
+        * 在NewApp中加入crawler选项`pkg.WithHttpAuth()`
+          或`pkg.WithMiddleware(new(middlewares.HttpAuthMiddleware), 150)`
+    * compress: 160
         * 支持gzip/deflate解压缩中间件，用于处理响应的压缩编码。
         * 可以通过配置项enable_compress_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CompressMiddleware), 160)`
-    * decode:170
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CompressMiddleware), 160)`
+    * decode: 170
         * 中文解码中间件，支持对响应中的GBK、GB2312和Big5编码进行解码。
         * 可以通过配置项enable_decode_middleware来启用或禁用，默认启用。
-        * 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DecodeMiddleware), 170)`
-    * device:180
+        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DecodeMiddleware), 170)`
+    * device: 180
         * 修改请求设备信息中间件，用于修改请求的设备信息，包括请求头（header）和TLS信息。目前只支持User-Agent随机切换。
         * 需要设置设备范围（Platforms）和浏览器范围（Browsers）。
         * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
         * Browsers: Chrome/Edge/Safari/FireFox
         * 可以通过配置项enable_device_middleware来启用或禁用，默认禁用。
-* 启用方法：在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DeviceMiddleware), 180)`
-* 在爬虫框架中，Pipeline用于处理Item。
-  通过配置不同的Pipeline，您可以方便地处理Item并将结果保存到不同的目标，如控制台、文件、数据库或消息队列中，以满足您的需求。
-  以下是一些常用的Pipeline及其功能说明：
-    * dump:10
+        * 在NewApp中加入crawler选项`pkg.WithDevice()`启用该中间件。
+    * custom: 11
+        * 自定义中间件
+        * 在NewApp中加入crawler选项`pkg.WithCustomMiddleware(new(CustomMiddleware))`启用该中间件。
+* Pipeline用于流式处理Item，如数据过滤、数据存储等。
+  通过配置不同的Pipeline，您可以方便地处理Item并将结果保存到不同的目标，如控制台、文件、数据库或消息队列中。
+  内置的Pipeline和自定义Pipeline使用默认的order值即可。
+  如果需要改变默认的order值，需要在NewApp中加入crawler选项`pkg.WithPipeline(new(pipeline), order)`启用该Pipeline并应用该order值。
+    * dump: 10
         * 用于在控制台打印Item的详细信息。
-        * 您可以通过配置项enable_dump_pipeline来控制是否启用该Pipeline，默认为启用。
-    * file:20
+        * 您可以通过配置enable_dump_pipeline来控制是否启用该Pipeline，默认启用。
+        * 在NewApp中加入crawler选项`pkg.WithDumpPipeline()`启用该Pipeline。
+    * file: 20
         * 用于下载文件并保存到Item中。
-        * 您可以通过配置项enable_file_pipeline来控制是否启用该Pipeline，默认为启用。
-    * image:30
+        * 您可以通过配置enable_file_pipeline来控制是否启用该Pipeline，默认启用。
+        * 在NewApp中加入crawler选项`pkg.WithFilePipeline()`启用该Pipeline。
+    * image: 30
         * 用于下载图片并保存到Item中。
-        * 您可以通过配置项enable_image_pipeline来控制是否启用该Pipeline，默认为启用。
-    * filter:200
+        * 您可以通过配置enable_image_pipeline来控制是否启用该Pipeline，默认启用。
+        * 在NewApp中加入crawler选项`pkg.WithImagePipeline()`启用该Pipeline。
+    * filter: 200
         * 用于对Item进行过滤。
         * 它可用于去重请求，需要在中间件同时启用filter。
         * 默认情况下，Item只有在成功保存后才会进入去重队列。
-        * 您可以通过配置项enable_filter_pipeline来控制是否启用该Pipeline，默认为启用。
-    * csv
-        * 用于将结果保存到CSV文件中的Pipeline。
+        * 您可以通过配置enable_filter_pipeline来控制是否启用该Pipeline，默认启用。
+        * 在NewApp中加入crawler选项`pkg.WithFilterPipeline()`启用该Pipeline。
+    * csv: 101
+        * 用于将结果保存到CSV文件中。
         * 需要在ItemCsv中设置`FileName`，指定保存的文件名称（不包含.csv扩展名）。
         * 您可以使用tag `column:""`来定义CSV文件的列名。
-        * 启用方法是在创建应用程序时，将`pkg.WithPipeline(new(pipelines.CsvPipeline), 101)`添加到crawler选项中。
-    * jsonLines
-        * 用于将结果保存到JSON Lines文件中的Pipeline。
+        * 您可以通过配置enable_csv_pipeline来控制是否启用该Pipeline，默认关闭。
+        * 在NewApp中加入crawler选项`pkg.WithCsvPipeline()`启用该Pipeline。
+    * jsonLines: 102
+        * 用于将结果保存到JSON Lines文件中。
         * 需要在ItemJsonl中设置`FileName`，指定保存的文件名称（不包含.jsonl扩展名）。
         * 您可以使用tag `json:""`来定义JSON Lines文件的字段。
-        * 启用方法是在创建应用程序时，将`pkg.WithPipeline(new(pipelines.JsonLinesPipeline), 102)`添加到crawler选项中。
-    * mongo
-        * 用于将结果保存到MongoDB中的Pipeline。
+        * 您可以通过配置enable_json_lines_pipeline来控制是否启用该Pipeline，默认关闭。
+        * 在NewApp中加入crawler选项`pkg.WithJsonLinesPipeline()`启用该Pipeline。
+    * mongo: 103
+        * 用于将结果保存到MongoDB中。
         * 需要在ItemMongo中设置`Collection`，指定保存的collection名称。
         * 您可以使用tag `bson:""`来定义MongoDB文档的字段。
-        * 启用方法是在创建应用程序时，将`pkg.WithPipeline(new(pipelines.MongoPipeline), 103)`添加到crawler选项中。
-    * mysql
-        * 用于将结果保存到MySQL中的Pipeline。
+        * 您可以通过配置enable_mongo_pipeline来控制是否启用该Pipeline，默认关闭。
+        * 在NewApp中加入crawler选项`pkg.WithMongoPipeline()`启用该Pipeline。
+    * mysql: 104
+        * 用于将结果保存到MySQL中。
         * 需要在ItemMysql中设置`Table`，指定保存的表名。
         * 您可以使用tag `column:""`来定义MySQL表的列名。
-        * 启用方法是在创建应用程序时，将`pkg.WithPipeline(new(pipelines.MysqlPipeline), 104)`添加到crawler选项中。
-    * kafka
-        * 用于将结果保存到Kafka中的Pipeline。
-        * 需要在ItemKafka中设置Topic，指定保存的主题名。
+        * 您可以通过配置enable_mysql_pipeline来控制是否启用该Pipeline，默认关闭。
+        * 在NewApp中加入crawler选项`pkg.WithMysqlPipeline()`启用该Pipeline。
+    * kafka: 105
+        * 用于将结果保存到Kafka中。
+        * 需要在ItemKafka中设置`Topic`，指定保存的主题名。
         * 您可以使用tag `json:""`来定义Kafka消息的字段。
-        * 启用方法是在创建应用程序时，将`pkg.WithPipeline(new(pipelines.KafkaPipeline), 105)`添加到crawler选项中。
+        * 您可以通过配置enable_kafka_pipeline来控制是否启用该Pipeline，默认关闭。
+        * 在NewApp中加入crawler选项`pkg.WithKafkaPipeline()`启用该Pipeline。
+    * custom: 110
+        * 自定义pipeline
+        * 在NewApp中加入crawler选项`pkg.WithCustomPipeline(new(CustomPipeline))`启用该Pipeline。
 * 信号（Signal）是一种机制，用于在运行时处理外部发出的操作指令。通过捕获和处理信号，您可以实现对爬虫的控制和管理
 * 在配置文件中配置全局的请求参数，并在具体的请求中可以覆盖这些全局配置，可以提供更灵活和细粒度的请求定制
 * 框架内置了多个解析模块。这些解析模块提供了不同的选择器和语法，以适应不同的数据提取需求。您可以根据具体的爬虫任务和数据结构，选择适合您的解析模块和语法，从网页响应中准确地提取所需的数据。
@@ -222,31 +261,37 @@
         * enable_file_pipeline: false
         * enable_image_pipeline: false
         * enable_filter_pipeline: false
+        * enable_csv_pipeline: false
+        * enable_json_lines_pipeline: false
+        * enable_mongo_pipeline: false
+        * enable_mysql_pipeline: false
+        * enable_kafka_pipeline: false
 * 文件下载
     * 如果您希望将文件保存到S3等对象存储中，需要进行相应的配置
     * Files下载
         * 在Item中设置Files请求：在Item中，您需要设置Files请求，即包含要下载的文件的请求列表。
           可以使用`item.SetFilesRequest([]*pkg.Request{...})`
           方法设置请求列表。
-        * Item.Data结构：您的Item的Data字段需要实现pkg.File的切片，用于保存下载文件的结果。
+        * Item.Data：您的Item.Data字段需要实现pkg.File的切片，用于保存下载文件的结果。
           该字段的名称必须是Files，如`type DataFile struct {Files []*media.File}`。
     * Images下载
         * 在Item中设置Images请求：在Item中，您需要设置Images请求，即包含要下载的图片的请求列表。
           可以使用item.SetImagesRequest([]*pkg.Request{...})方法设置请求列表。
-        * Item.Data结构：您的Item的Data字段需要实现pkg.Image的切片，用于保存下载图片的结果。
+        * Item.Data：您的Item.Data字段需要实现pkg.Image的切片，用于保存下载图片的结果。
           该字段的名称必须是Images，如`type DataImage struct {Images []*media.Image}`。
 * 爬虫结构
     * 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
-* 为了方便开发和调试，框架增加了本地devServer，并在`-m dev`模式下会默认启用。
-  您可以自定义路由（routes），只需要实现`pkg.Route` 接口，并通过在Spider中调用`AddDevServerRoutes(...pkg.Route)`
-  方法将其注册到devServer中。通过使用本地devServer，您可以在开发和调试过程中更方便地模拟和观察网络请求和响应，以及处理自定义路由逻辑。
-  这为开发者提供了一个便捷的工具，有助于快速定位和解决问题。以下是devServer的一些特性：
+* 为了方便开发和调试，框架内置了本地devServer，在`-m dev`模式下会默认启用。
+  通过使用本地devServer，您可以在开发和调试过程中更方便地模拟和观察网络请求和响应，以及处理自定义路由逻辑。
+  这为开发者提供了一个便捷的工具，有助于快速定位和解决问题。
+  您可以自定义路由（route），只需要实现`pkg.Route` 接口，并通过在Spider中调用`AddDevServerRoutes(...pkg.Route)`
+  方法将其注册到devServer中。
     * 支持http和https，您可以通过设置`dev_server`选项来指定devServer的URL。
       `http://localhost:8081`表示使用HTTP协议，`https://localhost:8081`表示使用HTTPS协议。
     * 默认显示JA3指纹。JA3是一种用于TLS客户端指纹识别的算法，它可以显示与服务器建立连接时客户端使用的TLS版本和加密套件等信息。
     * 您可以使用tls工具来生成服务器的私钥和证书，以便在devServer中使用HTTPS。tls工具可以帮助您生成自签名的证书，用于本地开发和测试环境。
     * devServer内置了多种handler，这些handler提供了丰富的功能，可以模拟各种网络情景，帮助进行开发和调试。
-      您可以根据需要选择合适的handler，并将其配置到devServer中，以模拟特定的网络响应和行为。以下是可用的handler列表及其功能：
+      您可以根据需要选择合适的handler，并将其配置到devServer中，以模拟特定的网络响应和行为。
         * BadGatewayHandler 模拟返回502状态码
         * Big5Handler 模拟使用big5编码
         * CookieHandler 模拟返回cookie
@@ -268,81 +313,86 @@
 
 通过配置环境变量和启动参数，您可以更灵活地配置和控制爬虫的行为，包括选择配置文件、指定入口方法、传递额外参数以及设定启动模式。这样的设计可以提高爬虫的可配置性和可扩展性，使得爬虫框架更适应各种不同的应用场景。
 
-* CRAWLER_CONFIG_FILE -c 配置文件路径，必须进行配置。该配置文件包含了爬虫的各项配置信息。
-* CRAWLER_START_FUNC -f 入口方法名称，默认为Test。您可以根据实际需要自定义入口方法，用于启动爬虫的执行流程。
-* CRAWLER_ARGS -a 额外的参数，以JSON字符串的形式提供。这些参数可以在入口方法调用时使用，用于进一步定制爬虫的行为。该参数是非必须项，根据具体需求进行配置。
-* CRAWLER_MODE -m 启动模式，默认为test。您可以根据需要配置不同的模式，如dev、prod等，以适应不同的开发和生产环境。
+* CRAWLER_CONFIG_FILE -c 配置文件路径，必须进行配置。
+* CRAWLER_START_FUNC -f 入口方法名称，默认Test。
+* CRAWLER_ARGS -a 额外的参数，该参数是非必须项。建议使用JSON字符串。参数会被入口方法调用。
+* CRAWLER_MODE -m 启动模式，默认test。您可以根据需要使用不同的模式，如dev、prod等，以区分开发和生产环境。
 
 ### config
 
-数据库相关配置：
+数据库配置：
 
 * mongo_enable: 是否启用MongoDB。
-* mongo.example.uri: MongoDB的连接URI。
+* mongo.example.uri: MongoDB的URI。
 * mongo.example.database: MongoDB的数据库名称。
 * mysql_enable: 是否启用MySQL。
-* mysql.example.uri: MySQL的连接URI。
+* mysql.example.uri: MySQL的URI。
 * mysql.example.database: MySQL的数据库名称。
 * redis_enable: 是否启用Redis。
 * redis.example.addr: Redis的地址。
 * redis.example.password: Redis的密码。
-* redis.example.db: Redis的数据库编号。
+* redis.example.db: Redis的数据库。
 * s3_enable: 是否启用S3对象存储（如COS、OSS、MinIO等）
-* s3.example.endpoint:  S3的终端节点
+* s3.example.endpoint: S3的地址
 * s3.example.region: S3的区域。
-* s3.example.id: S3的身份标识。
-* s3.example.key: S3的身份密钥。
-* s3.example.bucket: S3的存储桶名称。
+* s3.example.id: S3的ID。
+* s3.example.key: S3的密钥。
+* s3.example.bucket: S3的桶名称。
 * kafka_enable: 是否启用Kafka。
-* kafka.example.uri: Kafka的连接URI。
+* kafka.example.uri: Kafka的URI。
 
-日志和日志文件配置：
+日志配置：
 
-* log.filename: 日志文件路径。可以使用"{name}"替换为-ldflags。
-* log.long_file: 如果设置为true，则记录完整文件路径。
+* log.filename: 日志文件路径。可以使用"{name}"的方式替换成-ldflags的参数。
+* log.long_file: 如果设置为true（默认），则记录完整文件路径。
 * log.level: 日志级别，可选DEBUG/INFO/WARN/ERROR。
 
-其他配置项：
+其他配置：
 
-* proxy.example: 代理配置。
+* proxy.example: 代理。
 * request.concurrency: 请求并发数。
-* request.interval: 请求间隔时间（毫秒）。如果设置为0，则使用默认间隔时间（1000毫秒）。如果设置为负数，则为0。
-* request.timeout: 请求超时时间（秒）。
+* request.interval: 请求间隔时间（毫秒）。默认1000毫秒（1秒）。
+* request.timeout: 请求超时时间（秒）。默认60秒（1分钟）。
 * request.ok_http_codes: 请求正常的HTTP状态码。
-* request.retry_max_times: 请求重试的最大次数，默认为10。
-* request.http_proto: 请求的HTTP协议。
-* dev_server: 开发服务器（devServer）的地址。
-* enable_ja3: 是否显示devServer的JA3指纹。
+* request.retry_max_times: 请求重试的最大次数，默认10。
+* request.http_proto: 请求的HTTP协议。默认`2.0`
+* dev_server: 开发服务器的地址。默认`https://localhost:8081`
+* enable_ja3: 是否打印JA3指纹。默认关闭。
+* scheduler: 调度方式，默认memory（内存调度），可选值memory、redis、kafka。选择redis或kafka后可以实现集群调度。
+* filter: 过滤方式，默认memory（内存过滤），可选值memory、redis。选择redis后可以实现集群过滤。
 
-其他中间件和pipeline相关配置。
+中间件和Pipeline配置
 
-* enable_stats_middleware: 是否开启统计中间件，默认为true。
-* enable_dump_middleware: 是否开启打印请求/响应中间件，默认为true。
-* enable_filter_middleware: 是否开启过滤中间件，默认为true。
-* enable_file_middleware: 是否开启文件处理中间件，默认为true。
-* enable_image_middleware: 是否开启图片处理中间件，默认为true。
-* enable_http_middleware: 是否开启HTTP请求中间件，默认为true。
-* enable_retry_middleware: 是否开启请求重试中间件，默认为true。
-* enable_referer_middleware: 是否开启Referer中间件，默认为true。
-* referrer_policy: 设置来源政策，可选值为DefaultReferrerPolicy（默认值）和NoReferrerPolicy。
-* enable_http_auth_middleware: 是否开启HTTP认证中间件，默认为false。
-* enable_cookie_middleware:  是否开启Cookie中间件，默认为true。
-* enable_url_middleware: 是否开启URL长度限制中间件，默认为true。
-* url_length_limit: URL的最大长度限制，默认为2083。
-* enable_compress_middleware: 是否开启响应解压缩中间件（支持gzip/deflate），默认为true。
-* enable_decode_middleware: 是否开启中文解码中间件（支持GBK、GB2312、Big5编码），默认为true。
-* enable_redirect_middleware: 是否开启重定向中间件，默认为true。
-* redirect_max_times: 重定向的最大次数，默认为1。
-* enable_chrome_middleware: 是否开启Chrome模拟中间件，默认为true。
-* enable_device_middleware: 是否开启设备模拟中间件，默认为false。
-* enable_proxy_middleware: 是否开启代理中间件，默认为true。
-* enable_robots_txt_middleware: 是否开启robots.txt支持中间件，默认为false。
-* enable_dump_pipeline: 是否开启打印Item Pipeline，默认为true。
-* enable_file_pipeline: 是否开启文件下载Pipeline，默认为true。
-* enable_image_pipeline: 是否开启图片下载Pipeline，默认为true。
-* enable_filter_pipeline: 是否开启过滤Pipeline，默认为true。
-* scheduler: 调度方式，默认为memory（单机调度），可选值为memory、redis、kafka。选择redis或kafka后可以实现集群调度。
-* filter: 过滤方式，默认为memory（内存过滤），可选值为memory、redis。
+* enable_stats_middleware: 是否开启统计中间件，默认启用。
+* enable_dump_middleware: 是否开启打印请求和响应中间件，默认启用。
+* enable_filter_middleware: 是否开启过滤中间件，默认启用。
+* enable_file_middleware: 是否开启文件处理中间件，默认启用。
+* enable_image_middleware: 是否开启图片处理中间件，默认启用。
+* enable_http_middleware: 是否开启HTTP请求中间件，默认启用。
+* enable_retry_middleware: 是否开启请求重试中间件，默认启用。
+* enable_referer_middleware: 是否开启Referer中间件，默认启用。
+* referrer_policy: 设置Referer策略，可选值为DefaultReferrerPolicy（默认）和NoReferrerPolicy。
+* enable_http_auth_middleware: 是否开启HTTP认证中间件，默认关闭。
+* enable_cookie_middleware:  是否开启Cookie中间件，默认启用。
+* enable_url_middleware: 是否开启URL长度限制中间件，默认启用。
+* url_length_limit: URL的最大长度限制，默认2083。
+* enable_compress_middleware: 是否开启响应解压缩中间件（gzip、deflate），默认启用。
+* enable_decode_middleware: 是否开启中文解码中间件（GBK、GB2312、Big5编码），默认启用。
+* enable_redirect_middleware: 是否开启重定向中间件，默认启用。
+* redirect_max_times: 重定向的最大次数，默认1。
+* enable_chrome_middleware: 是否开启Chrome模拟中间件，默认启用。
+* enable_device_middleware: 是否开启设备模拟中间件，默认关闭。
+* enable_proxy_middleware: 是否开启代理中间件，默认启用。
+* enable_robots_txt_middleware: 是否开启robots.txt支持中间件，默认关闭。
+* enable_dump_pipeline: 是否开启打印Item Pipeline，默认启用。
+* enable_file_pipeline: 是否开启文件下载Pipeline，默认启用。
+* enable_image_pipeline: 是否开启图片下载Pipeline，默认启用。
+* enable_filter_pipeline: 是否开启过滤Pipeline，默认启用。
+* enable_csv_pipeline: 是否开启csv Pipeline，默认关闭。
+* enable_json_lines_pipeline: 是否开启json lines Pipeline，默认关闭。
+* enable_mongo_pipeline: 是否开启mongo Pipeline，默认关闭。
+* enable_mysql_pipeline: 是否开启mysql Pipeline，默认关闭。
+* enable_kafka_pipeline: 是否开启kafka Pipeline，默认关闭。
 
 ## Example
 
@@ -458,9 +508,7 @@ git clone github.com/lizongying/go-crawler-example
 
 ## TODO
 
-* middlewares
-    * downloadtimeout
-
+* downloadtimeout
 * AutoThrottle
 * cron
 * max request limit?

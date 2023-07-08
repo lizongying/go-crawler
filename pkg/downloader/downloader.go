@@ -174,11 +174,63 @@ func (d *Downloader) CleanMiddlewares() {
 
 	d.middlewares = make([]pkg.Middleware, 0)
 }
-
-func (d *Downloader) WithRobotsTxt() {
+func (d *Downloader) WithStatsMiddleware() {
+	d.SetMiddleware(new(middlewares.StatsMiddleware), 10)
+}
+func (d *Downloader) WithDumpMiddleware() {
+	d.SetMiddleware(new(middlewares.DumpMiddleware), 20)
+}
+func (d *Downloader) WithProxyMiddleware() {
+	d.SetMiddleware(new(middlewares.ProxyMiddleware), 30)
+}
+func (d *Downloader) WithRobotsTxtMiddleware() {
 	d.SetMiddleware(new(middlewares.RobotsTxtMiddleware), 40)
 }
-
+func (d *Downloader) WithFilterMiddleware() {
+	d.SetMiddleware(new(middlewares.FilterMiddleware), 50)
+}
+func (d *Downloader) WithFileMiddleware() {
+	d.SetMiddleware(new(middlewares.FileMiddleware), 60)
+}
+func (d *Downloader) WithImageMiddleware() {
+	d.SetMiddleware(new(middlewares.ImageMiddleware), 70)
+}
+func (d *Downloader) WithHttpMiddleware() {
+	d.SetMiddleware(new(middlewares.HttpMiddleware), 80)
+}
+func (d *Downloader) WithRetryMiddleware() {
+	d.SetMiddleware(new(middlewares.RetryMiddleware), 90)
+}
+func (d *Downloader) WithUrlMiddleware() {
+	d.SetMiddleware(new(middlewares.UrlMiddleware), 100)
+}
+func (d *Downloader) WithRefererMiddleware() {
+	d.SetMiddleware(new(middlewares.RefererMiddleware), 110)
+}
+func (d *Downloader) WithCookieMiddleware() {
+	d.SetMiddleware(new(middlewares.CookieMiddleware), 120)
+}
+func (d *Downloader) WithRedirectMiddleware() {
+	d.SetMiddleware(new(middlewares.RedirectMiddleware), 130)
+}
+func (d *Downloader) WithChromeMiddleware() {
+	d.SetMiddleware(new(middlewares.ChromeMiddleware), 140)
+}
+func (d *Downloader) WithHttpAuthMiddleware() {
+	d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 150)
+}
+func (d *Downloader) WithCompressMiddleware() {
+	d.SetMiddleware(new(middlewares.CompressMiddleware), 160)
+}
+func (d *Downloader) WithDecodeMiddleware() {
+	d.SetMiddleware(new(middlewares.DecodeMiddleware), 170)
+}
+func (d *Downloader) WithDeviceMiddleware() {
+	d.SetMiddleware(new(middlewares.DeviceMiddleware), 180)
+}
+func (d *Downloader) WithCustomMiddleware(middleware pkg.Middleware) {
+	d.SetMiddleware(middleware, 190)
+}
 func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	if d == nil {
 		return new(Downloader).FromCrawler(crawler)
@@ -191,59 +243,58 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 
 	// set middlewares
 	if config.GetEnableStatsMiddleware() {
-		d.SetMiddleware(new(middlewares.StatsMiddleware), 10)
+		d.WithStatsMiddleware()
 	}
 	if config.GetEnableDumpMiddleware() {
-		d.SetMiddleware(new(middlewares.DumpMiddleware), 20)
+		d.WithDumpMiddleware()
 	}
 	if config.GetEnableProxyMiddleware() {
-		d.SetMiddleware(new(middlewares.ProxyMiddleware), 30)
+		d.WithProxyMiddleware()
 	}
 	if config.GetEnableRobotsTxtMiddleware() {
-		d.WithRobotsTxt()
+		d.WithRobotsTxtMiddleware()
 	}
 	if config.GetEnableFilterMiddleware() {
-		d.SetMiddleware(new(middlewares.FilterMiddleware), 50)
+		d.WithFilterMiddleware()
 	}
 	if config.GetEnableFileMiddleware() {
-		d.SetMiddleware(new(middlewares.FileMiddleware), 60)
+		d.WithFileMiddleware()
 	}
 	if config.GetEnableImageMiddleware() {
-		d.SetMiddleware(new(middlewares.ImageMiddleware), 70)
+		d.WithImageMiddleware()
 	}
 	if config.GetEnableHttpMiddleware() {
-		d.SetMiddleware(new(middlewares.HttpMiddleware), 80)
+		d.WithHttpMiddleware()
 	}
 	if config.GetEnableRetryMiddleware() {
-		d.SetMiddleware(new(middlewares.RetryMiddleware), 90)
+		d.WithRetryMiddleware()
 	}
 	if config.GetEnableUrlMiddleware() {
-		d.SetMiddleware(new(middlewares.UrlMiddleware), 100)
+		d.WithUrlMiddleware()
 	}
 	if config.GetEnableRefererMiddleware() {
-		d.SetMiddleware(new(middlewares.RefererMiddleware), 110)
+		d.WithRefererMiddleware()
 	}
 	if config.GetEnableCookieMiddleware() {
-		d.SetMiddleware(new(middlewares.CookieMiddleware), 120)
+		d.WithCookieMiddleware()
 	}
 	if config.GetEnableRedirectMiddleware() {
-		d.SetMiddleware(new(middlewares.RedirectMiddleware), 130)
+		d.WithRedirectMiddleware()
 	}
 	if config.GetEnableChromeMiddleware() {
-		d.SetMiddleware(new(middlewares.ChromeMiddleware), 140)
+		d.WithChromeMiddleware()
 	}
 	if config.GetEnableHttpAuthMiddleware() {
-		d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 150)
+		d.WithHttpAuthMiddleware()
 	}
 	if config.GetEnableCompressMiddleware() {
-		d.SetMiddleware(new(middlewares.CompressMiddleware), 160)
+		d.WithCompressMiddleware()
 	}
 	if config.GetEnableDecodeMiddleware() {
-		d.SetMiddleware(new(middlewares.DecodeMiddleware), 170)
+		d.WithDecodeMiddleware()
 	}
 	if config.GetEnableDeviceMiddleware() {
-		d.SetMiddleware(new(middlewares.DeviceMiddleware), 180)
+		d.WithDeviceMiddleware()
 	}
-
 	return d
 }

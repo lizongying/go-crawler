@@ -11,5 +11,15 @@ type Exporter interface {
 	SetPipeline(Pipeline, uint8)
 	DelPipeline(int)
 	CleanPipelines()
+	WithDumpPipeline()
+	WithFilePipeline()
+	WithImagePipeline()
+	WithFilterPipeline()
+	WithCsvPipeline()
+	WithJsonLinesPipeline()
+	WithMongoPipeline()
+	WithMysqlPipeline()
+	WithKafkaPipeline()
+	WithCustomPipeline(Pipeline)
 	FromCrawler(Crawler) Exporter
 }

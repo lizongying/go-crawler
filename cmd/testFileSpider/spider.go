@@ -7,7 +7,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
-	"github.com/lizongying/go-crawler/pkg/pipelines"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strconv"
 )
@@ -102,5 +101,5 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider, pkg.WithPipeline(new(pipelines.JsonLinesPipeline), 102)).Run()
+	app.NewApp(NewSpider, pkg.WithJsonLinesPipeline()).Run()
 }
