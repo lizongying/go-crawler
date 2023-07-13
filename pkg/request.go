@@ -99,8 +99,13 @@ func (r *Request) SetHeader(key string, value string) {
 
 	return
 }
-func (r *Request) SetUrl(url string) *Request {
-	r.Url = url
+func (r *Request) SetUrl(Url string) *Request {
+	r.Url = Url
+	if r.Request != nil {
+		URL, _ := url.Parse(Url)
+		r.Request.URL = URL
+	}
+
 	return r
 }
 

@@ -53,6 +53,7 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Reques
 			m.stats.IncRequestError()
 			return
 		}
+		request.URL = Url
 	}
 	if request.Header == nil {
 		request.Header = make(http.Header)

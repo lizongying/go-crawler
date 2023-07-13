@@ -9,6 +9,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/lizongying/go-crawler/static"
+	utls "github.com/refraction-networking/utls"
 	"io"
 	"net"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 )
 
 type HttpClient struct {
+	ClientOption
 	client           *http.Client
 	proxy            *url.URL
 	timeout          time.Duration
@@ -24,6 +26,59 @@ type HttpClient struct {
 	logger           pkg.Logger
 	redirectMaxTimes uint8
 	retryMaxTimes    uint8
+}
+
+func NewClientJa3(ctx context.Context, conn net.Conn, helloID *utls.ClientHelloID, helloSpec *utls.ClientHelloSpec, serverName string, http2 bool) (net.Conn, error) {
+	config := &utls.Config{
+		//InsecureSkipVerify: true,
+		ServerName: serverName,
+	}
+	if http2 {
+		config.NextProtos = []string{"h2", "http/1.1"}
+	} else {
+		config.NextProtos = []string{"http/1.1"}
+	}
+
+	if helloID == nil {
+		helloID = &utls.HelloChrome_Auto
+	}
+	if helloSpec != nil {
+		helloID = &utls.HelloCustom
+	}
+	c := utls.UClient(conn, config, *helloID)
+
+	if *helloID == utls.HelloCustom {
+		if err := c.ApplyPreset(helloSpec); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := c.HandshakeContext(ctx); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+func NewClient(conn net.Conn, serverName string, http2 bool) net.Conn {
+	config := &tls.Config{
+		//InsecureSkipVerify: true,
+		ServerName: serverName,
+	}
+	if http2 {
+		config.NextProtos = []string{"h2", "http/1.1"}
+	} else {
+		config.NextProtos = []string{"http/1.1"}
+	}
+
+	return tls.Client(conn, config)
+}
+
+type ClientOption struct {
+	Ja3         bool
+	HelloID     *utls.ClientHelloID
+	HelloSpec   *utls.ClientHelloSpec
+	DialTimeout *time.Duration
 }
 
 func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
@@ -105,11 +160,72 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		return
 	}
 
+	if h.DialTimeout == nil {
+		dialTimeout := 10 * time.Second
+		h.DialTimeout = &dialTimeout
+	}
+
+	network := request.URL.Scheme
+	address := request.URL.Host
+
+	// Check if the URL specifies a port, otherwise use the default port
+	if request.URL.Port() == "" {
+		switch network {
+		case "http":
+			address += ":80"
+		case "https":
+			address += ":443"
+		default:
+			return nil, errors.New(fmt.Sprintf("Unsupported network: %s\n", network))
+		}
+	}
+
+	conn, err := net.DialTimeout("tcp", address, *h.DialTimeout)
+	if err != nil {
+		return nil, err
+	}
+
+	h.Ja3 = true
+	if h.Ja3 {
+		conn, _ = NewClientJa3(ctx, conn, h.HelloID, h.HelloSpec, request.URL.Hostname(), h.httpProto == "2.0")
+	} else {
+		conn = NewClient(conn, request.URL.Hostname(), h.httpProto == "2.0")
+	}
+
 	begin := time.Now()
 	response = &pkg.Response{
 		Request: request,
 	}
-	response.Response, err = client.Do(request.Request)
+
+	if h.httpProto == "2.0" {
+		request.Proto = "HTTP/2.0"
+		request.ProtoMajor = 2
+		request.ProtoMinor = 0
+
+		tr := transport
+		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return conn, nil
+		}
+		tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return conn, nil
+		}
+
+		response.Response, err = tr.RoundTrip(request.Request)
+	} else {
+		request.Proto = "HTTP/1.1"
+		request.ProtoMajor = 1
+		request.ProtoMinor = 1
+
+		tr := transport
+		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return conn, nil
+		}
+		tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return conn, nil
+		}
+		response.Response, err = tr.RoundTrip(request.Request)
+	}
+
 	response.Request.SpendTime = time.Now().Sub(begin)
 	if err != nil {
 		retryMaxTimes := h.retryMaxTimes

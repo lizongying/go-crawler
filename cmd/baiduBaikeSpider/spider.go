@@ -34,7 +34,7 @@ func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err e
 	}
 
 	content := x.FindNodeOne("//div[contains(@class, 'J-content')]").FindStrOne("string(.)")
-	//s.logger.Info(string(response.BodyBytes))
+	s.logger.Info(string(response.BodyBytes))
 	data := DataWord{
 		Id:      extra.Keyword,
 		Keyword: extra.Keyword,
@@ -58,7 +58,7 @@ func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err e
 	return
 }
 
-// Test go run cmd/baiduBaikeSpider/* -c dev.yml -m prod
+// Test go run cmd/baiduBaikeSpider/* -c example.yml -m prod
 func (s *Spider) Test(ctx context.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, &pkg.Request{
 		Extra: &ExtraDetail{
@@ -89,6 +89,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 func main() {
 	app.NewApp(NewSpider,
 		pkg.WithCustomMiddleware(new(Middleware)),
-		pkg.WithMongoPipeline(),
+		//pkg.WithMongoPipeline(),
 	).Run()
 }
