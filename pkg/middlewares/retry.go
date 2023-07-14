@@ -30,13 +30,13 @@ func (m *RetryMiddleware) ProcessResponse(_ context.Context, response *pkg.Respo
 	if retryMaxTimes > 0 && (response.Response == nil || !utils.InSlice(response.StatusCode, okHttpCodes)) {
 		if request.RetryTimes < retryMaxTimes {
 			request.RetryTimes++
-			m.logger.Info(request.UniqueKey, "retry times:", request.RetryTimes, "SpendTime:", request.SpendTime)
+			m.logger.Info(request.GetUniqueKey(), "retry times:", request.RetryTimes, "SpendTime:", request.SpendTime)
 			err = pkg.ErrNeedRetry
 			return
 		}
 
 		err = errors.New("retry max times")
-		m.logger.Error(request.UniqueKey, err, request.RetryTimes, request.RetryMaxTimes)
+		m.logger.Error(request.GetUniqueKey(), err, request.RetryTimes, request.RetryMaxTimes)
 		return
 	}
 

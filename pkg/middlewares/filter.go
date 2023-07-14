@@ -22,12 +22,12 @@ func (m *FilterMiddleware) ProcessRequest(ctx context.Context, request *pkg.Requ
 		return
 	}
 
-	if request.UniqueKey == "" {
+	if request.GetUniqueKey() == "" {
 		m.logger.Debug("UniqueKey is empty")
 		return
 	}
 
-	ok, e := m.filter.IsExist(ctx, request.UniqueKey)
+	ok, e := m.filter.IsExist(ctx, request.GetUniqueKey())
 	if err != nil {
 		err = e
 		return
@@ -35,7 +35,7 @@ func (m *FilterMiddleware) ProcessRequest(ctx context.Context, request *pkg.Requ
 
 	if ok {
 		err = pkg.ErrIgnoreRequest
-		m.logger.InfoF("%s in filter", request.UniqueKey)
+		m.logger.InfoF("%s in filter", request.GetUniqueKey())
 		m.stats.IncRequestIgnore()
 		return
 	}

@@ -28,7 +28,7 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 
 	item := pkg.ItemJsonl{
 		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: response.Request.UniqueKey,
+			UniqueKey: response.Request.GetUniqueKey(),
 			Data: &DataImage{
 				DataOk: DataOk{
 					Count: extra.Count,

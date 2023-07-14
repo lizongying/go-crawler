@@ -38,13 +38,13 @@ func (m *RedirectMiddleware) ProcessRequest(_ context.Context, request *pkg.Requ
 //	if redirectMaxTimes > 0 && (utils.InSlice(response.StatusCode, m.redirectHttpCodes)) {
 //		if request.RedirectTimes < redirectMaxTimes {
 //			request.RedirectTimes++
-//			m.logger.Info(request.UniqueKey, "redirect times:", request.RedirectTimes, "SpendTime:", request.SpendTime)
+//			m.logger.Info(request.GetUniqueKey(), "redirect times:", request.RedirectTimes, "SpendTime:", request.SpendTime)
 //			err = c.FirstRequest()
 //			return
 //		}
 //
 //		err = errors.New("redirect max times")
-//		m.logger.Error(request.UniqueKey, err, request.RedirectTimes, request.RedirectMaxTimes)
+//		m.logger.Error(request.GetUniqueKey(), err, request.RedirectTimes, request.RedirectMaxTimes)
 //		return
 //	}
 //

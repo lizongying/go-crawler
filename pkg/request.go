@@ -17,8 +17,6 @@ import (
 
 type Request struct {
 	http.Request
-	BodyStr            string
-	UniqueKey          string
 	CallBack           Callback
 	ErrBack            Errback
 	Referer            string
@@ -48,8 +46,10 @@ type Request struct {
 	Image              *bool
 	Extra              any
 	extraName          string
-	errors             map[string]error
+	uniqueKey          string
+	bodyStr            string
 	disableMiddleware  bool
+	errors             map[string]error
 }
 
 func (r *Request) String() string {
@@ -101,11 +101,11 @@ func (r *Request) GetExtraName() string {
 	return r.extraName
 }
 func (r *Request) SetUniqueKey(uniqueKey string) *Request {
-	r.UniqueKey = uniqueKey
+	r.uniqueKey = uniqueKey
 	return r
 }
 func (r *Request) GetUniqueKey() string {
-	return r.UniqueKey
+	return r.uniqueKey
 }
 func (r *Request) SetErr(key string, value error) {
 	if r.errors == nil {
@@ -204,12 +204,12 @@ func (r *Request) GetMethod() string {
 	return r.Method
 }
 func (r *Request) SetBody(bodyStr string) *Request {
-	r.BodyStr = bodyStr
+	r.bodyStr = bodyStr
 	r.Body = io.NopCloser(strings.NewReader(bodyStr))
 	return r
 }
 func (r *Request) GetBody() string {
-	return r.BodyStr
+	return r.bodyStr
 }
 func (r *Request) SetHeader(key string, value string) *Request {
 	if r.Header == nil {
@@ -416,38 +416,40 @@ func (r *Request) ToRequestJson() (request *RequestJson, err error) {
 		Url = r.URL.String()
 	}
 	request = &RequestJson{
-		Url:              Url,
-		Method:           r.Method,
-		BodyStr:          r.BodyStr,
-		Header:           r.Header,
-		Cookies:          r.Cookies(),
-		UniqueKey:        r.UniqueKey,
-		CallBack:         callBack,
-		ErrBack:          errBack,
-		Referer:          r.Referer,
-		Username:         r.Username,
-		Password:         r.Password,
-		Checksum:         r.Checksum,
-		CreateTime:       r.CreateTime,
-		SpendTime:        uint(r.SpendTime),
-		Skip:             r.Skip,
-		SkipFilter:       r.SkipFilter,
-		ProxyEnable:      r.ProxyEnable,
-		Proxy:            proxy,
-		RetryMaxTimes:    r.RetryMaxTimes,
-		RetryTimes:       r.RetryTimes,
-		RedirectMaxTimes: r.RedirectMaxTimes,
-		RedirectTimes:    r.RedirectTimes,
-		OkHttpCodes:      r.OkHttpCodes,
-		Slot:             r.Slot,
-		Concurrency:      r.Concurrency,
-		Interval:         int(r.Interval),
-		Timeout:          int(r.Timeout),
-		HttpProto:        r.HttpProto,
-		Platform:         platform,
-		Browser:          browser,
-		Image:            r.Image,
-		Extra:            r.Extra,
+		Url:               Url,
+		Method:            r.Method,
+		BodyStr:           r.GetBody(),
+		Header:            r.Header,
+		Cookies:           r.Cookies(),
+		UniqueKey:         r.GetUniqueKey(),
+		CallBack:          callBack,
+		ErrBack:           errBack,
+		Referer:           r.Referer,
+		Username:          r.Username,
+		Password:          r.Password,
+		Checksum:          r.Checksum,
+		CreateTime:        r.CreateTime,
+		SpendTime:         uint(r.SpendTime),
+		Skip:              r.Skip,
+		SkipFilter:        r.SkipFilter,
+		ProxyEnable:       r.ProxyEnable,
+		Proxy:             proxy,
+		RetryMaxTimes:     r.RetryMaxTimes,
+		RetryTimes:        r.RetryTimes,
+		RedirectMaxTimes:  r.RedirectMaxTimes,
+		RedirectTimes:     r.RedirectTimes,
+		OkHttpCodes:       r.OkHttpCodes,
+		Slot:              r.Slot,
+		Concurrency:       r.Concurrency,
+		Interval:          int(r.Interval),
+		Timeout:           int(r.Timeout),
+		HttpProto:         r.HttpProto,
+		Platform:          platform,
+		Browser:           browser,
+		Image:             r.Image,
+		Extra:             r.Extra,
+		ExtraName:         r.GetExtraName(),
+		DisableMiddleware: r.IsDisableMiddleware(),
 	}
 	return
 }
@@ -496,6 +498,8 @@ type RequestJson struct {
 	Browser            []string       `json:"browser,omitempty"`
 	Image              *bool          `json:"image,omitempty"`
 	Extra              any            `json:"extra,omitempty"`
+	ExtraName          string         `json:"extra_name,omitempty"`
+	DisableMiddleware  bool           `json:"disable_middleware,omitempty"`
 }
 
 func (r *RequestJson) SetCallbacks(callbacks map[string]Callback) {
@@ -527,8 +531,6 @@ func (r *RequestJson) ToRequest() (request *Request, err error) {
 
 	request = &Request{
 		Request:            *req,
-		BodyStr:            r.BodyStr,
-		UniqueKey:          r.UniqueKey,
 		CallBack:           r.callbacks[r.CallBack],
 		ErrBack:            r.errbacks[r.ErrBack],
 		Referer:            r.Referer,
@@ -556,6 +558,10 @@ func (r *RequestJson) ToRequest() (request *Request, err error) {
 		Browser:            browser,
 		Image:              r.Image,
 		Extra:              r.Extra,
+		extraName:          r.ExtraName,
+		uniqueKey:          r.UniqueKey,
+		bodyStr:            r.BodyStr,
+		disableMiddleware:  r.DisableMiddleware,
 	}
 
 	return
