@@ -276,8 +276,9 @@ func (r *Request) GetImage() bool {
 	}
 	return *r.Image
 }
-func (r *Request) SetProxyEnable(proxyEnable *bool) {
+func (r *Request) SetProxyEnable(proxyEnable *bool) *Request {
 	r.ProxyEnable = proxyEnable
+	return r
 }
 func (r *Request) GetProxyEnable() bool {
 	if r.ProxyEnable == nil {
@@ -410,8 +411,12 @@ func (r *Request) ToRequestJson() (request *RequestJson, err error) {
 			browser = append(browser, string(v))
 		}
 	}
+	var Url string
+	if r.URL != nil {
+		Url = r.URL.String()
+	}
 	request = &RequestJson{
-		Url:              r.URL.String(),
+		Url:              Url,
 		Method:           r.Method,
 		BodyStr:          r.BodyStr,
 		Header:           r.Header,
