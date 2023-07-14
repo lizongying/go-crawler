@@ -16,7 +16,11 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
 	var extra ExtraOk
-	_ = response.Request.GetExtra(&extra)
+	err = response.Request.GetExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 
 	item := pkg.ItemNone{
 		ItemUnimplemented: pkg.ItemUnimplemented{
@@ -36,12 +40,12 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	}
 
 	requestNext := new(pkg.Request)
-	//requestNext.Url = response.Request.Url
-	requestNext.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGb2312)
-	requestNext.Extra = &ExtraOk{
+	//requestNext.SetUrl(response.Request.GetUrl())
+	requestNext.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGb2312))
+	requestNext.SetExtra(&ExtraOk{
 		Count: extra.Count + 1,
-	}
-	requestNext.CallBack = s.ParseOk
+	})
+	requestNext.SetCallback(s.ParseOk)
 	err = s.YieldRequest(ctx, requestNext)
 	if err != nil {
 		s.logger.Error(err)
@@ -55,9 +59,9 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
-	request.Extra = &ExtraOk{}
-	request.CallBack = s.ParseOk
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk))
+	request.SetExtra(&ExtraOk{})
+	request.SetCallback(s.ParseOk)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)
@@ -83,5 +87,5 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider, pkg.WithRobotsTxtMiddleware()).Run()
+	app.NewApp(NewSpider).Run()
 }

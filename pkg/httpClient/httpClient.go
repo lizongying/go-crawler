@@ -17,8 +17,18 @@ import (
 	"time"
 )
 
+type Option struct {
+	HelloID            *utls.ClientHelloID
+	HelloSpec          *utls.ClientHelloSpec
+	ServerName         string
+	InsecureSkipVerify bool
+	RootCAs            *x509.CertPool
+	Http2              bool
+}
 type HttpClient struct {
-	ClientOption
+	Ja3 bool
+	Option
+	DialTimeout      *time.Duration
 	client           *http.Client
 	proxy            *url.URL
 	timeout          time.Duration
@@ -28,27 +38,28 @@ type HttpClient struct {
 	retryMaxTimes    uint8
 }
 
-func NewClientJa3(ctx context.Context, conn net.Conn, helloID *utls.ClientHelloID, helloSpec *utls.ClientHelloSpec, serverName string, http2 bool) (net.Conn, error) {
+func NewClientJa3(ctx context.Context, conn net.Conn, option Option) (net.Conn, error) {
 	config := &utls.Config{
-		//InsecureSkipVerify: true,
-		ServerName: serverName,
+		RootCAs:            option.RootCAs,
+		InsecureSkipVerify: option.InsecureSkipVerify,
+		ServerName:         option.ServerName,
 	}
-	if http2 {
+	if option.Http2 {
 		config.NextProtos = []string{"h2", "http/1.1"}
 	} else {
 		config.NextProtos = []string{"http/1.1"}
 	}
 
-	if helloID == nil {
-		helloID = &utls.HelloChrome_Auto
+	if option.HelloID == nil {
+		option.HelloID = &utls.HelloChrome_Auto
 	}
-	if helloSpec != nil {
-		helloID = &utls.HelloCustom
+	if option.HelloSpec != nil {
+		option.HelloID = &utls.HelloCustom
 	}
-	c := utls.UClient(conn, config, *helloID)
+	c := utls.UClient(conn, config, *option.HelloID)
 
-	if *helloID == utls.HelloCustom {
-		if err := c.ApplyPreset(helloSpec); err != nil {
+	if *option.HelloID == utls.HelloCustom {
+		if err := c.ApplyPreset(option.HelloSpec); err != nil {
 			return nil, err
 		}
 	}
@@ -60,25 +71,19 @@ func NewClientJa3(ctx context.Context, conn net.Conn, helloID *utls.ClientHelloI
 	return c, nil
 }
 
-func NewClient(conn net.Conn, serverName string, http2 bool) net.Conn {
+func NewClient(conn net.Conn, option Option) net.Conn {
 	config := &tls.Config{
-		//InsecureSkipVerify: true,
-		ServerName: serverName,
+		RootCAs:            option.RootCAs,
+		InsecureSkipVerify: option.InsecureSkipVerify,
+		ServerName:         option.ServerName,
 	}
-	if http2 {
+	if option.Http2 {
 		config.NextProtos = []string{"h2", "http/1.1"}
 	} else {
 		config.NextProtos = []string{"http/1.1"}
 	}
 
 	return tls.Client(conn, config)
-}
-
-type ClientOption struct {
-	Ja3         bool
-	HelloID     *utls.ClientHelloID
-	HelloSpec   *utls.ClientHelloSpec
-	DialTimeout *time.Duration
 }
 
 func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
@@ -155,11 +160,6 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		client.Timeout = timeout
 	}
 
-	if request.Request == nil {
-		err = errors.New("nil request")
-		return
-	}
-
 	if h.DialTimeout == nil {
 		dialTimeout := 10 * time.Second
 		h.DialTimeout = &dialTimeout
@@ -185,11 +185,15 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		return nil, err
 	}
 
-	h.Ja3 = true
+	option := Option{
+		RootCAs:    defaultCAs,
+		ServerName: request.URL.Hostname(),
+		Http2:      h.httpProto == "2.0",
+	}
 	if h.Ja3 {
-		conn, _ = NewClientJa3(ctx, conn, h.HelloID, h.HelloSpec, request.URL.Hostname(), h.httpProto == "2.0")
+		conn, _ = NewClientJa3(ctx, conn, option)
 	} else {
-		conn = NewClient(conn, request.URL.Hostname(), h.httpProto == "2.0")
+		conn = NewClient(conn, option)
 	}
 
 	begin := time.Now()
@@ -210,7 +214,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 			return conn, nil
 		}
 
-		response.Response, err = tr.RoundTrip(request.Request)
+		response.Response, err = tr.RoundTrip(&request.Request)
 	} else {
 		request.Proto = "HTTP/1.1"
 		request.ProtoMajor = 1
@@ -223,7 +227,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return conn, nil
 		}
-		response.Response, err = tr.RoundTrip(request.Request)
+		response.Response, err = tr.RoundTrip(&request.Request)
 	}
 
 	response.Request.SpendTime = time.Now().Sub(begin)
@@ -283,6 +287,7 @@ func (h *HttpClient) FromCrawler(crawler pkg.Crawler) pkg.HttpClient {
 	h.logger = crawler.GetLogger()
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 	h.retryMaxTimes = config.GetRetryMaxTimes()
+	h.Ja3 = true
 
 	return h
 }

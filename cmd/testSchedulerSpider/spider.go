@@ -48,14 +48,14 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	//	s.logger.Info("extra", utils.JsonStr(extra))
 	//}
 	requestNext := new(pkg.Request)
-	requestNext.Url = response.Request.Url
+	requestNext.SetUrl(response.Request.GetUrl())
 	count := extra.Count + 1
-	requestNext.Extra = &ExtraOk{
+	requestNext.SetExtra(&ExtraOk{
 		Count: count,
-	}
-	requestNext.CallBack = s.ParseOk
-	requestNext.UniqueKey = strconv.Itoa(count)
-	//requestNext.UniqueKey = "2"
+	})
+	requestNext.SetCallback(s.ParseOk)
+	requestNext.SetUniqueKey(strconv.Itoa(count))
+	//requestNext.SetUniqueKey("2")
 	err = s.YieldRequest(ctx, requestNext)
 	if err != nil {
 		s.logger.Error(err)
@@ -67,10 +67,10 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
-	request.Extra = &ExtraOk{}
-	request.UniqueKey = "0"
-	request.CallBack = s.ParseOk
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk))
+	request.SetExtra(&ExtraOk{})
+	request.SetUniqueKey("0")
+	request.SetCallback(s.ParseOk)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)

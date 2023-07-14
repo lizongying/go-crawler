@@ -23,9 +23,9 @@ func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request *pkg.Requ
 	}
 
 	if username != "" && password != "" {
+		m.logger.InfoF("BasicAuth %s:%s", password, username)
 		request.SetBasicAuth(username, password)
 	}
-	m.logger.InfoF("BasicAuth %s:%s", password, username)
 
 	return
 }

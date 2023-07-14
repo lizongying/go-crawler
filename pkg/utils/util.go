@@ -131,12 +131,12 @@ func Request2Curl(r *pkg.Request) string {
 	if r.Method != "GET" {
 		args = append(args, "-X", r.Method)
 	}
-	args = append(args, fmt.Sprintf(`'%s'`, r.Url))
+	args = append(args, fmt.Sprintf(`'%s'`, r.URL.String()))
 	for k := range r.Header {
 		args = append(args, fmt.Sprintf(`-H '%s: %s'`, k, r.Header.Get(k)))
 	}
-	if r.BodyStr != "" {
-		args = append(args, fmt.Sprintf(`--data-raw '%s'`, r.BodyStr))
+	if r.GetBody() != "" {
+		args = append(args, fmt.Sprintf(`--data-raw '%s'`, r.GetBody()))
 	}
 
 	return fmt.Sprint(strings.Join(args, " "))

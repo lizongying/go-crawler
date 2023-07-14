@@ -60,13 +60,9 @@ func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err e
 
 // Test go run cmd/baiduBaikeSpider/* -c example.yml -m prod
 func (s *Spider) Test(ctx context.Context, _ string) (err error) {
-	err = s.YieldRequest(ctx, &pkg.Request{
-		Extra: &ExtraDetail{
-			Keyword: "动物传染病",
-		},
-		CallBack: s.ParseDetail,
-		//ProxyEnable: true,
-	})
+	err = s.YieldRequest(ctx, new(pkg.Request).SetExtra(&ExtraDetail{
+		Keyword: "动物传染病",
+	}).SetCallback(s.ParseDetail))
 	return
 }
 

@@ -460,7 +460,7 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk))
 	request.Extra = &ExtraOk{}
 	request.CallBack = s.ParseOk
 	err = s.YieldRequest(ctx, request)

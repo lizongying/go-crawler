@@ -32,7 +32,7 @@ func (s *Scheduler) Request(ctx context.Context, request *pkg.Request) (response
 		}
 
 		s.logger.Error(err)
-		if request != nil && request.Request != nil {
+		if request != nil {
 			ctx = request.Context()
 		}
 		s.handleError(ctx, response, err, request.ErrBack)
@@ -185,12 +185,15 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err
 	referer := ctx.Value("referer")
 	if referer != nil {
 		request.Referer = referer.(string)
+		// TODO to header?
 	}
 
 	// add cookies to request
 	cookies := ctx.Value("cookies")
 	if cookies != nil {
-		request.Cookies = cookies.([]*http.Cookie)
+		for _, cookie := range cookies.([]*http.Cookie) {
+			request.AddCookie(cookie)
+		}
 	}
 
 	s.requestActiveChan <- struct{}{}

@@ -18,7 +18,12 @@ type RobotsTxtMiddleware struct {
 }
 
 func (m *RobotsTxtMiddleware) Start(ctx context.Context, crawler pkg.Crawler) (err error) {
-	r, e := crawler.GetScheduler().Request(ctx, new(pkg.Request).SetUrl(fmt.Sprintf("%s/robots.txt", crawler.GetSpider().GetHost())))
+	host := crawler.GetSpider().GetHost()
+	if host == "" {
+		m.logger.Warn("host is emtpy")
+		return
+	}
+	r, e := crawler.GetScheduler().Request(ctx, new(pkg.Request).SetUrl(fmt.Sprintf("%s/robots.txt", host)).DisableMiddleware())
 	if e != nil {
 		err = e
 		m.logger.Error(e)
@@ -33,7 +38,11 @@ func (m *RobotsTxtMiddleware) Start(ctx context.Context, crawler pkg.Crawler) (e
 }
 
 func (m *RobotsTxtMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
-	u, _ := url.Parse(request.Url)
+	if m.group == nil {
+		return
+	}
+
+	u, _ := url.Parse(request.GetUrl())
 	if utils.InSlice(u.Path, m.ignoreUrl) {
 		return
 	}

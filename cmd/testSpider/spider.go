@@ -35,12 +35,12 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	//	s.logger.Info("extra", utils.JsonStr(extra))
 	//}
 	//requestNext := new(pkg.Request)
-	//requestNext.Url = response.Request.Url
-	//requestNext.Extra = &ExtraOk{
+	//requestNext.SetUrl(response.Request.GetUrl())
+	//requestNext.SetExtra(&ExtraOk{
 	//	Count: extra.Count + 1,
-	//}
-	//requestNext.CallBack = s.ParseOk
-	////requestNext.UniqueKey = "1"
+	//})
+	//requestNext.SetCallback(s.ParseOk)
+	//requestNext.SetUniqueKey("1")
 	//err = s.YieldRequest(ctx, requestNext)
 	//if err != nil {
 	//	s.logger.Error(err)
@@ -75,12 +75,12 @@ func (s *Spider) ParseCookie(ctx context.Context, response *pkg.Response) (err e
 	}
 
 	requestNext := new(pkg.Request)
-	requestNext.Url = response.Request.Url
-	requestNext.Extra = &ExtraCookie{
+	requestNext.SetUrl(response.Request.GetUrl())
+	requestNext.SetExtra(&ExtraCookie{
 		Count: extra.Count + 1,
-	}
-	requestNext.CallBack = s.ParseCookie
-	//requestNext.UniqueKey = "1"
+	})
+	requestNext.SetCallback(s.ParseCookie)
+	//requestNext.SetUniqueKey("1")
 	err = s.YieldRequest(ctx, requestNext)
 	if err != nil {
 		s.logger.Error(err)
@@ -126,9 +126,9 @@ func (s *Spider) ParseImages(ctx context.Context, response *pkg.Response) (err e
 func (s *Spider) TestUrl(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk+strings.Repeat("#", 10000))
-	request.Extra = &ExtraOk{}
-	request.CallBack = s.ParseOk
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk+strings.Repeat("#", 10000)))
+	request.SetExtra(&ExtraOk{})
+	request.SetCallback(s.ParseOk)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)
@@ -140,9 +140,9 @@ func (s *Spider) TestUrl(ctx context.Context, _ string) (err error) {
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)
-	request.Extra = &ExtraOk{}
-	request.CallBack = s.ParseOk
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk))
+	request.SetExtra(&ExtraOk{})
+	request.SetCallback(s.ParseOk)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)
@@ -154,9 +154,9 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 func (s *Spider) TestHttpAuth(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewHttpAuthHandler(s.logger))
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlHttpAuth)
-	request.Extra = &ExtraHttpAuth{}
-	request.CallBack = s.ParseHttpAuth
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlHttpAuth))
+	request.SetExtra(&ExtraHttpAuth{})
+	request.SetCallback(s.ParseHttpAuth)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)
@@ -169,9 +169,9 @@ func (s *Spider) TestCookie(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewCookieHandler(s.logger))
 
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlCookie)
-	request.Extra = &ExtraCookie{}
-	request.CallBack = s.ParseCookie
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlCookie))
+	request.SetExtra(&ExtraCookie{})
+	request.SetCallback(s.ParseCookie)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)
@@ -184,8 +184,8 @@ func (s *Spider) TestGzip(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewGzipHandler(s.logger))
 
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGzip)
-	request.CallBack = s.ParseGzip
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGzip))
+	request.SetCallback(s.ParseGzip)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)
@@ -198,8 +198,8 @@ func (s *Spider) TestDeflate(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewDeflateHandler(s.logger))
 
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlDeflate)
-	request.CallBack = s.ParseDeflate
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlDeflate))
+	request.SetCallback(s.ParseDeflate)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)
@@ -213,8 +213,8 @@ func (s *Spider) TestRedirect(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 
 	request := new(pkg.Request)
-	request.Url = fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlRedirect)
-	request.CallBack = s.ParseRedirect
+	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlRedirect))
+	request.SetCallback(s.ParseRedirect)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)
@@ -224,11 +224,11 @@ func (s *Spider) TestRedirect(ctx context.Context, _ string) (err error) {
 
 func (s *Spider) TestImages(ctx context.Context, _ string) (err error) {
 	request := new(pkg.Request)
-	request.Url = "https://chinese.aljazeera.net/wp-content/uploads/2023/03/1-126.jpg"
-	request.Extra = &ExtraTest{
+	request.SetUrl("https://chinese.aljazeera.net/wp-content/uploads/2023/03/1-126.jpg")
+	request.SetExtra(&ExtraTest{
 		Image: new(media.Image),
-	}
-	request.CallBack = s.ParseImages
+	})
+	request.SetCallback(s.ParseImages)
 	err = s.YieldRequest(ctx, request)
 	if err != nil {
 		s.logger.Error(err)

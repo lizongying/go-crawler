@@ -3,7 +3,6 @@ package logger
 import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
-	"strings"
 )
 
 type Logger struct {
@@ -59,17 +58,8 @@ func (l *Logger) ErrorF(format string, v ...any) {
 }
 
 func NewLogger(config *config.Config) (logger *Logger, err error) {
-	levelStr := config.Log.Level
-	level := pkg.LevelInfo
-	if levelStr != "" {
-		l, ok := pkg.LevelMap[strings.ToUpper(levelStr)]
-		if ok {
-			level = l
-		}
-	}
-
 	logger = &Logger{
-		level: level,
+		level: config.GetLogLevel(),
 	}
 
 	return

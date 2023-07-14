@@ -12,7 +12,7 @@ type UrlMiddleware struct {
 }
 
 func (m *UrlMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
-	if m.urlLengthLimit < len(request.Url) {
+	if m.urlLengthLimit < len(request.GetUrl()) {
 		err = pkg.ErrUrlLengthLimit
 		m.logger.Error(err)
 		return

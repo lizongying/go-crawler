@@ -3,7 +3,9 @@ package pkg
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -13,17 +15,9 @@ import (
 	"time"
 )
 
-type Http struct {
-	*http.Request
-	Url     string         `json:"url,omitempty"`
-	Method  string         `json:"method,omitempty"`
-	BodyStr string         `json:"body,omitempty"`
-	Header  http.Header    `json:"header,omitempty"`
-	Cookies []*http.Cookie `json:"cookies,omitempty"`
-}
-
 type Request struct {
-	Http
+	http.Request
+	BodyStr            string
 	UniqueKey          string
 	CallBack           Callback
 	ErrBack            Errback
@@ -53,6 +47,9 @@ type Request struct {
 	File               *bool
 	Image              *bool
 	Extra              any
+	extraName          string
+	errors             map[string]error
+	disableMiddleware  bool
 }
 
 func (r *Request) String() string {
@@ -86,29 +83,145 @@ func (r *Request) String() string {
 	}
 	return fmt.Sprintf(`{%s}`, strings.Join(out, ", "))
 }
-
-func (r *Request) SetHeader(key string, value string) {
+func (r *Request) DisableMiddleware() *Request {
+	r.disableMiddleware = true
+	return r
+}
+func (r *Request) EnableMiddleware() *Request {
+	r.disableMiddleware = false
+	return r
+}
+func (r *Request) IsDisableMiddleware() bool {
+	return r.disableMiddleware
+}
+func (r *Request) setExtraName(name string) {
+	r.extraName = name
+}
+func (r *Request) GetExtraName() string {
+	return r.extraName
+}
+func (r *Request) SetUniqueKey(uniqueKey string) *Request {
+	r.UniqueKey = uniqueKey
+	return r
+}
+func (r *Request) GetUniqueKey() string {
+	return r.UniqueKey
+}
+func (r *Request) SetErr(key string, value error) {
+	if r.errors == nil {
+		r.errors = make(map[string]error)
+	}
+	r.errors[key] = value
+}
+func (r *Request) GetErr() map[string]error {
+	return r.errors
+}
+func (r *Request) DelErr(key string) {
+	delete(r.errors, key)
+}
+func (r *Request) SetUrl(Url string) *Request {
+	URL, err := url.Parse(Url)
+	if err != nil {
+		r.SetErr("Url", err)
+		return r
+	}
+	r.URL = URL
+	return r
+}
+func (r *Request) GetUrl() string {
+	if r.URL == nil {
+		return ""
+	}
+	return r.URL.String()
+}
+func (r *Request) AddQuery(key string, value string) *Request {
+	r.URL.Query().Add(key, value)
+	return r
+}
+func (r *Request) SetQuery(key string, value string) *Request {
+	r.URL.Query().Set(key, value)
+	return r
+}
+func (r *Request) GetQuery(key string) *Request {
+	r.URL.Query().Get(key)
+	return r
+}
+func (r *Request) DelQuery(key string) *Request {
+	r.URL.Query().Del(key)
+	return r
+}
+func (r *Request) HasQuery(key string) *Request {
+	r.URL.Query().Has(key)
+	return r
+}
+func (r *Request) SetForm(key string, value string) *Request {
+	if r.Form == nil {
+		r.Form = make(url.Values)
+	}
+	r.Form.Add(key, value)
+	err := r.ParseForm()
+	if err != nil {
+		r.SetErr("Form", err)
+		return r
+	}
+	return r
+}
+func (r *Request) GetForm() url.Values {
+	return r.Form
+}
+func (r *Request) SetPostForm(key string, value string) *Request {
+	if r.PostForm == nil {
+		r.PostForm = make(url.Values)
+	}
+	r.PostForm.Add(key, value)
+	err := r.ParseForm()
+	if err != nil {
+		r.SetErr("PostForm", err)
+		return r
+	}
+	return r
+}
+func (r *Request) GetPostForm() url.Values {
+	return r.PostForm
+}
+func (r *Request) SetMethod(method string) *Request {
+	method = strings.ToUpper(method)
+	ok := false
+	for _, v := range []string{"OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE"} {
+		if v == method {
+			ok = true
+			break
+		}
+	}
+	if ok {
+		r.Method = method
+	} else {
+		r.SetErr("Method", errors.New("method error"))
+	}
+	return r
+}
+func (r *Request) GetMethod() string {
+	return r.Method
+}
+func (r *Request) SetBody(bodyStr string) *Request {
+	r.BodyStr = bodyStr
+	r.Body = io.NopCloser(strings.NewReader(bodyStr))
+	return r
+}
+func (r *Request) GetBody() string {
+	return r.BodyStr
+}
+func (r *Request) SetHeader(key string, value string) *Request {
 	if r.Header == nil {
 		r.Header = make(http.Header)
 	}
 	r.Header.Set(key, value)
 
-	if r.Request != nil {
-		r.Request.Header = r.Header
-	}
-
-	return
-}
-func (r *Request) SetUrl(Url string) *Request {
-	r.Url = Url
-	if r.Request != nil {
-		URL, _ := url.Parse(Url)
-		r.Request.URL = URL
-	}
-
 	return r
 }
-
+func (r *Request) GetHeader() http.Header {
+	return r.Header
+}
 func MapToStruct(data map[string]interface{}, obj interface{}) error {
 	objValue := reflect.ValueOf(obj)
 	if objValue.Kind() != reflect.Ptr || objValue.IsNil() {
@@ -251,6 +364,24 @@ func (r *Request) GetExtra(obj interface{}) (err error) {
 
 	return
 }
+func (r *Request) SetExtra(extra any) *Request {
+	extraValue := reflect.ValueOf(extra)
+	if extraValue.Kind() != reflect.Ptr || extraValue.IsNil() {
+		r.SetErr("Extra", errors.New("extra must be a non-null pointer"))
+		return r
+	}
+	r.setExtraName(extraValue.Elem().Type().Name())
+	r.Extra = extra
+	return r
+}
+func (r *Request) SetCallback(callback Callback) *Request {
+	r.CallBack = callback
+	return r
+}
+func (r *Request) SetErrback(errback Errback) *Request {
+	r.ErrBack = errback
+	return r
+}
 
 func (r *Request) ToRequestJson() (request *RequestJson, err error) {
 	var proxy string
@@ -280,7 +411,11 @@ func (r *Request) ToRequestJson() (request *RequestJson, err error) {
 		}
 	}
 	request = &RequestJson{
-		Http:             r.Http,
+		Url:              r.URL.String(),
+		Method:           r.Method,
+		BodyStr:          r.BodyStr,
+		Header:           r.Header,
+		Cookies:          r.Cookies(),
 		UniqueKey:        r.UniqueKey,
 		CallBack:         callBack,
 		ErrBack:          errBack,
@@ -321,37 +456,41 @@ func (r *Request) Marshal() ([]byte, error) {
 }
 
 type RequestJson struct {
-	callbacks map[string]Callback
-	errbacks  map[string]Errback
-	Http
-	UniqueKey          string   `json:"unique_key,omitempty"` // for filter
-	CallBack           string   `json:"call_back,omitempty"`
-	ErrBack            string   `json:"err_back,omitempty"`
-	Referer            string   `json:"referer,omitempty"`
-	Username           string   `json:"username,omitempty"`
-	Password           string   `json:"password,omitempty"`
-	Checksum           string   `json:"checksum,omitempty"`
-	CreateTime         string   `json:"create_time,omitempty"` //create time
-	SpendTime          uint     `json:"spend_time,omitempty"`
-	Skip               *bool    `json:"skip,omitempty"`                 // Not in to schedule
-	SkipFilter         *bool    `json:"skip_filter,omitempty"`          // Allow duplicate requests if set "true"
-	CanonicalHeaderKey *bool    `json:"canonical_header_key,omitempty"` //canonical header key
-	ProxyEnable        *bool    `json:"proxy_enable,omitempty"`
-	Proxy              string   `json:"proxy,omitempty"`
-	RetryMaxTimes      *uint8   `json:"retry_max_times,omitempty"`
-	RetryTimes         uint8    `json:"retry_times,omitempty"`
-	RedirectMaxTimes   *uint8   `json:"redirect_max_times,omitempty"`
-	RedirectTimes      uint8    `json:"redirect_times,omitempty"`
-	OkHttpCodes        []int    `json:"ok_http_codes,omitempty"`
-	Slot               string   `json:"slot,omitempty"` // same slot same concurrency & delay
-	Concurrency        *uint8   `json:"concurrency,omitempty"`
-	Interval           int      `json:"interval,omitempty"`
-	Timeout            int      `json:"timeout,omitempty"`    //seconds
-	HttpProto          string   `json:"http_proto,omitempty"` // e.g. 1.0/1.1/2.0
-	Platform           []string `json:"platform,omitempty"`
-	Browser            []string `json:"browser,omitempty"`
-	Image              *bool    `json:"image,omitempty"`
-	Extra              any      `json:"extra,omitempty"`
+	callbacks          map[string]Callback
+	errbacks           map[string]Errback
+	Url                string         `json:"url,omitempty"`
+	Method             string         `json:"method,omitempty"`
+	BodyStr            string         `json:"body,omitempty"`
+	Header             http.Header    `json:"header,omitempty"`
+	Cookies            []*http.Cookie `json:"cookies,omitempty"`
+	UniqueKey          string         `json:"unique_key,omitempty"` // for filter
+	CallBack           string         `json:"call_back,omitempty"`
+	ErrBack            string         `json:"err_back,omitempty"`
+	Referer            string         `json:"referer,omitempty"`
+	Username           string         `json:"username,omitempty"`
+	Password           string         `json:"password,omitempty"`
+	Checksum           string         `json:"checksum,omitempty"`
+	CreateTime         string         `json:"create_time,omitempty"` //create time
+	SpendTime          uint           `json:"spend_time,omitempty"`
+	Skip               *bool          `json:"skip,omitempty"`                 // Not in to schedule
+	SkipFilter         *bool          `json:"skip_filter,omitempty"`          // Allow duplicate requests if set "true"
+	CanonicalHeaderKey *bool          `json:"canonical_header_key,omitempty"` //canonical header key
+	ProxyEnable        *bool          `json:"proxy_enable,omitempty"`
+	Proxy              string         `json:"proxy,omitempty"`
+	RetryMaxTimes      *uint8         `json:"retry_max_times,omitempty"`
+	RetryTimes         uint8          `json:"retry_times,omitempty"`
+	RedirectMaxTimes   *uint8         `json:"redirect_max_times,omitempty"`
+	RedirectTimes      uint8          `json:"redirect_times,omitempty"`
+	OkHttpCodes        []int          `json:"ok_http_codes,omitempty"`
+	Slot               string         `json:"slot,omitempty"` // same slot same concurrency & delay
+	Concurrency        *uint8         `json:"concurrency,omitempty"`
+	Interval           int            `json:"interval,omitempty"`
+	Timeout            int            `json:"timeout,omitempty"`    //seconds
+	HttpProto          string         `json:"http_proto,omitempty"` // e.g. 1.0/1.1/2.0
+	Platform           []string       `json:"platform,omitempty"`
+	Browser            []string       `json:"browser,omitempty"`
+	Image              *bool          `json:"image,omitempty"`
+	Extra              any            `json:"extra,omitempty"`
 }
 
 func (r *RequestJson) SetCallbacks(callbacks map[string]Callback) {
@@ -379,8 +518,11 @@ func (r *RequestJson) ToRequest() (request *Request, err error) {
 		}
 	}
 
+	req, _ := http.NewRequest(r.Method, r.Url, strings.NewReader(r.BodyStr))
+
 	request = &Request{
-		Http:               r.Http,
+		Request:            *req,
+		BodyStr:            r.BodyStr,
 		UniqueKey:          r.UniqueKey,
 		CallBack:           r.callbacks[r.CallBack],
 		ErrBack:            r.errbacks[r.ErrBack],

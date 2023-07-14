@@ -22,6 +22,9 @@ type Downloader struct {
 }
 
 func (d *Downloader) processRequest(ctx context.Context, request *pkg.Request) (err error) {
+	if request.IsDisableMiddleware() {
+		return
+	}
 	for k, v := range d.processRequestFns {
 		name := d.middlewares[k].GetName()
 		d.logger.Debug("enter", name, "processRequest")
@@ -56,12 +59,6 @@ func (d *Downloader) Download(ctx context.Context, request *pkg.Request) (respon
 		return
 	}
 
-	if request.Request == nil {
-		err = errors.New("nil request.Request")
-		d.logger.Error(err)
-		return
-	}
-
 	response, err = d.httpClient.DoRequest(request.Context(), request)
 	if err != nil {
 		d.logger.Error(err)
@@ -92,6 +89,9 @@ func (d *Downloader) Download(ctx context.Context, request *pkg.Request) (respon
 }
 
 func (d *Downloader) processResponse(ctx context.Context, response *pkg.Response) (err error) {
+	if response.Request.IsDisableMiddleware() {
+		return
+	}
 	for k, v := range d.processResponseFns {
 		name := d.middlewares[k].GetName()
 		d.logger.Debug("enter", name, "ProcessResponse")
@@ -174,8 +174,8 @@ func (d *Downloader) CleanMiddlewares() {
 
 	d.middlewares = make([]pkg.Middleware, 0)
 }
-func (d *Downloader) WithStatsMiddleware() {
-	d.SetMiddleware(new(middlewares.StatsMiddleware), 10)
+func (d *Downloader) WithCustomMiddleware(middleware pkg.Middleware) {
+	d.SetMiddleware(middleware, 10)
 }
 func (d *Downloader) WithDumpMiddleware() {
 	d.SetMiddleware(new(middlewares.DumpMiddleware), 20)
@@ -195,41 +195,41 @@ func (d *Downloader) WithFileMiddleware() {
 func (d *Downloader) WithImageMiddleware() {
 	d.SetMiddleware(new(middlewares.ImageMiddleware), 70)
 }
-func (d *Downloader) WithHttpMiddleware() {
-	d.SetMiddleware(new(middlewares.HttpMiddleware), 80)
-}
 func (d *Downloader) WithRetryMiddleware() {
-	d.SetMiddleware(new(middlewares.RetryMiddleware), 90)
+	d.SetMiddleware(new(middlewares.RetryMiddleware), 80)
 }
 func (d *Downloader) WithUrlMiddleware() {
-	d.SetMiddleware(new(middlewares.UrlMiddleware), 100)
+	d.SetMiddleware(new(middlewares.UrlMiddleware), 90)
 }
 func (d *Downloader) WithRefererMiddleware() {
-	d.SetMiddleware(new(middlewares.RefererMiddleware), 110)
+	d.SetMiddleware(new(middlewares.RefererMiddleware), 100)
 }
 func (d *Downloader) WithCookieMiddleware() {
-	d.SetMiddleware(new(middlewares.CookieMiddleware), 120)
+	d.SetMiddleware(new(middlewares.CookieMiddleware), 110)
 }
 func (d *Downloader) WithRedirectMiddleware() {
-	d.SetMiddleware(new(middlewares.RedirectMiddleware), 130)
+	d.SetMiddleware(new(middlewares.RedirectMiddleware), 120)
 }
 func (d *Downloader) WithChromeMiddleware() {
-	d.SetMiddleware(new(middlewares.ChromeMiddleware), 140)
+	d.SetMiddleware(new(middlewares.ChromeMiddleware), 130)
 }
 func (d *Downloader) WithHttpAuthMiddleware() {
-	d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 150)
+	d.SetMiddleware(new(middlewares.HttpAuthMiddleware), 140)
 }
 func (d *Downloader) WithCompressMiddleware() {
-	d.SetMiddleware(new(middlewares.CompressMiddleware), 160)
+	d.SetMiddleware(new(middlewares.CompressMiddleware), 150)
 }
 func (d *Downloader) WithDecodeMiddleware() {
-	d.SetMiddleware(new(middlewares.DecodeMiddleware), 170)
+	d.SetMiddleware(new(middlewares.DecodeMiddleware), 160)
 }
 func (d *Downloader) WithDeviceMiddleware() {
-	d.SetMiddleware(new(middlewares.DeviceMiddleware), 180)
+	d.SetMiddleware(new(middlewares.DeviceMiddleware), 170)
 }
-func (d *Downloader) WithCustomMiddleware(middleware pkg.Middleware) {
-	d.SetMiddleware(middleware, 190)
+func (d *Downloader) WithHttpMiddleware() {
+	d.SetMiddleware(new(middlewares.HttpMiddleware), 180)
+}
+func (d *Downloader) WithStatsMiddleware() {
+	d.SetMiddleware(new(middlewares.StatsMiddleware), 190)
 }
 func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	if d == nil {
