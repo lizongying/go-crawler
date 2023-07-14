@@ -442,13 +442,12 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 		return
 	}
 
-	requestNext := new(pkg.Request)
-	requestNext.Url = response.Request.Url
-	requestNext.Extra = &ExtraOk{
-		Count: extra.Count + 1,
-	}
-	requestNext.CallBack = s.ParseOk
-	err = s.YieldRequest(ctx, requestNext)
+	err = s.YieldRequest(ctx, new(pkg.Request).
+		SetUrl(response.Request.GetUrl()).
+		SetExtra(&ExtraOk{
+			Count: extra.Count + 1,
+		}).
+		SetCallback(s.ParseOk))
 	if err != nil {
 		s.logger.Error(err)
 	}
@@ -459,11 +458,10 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	// mock server
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 
-	request := new(pkg.Request)
-	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk))
-	request.Extra = &ExtraOk{}
-	request.CallBack = s.ParseOk
-	err = s.YieldRequest(ctx, request)
+	err = s.YieldRequest(ctx, new(pkg.Request).
+		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetExtra(&ExtraOk{}).
+		SetCallback(s.ParseOk))
 	if err != nil {
 		s.logger.Error(err)
 	}
