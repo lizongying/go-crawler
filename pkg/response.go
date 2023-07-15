@@ -11,7 +11,7 @@ import (
 
 type Response struct {
 	*http.Response
-	Request   *Request
+	Request   Request
 	BodyBytes []byte
 	Files     []File
 	Images    []Image

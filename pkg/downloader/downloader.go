@@ -13,7 +13,7 @@ import (
 
 type Downloader struct {
 	middlewares        []pkg.Middleware
-	processRequestFns  []func(context.Context, *pkg.Request) error
+	processRequestFns  []func(context.Context, pkg.Request) error
 	processResponseFns []func(context.Context, *pkg.Response) error
 	httpClient         pkg.HttpClient
 	crawler            pkg.Crawler
@@ -21,7 +21,7 @@ type Downloader struct {
 	locker             sync.Mutex
 }
 
-func (d *Downloader) processRequest(ctx context.Context, request *pkg.Request) (err error) {
+func (d *Downloader) processRequest(ctx context.Context, request pkg.Request) (err error) {
 	if request.GetSkipMiddleware() {
 		return
 	}
@@ -38,7 +38,7 @@ func (d *Downloader) processRequest(ctx context.Context, request *pkg.Request) (
 	return
 }
 
-func (d *Downloader) Download(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
+func (d *Downloader) Download(ctx context.Context, request pkg.Request) (response *pkg.Response, err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -143,7 +143,7 @@ func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
 		return d.middlewares[i].GetOrder() < d.middlewares[j].GetOrder()
 	})
 
-	var processRequestFns []func(context.Context, *pkg.Request) error
+	var processRequestFns []func(context.Context, pkg.Request) error
 	var processResponseFns []func(context.Context, *pkg.Response) error
 	for _, v := range d.middlewares {
 		processRequestFns = append(processRequestFns, v.ProcessRequest)

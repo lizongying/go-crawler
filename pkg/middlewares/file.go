@@ -34,14 +34,14 @@ func (m *FileMiddleware) ProcessResponse(ctx context.Context, response *pkg.Resp
 	isFile := response.Request.GetFile()
 	if isFile {
 		i := new(media.File)
-		i.SetName(utils.StrMd5(response.Request.URL.String()))
+		i.SetName(utils.StrMd5(response.Request.GetURL().String()))
 		ext := ""
 		if e, ok := m.ContenttypeMap[response.Header.Get("Content-Type")]; ok {
 			ext = e
 		}
 
 		if m.s3 != nil {
-			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.Request.URL.String()), ext)
+			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.Request.GetUrl()), ext)
 			storePath := fmt.Sprintf("s3://%s/%s", m.bucketName, key)
 			uploadParams := &s3.PutObjectInput{
 				Bucket: &m.bucketName,

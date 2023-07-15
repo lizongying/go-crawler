@@ -43,13 +43,13 @@ func (m *ImageMiddleware) ProcessResponse(ctx context.Context, response *pkg.Res
 		rect := img.Bounds()
 
 		i := new(media.Image)
-		i.SetName(utils.StrMd5(response.Request.URL.String()))
+		i.SetName(utils.StrMd5(response.Request.GetUrl()))
 		i.SetExtension(name)
 		i.SetWidth(rect.Dx())
 		i.SetHeight(rect.Dy())
 
 		if m.s3 != nil {
-			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.Request.URL.String()), name)
+			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.Request.GetUrl()), name)
 			storePath := fmt.Sprintf("s3://%s/%s", m.bucketName, key)
 			uploadParams := &s3.PutObjectInput{
 				Bucket: &m.bucketName,

@@ -20,7 +20,7 @@ func (m *CustomMiddleware) Start(_ context.Context, crawler pkg.Crawler) error {
 	return nil
 }
 
-func (m *CustomMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) error {
+func (m *CustomMiddleware) ProcessRequest(_ context.Context, request pkg.Request) error {
 	m.logger.Debug("request", request)
 	return nil
 }

@@ -125,15 +125,15 @@ func StrMd5(sl ...string) string {
 	return fmt.Sprintf("%x", md5.Sum([]byte(strings.Join(sl, ""))))
 }
 
-func Request2Curl(r *pkg.Request) string {
+func Request2Curl(r pkg.Request) string {
 	var args []string
 	args = append(args, "curl")
-	if r.Method != "GET" {
-		args = append(args, "-X", r.Method)
+	if r.GetMethod() != "GET" {
+		args = append(args, "-X", r.GetMethod())
 	}
-	args = append(args, fmt.Sprintf(`'%s'`, r.URL.String()))
-	for k := range r.Header {
-		args = append(args, fmt.Sprintf(`-H '%s: %s'`, k, r.Header.Get(k)))
+	args = append(args, fmt.Sprintf(`'%s'`, r.GetUrl()))
+	for k := range r.GetHeaders() {
+		args = append(args, fmt.Sprintf(`-H '%s: %s'`, k, r.GetHeader(k)))
 	}
 	if r.GetBody() != "" {
 		args = append(args, fmt.Sprintf(`--data-raw '%s'`, r.GetBody()))

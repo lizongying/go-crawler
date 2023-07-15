@@ -10,7 +10,7 @@ type ChromeMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *ChromeMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *ChromeMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 	request.SetHeader("Accept", "*/*")
 	request.SetHeader("Cache-Control", "no-cache")
 	request.SetHeader("Content-Type", "text/plain;charset=UTF-8")

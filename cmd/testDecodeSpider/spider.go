@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/request"
 )
 
 type Spider struct {
@@ -24,9 +25,9 @@ func (s *Spider) ParseDecode(_ context.Context, response *pkg.Response) (err err
 func (s *Spider) TestGbk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewGbkHandler(s.logger))
 
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGbk)).
-		SetCallback(s.ParseDecode))
+		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
 		return
@@ -39,9 +40,9 @@ func (s *Spider) TestGbk(ctx context.Context, _ string) (err error) {
 func (s *Spider) TestGb2312(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewGb2312Handler(s.logger))
 
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGb2312)).
-		SetCallback(s.ParseDecode))
+		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
 		return
@@ -54,9 +55,9 @@ func (s *Spider) TestGb2312(ctx context.Context, _ string) (err error) {
 func (s *Spider) TestGb18030(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewGb18030Handler(s.logger))
 
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGb18030)).
-		SetCallback(s.ParseDecode))
+		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
 		return
@@ -69,9 +70,9 @@ func (s *Spider) TestGb18030(ctx context.Context, _ string) (err error) {
 func (s *Spider) TestBig5(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewBig5Handler(s.logger))
 
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlBig5)).
-		SetCallback(s.ParseDecode))
+		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
 		return

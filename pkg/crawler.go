@@ -55,11 +55,11 @@ type Crawler interface {
 	GetScheduler() Scheduler
 	SetScheduler(Scheduler)
 	YieldItem(context.Context, Item) error
-	Request(context.Context, *Request) (*Response, error)
-	YieldRequest(context.Context, *Request) error
+	Request(context.Context, Request) (*Response, error)
+	YieldRequest(context.Context, Request) error
 	GetStats() Stats
-	GetCallbacks() map[string]Callback
-	GetErrbacks() map[string]Errback
+	GetCallBacks() map[string]CallBack
+	GetErrBacks() map[string]ErrBack
 	GetSignal() Signal
 	SetSignal(Signal)
 }

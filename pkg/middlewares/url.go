@@ -11,7 +11,7 @@ type UrlMiddleware struct {
 	logger         pkg.Logger
 }
 
-func (m *UrlMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *UrlMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 	if m.urlLengthLimit < len(request.GetUrl()) {
 		err = pkg.ErrUrlLengthLimit
 		m.logger.Error(err)

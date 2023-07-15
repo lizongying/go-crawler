@@ -32,7 +32,7 @@ func (m *StatsMiddleware) Start(_ context.Context, crawler pkg.Crawler) (err err
 	return
 }
 
-func (m *StatsMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *StatsMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 	m.stats.IncRequestTotal()
 	return
 }

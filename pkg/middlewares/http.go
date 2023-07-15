@@ -15,7 +15,7 @@ type HttpMiddleware struct {
 	stats   pkg.Stats
 }
 
-func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Request) (err error) {
+func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request pkg.Request) (err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -25,35 +25,28 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Reques
 	}
 	if request.GetUrl() == "" {
 		err = errors.New("url is empty")
+		m.logger.Error(err)
+		m.stats.IncRequestError()
 		return
 	}
 	request.SetCreateTime(utils.NowStr())
 	request.SetChecksum(utils.StrMd5(request.GetMethod(), request.GetUrl(), request.GetBody()))
+
 	canonicalHeaderKey := true
 	if request.GetCanonicalHeaderKey() != nil {
 		canonicalHeaderKey = *request.GetCanonicalHeaderKey()
 	}
 	if canonicalHeaderKey {
-		headers := make(map[string][]string)
-		for k, v := range request.Header {
-			headers[http.CanonicalHeaderKey(k)] = v
+		for k, v := range request.GetHeaders() {
+			l := len(v)
+			if l < 1 {
+				continue
+			}
+			request.SetHeader(http.CanonicalHeaderKey(k), v[l-1])
 		}
-		request.Header = headers
 	}
 
-	request.Request = *request.WithContext(ctx)
-	if err != nil {
-		m.logger.Error(err)
-		m.stats.IncRequestError()
-		return
-	}
-
-	if request.Header == nil {
-		request.Header = make(http.Header)
-	}
-	request.Request.Header = request.Header
-
-	ok := m.crawler.IsAllowedDomain(request.URL)
+	ok := m.crawler.IsAllowedDomain(request.GetURL())
 	if !ok {
 		err = errors.New("it's not a allowed domain")
 		m.logger.Error(err)

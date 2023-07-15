@@ -15,7 +15,7 @@ func (m *CookieMiddleware) ProcessResponse(_ context.Context, response *pkg.Resp
 	cookies := response.Cookies()
 	if len(cookies) > 0 {
 		ctx := context.WithValue(response.Request.Context(), "cookies", cookies)
-		response.Request.Request = *response.Request.WithContext(ctx)
+		response.Request.WithContext(ctx)
 	}
 
 	return

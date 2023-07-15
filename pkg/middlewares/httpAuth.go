@@ -12,7 +12,7 @@ type HttpAuthMiddleware struct {
 	logger   pkg.Logger
 }
 
-func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 	username := m.username
 	if request.GetUsername() != "" {
 		username = request.GetUsername()

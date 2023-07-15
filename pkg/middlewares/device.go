@@ -19,7 +19,7 @@ type DeviceMiddleware struct {
 	uaLen  int
 }
 
-func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 	platform := request.GetPlatform()
 	browser := request.GetBrowser()
 	var ua []device.Device
@@ -35,7 +35,7 @@ func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request *pkg.Reques
 		uaLen = m.uaLen
 	}
 
-	if len(request.Header) == 0 && uaLen > 0 {
+	if len(request.GetHeaders()) == 0 && uaLen > 0 {
 		u := ua[rand.New(rand.NewSource(time.Now().UnixNano())).Intn(uaLen)]
 		rt := reflect.TypeOf(u)
 		rv := reflect.ValueOf(u)

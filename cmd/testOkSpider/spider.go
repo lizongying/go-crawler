@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/request"
 )
 
 type Spider struct {
@@ -39,12 +40,12 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 		return
 	}
 
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(response.Request.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
-		SetCallback(s.ParseOk))
+		SetCallBack(s.ParseOk))
 	if err != nil {
 		s.logger.Error(err)
 	}
@@ -56,10 +57,10 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	// mock server
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
-		SetCallback(s.ParseOk))
+		SetCallBack(s.ParseOk))
 	if err != nil {
 		s.logger.Error(err)
 	}

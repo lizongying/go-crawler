@@ -13,10 +13,10 @@ type RedirectMiddleware struct {
 	redirectMaxTimes  uint8
 }
 
-func (m *RedirectMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *RedirectMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 	if request.GetRedirectMaxTimes() != nil {
 		ctx := context.WithValue(request.Context(), "redirect_max_times", *request.GetRedirectMaxTimes())
-		request.Request = *request.WithContext(ctx)
+		request.WithContext(ctx)
 	}
 	return
 }

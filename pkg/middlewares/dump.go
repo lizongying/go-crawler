@@ -10,8 +10,8 @@ type DumpMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *DumpMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
-	m.logger.InfoF("request: %+v", *request)
+func (m *DumpMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
+	m.logger.InfoF("request: %+v", request)
 	return
 }
 

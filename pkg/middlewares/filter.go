@@ -12,7 +12,7 @@ type FilterMiddleware struct {
 	filter pkg.Filter
 }
 
-func (m *FilterMiddleware) ProcessRequest(ctx context.Context, request *pkg.Request) (err error) {
+func (m *FilterMiddleware) ProcessRequest(ctx context.Context, request pkg.Request) (err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}

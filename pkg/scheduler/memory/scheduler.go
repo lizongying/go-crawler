@@ -23,7 +23,7 @@ type Scheduler struct {
 	itemTimer           *time.Timer
 	itemChan            chan pkg.Item
 	itemActiveChan      chan struct{}
-	requestChan         chan *pkg.Request
+	requestChan         chan pkg.Request
 	requestActiveChan   chan struct{}
 	requestSlots        sync.Map
 
@@ -149,7 +149,7 @@ func (s *Scheduler) FromCrawler(crawler pkg.Crawler) pkg.Scheduler {
 	config := crawler.GetConfig()
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
-	s.requestChan = make(chan *pkg.Request, defaultRequestMax)
+	s.requestChan = make(chan pkg.Request, defaultRequestMax)
 	s.requestActiveChan = make(chan struct{}, defaultRequestMax)
 	s.itemChan = make(chan pkg.Item, defaultChanItemMax)
 	s.itemActiveChan = make(chan struct{}, defaultChanItemMax)

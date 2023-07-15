@@ -268,13 +268,13 @@
     * 如果您希望将文件保存到S3等对象存储中，需要进行相应的配置
     * Files下载
         * 在Item中设置Files请求：在Item中，您需要设置Files请求，即包含要下载的文件的请求列表。
-          可以使用`item.SetFilesRequest([]*pkg.Request{...})`
+          可以使用`item.SetFilesRequest([]pkg.Request{...})`
           方法设置请求列表。
         * Item.Data：您的Item.Data字段需要实现pkg.File的切片，用于保存下载文件的结果。
           该字段的名称必须是Files，如`type DataFile struct {Files []*media.File}`。
     * Images下载
         * 在Item中设置Images请求：在Item中，您需要设置Images请求，即包含要下载的图片的请求列表。
-          可以使用item.SetImagesRequest([]*pkg.Request{...})方法设置请求列表。
+          可以使用item.SetImagesRequest([]pkg.Request{...})方法设置请求列表。
         * Item.Data：您的Item.Data字段需要实现pkg.Image的切片，用于保存下载图片的结果。
           该字段的名称必须是Images，如`type DataImage struct {Images []*media.Image}`。
 * 爬虫结构
@@ -404,6 +404,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/request"
 )
 
 type ExtraOk struct {
@@ -444,12 +445,12 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 		return
 	}
 
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(response.Request.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
-		SetCallback(s.ParseOk))
+		SetCallBack(s.ParseOk))
 	if err != nil {
 		s.logger.Error(err)
 	}
@@ -460,10 +461,10 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	// mock server
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
-		SetCallback(s.ParseOk))
+		SetCallBack(s.ParseOk))
 	if err != nil {
 		s.logger.Error(err)
 	}

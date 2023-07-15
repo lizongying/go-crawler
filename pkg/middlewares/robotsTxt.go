@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/temoto/robotstxt"
 	"net/url"
@@ -23,7 +24,7 @@ func (m *RobotsTxtMiddleware) Start(ctx context.Context, crawler pkg.Crawler) (e
 		m.logger.Warn("host is emtpy")
 		return
 	}
-	r, e := crawler.GetScheduler().Request(ctx, new(pkg.Request).SetUrl(fmt.Sprintf("%s/robots.txt", host)).SetSkipMiddleware(true))
+	r, e := crawler.GetScheduler().Request(ctx, request.NewRequest().SetUrl(fmt.Sprintf("%s/robots.txt", host)).SetSkipMiddleware(true))
 	if e != nil {
 		err = e
 		m.logger.Error(e)
@@ -37,7 +38,7 @@ func (m *RobotsTxtMiddleware) Start(ctx context.Context, crawler pkg.Crawler) (e
 	return
 }
 
-func (m *RobotsTxtMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *RobotsTxtMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 	if m.group == nil {
 		return
 	}

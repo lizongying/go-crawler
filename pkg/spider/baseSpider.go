@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/request"
 	"log"
 	"runtime"
 )
@@ -23,8 +24,8 @@ type BaseSpider struct {
 	pkg.Crawler
 	name      string
 	host      string
-	callbacks map[string]pkg.Callback
-	errbacks  map[string]pkg.Errback
+	callbacks map[string]pkg.CallBack
+	errbacks  map[string]pkg.ErrBack
 	logger    pkg.Logger
 }
 
@@ -42,17 +43,20 @@ func (s *BaseSpider) SetHost(host string) pkg.Spider {
 	s.host = host
 	return s
 }
-func (s *BaseSpider) GetCallbacks() map[string]pkg.Callback {
+func (s *BaseSpider) GetCallBacks() map[string]pkg.CallBack {
 	return s.callbacks
 }
-func (s *BaseSpider) GetErrbacks() map[string]pkg.Errback {
+func (s *BaseSpider) GetErrBacks() map[string]pkg.ErrBack {
 	return s.errbacks
 }
-func (s *BaseSpider) SetCallbacks(callbacks map[string]pkg.Callback) {
+func (s *BaseSpider) SetCallBacks(callbacks map[string]pkg.CallBack) {
 	s.callbacks = callbacks
 }
-func (s *BaseSpider) SetErrbacks(errbacks map[string]pkg.Errback) {
+func (s *BaseSpider) SetErrBacks(errbacks map[string]pkg.ErrBack) {
 	s.errbacks = errbacks
+}
+func (s *BaseSpider) NewRequest() pkg.Request {
+	return new(request.Request)
 }
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	return

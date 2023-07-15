@@ -10,19 +10,19 @@ type Item interface {
 	GetData() any
 	SetReferer(string)
 	GetReferer() string
-	SetFilesRequest([]*Request)
-	GetFilesRequest() []*Request
+	SetFilesRequest([]Request)
+	GetFilesRequest() []Request
 	SetFiles([]File)
 	GetFiles() []File
-	SetImagesRequest([]*Request)
-	GetImagesRequest() []*Request
+	SetImagesRequest([]Request)
+	GetImagesRequest() []Request
 	SetImages([]Image)
 	GetImages() []Image
 }
 
 type ItemUnimplemented struct {
-	files     []*Request
-	images    []*Request
+	files     []Request
+	images    []Request
 	referer   string
 	UniqueKey string
 	Id        any
@@ -44,22 +44,22 @@ func (i *ItemUnimplemented) SetReferer(referer string) {
 func (i *ItemUnimplemented) GetReferer() string {
 	return i.referer
 }
-func (i *ItemUnimplemented) SetFilesRequest(files []*Request) {
+func (i *ItemUnimplemented) SetFilesRequest(files []Request) {
 	for _, v := range files {
 		v.SetFile(true)
 		i.files = append(i.files, v)
 	}
 }
-func (i *ItemUnimplemented) GetFilesRequest() []*Request {
+func (i *ItemUnimplemented) GetFilesRequest() []Request {
 	return i.files
 }
-func (i *ItemUnimplemented) SetImagesRequest(images []*Request) {
+func (i *ItemUnimplemented) SetImagesRequest(images []Request) {
 	for _, v := range images {
 		v.SetImage(true)
 		i.images = append(i.images, v)
 	}
 }
-func (i *ItemUnimplemented) GetImagesRequest() []*Request {
+func (i *ItemUnimplemented) GetImagesRequest() []Request {
 	return i.images
 }
 func (i *ItemUnimplemented) SetFiles(files []File) {

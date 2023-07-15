@@ -11,12 +11,12 @@ type RefererMiddleware struct {
 	refererPolicy pkg.ReferrerPolicy
 }
 
-func (m *RefererMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
-	if m.refererPolicy == pkg.NoReferrerPolicy && request.Header != nil && request.Header.Get("Referer") != "" {
+func (m *RefererMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
+	if m.refererPolicy == pkg.NoReferrerPolicy && request.GetHeaders() != nil && request.GetHeader("Referer") != "" {
 		//request.Header.Del("Referer")
 	}
 
-	if m.refererPolicy == pkg.DefaultReferrerPolicy && request.Header != nil && request.GetReferer() != "" {
+	if m.refererPolicy == pkg.DefaultReferrerPolicy && request.GetHeaders() != nil && request.GetReferer() != "" {
 		request.SetHeader("Referer", request.GetReferer())
 	}
 
@@ -27,7 +27,7 @@ func (m *RefererMiddleware) ProcessResponse(_ context.Context, response *pkg.Res
 	// add referer to context
 	if response.Request.GetUrl() != "" {
 		ctx := context.WithValue(response.Request.Context(), "referer", response.Request.GetUrl())
-		response.Request.Request = *response.Request.WithContext(ctx)
+		response.Request.WithContext(ctx)
 	}
 
 	return

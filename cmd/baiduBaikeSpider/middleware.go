@@ -14,7 +14,7 @@ type Middleware struct {
 	urlDetail string
 }
 
-func (m *Middleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *Middleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 	switch request.GetExtraName() {
 	case "ExtraDetail":
 		var extra ExtraDetail

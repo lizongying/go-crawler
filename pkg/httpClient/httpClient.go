@@ -86,8 +86,8 @@ func NewClient(conn net.Conn, option Option) net.Conn {
 	return tls.Client(conn, config)
 }
 
-func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
-	h.logger.DebugF("request: %+v", *request)
+func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (response *pkg.Response, err error) {
+	h.logger.DebugF("request: %+v", request.GetRequest())
 
 	if ctx == nil {
 		ctx = context.Background()
@@ -169,11 +169,11 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		h.DialTimeout = &dialTimeout
 	}
 
-	network := request.URL.Scheme
-	address := request.URL.Host
+	network := request.GetURL().Scheme
+	address := request.GetURL().Host
 
 	// Check if the URL specifies a port, otherwise use the default port
-	if request.URL.Port() == "" {
+	if request.GetURL().Port() == "" {
 		switch network {
 		case "http":
 			address += ":80"
@@ -191,7 +191,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 
 	option := Option{
 		RootCAs:    defaultCAs,
-		ServerName: request.URL.Hostname(),
+		ServerName: request.GetURL().Hostname(),
 		Http2:      h.httpProto == "2.0",
 	}
 	if h.Ja3 {
@@ -206,9 +206,9 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 	}
 
 	if h.httpProto == "2.0" {
-		request.Proto = "HTTP/2.0"
-		request.ProtoMajor = 2
-		request.ProtoMinor = 0
+		request.GetRequest().Proto = "HTTP/2.0"
+		request.GetRequest().ProtoMajor = 2
+		request.GetRequest().ProtoMinor = 0
 
 		tr := transport
 		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -218,11 +218,11 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 			return conn, nil
 		}
 
-		response.Response, err = tr.RoundTrip(&request.Request)
+		response.Response, err = tr.RoundTrip(request.GetRequest())
 	} else {
-		request.Proto = "HTTP/1.1"
-		request.ProtoMajor = 1
-		request.ProtoMinor = 1
+		request.GetRequest().Proto = "HTTP/1.1"
+		request.GetRequest().ProtoMajor = 1
+		request.GetRequest().ProtoMinor = 1
 
 		tr := transport
 		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -231,7 +231,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return conn, nil
 		}
-		response.Response, err = tr.RoundTrip(&request.Request)
+		response.Response, err = tr.RoundTrip(request.GetRequest())
 	}
 
 	response.Request.SetSpendTime(time.Now().Sub(begin))

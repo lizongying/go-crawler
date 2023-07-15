@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strconv"
 )
@@ -41,7 +42,7 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 		},
 		FileName: "image",
 	}
-	item.SetImagesRequest([]*pkg.Request{new(pkg.Request).SetUrl("https://www.bing.com/th?id=OHR.ClamBears_ZH-CN5686721500_UHD.jpg&w=3840&h=2160&c=8&rs=1&o=3&r=0")})
+	item.SetImagesRequest([]pkg.Request{request.NewRequest().SetUrl("https://www.bing.com/th?id=OHR.ClamBears_ZH-CN5686721500_UHD.jpg&w=3840&h=2160&c=8&rs=1&o=3&r=0")})
 	err = s.YieldItem(ctx, &item)
 	if err != nil {
 		s.logger.Error(err)
@@ -52,12 +53,12 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	//	s.logger.Info("extra", utils.JsonStr(extra))
 	//}
 	count := extra.Count + 1
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(response.Request.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: count,
 		}).
-		SetCallback(s.ParseOk).
+		SetCallBack(s.ParseOk).
 		SetUniqueKey(strconv.Itoa(count)))
 	if err != nil {
 		s.logger.Error(err)
@@ -69,11 +70,11 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 
-	err = s.YieldRequest(ctx, new(pkg.Request).
+	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetUniqueKey("0").
-		SetCallback(s.ParseOk))
+		SetCallBack(s.ParseOk))
 	if err != nil {
 		s.logger.Error(err)
 	}

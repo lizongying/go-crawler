@@ -10,13 +10,13 @@ import (
 	"time"
 )
 
-func (s *Scheduler) Request(ctx context.Context, request *pkg.Request) (response *pkg.Response, err error) {
+func (s *Scheduler) Request(ctx context.Context, request pkg.Request) (response *pkg.Response, err error) {
 	if request == nil {
 		err = errors.New("nil request")
 		return
 	}
 
-	s.logger.DebugF("request: %+v", *request)
+	s.logger.DebugF("request: %+v", request)
 
 	if ctx == nil {
 		ctx = context.Background()
@@ -33,11 +33,11 @@ func (s *Scheduler) Request(ctx context.Context, request *pkg.Request) (response
 		if request != nil {
 			ctx = request.Context()
 		}
-		s.handleError(ctx, response, err, request.GetErrback())
+		s.handleError(ctx, response, err, request.GetErrBack())
 		return
 	}
 
-	s.logger.DebugF("request %+v", *request)
+	s.logger.DebugF("request %+v", request)
 
 	return
 }
@@ -88,7 +88,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		if err != nil {
 			s.logger.Error(err)
 		}
-		go func(request *pkg.Request) {
+		go func(request pkg.Request) {
 			defer func() {
 				<-s.requestActiveChan
 			}()
@@ -104,11 +104,11 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				return
 			}
 
-			if request.GetCallback() == nil {
+			if request.GetCallBack() == nil {
 				err = errors.New("nil CallBack")
 				s.logger.Error(err)
 
-				s.handleError(request.Context(), response, err, request.GetErrback())
+				s.handleError(request.Context(), response, err, request.GetErrBack())
 				return
 			}
 
@@ -119,14 +119,14 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
 						s.logger.Error(err)
-						s.handleError(response.Request.Context(), response, err, request.GetErrback())
+						s.handleError(response.Request.Context(), response, err, request.GetErrBack())
 					}
 				}()
 
-				err = request.GetCallback()(response.Request.Context(), response)
+				err = request.GetCallBack()(response.Request.Context(), response)
 				if e != nil {
 					s.logger.Error(err)
-					s.handleError(response.Request.Context(), response, err, request.GetErrback())
+					s.handleError(response.Request.Context(), response, err, request.GetErrBack())
 					return
 				}
 			}(response)
@@ -136,7 +136,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 	return
 }
 
-func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err error) {
+func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err error) {
 	if len(s.requestChan) >= defaultRequestMax {
 		err = errors.New("requestChan max limit")
 		s.logger.Error(err)

@@ -10,7 +10,7 @@ type ProxyMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *ProxyMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
+func (m *ProxyMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 
 	return
 }

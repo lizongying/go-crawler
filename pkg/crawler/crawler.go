@@ -166,11 +166,11 @@ func (c *Crawler) SetOkHttpCodes(httpCodes ...int) {
 	}
 }
 
-func (c *Crawler) GetCallbacks() map[string]pkg.Callback {
-	return c.spider.GetCallbacks()
+func (c *Crawler) GetCallBacks() map[string]pkg.CallBack {
+	return c.spider.GetCallBacks()
 }
-func (c *Crawler) GetErrbacks() map[string]pkg.Errback {
-	return c.spider.GetErrbacks()
+func (c *Crawler) GetErrBacks() map[string]pkg.ErrBack {
+	return c.spider.GetErrBacks()
 }
 
 func (c *Crawler) GetConfig() pkg.Config {
@@ -226,8 +226,8 @@ func (c *Crawler) SetSignal(signal pkg.Signal) {
 	c.Signal = signal
 }
 func (c *Crawler) registerParser() {
-	callbacks := make(map[string]pkg.Callback)
-	errbacks := make(map[string]pkg.Errback)
+	callbacks := make(map[string]pkg.CallBack)
+	errbacks := make(map[string]pkg.ErrBack)
 	rt := reflect.TypeOf(c.spider)
 	rv := reflect.ValueOf(c.spider)
 	l := rt.NumMethod()
@@ -242,8 +242,8 @@ func (c *Crawler) registerParser() {
 			errbacks[name] = errback
 		}
 	}
-	c.spider.SetCallbacks(callbacks)
-	c.spider.SetErrbacks(errbacks)
+	c.spider.SetCallBacks(callbacks)
+	c.spider.SetErrBacks(errbacks)
 }
 func (c *Crawler) Start(ctx context.Context) (err error) {
 	if ctx == nil {
