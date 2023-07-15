@@ -20,8 +20,8 @@ type DeviceMiddleware struct {
 }
 
 func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
-	platform := request.Platform
-	browser := request.Browser
+	platform := request.GetPlatform()
+	browser := request.GetBrowser()
 	var ua []device.Device
 	uaLen := 0
 	if len(platform) > 0 && len(browser) > 0 {

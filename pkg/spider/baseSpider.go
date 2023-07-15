@@ -31,14 +31,16 @@ type BaseSpider struct {
 func (s *BaseSpider) GetName() string {
 	return s.name
 }
-func (s *BaseSpider) SetName(name string) {
+func (s *BaseSpider) SetName(name string) pkg.Spider {
 	s.name = name
+	return s
 }
 func (s *BaseSpider) GetHost() string {
 	return s.host
 }
-func (s *BaseSpider) SetHost(host string) {
+func (s *BaseSpider) SetHost(host string) pkg.Spider {
 	s.host = host
+	return s
 }
 func (s *BaseSpider) GetCallbacks() map[string]pkg.Callback {
 	return s.callbacks

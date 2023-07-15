@@ -23,7 +23,7 @@ func (m *RobotsTxtMiddleware) Start(ctx context.Context, crawler pkg.Crawler) (e
 		m.logger.Warn("host is emtpy")
 		return
 	}
-	r, e := crawler.GetScheduler().Request(ctx, new(pkg.Request).SetUrl(fmt.Sprintf("%s/robots.txt", host)).DisableMiddleware())
+	r, e := crawler.GetScheduler().Request(ctx, new(pkg.Request).SetUrl(fmt.Sprintf("%s/robots.txt", host)).SetSkipMiddleware(true))
 	if e != nil {
 		err = e
 		m.logger.Error(e)

@@ -27,9 +27,13 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request *pkg.Reques
 		err = errors.New("url is empty")
 		return
 	}
-	request.CreateTime = utils.NowStr()
-	request.Checksum = utils.StrMd5(request.GetMethod(), request.GetUrl(), request.GetBody())
-	if request.GetCanonicalHeaderKey() {
+	request.SetCreateTime(utils.NowStr())
+	request.SetChecksum(utils.StrMd5(request.GetMethod(), request.GetUrl(), request.GetBody()))
+	canonicalHeaderKey := true
+	if request.GetCanonicalHeaderKey() != nil {
+		canonicalHeaderKey = *request.GetCanonicalHeaderKey()
+	}
+	if canonicalHeaderKey {
 		headers := make(map[string][]string)
 		for k, v := range request.Header {
 			headers[http.CanonicalHeaderKey(k)] = v

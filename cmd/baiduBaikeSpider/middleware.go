@@ -18,7 +18,7 @@ func (m *Middleware) ProcessRequest(_ context.Context, request *pkg.Request) (er
 	switch request.GetExtraName() {
 	case "ExtraDetail":
 		var extra ExtraDetail
-		err = request.GetExtra(&extra)
+		err = request.UnmarshalExtra(&extra)
 		if err != nil {
 			m.logger.Error(err)
 			return

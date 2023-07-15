@@ -22,7 +22,7 @@ type Downloader struct {
 }
 
 func (d *Downloader) processRequest(ctx context.Context, request *pkg.Request) (err error) {
-	if request.IsDisableMiddleware() {
+	if request.GetSkipMiddleware() {
 		return
 	}
 	for k, v := range d.processRequestFns {
@@ -89,7 +89,7 @@ func (d *Downloader) Download(ctx context.Context, request *pkg.Request) (respon
 }
 
 func (d *Downloader) processResponse(ctx context.Context, response *pkg.Response) (err error) {
-	if response.Request.IsDisableMiddleware() {
+	if response.Request.GetSkipMiddleware() {
 		return
 	}
 	for k, v := range d.processResponseFns {

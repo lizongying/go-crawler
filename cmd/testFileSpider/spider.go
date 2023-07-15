@@ -18,9 +18,13 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
 	var extra ExtraOk
-	_ = response.Request.GetExtra(&extra)
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", string(response.BodyBytes))
+	err = response.Request.UnmarshalExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
+	s.logger.Info("ExtraOk", utils.JsonStr(extra))
+	s.logger.Info("BodyBytes", string(response.BodyBytes))
 
 	if extra.Count > 0 {
 		return
@@ -41,25 +45,25 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	err = s.YieldItem(ctx, &item)
 	if err != nil {
 		s.logger.Error(err)
-		return err
+		return
 	}
 
 	//if extra.Count%1000 == 0 {
 	//	s.logger.Info("extra", utils.JsonStr(extra))
 	//}
-	requestNext := new(pkg.Request)
-	requestNext.SetUrl(response.Request.GetUrl())
 	count := extra.Count + 1
-	requestNext.SetExtra(&ExtraOk{
-		Count: count,
-	})
-	requestNext.SetCallback(s.ParseOk)
-	requestNext.SetUniqueKey(strconv.Itoa(count))
-	//requestNext.SetUniqueKey("2")
-	err = s.YieldRequest(ctx, requestNext)
+	err = s.YieldRequest(ctx, new(pkg.Request).
+		SetUrl(response.Request.GetUrl()).
+		SetExtra(&ExtraOk{
+			Count: count,
+		}).
+		SetCallback(s.ParseOk).
+		SetUniqueKey(strconv.Itoa(count)))
 	if err != nil {
 		s.logger.Error(err)
+		return
 	}
+
 	return
 }
 
@@ -67,15 +71,17 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 	s.AddDevServerRoutes(devServer.NewFileHandler(s.logger))
-	request := new(pkg.Request)
-	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk))
-	request.SetExtra(&ExtraOk{})
-	request.SetUniqueKey("0")
-	request.SetCallback(s.ParseOk)
-	err = s.YieldRequest(ctx, request)
+
+	err = s.YieldRequest(ctx, new(pkg.Request).
+		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetExtra(&ExtraOk{}).
+		SetUniqueKey("0").
+		SetCallback(s.ParseOk))
 	if err != nil {
 		s.logger.Error(err)
+		return
 	}
+
 	return
 }
 

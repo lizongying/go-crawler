@@ -82,81 +82,79 @@
     * stats: 10
         * 数据统计中间件，用于统计爬虫的请求、响应和处理情况。
         * 可以通过配置项enable_stats_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.StatsMiddleware), 10)`
+        * 在NewApp中加入crawler选项`pkg.WithStatsMiddleware()`
     * dump: 20
         * 控制台打印item.data中间件，用于打印请求和响应的详细信息。
         * 可以通过配置项enable_dump_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DumpMiddleware), 20)`
+        * 在NewApp中加入crawler选项`pkg.WithDumpMiddleware()`
     * proxy: 30
         * 用于切换请求使用的代理。
         * 可以通过配置项enable_proxy_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ProxyMiddleware), 30)`
+        * 在NewApp中加入crawler选项`pkg.WithProxyMiddleware()`
     * robotsTxt: 40
         * robots.txt支持中间件，用于支持爬取网站的robots.txt文件。
         * 可以通过配置项enable_robots_txt_middleware来启用或禁用，默认禁用。
-        * 在NewApp中加入crawler选项`pkg.WithRobotsTxt()`
-          或`pkg.WithMiddleware(new(middlewares.RobotsTxtMiddleware), 40)`
+        * 在NewApp中加入crawler选项`pkg.WithRobotsTxtMiddleware()`
     * filter: 50
         * 过滤重复请求中间件，用于过滤重复的请求。默认只有在Item保存成功后才会进入去重队列。
         * 可以通过配置项enable_filter_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FilterMiddleware), 50)`
+        * 在NewApp中加入crawler选项`pkg.WithFilterMiddleware()`
     * file: 60
         * 自动添加文件信息中间件，用于自动添加文件信息到请求中。
         * 可以通过配置项enable_file_middleware来启用或禁用，默认禁用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.FileMiddleware), 60)`
+        * 在NewApp中加入crawler选项`pkg.WithFileMiddleware()`
     * image: 70
         * 自动添加图片的宽高等信息中间件
         * 用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ImageMiddleware), 70)`
+        * 在NewApp中加入crawler选项`pkg.WithImageMiddleware()`
     * http: 80
         * 创建请求中间件，用于创建HTTP请求。
         * 可以通过配置项enable_http_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.HttpMiddleware), 80)`
+        * 在NewApp中加入crawler选项`pkg.WithHttpMiddleware()`
     * retry: 90
         * 请求重试中间件，用于在请求失败时进行重试。
         * 默认最大重试次数为10。可以通过配置项enable_retry_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RetryMiddleware), 90)`
+        * 在NewApp中加入crawler选项`pkg.WithRetryMiddleware()`
     * url: 100
         * 限制URL长度中间件，用于限制请求的URL长度。
         * 可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.UrlMiddleware), 100)`
+        * 在NewApp中加入crawler选项`pkg.WithUrlMiddleware()`
     * referer: 110
         * 自动添加Referer中间件，用于自动添加Referer到请求中。
         * 可以根据referrer_policy配置项选择不同的Referer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源
         * 配置 enable_referer_middleware: true 是否开启自动添加referer，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RefererMiddleware), 110)`
+        * 在NewApp中加入crawler选项`pkg.WithRefererMiddleware()`
     * cookie: 120
         * 自动添加Cookie中间件，用于自动添加之前请求返回的Cookie到后续请求中。
         * 可以通过配置项enable_cookie_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CookieMiddleware), 120)`
+        * 在NewApp中加入crawler选项`pkg.WithCookieMiddleware()`
     * redirect: 130
         * 网址重定向中间件，用于处理网址重定向，默认支持301和302重定向。
         * 可以通过配置项enable_redirect_middleware和redirect_max_times来启用和设置最大重定向次数，默认启用和最大次数为1。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.RedirectMiddleware), 130)`
+        * 在NewApp中加入crawler选项`pkg.WithRedirectMiddleware()`
     * chrome: 140
         * 模拟Chrome中间件，用于模拟Chrome浏览器。
         * 可以通过配置项enable_chrome_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.ChromeMiddleware), 140)`
+        * 在NewApp中加入crawler选项`pkg.WithChromeMiddleware()`
     * httpAuth: 150
         * HTTP认证中间件，通过提供用户名（username）和密码（password）进行HTTP认证。
         * 需要在具体的请求中设置用户名和密码。可以通过配置项enable_http_auth_middleware来启用或禁用，默认禁用。
-        * 在NewApp中加入crawler选项`pkg.WithHttpAuth()`
-          或`pkg.WithMiddleware(new(middlewares.HttpAuthMiddleware), 150)`
+        * 在NewApp中加入crawler选项`pkg.WithHttpAuthMiddleware()`
     * compress: 160
         * 支持gzip/deflate解压缩中间件，用于处理响应的压缩编码。
         * 可以通过配置项enable_compress_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.CompressMiddleware), 160)`
+        * 在NewApp中加入crawler选项`pkg.WithCompressMiddleware()`
     * decode: 170
         * 中文解码中间件，支持对响应中的GBK、GB2312和Big5编码进行解码。
         * 可以通过配置项enable_decode_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithMiddleware(new(middlewares.DecodeMiddleware), 170)`
+        * 在NewApp中加入crawler选项`pkg.WithDecodeMiddleware()`
     * device: 180
         * 修改请求设备信息中间件，用于修改请求的设备信息，包括请求头（header）和TLS信息。目前只支持User-Agent随机切换。
         * 需要设置设备范围（Platforms）和浏览器范围（Browsers）。
         * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
         * Browsers: Chrome/Edge/Safari/FireFox
         * 可以通过配置项enable_device_middleware来启用或禁用，默认禁用。
-        * 在NewApp中加入crawler选项`pkg.WithDevice()`启用该中间件。
+        * 在NewApp中加入crawler选项`pkg.WithDeviceMiddleware()`启用该中间件。
     * custom: 11
         * 自定义中间件
         * 在NewApp中加入crawler选项`pkg.WithCustomMiddleware(new(CustomMiddleware))`启用该中间件。
@@ -423,8 +421,12 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
 	var extra ExtraOk
-	_ = response.Request.GetExtra(&extra)
-
+	err = response.Request.UnmarshalExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
+	
 	item := pkg.ItemNone{
 		ItemUnimplemented: pkg.ItemUnimplemented{
 			Data: &DataOk{

@@ -31,8 +31,8 @@ func (m *FileMiddleware) ProcessResponse(ctx context.Context, response *pkg.Resp
 		return
 	}
 
-	isImage := response.Request.GetImage()
-	if isImage {
+	isFile := response.Request.GetFile()
+	if isFile {
 		i := new(media.File)
 		i.SetName(utils.StrMd5(response.Request.URL.String()))
 		ext := ""

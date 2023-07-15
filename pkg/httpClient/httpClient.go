@@ -93,15 +93,15 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		ctx = context.Background()
 	}
 
-	if request.Timeout > 0 {
+	if request.GetTimeout() > 0 {
 		//c, cancel := context.WithTimeout(ctx, request.Timeout)
 		//defer cancel()
 		//request.Request = request.Request.WithContext(c)
 	}
 
 	timeout := h.timeout
-	if request.Timeout > 0 {
-		timeout = request.Timeout
+	if request.GetTimeout() > 0 {
+		timeout = request.GetTimeout()
 	}
 
 	// Get a copy of the default root CAs
@@ -131,10 +131,14 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 			//InsecureSkipVerify: true,
 		},
 	}
-	if request.GetProxyEnable() {
+	proxyEnable := false
+	if request.GetProxyEnable() != nil {
+		proxyEnable = *request.GetProxyEnable()
+	}
+	if proxyEnable {
 		proxy := h.proxy
-		if request.Proxy != nil {
-			proxy = request.Proxy
+		if request.GetProxy() != nil {
+			proxy = request.GetProxy()
 		}
 		if proxy == nil {
 			err = errors.New("nil proxy")
@@ -144,8 +148,8 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 	}
 
 	httpProto := h.httpProto
-	if request.HttpProto != "" {
-		httpProto = request.HttpProto
+	if request.GetHttpProto() != "" {
+		httpProto = request.GetHttpProto()
 	}
 	if httpProto != "2.0" {
 		transport.ForceAttemptHTTP2 = false
@@ -230,16 +234,16 @@ func (h *HttpClient) DoRequest(ctx context.Context, request *pkg.Request) (respo
 		response.Response, err = tr.RoundTrip(&request.Request)
 	}
 
-	response.Request.SpendTime = time.Now().Sub(begin)
+	response.Request.SetSpendTime(time.Now().Sub(begin))
 	if err != nil {
 		retryMaxTimes := h.retryMaxTimes
-		if request.RetryMaxTimes != nil {
-			retryMaxTimes = *request.RetryMaxTimes
+		if request.GetRetryMaxTimes() != nil {
+			retryMaxTimes = *request.GetRetryMaxTimes()
 		}
-		if request.RetryTimes < retryMaxTimes {
+		if request.GetRetryTimes() < retryMaxTimes {
 			return
 		}
-		h.logger.Error(err, "RetryTimes:", request.RetryTimes)
+		h.logger.Error(err, "RetryTimes:", request.GetRetryTimes())
 		h.logger.ErrorF("request: %+v", request)
 		h.logger.Debug(utils.Request2Curl(request))
 		return

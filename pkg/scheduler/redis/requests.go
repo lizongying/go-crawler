@@ -7,7 +7,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"golang.org/x/time/rate"
 	"net/http"
-	"reflect"
 	"runtime"
 	"time"
 )
@@ -35,7 +34,7 @@ func (s *Scheduler) Request(ctx context.Context, request *pkg.Request) (response
 		if request != nil {
 			ctx = request.Context()
 		}
-		s.handleError(ctx, response, err, request.ErrBack)
+		s.handleError(ctx, response, err, request.GetErrback())
 		return
 	}
 
@@ -93,17 +92,20 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			s.logger.Warn(err)
 			continue
 		}
-		slot = request.Slot
+		slot = request.GetSlot()
 		if slot == "" {
 			slot = "*"
 		}
 		slotValue, ok := s.requestSlots.Load(slot)
 		if !ok {
-			concurrency := request.GetConcurrency()
+			concurrency := uint8(1)
+			if request.GetConcurrency() != nil {
+				concurrency = *request.GetConcurrency()
+			}
 			if concurrency < 1 {
 				concurrency = 1
 			}
-			requestSlot = rate.NewLimiter(rate.Every(request.Interval/time.Duration(concurrency)), int(concurrency))
+			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
 			s.requestSlots.Store(slot, requestSlot)
 		}
 
@@ -129,11 +131,11 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				return
 			}
 
-			if request.CallBack == nil {
+			if request.GetCallback() == nil {
 				err = errors.New("nil CallBack")
 				s.logger.Error(err)
 
-				s.handleError(request.Context(), response, err, request.ErrBack)
+				s.handleError(request.Context(), response, err, request.GetErrback())
 				return
 			}
 
@@ -144,14 +146,14 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
 						s.logger.Error(err)
-						s.handleError(response.Request.Context(), response, err, request.ErrBack)
+						s.handleError(response.Request.Context(), response, err, request.GetErrback())
 					}
 				}()
 
-				err = request.CallBack(response.Request.Context(), response)
+				err = request.GetCallback()(response.Request.Context(), response)
 				if e != nil {
 					s.logger.Error(err)
-					s.handleError(response.Request.Context(), response, err, request.ErrBack)
+					s.handleError(response.Request.Context(), response, err, request.GetErrback())
 					return
 				}
 			}(response)
@@ -169,22 +171,10 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request *pkg.Request) (err
 		return
 	}
 
-	extraValue := reflect.ValueOf(request.Extra)
-	if !extraValue.IsNil() && extraValue.Kind() != reflect.Ptr {
-		err = errors.New("request.Extra must be a pointer")
-		s.logger.Error(err)
-		return
-	}
-
-	if request.GetSkip() {
-		s.logger.Debug("skip")
-		return
-	}
-
 	// add referer to request
 	referer := ctx.Value("referer")
 	if referer != nil {
-		request.Referer = referer.(string)
+		request.SetReferer(referer.(string))
 		// TODO to header?
 	}
 

@@ -14,8 +14,8 @@ type RedirectMiddleware struct {
 }
 
 func (m *RedirectMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
-	if request.RedirectMaxTimes != nil {
-		ctx := context.WithValue(request.Context(), "redirect_max_times", *request.RedirectMaxTimes)
+	if request.GetRedirectMaxTimes() != nil {
+		ctx := context.WithValue(request.Context(), "redirect_max_times", *request.GetRedirectMaxTimes())
 		request.Request = *request.WithContext(ctx)
 	}
 	return
@@ -36,15 +36,15 @@ func (m *RedirectMiddleware) ProcessRequest(_ context.Context, request *pkg.Requ
 //	m.logger.Info("StatusCode", response.StatusCode)
 //	m.logger.Info("redirectHttpCodes", m.redirectHttpCodes)
 //	if redirectMaxTimes > 0 && (utils.InSlice(response.StatusCode, m.redirectHttpCodes)) {
-//		if request.RedirectTimes < redirectMaxTimes {
-//			request.RedirectTimes++
-//			m.logger.Info(request.GetUniqueKey(), "redirect times:", request.RedirectTimes, "SpendTime:", request.SpendTime)
+//		if request.GetRedirectTimes() < redirectMaxTimes {
+//			request.SetRedirectTimes(request.GetRedirectTimes()+1)
+//			m.logger.Info(request.GetUniqueKey(), "redirect times:", request.GetRedirectTimes(), "SpendTime:", request.GetSpendTime())
 //			err = c.FirstRequest()
 //			return
 //		}
 //
 //		err = errors.New("redirect max times")
-//		m.logger.Error(request.GetUniqueKey(), err, request.RedirectTimes, request.RedirectMaxTimes)
+//		m.logger.Error(request.GetUniqueKey(), err, request.GetRedirectTimes(), request.RedirectMaxTimes)
 //		return
 //	}
 //

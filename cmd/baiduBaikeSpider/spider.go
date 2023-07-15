@@ -15,17 +15,14 @@ type Spider struct {
 }
 
 func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err error) {
-	//s.logger.Info(response.Request.Request.Header)
 	var extra ExtraDetail
-	err = response.Request.GetExtra(&extra)
+	err = response.Request.UnmarshalExtra(&extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("Detail", utils.JsonStr(extra))
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	s.logger.Info("ExtraDetail", utils.JsonStr(extra))
+	s.logger.Info("BodyBytes", string(response.BodyBytes))
 
 	x, err := response.Xpath()
 	if err != nil {
@@ -34,7 +31,6 @@ func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err e
 	}
 
 	content := x.FindNodeOne("//div[contains(@class, 'J-content')]").FindStrOne("string(.)")
-	s.logger.Info(string(response.BodyBytes))
 	data := DataWord{
 		Id:      extra.Keyword,
 		Keyword: extra.Keyword,
@@ -52,17 +48,24 @@ func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err e
 	err = s.YieldItem(ctx, &item)
 	if err != nil {
 		s.logger.Error(err)
-		return err
+		return
 	}
 
 	return
 }
 
-// Test go run cmd/baiduBaikeSpider/* -c example.yml -m prod
+// Test go run cmd/baiduBaikeSpider/* -c dev.yml -m prod
 func (s *Spider) Test(ctx context.Context, _ string) (err error) {
-	err = s.YieldRequest(ctx, new(pkg.Request).SetExtra(&ExtraDetail{
-		Keyword: "动物传染病",
-	}).SetCallback(s.ParseDetail))
+	err = s.YieldRequest(ctx, new(pkg.Request).
+		SetExtra(&ExtraDetail{
+			Keyword: "动物传染病",
+		}).
+		SetCallback(s.ParseDetail))
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
+
 	return
 }
 

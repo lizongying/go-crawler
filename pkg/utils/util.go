@@ -245,3 +245,40 @@ func GetBoolDefault(s string, d bool) bool {
 		return d
 	}
 }
+
+func MapToStruct(data map[string]interface{}, obj interface{}) error {
+	objValue := reflect.ValueOf(obj)
+	if objValue.Kind() != reflect.Ptr || objValue.IsNil() {
+		return fmt.Errorf("obj must be a non-null pointer")
+	}
+
+	objValue = objValue.Elem()
+	objType := objValue.Type()
+
+	for i := 0; i < objValue.NumField(); i++ {
+		field := objValue.Field(i)
+		fieldType := objType.Field(i)
+
+		value, ok := data[fieldType.Name]
+		if !ok {
+			continue
+		}
+
+		fieldValue := reflect.ValueOf(value)
+
+		if fieldType.Type.Kind() == reflect.Struct && fieldValue.Type().Kind() == reflect.Map {
+			nestedStruct := reflect.New(field.Type()).Interface()
+			err := MapToStruct(fieldValue.Interface().(map[string]interface{}), nestedStruct)
+			if err != nil {
+				return err
+			}
+			field.Set(reflect.ValueOf(nestedStruct).Elem())
+		} else if fieldValue.Type().ConvertibleTo(field.Type()) {
+			field.Set(fieldValue.Convert(field.Type()))
+		} else {
+			return fmt.Errorf("field %s type does not match", fieldType.Name)
+		}
+	}
+
+	return nil
+}

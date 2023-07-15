@@ -14,12 +14,12 @@ type HttpAuthMiddleware struct {
 
 func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request *pkg.Request) (err error) {
 	username := m.username
-	if request.Username != "" {
-		username = request.Username
+	if request.GetUsername() != "" {
+		username = request.GetUsername()
 	}
 	password := m.password
-	if request.Password != "" {
-		password = request.Password
+	if request.GetPassword() != "" {
+		password = request.GetPassword()
 	}
 
 	if username != "" && password != "" {

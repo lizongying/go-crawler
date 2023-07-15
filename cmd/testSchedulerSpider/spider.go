@@ -18,7 +18,11 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
 	var extra ExtraOk
-	_ = response.Request.GetExtra(&extra)
+	err = response.Request.UnmarshalExtra(&extra)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 	s.logger.Info("extra", utils.JsonStr(extra))
 	s.logger.Info("response", string(response.BodyBytes))
 
@@ -47,16 +51,14 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	//if extra.Count%1000 == 0 {
 	//	s.logger.Info("extra", utils.JsonStr(extra))
 	//}
-	requestNext := new(pkg.Request)
-	requestNext.SetUrl(response.Request.GetUrl())
 	count := extra.Count + 1
-	requestNext.SetExtra(&ExtraOk{
-		Count: count,
-	})
-	requestNext.SetCallback(s.ParseOk)
-	requestNext.SetUniqueKey(strconv.Itoa(count))
-	//requestNext.SetUniqueKey("2")
-	err = s.YieldRequest(ctx, requestNext)
+	err = s.YieldRequest(ctx, new(pkg.Request).
+		SetUrl(response.Request.GetUrl()).
+		SetExtra(&ExtraOk{
+			Count: count,
+		}).
+		SetCallback(s.ParseOk).
+		SetUniqueKey(strconv.Itoa(count)))
 	if err != nil {
 		s.logger.Error(err)
 	}
@@ -66,12 +68,12 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 // TestOk go run cmd/testSchedulerSpider/*.go -c dev.yml -f TestOk -m dev
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
-	request := new(pkg.Request)
-	request.SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk))
-	request.SetExtra(&ExtraOk{})
-	request.SetUniqueKey("0")
-	request.SetCallback(s.ParseOk)
-	err = s.YieldRequest(ctx, request)
+
+	err = s.YieldRequest(ctx, new(pkg.Request).
+		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetExtra(&ExtraOk{}).
+		SetUniqueKey("0").
+		SetCallback(s.ParseOk))
 	if err != nil {
 		s.logger.Error(err)
 	}

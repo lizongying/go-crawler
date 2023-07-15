@@ -16,8 +16,8 @@ func (m *RefererMiddleware) ProcessRequest(_ context.Context, request *pkg.Reque
 		//request.Header.Del("Referer")
 	}
 
-	if m.refererPolicy == pkg.DefaultReferrerPolicy && request.Header != nil && request.Referer != "" {
-		request.SetHeader("Referer", request.Referer)
+	if m.refererPolicy == pkg.DefaultReferrerPolicy && request.Header != nil && request.GetReferer() != "" {
+		request.SetHeader("Referer", request.GetReferer())
 	}
 
 	return
