@@ -5,7 +5,7 @@ import (
 )
 
 type Downloader interface {
-	Download(context.Context, Request) (*Response, error)
+	Download(context.Context, Request) (Response, error)
 	GetMiddlewareNames() map[uint8]string
 	GetMiddlewares() []Middleware
 	SetMiddleware(Middleware, uint8)

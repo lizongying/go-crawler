@@ -14,7 +14,7 @@ import (
 type Downloader struct {
 	middlewares        []pkg.Middleware
 	processRequestFns  []func(context.Context, pkg.Request) error
-	processResponseFns []func(context.Context, *pkg.Response) error
+	processResponseFns []func(context.Context, pkg.Response) error
 	httpClient         pkg.HttpClient
 	crawler            pkg.Crawler
 	logger             pkg.Logger
@@ -38,7 +38,7 @@ func (d *Downloader) processRequest(ctx context.Context, request pkg.Request) (e
 	return
 }
 
-func (d *Downloader) Download(ctx context.Context, request pkg.Request) (response *pkg.Response, err error) {
+func (d *Downloader) Download(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -64,7 +64,7 @@ func (d *Downloader) Download(ctx context.Context, request pkg.Request) (respons
 		d.logger.Error(err)
 		return
 	}
-	d.logger.Debug("StatusCode", response.StatusCode)
+	d.logger.Debug("StatusCode", response.GetStatusCode())
 
 	err = d.processResponse(ctx, response)
 	if err != nil {
@@ -82,14 +82,14 @@ func (d *Downloader) Download(ctx context.Context, request pkg.Request) (respons
 	}
 
 	if response != nil && request != nil {
-		response.Request = request
+		response.SetRequest(request)
 	}
 
 	return
 }
 
-func (d *Downloader) processResponse(ctx context.Context, response *pkg.Response) (err error) {
-	if response.Request.GetSkipMiddleware() {
+func (d *Downloader) processResponse(ctx context.Context, response pkg.Response) (err error) {
+	if response.GetSkipMiddleware() {
 		return
 	}
 	for k, v := range d.processResponseFns {
@@ -144,7 +144,7 @@ func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
 	})
 
 	var processRequestFns []func(context.Context, pkg.Request) error
-	var processResponseFns []func(context.Context, *pkg.Response) error
+	var processResponseFns []func(context.Context, pkg.Response) error
 	for _, v := range d.middlewares {
 		processRequestFns = append(processRequestFns, v.ProcessRequest)
 		processResponseFns = append(processResponseFns, v.ProcessResponse)

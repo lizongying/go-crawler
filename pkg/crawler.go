@@ -29,7 +29,6 @@ type Crawler interface {
 	Start(context.Context) error
 	Stop(context.Context) error
 	RunDevServer() error
-	GetDevServerHost() string
 	AddDevServerRoutes(...Route)
 	GetLogger() Logger
 	SetLogger(Logger)
@@ -55,7 +54,7 @@ type Crawler interface {
 	GetScheduler() Scheduler
 	SetScheduler(Scheduler)
 	YieldItem(context.Context, Item) error
-	Request(context.Context, Request) (*Response, error)
+	Request(context.Context, Request) (Response, error)
 	YieldRequest(context.Context, Request) error
 	GetStats() Stats
 	GetCallBacks() map[string]CallBack

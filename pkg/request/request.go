@@ -388,6 +388,9 @@ func (r *Request) WithContext(ctx context.Context) pkg.Request {
 func (r *Request) GetRequest() *http.Request {
 	return r.Request
 }
+func (r *Request) GetCookies() []*http.Cookie {
+	return r.Request.Cookies()
+}
 func (r *Request) AddCookie(c *http.Cookie) pkg.Request {
 	r.Request.AddCookie(c)
 	return r

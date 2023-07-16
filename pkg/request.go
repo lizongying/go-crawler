@@ -94,6 +94,7 @@ type Request interface {
 	Context() context.Context
 	WithContext(context.Context) Request
 	GetRequest() *http.Request
+	GetCookies() []*http.Cookie
 	AddCookie(c *http.Cookie) Request
 }
 
@@ -103,5 +104,5 @@ type RequestJson interface {
 	ToRequest() (Request, error)
 }
 
-type CallBack func(context.Context, *Response) error
-type ErrBack func(context.Context, *Response, error)
+type CallBack func(context.Context, Response) error
+type ErrBack func(context.Context, Response, error)

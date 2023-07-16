@@ -14,9 +14,9 @@ type CompressMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *CompressMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
-	if response.Header.Get("Content-Encoding") == "deflate" {
-		reader := flate.NewReader(bytes.NewReader(response.BodyBytes))
+func (m *CompressMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
+	if response.GetHeader("Content-Encoding") == "deflate" {
+		reader := flate.NewReader(bytes.NewReader(response.GetBodyBytes()))
 		defer func() {
 			e := reader.Close()
 			if e != nil {
@@ -25,10 +25,13 @@ func (m *CompressMiddleware) ProcessResponse(_ context.Context, response *pkg.Re
 			}
 		}()
 
-		response.BodyBytes, err = io.ReadAll(reader)
+		var bodyBytes []byte
+		bodyBytes, err = io.ReadAll(reader)
 		if err != nil {
 			m.logger.Error(err)
+			return
 		}
+		response.SetBodyBytes(bodyBytes)
 	}
 
 	return

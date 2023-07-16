@@ -15,9 +15,9 @@ type Spider struct {
 	logger pkg.Logger
 }
 
-func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
+func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	err = response.Request.UnmarshalExtra(&extra)
+	err = response.UnmarshalExtra(&extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
@@ -41,7 +41,7 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	}
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.Request.GetUrl()).
+		SetUrl(response.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -58,7 +58,7 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk))
 	if err != nil {
@@ -78,7 +78,8 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		logger: baseSpider.GetLogger(),
 	}
 	spider.SetName("test-ok")
-	spider.SetHost(spider.GetDevServerHost())
+	host, _ := spider.GetConfig().GetDevServer()
+	spider.SetHost(host.String())
 	spider.AddDevServerRoutes(devServer.NewRobotsTxtHandler(baseSpider.GetLogger()))
 
 	return

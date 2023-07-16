@@ -17,15 +17,15 @@ type Spider struct {
 	logger pkg.Logger
 }
 
-func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error) {
+func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	err = response.Request.UnmarshalExtra(&extra)
+	err = response.UnmarshalExtra(&extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
 	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("response", string(response.GetBodyBytes()))
 
 	if extra.Count > 0 {
 		return
@@ -33,7 +33,7 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 
 	item := pkg.ItemJsonl{
 		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: response.Request.GetUniqueKey(),
+			UniqueKey: response.GetUniqueKey(),
 			Data: &DataImage{
 				DataOk: DataOk{
 					Count: extra.Count,
@@ -54,7 +54,7 @@ func (s *Spider) ParseOk(ctx context.Context, response *pkg.Response) (err error
 	//}
 	count := extra.Count + 1
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.Request.GetUrl()).
+		SetUrl(response.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: count,
 		}).
@@ -71,7 +71,7 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetUniqueKey("0").
 		SetCallBack(s.ParseOk))
@@ -98,6 +98,8 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		logger: baseSpider.GetLogger(),
 	}
 	spider.SetName("test-scheduler")
+	host, _ := spider.GetConfig().GetDevServer()
+	spider.SetHost(host.String())
 
 	return
 }

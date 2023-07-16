@@ -24,29 +24,29 @@ type FileMiddleware struct {
 	ContenttypeMap map[string]string
 }
 
-func (m *FileMiddleware) ProcessResponse(ctx context.Context, response *pkg.Response) (err error) {
-	if len(response.BodyBytes) == 0 {
+func (m *FileMiddleware) ProcessResponse(ctx context.Context, response pkg.Response) (err error) {
+	if len(response.GetBodyBytes()) == 0 {
 		err = errors.New("BodyBytes empty")
 		m.logger.Error(err)
 		return
 	}
 
-	isFile := response.Request.GetFile()
+	isFile := response.GetFile()
 	if isFile {
 		i := new(media.File)
-		i.SetName(utils.StrMd5(response.Request.GetURL().String()))
+		i.SetName(utils.StrMd5(response.GetUrl()))
 		ext := ""
-		if e, ok := m.ContenttypeMap[response.Header.Get("Content-Type")]; ok {
+		if e, ok := m.ContenttypeMap[response.GetHeader("Content-Type")]; ok {
 			ext = e
 		}
 
 		if m.s3 != nil {
-			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.Request.GetUrl()), ext)
+			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.GetUrl()), ext)
 			storePath := fmt.Sprintf("s3://%s/%s", m.bucketName, key)
 			uploadParams := &s3.PutObjectInput{
 				Bucket: &m.bucketName,
 				Key:    &key,
-				Body:   bytes.NewReader(response.BodyBytes),
+				Body:   bytes.NewReader(response.GetBodyBytes()),
 			}
 
 			// Upload the file
@@ -60,7 +60,7 @@ func (m *FileMiddleware) ProcessResponse(ctx context.Context, response *pkg.Resp
 			i.SetStorePath(storePath)
 		}
 
-		response.Files = append(response.Files, i)
+		response.SetFiles(append(response.GetFiles(), i))
 		if m.stats != nil {
 			m.stats.IncImageTotal()
 		}

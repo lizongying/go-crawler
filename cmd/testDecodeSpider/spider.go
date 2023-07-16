@@ -15,9 +15,9 @@ type Spider struct {
 	logger pkg.Logger
 }
 
-func (s *Spider) ParseDecode(_ context.Context, response *pkg.Response) (err error) {
-	s.logger.Info("header", response.Header)
-	s.logger.Info("body", string(response.BodyBytes))
+func (s *Spider) ParseDecode(_ context.Context, response pkg.Response) (err error) {
+	s.logger.Info("header", response.GetHeaders())
+	s.logger.Info("body", string(response.GetBodyBytes()))
 	return
 }
 
@@ -26,7 +26,7 @@ func (s *Spider) TestGbk(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewGbkHandler(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGbk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGbk)).
 		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
@@ -41,7 +41,7 @@ func (s *Spider) TestGb2312(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewGb2312Handler(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGb2312)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGb2312)).
 		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
@@ -56,7 +56,7 @@ func (s *Spider) TestGb18030(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewGb18030Handler(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlGb18030)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGb18030)).
 		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
@@ -71,7 +71,7 @@ func (s *Spider) TestBig5(ctx context.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewBig5Handler(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlBig5)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlBig5)).
 		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
@@ -92,6 +92,8 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		logger: baseSpider.GetLogger(),
 	}
 	spider.SetName("test-decode")
+	host, _ := spider.GetConfig().GetDevServer()
+	spider.SetHost(host.String())
 
 	return
 }

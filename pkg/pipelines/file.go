@@ -38,7 +38,7 @@ func (m *FilePipeline) ProcessItem(ctx context.Context, item pkg.Item) (err erro
 			m.logger.Error(e)
 			continue
 		}
-		item.SetFiles(r.Files)
+		item.SetFiles(r.GetFiles())
 	}
 
 	return

@@ -30,7 +30,7 @@ func (m *RobotsTxtMiddleware) Start(ctx context.Context, crawler pkg.Crawler) (e
 		m.logger.Error(e)
 		return
 	}
-	robots, err := robotstxt.FromBytes(r.BodyBytes)
+	robots, err := robotstxt.FromBytes(r.GetBodyBytes())
 	if err != nil {
 		return
 	}

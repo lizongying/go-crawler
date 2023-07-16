@@ -15,8 +15,8 @@ type RetryMiddleware struct {
 	retryMaxTimes uint8
 }
 
-func (m *RetryMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
-	request := response.Request
+func (m *RetryMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
+	request := response.GetRequest()
 
 	retryMaxTimes := m.retryMaxTimes
 	if request.GetRetryMaxTimes() != nil {
@@ -27,7 +27,7 @@ func (m *RetryMiddleware) ProcessResponse(_ context.Context, response *pkg.Respo
 	if len(request.GetOkHttpCodes()) > 0 {
 		okHttpCodes = request.GetOkHttpCodes()
 	}
-	if retryMaxTimes > 0 && (response.Response == nil || !utils.InSlice(response.StatusCode, okHttpCodes)) {
+	if retryMaxTimes > 0 && (response.GetResponse() == nil || !utils.InSlice(response.GetStatusCode(), okHttpCodes)) {
 		if request.GetRetryTimes() < retryMaxTimes {
 			request.SetRetryTimes(request.GetRetryTimes() + 1)
 			m.logger.Info(request.GetUniqueKey(), "retry times:", request.GetRetryTimes(), "SpendTime:", request.GetSpendTime())

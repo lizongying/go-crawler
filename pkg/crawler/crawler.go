@@ -147,11 +147,6 @@ func (c *Crawler) AddDevServerRoutes(routes ...pkg.Route) {
 	c.devServer.AddRoutes(routes...)
 }
 
-func (c *Crawler) GetDevServerHost() (host string) {
-	host = c.devServer.GetHost()
-	return
-}
-
 func (c *Crawler) GetOkHttpCodes() (httpCodes []int) {
 	httpCodes = c.okHttpCodes
 	return
@@ -233,11 +228,11 @@ func (c *Crawler) registerParser() {
 	l := rt.NumMethod()
 	for i := 0; i < l; i++ {
 		name := rt.Method(i).Name
-		callback, ok := rv.Method(i).Interface().(func(context.Context, *pkg.Response) error)
+		callback, ok := rv.Method(i).Interface().(func(context.Context, pkg.Response) error)
 		if ok {
 			callbacks[name] = callback
 		}
-		errback, ok := rv.Method(i).Interface().(func(context.Context, *pkg.Response, error))
+		errback, ok := rv.Method(i).Interface().(func(context.Context, pkg.Response, error))
 		if ok {
 			errbacks[name] = errback
 		}

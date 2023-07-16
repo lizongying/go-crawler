@@ -15,15 +15,15 @@ type Spider struct {
 	collectionBaiduBaike string
 }
 
-func (s *Spider) ParseDetail(ctx context.Context, response *pkg.Response) (err error) {
+func (s *Spider) ParseDetail(ctx context.Context, response pkg.Response) (err error) {
 	var extra ExtraDetail
-	err = response.Request.UnmarshalExtra(&extra)
+	err = response.UnmarshalExtra(&extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
 	s.logger.Info("ExtraDetail", utils.JsonStr(extra))
-	s.logger.Info("BodyBytes", string(response.BodyBytes))
+	s.logger.Info("BodyBytes", string(response.GetBodyBytes()))
 
 	x, err := response.Xpath()
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/request"
 	"log"
 	"runtime"
 )
@@ -54,9 +53,6 @@ func (s *BaseSpider) SetCallBacks(callbacks map[string]pkg.CallBack) {
 }
 func (s *BaseSpider) SetErrBacks(errbacks map[string]pkg.ErrBack) {
 	s.errbacks = errbacks
-}
-func (s *BaseSpider) NewRequest() pkg.Request {
-	return new(request.Request)
 }
 func (s *BaseSpider) Start(ctx context.Context) (err error) {
 	return

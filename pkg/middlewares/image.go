@@ -24,16 +24,16 @@ type ImageMiddleware struct {
 	key        string
 }
 
-func (m *ImageMiddleware) ProcessResponse(ctx context.Context, response *pkg.Response) (err error) {
-	if len(response.BodyBytes) == 0 {
+func (m *ImageMiddleware) ProcessResponse(ctx context.Context, response pkg.Response) (err error) {
+	if len(response.GetBodyBytes()) == 0 {
 		err = errors.New("BodyBytes empty")
 		m.logger.Error(err)
 		return
 	}
 
-	isImage := response.Request.GetImage()
+	isImage := response.GetImage()
 	if isImage {
-		img, name, e := image.Decode(bytes.NewReader(response.BodyBytes))
+		img, name, e := image.Decode(bytes.NewReader(response.GetBodyBytes()))
 		if e != nil {
 			err = e
 			m.logger.Error(err)
@@ -43,18 +43,18 @@ func (m *ImageMiddleware) ProcessResponse(ctx context.Context, response *pkg.Res
 		rect := img.Bounds()
 
 		i := new(media.Image)
-		i.SetName(utils.StrMd5(response.Request.GetUrl()))
+		i.SetName(utils.StrMd5(response.GetUrl()))
 		i.SetExtension(name)
 		i.SetWidth(rect.Dx())
 		i.SetHeight(rect.Dy())
 
 		if m.s3 != nil {
-			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.Request.GetUrl()), name)
+			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.GetUrl()), name)
 			storePath := fmt.Sprintf("s3://%s/%s", m.bucketName, key)
 			uploadParams := &s3.PutObjectInput{
 				Bucket: &m.bucketName,
 				Key:    &key,
-				Body:   bytes.NewReader(response.BodyBytes),
+				Body:   bytes.NewReader(response.GetBodyBytes()),
 			}
 
 			// Upload the file
@@ -68,7 +68,7 @@ func (m *ImageMiddleware) ProcessResponse(ctx context.Context, response *pkg.Res
 			i.SetStorePath(storePath)
 		}
 
-		response.Images = append(response.Images, i)
+		response.SetImages(append(response.GetImages(), i))
 		if m.stats != nil {
 			m.stats.IncImageTotal()
 		}

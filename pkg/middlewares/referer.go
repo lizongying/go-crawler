@@ -23,11 +23,11 @@ func (m *RefererMiddleware) ProcessRequest(_ context.Context, request pkg.Reques
 	return
 }
 
-func (m *RefererMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
+func (m *RefererMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
 	// add referer to context
-	if response.Request.GetUrl() != "" {
-		ctx := context.WithValue(response.Request.Context(), "referer", response.Request.GetUrl())
-		response.Request.WithContext(ctx)
+	if response.GetUrl() != "" {
+		ctx := context.WithValue(response.Context(), "referer", response.GetUrl())
+		response.WithContext(ctx)
 	}
 
 	return

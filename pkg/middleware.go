@@ -7,7 +7,7 @@ import (
 type Middleware interface {
 	Start(context.Context, Crawler) error
 	ProcessRequest(context.Context, Request) error
-	ProcessResponse(context.Context, *Response) error
+	ProcessResponse(context.Context, Response) error
 	Stop(context.Context) error
 	SetName(string)
 	GetName() string
@@ -28,7 +28,7 @@ func (m *UnimplementedMiddleware) Start(_ context.Context, crawler Crawler) erro
 func (*UnimplementedMiddleware) ProcessRequest(context.Context, Request) error {
 	return nil
 }
-func (*UnimplementedMiddleware) ProcessResponse(context.Context, *Response) error {
+func (*UnimplementedMiddleware) ProcessResponse(context.Context, Response) error {
 	return nil
 }
 func (*UnimplementedMiddleware) Stop(context.Context) error {

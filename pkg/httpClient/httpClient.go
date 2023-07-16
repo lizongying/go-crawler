@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	response2 "github.com/lizongying/go-crawler/pkg/response"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/lizongying/go-crawler/static"
 	utls "github.com/refraction-networking/utls"
@@ -86,7 +87,7 @@ func NewClient(conn net.Conn, option Option) net.Conn {
 	return tls.Client(conn, config)
 }
 
-func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (response *pkg.Response, err error) {
+func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
 	h.logger.DebugF("request: %+v", request.GetRequest())
 
 	if ctx == nil {
@@ -201,10 +202,9 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	}
 
 	begin := time.Now()
-	response = &pkg.Response{
-		Request: request,
-	}
+	response = new(response2.Response).SetRequest(request)
 
+	var resp *http.Response
 	if h.httpProto == "2.0" {
 		request.GetRequest().Proto = "HTTP/2.0"
 		request.GetRequest().ProtoMajor = 2
@@ -218,7 +218,12 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 			return conn, nil
 		}
 
-		response.Response, err = tr.RoundTrip(request.GetRequest())
+		resp, err = tr.RoundTrip(request.GetRequest())
+		if err != nil {
+			h.logger.Error(err)
+			return
+		}
+		response.SetResponse(resp)
 	} else {
 		request.GetRequest().Proto = "HTTP/1.1"
 		request.GetRequest().ProtoMajor = 1
@@ -231,10 +236,16 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return conn, nil
 		}
-		response.Response, err = tr.RoundTrip(request.GetRequest())
+
+		resp, err = tr.RoundTrip(request.GetRequest())
+		if err != nil {
+			h.logger.Error(err)
+			return
+		}
+		response.SetResponse(resp)
 	}
 
-	response.Request.SetSpendTime(time.Now().Sub(begin))
+	response.SetSpendTime(time.Now().Sub(begin))
 	if err != nil {
 		retryMaxTimes := h.retryMaxTimes
 		if request.GetRetryMaxTimes() != nil {
@@ -249,15 +260,20 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		return
 	}
 
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(response.Body)
+	defer func(body io.ReadCloser) {
+		err = body.Close()
+		if err != nil {
+			h.logger.Error(err)
+		}
+	}(response.GetBody())
 
-	response.BodyBytes, err = io.ReadAll(response.Body)
+	var bodyBytes []byte
+	bodyBytes, err = io.ReadAll(response.GetBody())
 	if err != nil {
 		h.logger.Error(err)
 		return
 	}
+	response.SetBodyBytes(bodyBytes)
 
 	return
 }

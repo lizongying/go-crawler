@@ -20,21 +20,21 @@ type Spider struct {
 	fileNameTest   string
 }
 
-func (s *Spider) ParseMysql(ctx context.Context, response *pkg.Response) (err error) {
+func (s *Spider) ParseMysql(ctx context.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	err = response.Request.UnmarshalExtra(&extra)
+	err = response.UnmarshalExtra(&extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
 	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("response", string(response.GetBodyBytes()))
 
 	if extra.Count > 0 {
 		return
 	}
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.Request.GetUrl()).
+		SetUrl(response.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -63,21 +63,21 @@ func (s *Spider) ParseMysql(ctx context.Context, response *pkg.Response) (err er
 	return
 }
 
-func (s *Spider) ParseKafka(ctx context.Context, response *pkg.Response) (err error) {
+func (s *Spider) ParseKafka(ctx context.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	err = response.Request.UnmarshalExtra(&extra)
+	err = response.UnmarshalExtra(&extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
 	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("response", string(response.GetBodyBytes()))
 
 	if extra.Count > 0 {
 		return
 	}
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.Request.GetUrl()).
+		SetUrl(response.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -105,21 +105,21 @@ func (s *Spider) ParseKafka(ctx context.Context, response *pkg.Response) (err er
 	return
 }
 
-func (s *Spider) ParseMongo(ctx context.Context, response *pkg.Response) (err error) {
+func (s *Spider) ParseMongo(ctx context.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	err = response.Request.UnmarshalExtra(&extra)
+	err = response.UnmarshalExtra(&extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
 	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("response", string(response.GetBodyBytes()))
 
 	if extra.Count > 0 {
 		return
 	}
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.Request.GetUrl()).
+		SetUrl(response.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -145,21 +145,21 @@ func (s *Spider) ParseMongo(ctx context.Context, response *pkg.Response) (err er
 	return
 }
 
-func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err error) {
+func (s *Spider) ParseCsv(ctx context.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	err = response.Request.UnmarshalExtra(&extra)
+	err = response.UnmarshalExtra(&extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
 	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("response", string(response.GetBodyBytes()))
 
 	if extra.Count > 2 {
 		return
 	}
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.Request.GetUrl()).
+		SetUrl(response.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -184,21 +184,21 @@ func (s *Spider) ParseCsv(ctx context.Context, response *pkg.Response) (err erro
 	return
 }
 
-func (s *Spider) ParseJsonl(ctx context.Context, response *pkg.Response) (err error) {
+func (s *Spider) ParseJsonl(ctx context.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	err = response.Request.UnmarshalExtra(&extra)
+	err = response.UnmarshalExtra(&extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
 	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", string(response.BodyBytes))
+	s.logger.Info("response", string(response.GetBodyBytes()))
 
 	if extra.Count > 2 {
 		return
 	}
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.Request.GetUrl()).
+		SetUrl(response.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -228,7 +228,7 @@ func (s *Spider) ParseJsonl(ctx context.Context, response *pkg.Response) (err er
 // TestMongo go run cmd/testItemSpider/*.go -c dev.yml -f TestMongo -m dev
 func (s *Spider) TestMongo(ctx context.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseMongo))
 	if err != nil {
@@ -242,7 +242,7 @@ func (s *Spider) TestMongo(ctx context.Context, _ string) (err error) {
 // TestMysql go run cmd/testItemSpider/*.go -c dev.yml -f TestMysql -m dev
 func (s *Spider) TestMysql(ctx context.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseMysql))
 	if err != nil {
@@ -256,7 +256,7 @@ func (s *Spider) TestMysql(ctx context.Context, _ string) (err error) {
 // TestKafka go run cmd/testItemSpider/*.go -c dev.yml -f TestKafka -m dev
 func (s *Spider) TestKafka(ctx context.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseKafka))
 	if err != nil {
@@ -270,7 +270,7 @@ func (s *Spider) TestKafka(ctx context.Context, _ string) (err error) {
 // TestCsv go run cmd/testItemSpider/*.go -c dev.yml -f TestCsv -m dev
 func (s *Spider) TestCsv(ctx context.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseCsv))
 	if err != nil {
@@ -284,7 +284,7 @@ func (s *Spider) TestCsv(ctx context.Context, _ string) (err error) {
 // TestJsonl go run cmd/testItemSpider/*.go -c dev.yml -f TestJsonl -m dev
 func (s *Spider) TestJsonl(ctx context.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetDevServerHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseJsonl))
 	if err != nil {
@@ -313,6 +313,8 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		fileNameTest:   "test",
 	}
 	spider.SetName("test-item")
+	host, _ := spider.GetConfig().GetDevServer()
+	spider.SetHost(host.String())
 
 	return
 }

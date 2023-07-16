@@ -161,16 +161,15 @@ func (c *Config) GetHttpProto() string {
 	return defaultHttpProto
 }
 
-func (c *Config) GetDevServer() (url *url.URL, err error) {
+func (c *Config) GetDevServer() (URL *url.URL, err error) {
 	if c.DevServer != "" {
-		url, err = url.Parse(c.DevServer)
+		URL, err = url.Parse(c.DevServer)
 		return
 	}
 
-	url, err = url.Parse(defaultDevServer)
+	URL, err = url.Parse(defaultDevServer)
 	return
 }
-
 func (c *Config) GetEnableJa3() bool {
 	if c.EnableJa3 == nil {
 		enableJa3 := defaultEnableJa3

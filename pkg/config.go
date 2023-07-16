@@ -47,4 +47,5 @@ type Config interface {
 	GetRequestInterval() uint
 	GetOkHttpCodes() []int
 	GetFilter() FilterType
+	GetDevServer() (URL *url.URL, err error)
 }

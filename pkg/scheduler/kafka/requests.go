@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func (s *Scheduler) Request(ctx context.Context, request pkg.Request) (response *pkg.Response, err error) {
+func (s *Scheduler) Request(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
 	if request == nil {
 		err = errors.New("nil request")
 		return
@@ -45,7 +45,7 @@ func (s *Scheduler) Request(ctx context.Context, request pkg.Request) (response 
 	return
 }
 
-func (s *Scheduler) handleError(ctx context.Context, response *pkg.Response, err error, fn func(context.Context, *pkg.Response, error)) {
+func (s *Scheduler) handleError(ctx context.Context, response pkg.Response, err error, fn func(context.Context, pkg.Response, error)) {
 	if fn != nil {
 		fn(ctx, response, err)
 	} else {
@@ -141,21 +141,21 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				return
 			}
 
-			go func(response *pkg.Response) {
+			go func(response pkg.Response) {
 				defer func() {
 					if r := recover(); r != nil {
 						buf := make([]byte, 1<<16)
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
 						s.logger.Error(err)
-						s.handleError(response.Request.Context(), response, err, request.GetErrBack())
+						s.handleError(response.Context(), response, err, request.GetErrBack())
 					}
 				}()
 
-				err = request.GetCallBack()(response.Request.Context(), response)
+				err = request.GetCallBack()(response.Context(), response)
 				if e != nil {
 					s.logger.Error(err)
-					s.handleError(response.Request.Context(), response, err, request.GetErrBack())
+					s.handleError(response.Context(), response, err, request.GetErrBack())
 					return
 				}
 			}(response)

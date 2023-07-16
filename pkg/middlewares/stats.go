@@ -37,11 +37,11 @@ func (m *StatsMiddleware) ProcessRequest(_ context.Context, request pkg.Request)
 	return
 }
 
-func (m *StatsMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) (err error) {
+func (m *StatsMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
 	if response == nil {
 		m.stats.IncStatusErr()
 	} else {
-		if response.Response != nil && response.StatusCode == http.StatusOK {
+		if response.GetResponse() != nil && response.GetStatusCode() == http.StatusOK {
 			m.stats.IncStatusOk()
 		} else {
 			m.stats.IncStatusErr()

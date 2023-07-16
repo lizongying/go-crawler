@@ -8,7 +8,6 @@ type Spider interface {
 	SetHost(string) Spider
 	SetCallBacks(callbacks map[string]CallBack)
 	SetErrBacks(errbacks map[string]ErrBack)
-	NewRequest() Request
 }
 
 type NewSpider func(Spider) (Spider, error)

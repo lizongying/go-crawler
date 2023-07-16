@@ -25,7 +25,7 @@ func (m *CustomMiddleware) ProcessRequest(_ context.Context, request pkg.Request
 	return nil
 }
 
-func (m *CustomMiddleware) ProcessResponse(_ context.Context, response *pkg.Response) error {
+func (m *CustomMiddleware) ProcessResponse(_ context.Context, response pkg.Response) error {
 	m.logger.Debug("response", response)
 	return nil
 }
