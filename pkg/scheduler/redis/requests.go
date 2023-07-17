@@ -172,10 +172,10 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err 
 		return
 	}
 
-	// add referer to request
-	referer := ctx.Value("referer")
-	if referer != nil {
-		request.SetReferer(referer.(string))
+	// add referrer to request
+	referrer := ctx.Value("referrer")
+	if referrer != nil {
+		request.SetReferrer(referrer.(string))
 		// TODO to header?
 	}
 

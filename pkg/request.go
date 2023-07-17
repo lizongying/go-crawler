@@ -14,8 +14,8 @@ type Request interface {
 	GetCallBack() CallBack
 	SetErrBack(ErrBack) Request
 	GetErrBack() ErrBack
-	SetReferer(string) Request
-	GetReferer() string
+	SetReferrer(string) Request
+	GetReferrer() string
 	SetUsername(string) Request
 	GetUsername() string
 	SetPassword(string) Request

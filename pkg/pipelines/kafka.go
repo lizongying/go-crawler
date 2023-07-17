@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/segmentio/kafka-go"
 	"time"
@@ -21,7 +22,17 @@ type KafkaPipeline struct {
 }
 
 func (m *KafkaPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
-	itemKafka, ok := item.(*pkg.ItemKafka)
+	if item == nil {
+		err = errors.New("nil item")
+		m.logger.Error(err)
+		m.stats.IncItemError()
+		return
+	}
+	if item.GetName() != pkg.ItemKafka {
+		m.logger.Warn("item not support kafka")
+		return
+	}
+	itemKafka, ok := item.(*items.ItemKafka)
 	if !ok {
 		m.logger.Warn("item not support kafka")
 		return
@@ -34,7 +45,7 @@ func (m *KafkaPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		return
 	}
 
-	if itemKafka.Topic == "" {
+	if itemKafka.GetTopic() == "" {
 		err = errors.New("topic is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
@@ -69,13 +80,13 @@ func (m *KafkaPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	m.kafkaWriter.Topic = itemKafka.Topic
+	m.kafkaWriter.Topic = itemKafka.GetTopic()
 	m.kafkaWriter.Logger = kafka.LoggerFunc(func(msg string, a ...interface{}) {
-		m.logger.Info(itemKafka.Topic, "insert success", a)
+		m.logger.Info(itemKafka.GetTopic(), "insert success", a)
 	})
 	err = m.kafkaWriter.WriteMessages(ctx,
 		kafka.Message{
-			Key:   []byte(fmt.Sprint(itemKafka.Id)),
+			Key:   []byte(fmt.Sprint(itemKafka.GetId())),
 			Value: bs,
 		},
 	)

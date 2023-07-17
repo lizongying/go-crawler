@@ -21,7 +21,7 @@ type Request struct {
 	uniqueKey          string
 	callBack           pkg.CallBack
 	errBack            pkg.ErrBack
-	referer            string
+	referrer           string
 	username           string
 	password           string
 	checksum           string
@@ -72,12 +72,12 @@ func (r *Request) SetErrBack(errback pkg.ErrBack) pkg.Request {
 func (r *Request) GetErrBack() pkg.ErrBack {
 	return r.errBack
 }
-func (r *Request) SetReferer(referer string) pkg.Request {
-	r.referer = referer
+func (r *Request) SetReferrer(referrer string) pkg.Request {
+	r.referrer = referrer
 	return r
 }
-func (r *Request) GetReferer() string {
-	return r.referer
+func (r *Request) GetReferrer() string {
+	return r.referrer
 }
 func (r *Request) SetUsername(username string) pkg.Request {
 	r.username = username
@@ -466,7 +466,7 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 		UniqueKey:        r.GetUniqueKey(),
 		CallBack:         callBack,
 		ErrBack:          errBack,
-		Referer:          r.GetReferer(),
+		Referrer:         r.GetReferrer(),
 		Username:         r.GetUsername(),
 		Password:         r.GetPassword(),
 		Checksum:         r.GetChecksum(),
@@ -514,7 +514,7 @@ type RequestJson struct {
 	UniqueKey          string              `json:"unique_key,omitempty"` // for filter
 	CallBack           string              `json:"call_back,omitempty"`
 	ErrBack            string              `json:"err_back,omitempty"`
-	Referer            string              `json:"referer,omitempty"`
+	Referrer           string              `json:"referrer,omitempty"`
 	Username           string              `json:"username,omitempty"`
 	Password           string              `json:"password,omitempty"`
 	Checksum           string              `json:"checksum,omitempty"`
@@ -580,7 +580,7 @@ func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 		uniqueKey:          r.UniqueKey,
 		callBack:           r.callbacks[r.CallBack],
 		errBack:            r.errbacks[r.ErrBack],
-		referer:            r.Referer,
+		referrer:           r.Referrer,
 		username:           r.Username,
 		password:           r.Password,
 		checksum:           r.Checksum,

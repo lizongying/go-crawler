@@ -155,9 +155,9 @@ func WithUrlMiddleware() CrawlOption {
 		crawler.GetScheduler().GetDownloader().WithUrlMiddleware()
 	}
 }
-func WithRefererMiddleware() CrawlOption {
+func WithReferrerMiddleware() CrawlOption {
 	return func(crawler Crawler) {
-		crawler.GetScheduler().GetDownloader().WithRefererMiddleware()
+		crawler.GetScheduler().GetDownloader().WithReferrerMiddleware()
 	}
 }
 func WithCookieMiddleware() CrawlOption {

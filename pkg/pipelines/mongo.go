@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,7 +22,17 @@ type MongoPipeline struct {
 }
 
 func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
-	itemMongo, ok := item.(*pkg.ItemMongo)
+	if item == nil {
+		err = errors.New("nil item")
+		m.logger.Error(err)
+		m.stats.IncItemError()
+		return
+	}
+	if item.GetName() != pkg.ItemMongo {
+		m.logger.Warn("item not support mongo")
+		return
+	}
+	itemMongo, ok := item.(*items.ItemMongo)
 	if !ok {
 		m.logger.Warn("item not support mongo")
 		return
@@ -34,7 +45,7 @@ func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		return
 	}
 
-	if itemMongo.Collection == "" {
+	if itemMongo.GetCollection() == "" {
 		err = errors.New("collection is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
@@ -69,16 +80,16 @@ func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	res, err := m.mongoDb.Collection(itemMongo.Collection).InsertOne(ctx, bs)
+	res, err := m.mongoDb.Collection(itemMongo.GetCollection()).InsertOne(ctx, bs)
 	if err != nil {
-		if itemMongo.Update && !reflect.ValueOf(itemMongo.Id).IsZero() && mongo.IsDuplicateKeyError(err) {
-			_, err = m.mongoDb.Collection(itemMongo.Collection).UpdateOne(ctx, bson.M{"_id": itemMongo.Id}, bson.M{"$set": itemMongo.Data})
+		if itemMongo.GetUpdate() && !reflect.ValueOf(itemMongo.GetId()).IsZero() && mongo.IsDuplicateKeyError(err) {
+			_, err = m.mongoDb.Collection(itemMongo.GetCollection()).UpdateOne(ctx, bson.M{"_id": itemMongo.GetId()}, bson.M{"$set": itemMongo.GetData()})
 			if err == nil {
-				m.logger.Info(itemMongo.Collection, "update success", itemMongo.Id)
+				m.logger.Info(itemMongo.GetCollection(), "update success", itemMongo.GetId())
 			}
 		}
 	} else {
-		m.logger.Info(itemMongo.Collection, "insert success", res.InsertedID)
+		m.logger.Info(itemMongo.GetCollection(), "insert success", res.InsertedID)
 	}
 	if err != nil {
 		m.logger.Error(err)

@@ -51,7 +51,7 @@ enable_file_middleware: true
 enable_image_middleware: true
 enable_http_middleware: true
 enable_retry_middleware: true
-enable_referer_middleware: true
+enable_referrer_middleware: true
 referrer_policy: NoReferrerPolicy
 enable_http_auth_middleware: false
 enable_cookie_middleware: true

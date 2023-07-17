@@ -40,7 +40,7 @@
     * WithHttpMiddleware 设置 HTTP 中间件。
     * WithRetryMiddleware 设置重试中间件，用于在请求失败时进行自动重试。
     * WithUrlMiddleware 设置 URL 中间件。
-    * WithRefererMiddleware 设置 Referer 中间件，用于自动设置请求的 Referer 头。
+    * WithReferrerMiddleware 设置 Referrer 中间件，用于自动设置请求的 Referrer 头。
     * WithCookieMiddleware 设置 Cookie 中间件，用于处理请求和响应中的 Cookie，自动在接下来的请求设置之前的 Cookie。
     * WithRedirectMiddleware 设置重定向中间件，用于自动处理请求的重定向，跟随重定向链接并获取最终响应。
     * WithChromeMiddleware 设置 Chrome 中间件，用于模拟 Chrome 浏览器。
@@ -65,7 +65,7 @@
     * WithInterval 设置请求的间隔时间（Interval）。
     * WithOkHttpCodes 设置正常的HTTP状态码（OkHttpCodes）。
 * Item类需要实现Item接口（可以组合ItemUnimplemented）
-    * `GetReferer()` 可以获取到referer。
+    * `GetReferrer()` 可以获取到referrer。
     * UniqueKey属性作为唯一键用于过滤和其他用途
     * Id属性用于保存主键
     * Data属性用于保存完整数据（必须是指针类型）
@@ -119,11 +119,11 @@
         * 限制URL长度中间件，用于限制请求的URL长度。
         * 可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。
         * 在NewApp中加入crawler选项`pkg.WithUrlMiddleware()`
-    * referer: 110
-        * 自动添加Referer中间件，用于自动添加Referer到请求中。
-        * 可以根据referrer_policy配置项选择不同的Referer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源
-        * 配置 enable_referer_middleware: true 是否开启自动添加referer，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithRefererMiddleware()`
+    * referrer: 110
+        * 自动添加Referrer中间件，用于自动添加Referrer到请求中。
+        * 可以根据referrer_policy配置项选择不同的Referrer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源
+        * 配置 enable_referrer_middleware: true 是否开启自动添加referrer，默认启用。
+        * 在NewApp中加入crawler选项`pkg.WithReferrerMiddleware()`
     * cookie: 120
         * 自动添加Cookie中间件，用于自动添加之前请求返回的Cookie到后续请求中。
         * 可以通过配置项enable_cookie_middleware来启用或禁用，默认启用。
@@ -244,7 +244,7 @@
         * enable_image_middleware: false
         * enable_http_middleware: false
         * enable_retry_middleware: false
-        * enable_referer_middleware: false
+        * enable_referrer_middleware: false
         * enable_http_auth_middleware: false
         * enable_cookie_middleware: false
         * enable_url_middleware: false
@@ -368,8 +368,8 @@
 * enable_image_middleware: 是否开启图片处理中间件，默认启用。
 * enable_http_middleware: 是否开启HTTP请求中间件，默认启用。
 * enable_retry_middleware: 是否开启请求重试中间件，默认启用。
-* enable_referer_middleware: 是否开启Referer中间件，默认启用。
-* referrer_policy: 设置Referer策略，可选值为DefaultReferrerPolicy（默认）和NoReferrerPolicy。
+* enable_referrer_middleware: 是否开启Referrer中间件，默认启用。
+* referrer_policy: 设置Referrer策略，可选值为DefaultReferrerPolicy（默认）和NoReferrerPolicy。
 * enable_http_auth_middleware: 是否开启HTTP认证中间件，默认关闭。
 * enable_cookie_middleware:  是否开启Cookie中间件，默认启用。
 * enable_url_middleware: 是否开启URL长度限制中间件，默认启用。

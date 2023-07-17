@@ -24,7 +24,7 @@ type Config interface {
 	GetEnableHttpMiddleware() bool
 	GetEnableRetryMiddleware() bool
 	GetEnableUrlMiddleware() bool
-	GetEnableRefererMiddleware() bool
+	GetEnableReferrerMiddleware() bool
 	GetEnableCookieMiddleware() bool
 	GetEnableRedirectMiddleware() bool
 	GetEnableChromeMiddleware() bool

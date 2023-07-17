@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"os"
 	"path/filepath"
@@ -25,14 +26,17 @@ func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err
 		m.stats.IncItemError()
 		return
 	}
-
-	itemJsonl, ok := item.(*pkg.ItemJsonl)
+	if item.GetName() != pkg.ItemJsonl {
+		m.logger.Warn("item not support jsonl")
+		return
+	}
+	itemJsonl, ok := item.(*items.ItemJsonl)
 	if !ok {
 		m.logger.Warn("item not support jsonl")
 		return
 	}
 
-	if itemJsonl.FileName == "" {
+	if itemJsonl.GetFileName() == "" {
 		err = errors.New("fileName is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
@@ -47,9 +51,9 @@ func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err
 		return
 	}
 
-	filename := fmt.Sprintf("%s.jsonl", itemJsonl.FileName)
+	filename := fmt.Sprintf("%s.jsonl", itemJsonl.GetFileName())
 	var file *os.File
-	fileValue, ok := m.files.Load(itemJsonl.FileName)
+	fileValue, ok := m.files.Load(itemJsonl.GetFileName())
 	if !ok {
 		if !utils.ExistsDir(filename) {
 			err = os.MkdirAll(filepath.Dir(filename), 0744)
@@ -74,7 +78,7 @@ func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err
 				return
 			}
 		}
-		m.files.Store(itemJsonl.FileName, file)
+		m.files.Store(itemJsonl.GetFileName(), file)
 	} else {
 		file = fileValue.(*os.File)
 	}

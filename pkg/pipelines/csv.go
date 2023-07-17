@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"os"
 	"path/filepath"
@@ -27,14 +28,17 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 		m.stats.IncItemError()
 		return
 	}
-
-	itemCsv, ok := item.(*pkg.ItemCsv)
+	if item.GetName() != pkg.ItemCsv {
+		m.logger.Warn("item not support csv")
+		return
+	}
+	itemCsv, ok := item.(*items.ItemCsv)
 	if !ok {
 		m.logger.Warn("item not support csv")
 		return
 	}
 
-	if itemCsv.FileName == "" {
+	if itemCsv.GetFileName() == "" {
 		err = errors.New("fileName is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
@@ -58,9 +62,9 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 
 	var lines []string
 	var columns []string
-	filename := fmt.Sprintf("%s.csv", itemCsv.FileName)
+	filename := fmt.Sprintf("%s.csv", itemCsv.GetFileName())
 	var file *os.File
-	fileValue, ok := m.files.Load(itemCsv.FileName)
+	fileValue, ok := m.files.Load(itemCsv.GetFileName())
 	create := false
 	if !ok {
 		if !utils.ExistsDir(filename) {
@@ -87,7 +91,7 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 				return
 			}
 		}
-		m.files.Store(itemCsv.FileName, file)
+		m.files.Store(itemCsv.GetFileName(), file)
 	} else {
 		file = fileValue.(*os.File)
 	}

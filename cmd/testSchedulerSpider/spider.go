@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strconv"
@@ -31,19 +32,15 @@ func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error)
 		return
 	}
 
-	item := pkg.ItemJsonl{
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: response.GetUniqueKey(),
-			Data: &DataImage{
-				DataOk: DataOk{
-					Count: extra.Count,
-				},
+	err = s.YieldItem(ctx, items.NewItemJsonl("image").
+		SetUniqueKey(response.GetUniqueKey()).
+		SetData(&DataImage{
+			DataOk: DataOk{
+				Count: extra.Count,
 			},
-		},
-		FileName: "image",
-	}
-	item.SetImagesRequest([]pkg.Request{request.NewRequest().SetUrl("https://www.bing.com/th?id=OHR.ClamBears_ZH-CN5686721500_UHD.jpg&w=3840&h=2160&c=8&rs=1&o=3&r=0")})
-	err = s.YieldItem(ctx, &item)
+		}).SetImagesRequest([]pkg.Request{
+		request.NewRequest().SetUrl("https://www.bing.com/th?id=OHR.ClamBears_ZH-CN5686721500_UHD.jpg&w=3840&h=2160&c=8&rs=1&o=3&r=0"),
+	}))
 	if err != nil {
 		s.logger.Error(err)
 		return err

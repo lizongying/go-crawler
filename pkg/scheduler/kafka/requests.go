@@ -166,10 +166,10 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 }
 
 func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err error) {
-	// add referer to request
-	referer := ctx.Value("referer")
-	if referer != nil {
-		request.SetReferer(referer.(string))
+	// add referrer to request
+	referrer := ctx.Value("referrer")
+	if referrer != nil {
+		request.SetReferrer(referrer.(string))
 	}
 
 	// add cookies to request

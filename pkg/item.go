@@ -4,132 +4,139 @@ import (
 	"reflect"
 )
 
+const (
+	ItemNone  = ""
+	ItemMongo = "mongo"
+	ItemKafka = "kafka"
+	ItemMysql = "mysql"
+	ItemCsv   = "csv"
+	ItemJsonl = "jsonl"
+)
+
 type Item interface {
+	GetName() string
+	SetUniqueKey(string) Item
 	GetUniqueKey() string
+	SetId(any) Item
 	GetId() any
+	SetData(any) Item
 	GetData() any
-	SetReferer(string)
-	GetReferer() string
-	SetFilesRequest([]Request)
+	SetReferrer(string) Item
+	GetReferrer() string
+	SetFilesRequest([]Request) Item
 	GetFilesRequest() []Request
-	SetFiles([]File)
+	SetFiles([]File) Item
 	GetFiles() []File
-	SetImagesRequest([]Request)
+	SetImagesRequest([]Request) Item
 	GetImagesRequest() []Request
-	SetImages([]Image)
+	SetImages([]Image) Item
 	GetImages() []Image
 }
 
 type ItemUnimplemented struct {
+	name      string
 	files     []Request
 	images    []Request
-	referer   string
-	UniqueKey string
-	Id        any
-	Data      any
+	referrer  string
+	uniqueKey string
+	id        any
+	data      any
 }
 
+func (i *ItemUnimplemented) SetName(name string) Item {
+	i.name = name
+	return i
+}
+func (i *ItemUnimplemented) GetName() string {
+	return i.name
+}
+func (i *ItemUnimplemented) SetUniqueKey(uniqueKey string) Item {
+	i.uniqueKey = uniqueKey
+	return i
+}
 func (i *ItemUnimplemented) GetUniqueKey() string {
-	return i.UniqueKey
+	return i.uniqueKey
+}
+func (i *ItemUnimplemented) SetId(id any) Item {
+	i.id = id
+	return i
 }
 func (i *ItemUnimplemented) GetId() any {
-	return i.Id
+	return i.id
+}
+func (i *ItemUnimplemented) SetData(data any) Item {
+	i.data = data
+	return i
 }
 func (i *ItemUnimplemented) GetData() any {
-	return i.Data
+	return i.data
 }
-func (i *ItemUnimplemented) SetReferer(referer string) {
-	i.referer = referer
+func (i *ItemUnimplemented) SetReferrer(referrer string) Item {
+	i.referrer = referrer
+	return i
 }
-func (i *ItemUnimplemented) GetReferer() string {
-	return i.referer
+func (i *ItemUnimplemented) GetReferrer() string {
+	return i.referrer
 }
-func (i *ItemUnimplemented) SetFilesRequest(files []Request) {
+func (i *ItemUnimplemented) SetFilesRequest(files []Request) Item {
 	for _, v := range files {
 		v.SetFile(true)
 		i.files = append(i.files, v)
 	}
+	return i
 }
 func (i *ItemUnimplemented) GetFilesRequest() []Request {
 	return i.files
 }
-func (i *ItemUnimplemented) SetImagesRequest(images []Request) {
+func (i *ItemUnimplemented) SetImagesRequest(images []Request) Item {
 	for _, v := range images {
 		v.SetImage(true)
 		i.images = append(i.images, v)
 	}
+	return i
 }
 func (i *ItemUnimplemented) GetImagesRequest() []Request {
 	return i.images
 }
-func (i *ItemUnimplemented) SetFiles(files []File) {
+func (i *ItemUnimplemented) SetFiles(files []File) Item {
 	if len(files) == 0 {
-		return
+		return i
 	}
 
-	f := reflect.ValueOf(i.Data).Elem().FieldByName("Files")
+	f := reflect.ValueOf(i.data).Elem().FieldByName("Files")
 	if f.IsValid() && f.Type().Kind() == reflect.Slice {
 		for _, file := range files {
 			f.Set(reflect.Append(f, reflect.ValueOf(file)))
 		}
 	}
+	return i
 }
 func (i *ItemUnimplemented) GetFiles() []File {
-	f := reflect.ValueOf(i.Data).Elem().FieldByName("Files")
+	f := reflect.ValueOf(i.data).Elem().FieldByName("Files")
 	if f.IsValid() && f.Type().Kind() == reflect.Slice {
 		return f.Interface().([]File)
 	}
 
 	return nil
 }
-func (i *ItemUnimplemented) SetImages(images []Image) {
+func (i *ItemUnimplemented) SetImages(images []Image) Item {
 	if len(images) == 0 {
-		return
+		return i
 	}
 
-	img := reflect.ValueOf(i.Data).Elem().FieldByName("Images")
+	img := reflect.ValueOf(i.data).Elem().FieldByName("Images")
 	if img.IsValid() && img.Type().Kind() == reflect.Slice {
 		for _, image := range images {
 			img.Set(reflect.Append(img, reflect.ValueOf(image)))
 		}
 	}
+	return i
 }
 func (i *ItemUnimplemented) GetImages() []Image {
-	img := reflect.ValueOf(i.Data).Elem().FieldByName("Images")
+	img := reflect.ValueOf(i.data).Elem().FieldByName("Images")
 	if img.IsValid() && img.Type().Kind() == reflect.Slice {
 		return img.Interface().([]Image)
 	}
 
 	return nil
-}
-
-type ItemNone struct {
-	ItemUnimplemented
-}
-
-type ItemMongo struct {
-	ItemUnimplemented
-	Update     bool
-	Collection string
-}
-
-type ItemMysql struct {
-	ItemUnimplemented
-	Update bool
-	Table  string
-}
-
-type ItemKafka struct {
-	ItemUnimplemented
-	Topic string
-}
-
-type ItemCsv struct {
-	ItemUnimplemented
-	FileName string
-}
-
-type ItemJsonl struct {
-	ItemUnimplemented
-	FileName string
 }

@@ -1,9 +1,12 @@
 .PHONY: all
 
-all: tidy tls testSpider
+all: shell tidy tls testSpider
 
 module := $(shell head -n 1 go.mod)
 module := $(subst module ,,${module})
+
+shell:
+	@echo 'SHELL='$(SHELL)
 
 tidy:
 	go mod tidy

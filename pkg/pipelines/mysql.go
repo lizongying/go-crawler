@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-sql-driver/mysql"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"reflect"
 	"strings"
 	"time"
@@ -28,14 +29,17 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		m.stats.IncItemError()
 		return
 	}
-
-	itemMysql, ok := item.(*pkg.ItemMysql)
+	if item.GetName() != pkg.ItemMysql {
+		m.logger.Warn("item not support mysql")
+		return
+	}
+	itemMysql, ok := item.(*items.ItemMysql)
 	if !ok {
 		m.logger.Warn("item not support mysql")
 		return
 	}
 
-	if itemMysql.Table == "" {
+	if itemMysql.GetTable() == "" {
 		err = errors.New("table is empty")
 		m.logger.Error(err)
 		m.stats.IncItemError()
@@ -62,8 +66,8 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	refType := reflect.TypeOf(itemMysql.Data).Elem()
-	refValue := reflect.ValueOf(itemMysql.Data).Elem()
+	refType := reflect.TypeOf(itemMysql.GetData()).Elem()
+	refValue := reflect.ValueOf(itemMysql.GetData()).Elem()
 	var columns []string
 	var values []any
 	for i := 0; i < refType.NumField(); i++ {
@@ -76,7 +80,7 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		values = append(values, value)
 	}
 
-	s := fmt.Sprintf(`INSERT %s SET %s`, itemMysql.Table, strings.Join(columns, ","))
+	s := fmt.Sprintf(`INSERT %s SET %s`, itemMysql.GetTable(), strings.Join(columns, ","))
 	stmt, err := m.mysql.PrepareContext(ctx, s)
 	if err != nil {
 		m.logger.Error(err)
@@ -92,9 +96,9 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 			return
 		}
 
-		if itemMysql.Update && !reflect.ValueOf(itemMysql.Id).IsZero() && e.Number == 1062 {
-			s = fmt.Sprintf(`UPDATE %s SET %s WHERE id=?`, itemMysql.Table, strings.Join(columns, ","))
-			values = append(values, itemMysql.Id)
+		if itemMysql.GetUpdate() && !reflect.ValueOf(itemMysql.GetId()).IsZero() && e.Number == 1062 {
+			s = fmt.Sprintf(`UPDATE %s SET %s WHERE id=?`, itemMysql.GetTable(), strings.Join(columns, ","))
+			values = append(values, itemMysql.GetId())
 			stmt, err = m.mysql.PrepareContext(ctx, s)
 			if err != nil {
 				m.logger.Error(err)
@@ -116,7 +120,7 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 				return
 			}
 
-			m.logger.Info(itemMysql.Table, "update success", itemMysql.Id)
+			m.logger.Info(itemMysql.GetTable(), "update success", itemMysql.GetId())
 		} else {
 			m.logger.Error(err)
 			m.stats.IncItemError()
@@ -130,7 +134,7 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 			return
 		}
 
-		m.logger.Info(itemMysql.Table, "insert success", id)
+		m.logger.Info(itemMysql.GetTable(), "insert success", id)
 	}
 
 	m.stats.IncItemSuccess()

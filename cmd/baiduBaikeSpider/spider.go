@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
@@ -37,16 +38,10 @@ func (s *Spider) ParseDetail(ctx context.Context, response pkg.Response) (err er
 		Keyword: extra.Keyword,
 		Content: content,
 	}
-	item := pkg.ItemMongo{
-		Update:     true,
-		Collection: s.collectionBaiduBaike,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: extra.Keyword,
-			Id:        extra.Keyword,
-			Data:      &data,
-		},
-	}
-	err = s.YieldItem(ctx, &item)
+	err = s.YieldItem(ctx, items.NewItemMongo(s.collectionBaiduBaike, true).
+		SetUniqueKey(extra.Keyword).
+		SetId(extra.Keyword).
+		SetData(&data))
 	if err != nil {
 		s.logger.Error(err)
 		return

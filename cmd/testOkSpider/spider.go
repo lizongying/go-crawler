@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
 
@@ -23,14 +24,10 @@ func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error)
 		return
 	}
 
-	item := pkg.ItemNone{
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			Data: &DataOk{
-				Count: extra.Count,
-			},
-		},
-	}
-	err = s.YieldItem(ctx, &item)
+	err = s.YieldItem(ctx, items.NewItemNone().
+		SetData(&DataOk{
+			Count: extra.Count,
+		}))
 	if err != nil {
 		s.logger.Error(err)
 		return err

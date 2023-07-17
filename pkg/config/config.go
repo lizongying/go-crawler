@@ -19,7 +19,7 @@ const defaultEnableCookieMiddleware = true
 const defaultEnableUrlMiddleware = true
 const defaultEnableRetryMiddleware = true
 const defaultEnableStatsMiddleware = true
-const defaultEnableRefererMiddleware = true
+const defaultEnableReferrerMiddleware = true
 const defaultEnableHttpAuthMiddleware = false
 const defaultEnableCompressMiddleware = true
 const defaultEnableDecodeMiddleware = true
@@ -107,7 +107,7 @@ type Config struct {
 	} `yaml:"request" json:"-"`
 	DevServer                 string  `yaml:"dev_server" json:"-"`
 	EnableJa3                 *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
-	EnableRefererMiddleware   *bool   `yaml:"enable_referer_middleware,omitempty" json:"enable_referer_middleware"`
+	EnableReferrerMiddleware  *bool   `yaml:"enable_referrer_middleware,omitempty" json:"enable_referrer_middleware"`
 	ReferrerPolicy            *string `yaml:"referrer_policy_middleware,omitempty" json:"referrer_policy_middleware"`
 	EnableHttpAuthMiddleware  *bool   `yaml:"enable_http_auth_middleware,omitempty" json:"enable_http_auth_middleware"`
 	EnableCookieMiddleware    *bool   `yaml:"enable_cookie_middleware,omitempty" json:"enable_cookie_middleware"`
@@ -215,13 +215,13 @@ func (c *Config) GetEnableHttpAuthMiddleware() bool {
 	return *c.EnableHttpAuthMiddleware
 }
 
-func (c *Config) GetEnableRefererMiddleware() bool {
-	if c.EnableRefererMiddleware == nil {
-		enableRefererMiddleware := defaultEnableRefererMiddleware
-		c.EnableRefererMiddleware = &enableRefererMiddleware
+func (c *Config) GetEnableReferrerMiddleware() bool {
+	if c.EnableReferrerMiddleware == nil {
+		enableReferrerMiddleware := defaultEnableReferrerMiddleware
+		c.EnableReferrerMiddleware = &enableReferrerMiddleware
 	}
 
-	return *c.EnableRefererMiddleware
+	return *c.EnableReferrerMiddleware
 }
 func (c *Config) GetEnableDumpMiddleware() bool {
 	if c.EnableDumpMiddleware == nil {

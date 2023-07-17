@@ -201,8 +201,8 @@ func (d *Downloader) WithRetryMiddleware() {
 func (d *Downloader) WithUrlMiddleware() {
 	d.SetMiddleware(new(middlewares.UrlMiddleware), 90)
 }
-func (d *Downloader) WithRefererMiddleware() {
-	d.SetMiddleware(new(middlewares.RefererMiddleware), 100)
+func (d *Downloader) WithReferrerMiddleware() {
+	d.SetMiddleware(new(middlewares.ReferrerMiddleware), 100)
 }
 func (d *Downloader) WithCookieMiddleware() {
 	d.SetMiddleware(new(middlewares.CookieMiddleware), 110)
@@ -272,8 +272,8 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	if config.GetEnableUrlMiddleware() {
 		d.WithUrlMiddleware()
 	}
-	if config.GetEnableRefererMiddleware() {
-		d.WithRefererMiddleware()
+	if config.GetEnableReferrerMiddleware() {
+		d.WithReferrerMiddleware()
 	}
 	if config.GetEnableCookieMiddleware() {
 		d.WithCookieMiddleware()

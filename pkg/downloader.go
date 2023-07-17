@@ -21,7 +21,7 @@ type Downloader interface {
 	WithHttpMiddleware()
 	WithRetryMiddleware()
 	WithUrlMiddleware()
-	WithRefererMiddleware()
+	WithReferrerMiddleware()
 	WithCookieMiddleware()
 	WithRedirectMiddleware()
 	WithChromeMiddleware()

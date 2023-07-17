@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
@@ -42,21 +43,16 @@ func (s *Spider) ParseMysql(ctx context.Context, response pkg.Response) (err err
 	if err != nil {
 		s.logger.Error(err)
 	}
-	err = s.YieldItem(ctx, &pkg.ItemMysql{
-		Update: true,
-		Table:  s.tableTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        "3",
-			Data: &DataOk{
-				Id: "3",
-				A:  0,
-				B:  2,
-				C:  "",
-				D:  "2",
-			},
-		},
-	})
+	err = s.YieldItem(ctx, items.NewItemMysql(s.tableTest, true).
+		SetUniqueKey("1").
+		SetId("3").
+		SetData(&DataOk{
+			Id: "3",
+			A:  0,
+			B:  2,
+			C:  "",
+			D:  "2",
+		}))
 	if err != nil {
 		s.logger.Error(err)
 	}
@@ -85,20 +81,16 @@ func (s *Spider) ParseKafka(ctx context.Context, response pkg.Response) (err err
 	if err != nil {
 		s.logger.Error(err)
 	}
-	err = s.YieldItem(ctx, &pkg.ItemKafka{
-		Topic: s.tableTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        "3",
-			Data: &DataOk{
-				Id: "3",
-				A:  0,
-				B:  2,
-				C:  "",
-				D:  "2",
-			},
-		},
-	})
+	err = s.YieldItem(ctx, items.NewItemKafka(s.topicTest).
+		SetUniqueKey("1").
+		SetId("3").
+		SetData(&DataOk{
+			Id: "3",
+			A:  0,
+			B:  2,
+			C:  "",
+			D:  "2",
+		}))
 	if err != nil {
 		s.logger.Error(err)
 	}
@@ -127,18 +119,13 @@ func (s *Spider) ParseMongo(ctx context.Context, response pkg.Response) (err err
 	if err != nil {
 		s.logger.Error(err)
 	}
-	err = s.YieldItem(ctx, &pkg.ItemMongo{
-		Update:     true,
-		Collection: s.collectionTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        extra.Count,
-			Data: &DataOk{
-				Id:    fmt.Sprintf(`%d,"%d"`, extra.Count, extra.Count),
-				Count: extra.Count,
-			},
-		},
-	})
+	err = s.YieldItem(ctx, items.NewItemMongo(s.collectionTest, true).
+		SetUniqueKey("1").
+		SetId(extra.Count).
+		SetData(&DataOk{
+			Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
+			Count: extra.Count,
+		}))
 	if err != nil {
 		s.logger.Error(err)
 	}
@@ -167,17 +154,13 @@ func (s *Spider) ParseCsv(ctx context.Context, response pkg.Response) (err error
 	if err != nil {
 		s.logger.Error(err)
 	}
-	err = s.YieldItem(ctx, &pkg.ItemCsv{
-		FileName: s.fileNameTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        extra.Count,
-			Data: &DataOk{
-				Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
-				Count: extra.Count,
-			},
-		},
-	})
+	err = s.YieldItem(ctx, items.NewItemCsv(s.fileNameTest).
+		SetUniqueKey("1").
+		SetId(extra.Count).
+		SetData(&DataOk{
+			Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
+			Count: extra.Count,
+		}))
 	if err != nil {
 		s.logger.Error(err)
 	}
@@ -206,17 +189,13 @@ func (s *Spider) ParseJsonl(ctx context.Context, response pkg.Response) (err err
 	if err != nil {
 		s.logger.Error(err)
 	}
-	err = s.YieldItem(ctx, &pkg.ItemJsonl{
-		FileName: s.fileNameTest,
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			UniqueKey: "1",
-			Id:        extra.Count,
-			Data: &DataOk{
-				Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
-				Count: extra.Count,
-			},
-		},
-	})
+	err = s.YieldItem(ctx, items.NewItemJsonl(s.fileNameTest).
+		SetUniqueKey("1").
+		SetId(extra.Count).
+		SetData(&DataOk{
+			Id:    fmt.Sprintf("%d,%d", extra.Count, extra.Count),
+			Count: extra.Count,
+		}))
 	if err != nil {
 		s.logger.Error(err)
 		return
