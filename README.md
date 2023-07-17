@@ -64,25 +64,82 @@
     * WithTimeout 设置请求的超时时间（Timeout）。
     * WithInterval 设置请求的间隔时间（Interval）。
     * WithOkHttpCodes 设置正常的HTTP状态码（OkHttpCodes）。
-* Item类需要实现Item接口（可以组合ItemUnimplemented）
-    * `GetReferrer()` 可以获取到referrer。
-    * UniqueKey属性作为唯一键用于过滤和其他用途
-    * Id属性用于保存主键
-    * Data属性用于保存完整数据（必须是指针类型）
-    * 内置Item实现：框架提供了一些内置的Item实现，如ItemNone、ItemCsv、ItemJsonl、ItemMongo、ItemMysql、ItemKafka等。
-      您可以根据需要开启相应的Pipeline，以实现数据的保存功能。
+* Item
+
+  Item用于存储需要导出的数据和一些其他辅助信息。
+  框架里内置的Item涵盖了主要文件、数据库、消息队列等存储方式。
+  pkg.Item是一个接口，不能直接使用。pkg.ItemUnimplemented实现了pkg.Item的所有方法。
+  如果Item需要实现pkg.Item，可以组合pkg.ItemUnimplemented。 如：
+    ```go
+    type ItemNone struct {
+        pkg.ItemUnimplemented
+    }
+  
+    ```
+    * Item有一些通用方法：
+        * `GetName() pkg.ItemName`
+          获取Item的具体类型，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemMysql、pkg.ItemKafka等，用于Item反序列化到具体Item实现。
+        * `SetReferrer(string)` 设置referrer，可以用于记录请求的来源，一般不需要自己设置，由ReferrerMiddleware自动设置。
+        * `GetReferrer() string` 获取referrer。
+        * `SetUniqueKey(string)` 设置uniqueKey，可以用于过滤和其他唯一用途。
+        * `GetUniqueKey() string` 获取uniqueKey。
+        * `SetId(any)` 设置id，主要用于保存数据时的主键，和uniqueKey的一个区别是，id可能是在Response中产生，请求时不一定能获得。
+        * `GetId() any` 获取id。
+        * `SetData(any)` 设置data，这是要存储的完整数据。为了规范化，强制要求指针类型。存储到不同的目标时，data需要设置不同的格式。
+        * `GetData() any` 获取data。
+        * `SetFilesRequest([]pkg.Request)` 设置文件的请求。这是一个slice，可以下载多个文件。
+        * `GetFilesRequest() []pkg.Request` 获取文件的请求。
+        * `SetFiles([]pkg.File)` 设置文件。下载后的文件通过这个方法设置到Item中。
+        * `GetFiles() []pkg.File` 获取文件。
+        * `SetImagesRequest([]pkg.Request)` 设置图片的请求。这是一个slice，可以下载多个图片。
+        * `GetImagesRequest() []pkg.Request` 获取图片的请求。
+        * `SetImages([]pkg.Image)` 设置图片。下载后的图片通过这个方法设置到Item中。
+        * `GetImages() []pkg.Image` 获取图片。
+    * 内置Item实现：框架提供了一些内置的Item实现，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemMysql、pkg.ItemKafka等。
+      您可以根据需要，返回Item，并开启相应的Pipeline。如：
+      ```go
+      err = s.YieldItem(ctx, items.NewItemMongo(s.collection, true).
+      SetUniqueKey(extra.Keyword).
+      SetId(extra.Keyword).
+      SetData(&data))
+      
+      ```
+      ```go
+      app.NewApp(NewSpider,
+      pkg.WithMongoPipeline(),
+      ).Run()
+
+      ```
+        * pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
+            * `items.NewItemNone()`
+        * pkg.ItemCsv 保存到csv中。
+            * `items.NewItemCsv(filename string)`
+            * filename 存储的文件名，不包括拓展名
+        * pkg.ItemJsonl 保存到jsonl中。
+            * `items.NewItemJsonl(filename string)`
+            * filename 存储的文件名，不包括拓展名
+        * pkg.ItemMongo 保存到mongo中。
+            * `items.NewItemMongo(collection string, update bool)`
+            * collection mongo collection
+            * update 如果数据已存在mongo中，是否更新
+        * pkg.ItemMysql 保存到mysql中。
+            * `items.NewItemMysql(table string, update bool)`
+            * table mysql table
+            * update 如果数据已存在mongo中，是否更新
+        * pkg.ItemKafka 保存到kafka中。
+            * `items.NewItemKafka(topic string)`
+            * topic kafka topic
 * middleware/pipeline包括框架内置、公共自定义（internal/middlewares，internal/pipelines）和爬虫内自定义（和爬虫同module）。
 * 请确保不同中间件和Pipeline的order值不重复。如果有重复的order值，后面的中间件或Pipeline将替换前面的中间件或Pipeline。
 * 在框架中，内置的中间件具有预定义的order值，这些order值是10的倍数，例如10、20、30等。
   为了避免与内置中间件的order冲突，建议自定义中间件时选择不同的order值。
-  当您定义自己的中间件时，请选择避开内置中间件的order值。例如，您可以选择使用11、12、13等不同的order值来定义自定义中间件。
+  当您自定义中间件时，请选择避开内置中间件的order值。
   根据中间件的功能和需求，按照预期的执行顺序进行配置。确保较低order值的中间件先执行，然后依次执行较高order值的中间件。
   内置的中间件和自定义中间件使用默认的order值即可。
   如果需要改变默认的order值，需要在NewApp中加入crawler选项`pkg.WithMiddleware(new(middleware), order)`启用该中间件并应用该order值。
-    * stats: 10
-        * 数据统计中间件，用于统计爬虫的请求、响应和处理情况。
-        * 可以通过配置项enable_stats_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithStatsMiddleware()`
+    * custom: 10
+        * 自定义中间件
+        * 在NewApp中加入crawler选项`pkg.WithCustomMiddleware(new(CustomMiddleware))`启用该中间件。
     * dump: 20
         * 控制台打印item.data中间件，用于打印请求和响应的详细信息。
         * 可以通过配置项enable_dump_middleware来启用或禁用，默认启用。
@@ -107,57 +164,58 @@
         * 自动添加图片的宽高等信息中间件
         * 用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。
         * 在NewApp中加入crawler选项`pkg.WithImageMiddleware()`
-    * http: 80
-        * 创建请求中间件，用于创建HTTP请求。
-        * 可以通过配置项enable_http_middleware来启用或禁用，默认启用。
-        * 在NewApp中加入crawler选项`pkg.WithHttpMiddleware()`
-    * retry: 90
+    * retry: 80
         * 请求重试中间件，用于在请求失败时进行重试。
         * 默认最大重试次数为10。可以通过配置项enable_retry_middleware来启用或禁用，默认启用。
         * 在NewApp中加入crawler选项`pkg.WithRetryMiddleware()`
-    * url: 100
+    * url: 90
         * 限制URL长度中间件，用于限制请求的URL长度。
         * 可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。
         * 在NewApp中加入crawler选项`pkg.WithUrlMiddleware()`
-    * referrer: 110
+    * referrer: 100
         * 自动添加Referrer中间件，用于自动添加Referrer到请求中。
         * 可以根据referrer_policy配置项选择不同的Referrer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源
         * 配置 enable_referrer_middleware: true 是否开启自动添加referrer，默认启用。
         * 在NewApp中加入crawler选项`pkg.WithReferrerMiddleware()`
-    * cookie: 120
+    * cookie: 110
         * 自动添加Cookie中间件，用于自动添加之前请求返回的Cookie到后续请求中。
         * 可以通过配置项enable_cookie_middleware来启用或禁用，默认启用。
         * 在NewApp中加入crawler选项`pkg.WithCookieMiddleware()`
-    * redirect: 130
+    * redirect: 120
         * 网址重定向中间件，用于处理网址重定向，默认支持301和302重定向。
         * 可以通过配置项enable_redirect_middleware和redirect_max_times来启用和设置最大重定向次数，默认启用和最大次数为1。
         * 在NewApp中加入crawler选项`pkg.WithRedirectMiddleware()`
-    * chrome: 140
+    * chrome: 130
         * 模拟Chrome中间件，用于模拟Chrome浏览器。
         * 可以通过配置项enable_chrome_middleware来启用或禁用，默认启用。
         * 在NewApp中加入crawler选项`pkg.WithChromeMiddleware()`
-    * httpAuth: 150
+    * httpAuth: 140
         * HTTP认证中间件，通过提供用户名（username）和密码（password）进行HTTP认证。
         * 需要在具体的请求中设置用户名和密码。可以通过配置项enable_http_auth_middleware来启用或禁用，默认禁用。
         * 在NewApp中加入crawler选项`pkg.WithHttpAuthMiddleware()`
-    * compress: 160
+    * compress: 150
         * 支持gzip/deflate解压缩中间件，用于处理响应的压缩编码。
         * 可以通过配置项enable_compress_middleware来启用或禁用，默认启用。
         * 在NewApp中加入crawler选项`pkg.WithCompressMiddleware()`
-    * decode: 170
+    * decode: 160
         * 中文解码中间件，支持对响应中的GBK、GB2312和Big5编码进行解码。
         * 可以通过配置项enable_decode_middleware来启用或禁用，默认启用。
         * 在NewApp中加入crawler选项`pkg.WithDecodeMiddleware()`
-    * device: 180
+    * device: 170
         * 修改请求设备信息中间件，用于修改请求的设备信息，包括请求头（header）和TLS信息。目前只支持User-Agent随机切换。
         * 需要设置设备范围（Platforms）和浏览器范围（Browsers）。
         * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
         * Browsers: Chrome/Edge/Safari/FireFox
         * 可以通过配置项enable_device_middleware来启用或禁用，默认禁用。
         * 在NewApp中加入crawler选项`pkg.WithDeviceMiddleware()`启用该中间件。
-    * custom: 11
-        * 自定义中间件
-        * 在NewApp中加入crawler选项`pkg.WithCustomMiddleware(new(CustomMiddleware))`启用该中间件。
+    * http: 200
+        * 创建请求中间件，用于创建HTTP请求。
+        * 可以通过配置项enable_http_middleware来启用或禁用，默认启用。
+        * 在NewApp中加入crawler选项`pkg.WithHttpMiddleware()`
+    * stats: 210
+        * 数据统计中间件，用于统计爬虫的请求、响应和处理情况。
+        * 可以通过配置项enable_stats_middleware来启用或禁用，默认启用。
+        * 在NewApp中加入crawler选项`pkg.WithStatsMiddleware()`
 * Pipeline用于流式处理Item，如数据过滤、数据存储等。
   通过配置不同的Pipeline，您可以方便地处理Item并将结果保存到不同的目标，如控制台、文件、数据库或消息队列中。
   内置的Pipeline和自定义Pipeline使用默认的order值即可。
@@ -237,7 +295,6 @@
       例如，如果您不需要保存结果到MongoDB，可以禁用MongoPipeline。
     * 评估性能影响：在禁用中间件或Pipeline之前，请评估其对爬虫性能的实际影响。确保禁用的部分不会对功能产生负面影响。
     * 可以禁用的配置:
-        * enable_stats_middleware: false
         * enable_dump_middleware: false
         * enable_filter_middleware: false
         * enable_file_middleware: false
@@ -255,6 +312,7 @@
         * enable_device_middleware: false
         * enable_proxy_middleware: false
         * enable_robots_txt_middleware: false
+        * enable_stats_middleware: false
         * enable_dump_pipeline: false
         * enable_file_pipeline: false
         * enable_image_pipeline: false
@@ -270,12 +328,12 @@
         * 在Item中设置Files请求：在Item中，您需要设置Files请求，即包含要下载的文件的请求列表。
           可以使用`item.SetFilesRequest([]pkg.Request{...})`
           方法设置请求列表。
-        * Item.Data：您的Item.Data字段需要实现pkg.File的切片，用于保存下载文件的结果。
+        * Item.data：您的Item.data字段需要实现pkg.File的切片，用于保存下载文件的结果。
           该字段的名称必须是Files，如`type DataFile struct {Files []*media.File}`。
     * Images下载
         * 在Item中设置Images请求：在Item中，您需要设置Images请求，即包含要下载的图片的请求列表。
           可以使用item.SetImagesRequest([]pkg.Request{...})方法设置请求列表。
-        * Item.Data：您的Item.Data字段需要实现pkg.Image的切片，用于保存下载图片的结果。
+        * Item.data：您的Item.data字段需要实现pkg.Image的切片，用于保存下载图片的结果。
           该字段的名称必须是Images，如`type DataImage struct {Images []*media.Image}`。
 * 爬虫结构
     * 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
@@ -404,6 +462,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
 
@@ -427,15 +486,11 @@ func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error)
 		s.logger.Error(err)
 		return
 	}
-	
-	item := pkg.ItemNone{
-		ItemUnimplemented: pkg.ItemUnimplemented{
-			Data: &DataOk{
-				Count: extra.Count,
-			},
-		},
-	}
-	err = s.YieldItem(ctx, &item)
+
+	err = s.YieldItem(ctx, items.NewItemNone().
+		SetData(&DataOk{
+			Count: extra.Count,
+		}))
 	if err != nil {
 		s.logger.Error(err)
 		return err

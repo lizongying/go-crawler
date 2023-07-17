@@ -226,10 +226,10 @@ func (d *Downloader) WithDeviceMiddleware() {
 	d.SetMiddleware(new(middlewares.DeviceMiddleware), 170)
 }
 func (d *Downloader) WithHttpMiddleware() {
-	d.SetMiddleware(new(middlewares.HttpMiddleware), 180)
+	d.SetMiddleware(new(middlewares.HttpMiddleware), 200)
 }
 func (d *Downloader) WithStatsMiddleware() {
-	d.SetMiddleware(new(middlewares.StatsMiddleware), 190)
+	d.SetMiddleware(new(middlewares.StatsMiddleware), 210)
 }
 func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	if d == nil {
@@ -242,9 +242,6 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	config := crawler.GetConfig()
 
 	// set middlewares
-	if config.GetEnableStatsMiddleware() {
-		d.WithStatsMiddleware()
-	}
 	if config.GetEnableDumpMiddleware() {
 		d.WithDumpMiddleware()
 	}
@@ -262,9 +259,6 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	}
 	if config.GetEnableImageMiddleware() {
 		d.WithImageMiddleware()
-	}
-	if config.GetEnableHttpMiddleware() {
-		d.WithHttpMiddleware()
 	}
 	if config.GetEnableRetryMiddleware() {
 		d.WithRetryMiddleware()
@@ -295,6 +289,12 @@ func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
 	}
 	if config.GetEnableDeviceMiddleware() {
 		d.WithDeviceMiddleware()
+	}
+	if config.GetEnableHttpMiddleware() {
+		d.WithHttpMiddleware()
+	}
+	if config.GetEnableStatsMiddleware() {
+		d.WithStatsMiddleware()
 	}
 	return d
 }

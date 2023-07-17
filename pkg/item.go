@@ -4,17 +4,19 @@ import (
 	"reflect"
 )
 
+type ItemName string
+
 const (
-	ItemNone  = ""
-	ItemMongo = "mongo"
-	ItemKafka = "kafka"
-	ItemMysql = "mysql"
-	ItemCsv   = "csv"
-	ItemJsonl = "jsonl"
+	ItemNone  ItemName = ""
+	ItemMongo ItemName = "mongo"
+	ItemKafka ItemName = "kafka"
+	ItemMysql ItemName = "mysql"
+	ItemCsv   ItemName = "csv"
+	ItemJsonl ItemName = "jsonl"
 )
 
 type Item interface {
-	GetName() string
+	GetName() ItemName
 	SetUniqueKey(string) Item
 	GetUniqueKey() string
 	SetId(any) Item
@@ -34,7 +36,7 @@ type Item interface {
 }
 
 type ItemUnimplemented struct {
-	name      string
+	name      ItemName
 	files     []Request
 	images    []Request
 	referrer  string
@@ -43,11 +45,11 @@ type ItemUnimplemented struct {
 	data      any
 }
 
-func (i *ItemUnimplemented) SetName(name string) Item {
+func (i *ItemUnimplemented) SetName(name ItemName) Item {
 	i.name = name
 	return i
 }
-func (i *ItemUnimplemented) GetName() string {
+func (i *ItemUnimplemented) GetName() ItemName {
 	return i.name
 }
 func (i *ItemUnimplemented) SetUniqueKey(uniqueKey string) Item {
@@ -65,6 +67,10 @@ func (i *ItemUnimplemented) GetId() any {
 	return i.id
 }
 func (i *ItemUnimplemented) SetData(data any) Item {
+	dataValue := reflect.ValueOf(data)
+	if dataValue.Kind() != reflect.Ptr || dataValue.IsNil() {
+		return i
+	}
 	i.data = data
 	return i
 }

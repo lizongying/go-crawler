@@ -112,11 +112,6 @@ func (h *HttpServer) GetRoutes() (routes []string) {
 	return
 }
 
-func (h *HttpServer) GetHost() (host string) {
-	host = h.url.String()
-	return
-}
-
 func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (httpServer pkg.DevServer) {
 	devServer, err := config.GetDevServer()
 	if err != nil {

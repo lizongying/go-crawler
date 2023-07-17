@@ -17,5 +17,4 @@ type DevServer interface {
 	Run() error
 	AddRoutes(...Route)
 	GetRoutes() []string
-	GetHost() string
 }
