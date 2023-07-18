@@ -19,12 +19,10 @@ import (
 )
 
 type Option struct {
-	HelloID            *utls.ClientHelloID
-	HelloSpec          *utls.ClientHelloSpec
-	ServerName         string
-	InsecureSkipVerify bool
-	RootCAs            *x509.CertPool
-	Http2              bool
+	*tls.Config
+	HelloID   *utls.ClientHelloID
+	HelloSpec *utls.ClientHelloSpec
+	Http2     bool
 }
 type HttpClient struct {
 	Ja3 bool
@@ -41,14 +39,22 @@ type HttpClient struct {
 
 func NewClientJa3(ctx context.Context, conn net.Conn, option Option) (net.Conn, error) {
 	config := &utls.Config{
-		RootCAs:            option.RootCAs,
-		InsecureSkipVerify: option.InsecureSkipVerify,
-		ServerName:         option.ServerName,
-	}
-	if option.Http2 {
-		config.NextProtos = []string{"h2", "http/1.1"}
-	} else {
-		config.NextProtos = []string{"http/1.1"}
+		Rand:                        option.Rand,
+		Time:                        option.Time,
+		VerifyPeerCertificate:       option.VerifyPeerCertificate,
+		RootCAs:                     option.RootCAs,
+		NextProtos:                  option.NextProtos,
+		ServerName:                  option.ServerName,
+		ClientCAs:                   option.ClientCAs,
+		InsecureSkipVerify:          option.InsecureSkipVerify,
+		CipherSuites:                option.CipherSuites,
+		PreferServerCipherSuites:    option.PreferServerCipherSuites,
+		SessionTicketsDisabled:      option.SessionTicketsDisabled,
+		SessionTicketKey:            option.SessionTicketKey,
+		MinVersion:                  option.MinVersion,
+		MaxVersion:                  option.MaxVersion,
+		DynamicRecordSizingDisabled: option.DynamicRecordSizingDisabled,
+		KeyLogWriter:                option.KeyLogWriter,
 	}
 
 	if option.HelloID == nil {
@@ -72,20 +78,7 @@ func NewClientJa3(ctx context.Context, conn net.Conn, option Option) (net.Conn, 
 	return c, nil
 }
 
-func NewClient(conn net.Conn, option Option) net.Conn {
-	config := &tls.Config{
-		RootCAs:            option.RootCAs,
-		InsecureSkipVerify: option.InsecureSkipVerify,
-		ServerName:         option.ServerName,
-	}
-	if option.Http2 {
-		config.NextProtos = []string{"h2", "http/1.1"}
-	} else {
-		config.NextProtos = []string{"http/1.1"}
-	}
-
-	return tls.Client(conn, config)
-}
+var zeroDialer net.Dialer
 
 func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
 	h.logger.DebugF("request: %+v", request.GetRequest())
@@ -127,6 +120,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		MaxConnsPerHost:     1000,
 		MaxIdleConns:        1000,
 		MaxIdleConnsPerHost: 1000,
+
 		TLSClientConfig: &tls.Config{
 			RootCAs: defaultCAs,
 			//InsecureSkipVerify: true,
@@ -158,51 +152,10 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		transport.ForceAttemptHTTP2 = true
 	}
 
-	client := h.client
-	client.Transport = transport
-
-	if timeout > 0 {
-		client.Timeout = timeout
-	}
-
 	if h.DialTimeout == nil {
 		dialTimeout := 10 * time.Second
 		h.DialTimeout = &dialTimeout
 	}
-
-	network := request.GetURL().Scheme
-	address := request.GetURL().Host
-
-	// Check if the URL specifies a port, otherwise use the default port
-	if request.GetURL().Port() == "" {
-		switch network {
-		case "http":
-			address += ":80"
-		case "https":
-			address += ":443"
-		default:
-			return nil, errors.New(fmt.Sprintf("Unsupported network: %s\n", network))
-		}
-	}
-
-	conn, err := net.DialTimeout("tcp", address, *h.DialTimeout)
-	if err != nil {
-		return nil, err
-	}
-
-	option := Option{
-		RootCAs:    defaultCAs,
-		ServerName: request.GetURL().Hostname(),
-		Http2:      h.httpProto == "2.0",
-	}
-	if h.Ja3 {
-		conn, _ = NewClientJa3(ctx, conn, option)
-	} else {
-		conn = NewClient(conn, option)
-	}
-
-	begin := time.Now()
-	response = new(response2.Response).SetRequest(request)
 
 	var resp *http.Response
 	if h.httpProto == "2.0" {
@@ -210,42 +163,65 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		request.GetRequest().ProtoMajor = 2
 		request.GetRequest().ProtoMinor = 0
 
-		tr := transport
-		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return conn, nil
-		}
-		tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return conn, nil
-		}
-
-		resp, err = tr.RoundTrip(request.GetRequest())
-		if err != nil {
-			h.logger.Error(err)
-			return
-		}
-		response.SetResponse(resp)
 	} else {
 		request.GetRequest().Proto = "HTTP/1.1"
 		request.GetRequest().ProtoMajor = 1
 		request.GetRequest().ProtoMinor = 1
+	}
+	if requiresHTTP1(request.GetRequest()) {
+		transport.TLSClientConfig.NextProtos = nil
+	}
+	if h.Ja3 {
+		transport.DialTLSContext = func(http2 bool) func(ctx context.Context, network, addr string) (net.Conn, error) {
+			return func(ctx context.Context, network, addr string) (net.Conn, error) {
+				var firstTLSHost string
+				if firstTLSHost, _, err = net.SplitHostPort(addr); err != nil {
+					return nil, err
+				}
 
-		tr := transport
-		tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return conn, nil
-		}
-		tr.DialTLSContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return conn, nil
-		}
+				// Initiate TLS and check remote host name against certificate.
+				cfg := cloneTLSConfig(transport.TLSClientConfig)
+				if cfg.ServerName == "" {
+					cfg.ServerName = firstTLSHost
+				}
+				if http2 {
+					cfg.NextProtos = []string{"h2", "http/1.1"}
+				} else {
+					cfg.NextProtos = []string{"http/1.1"}
+				}
 
-		resp, err = tr.RoundTrip(request.GetRequest())
-		if err != nil {
-			h.logger.Error(err)
-			return
-		}
-		response.SetResponse(resp)
+				plainConn, err := zeroDialer.DialContext(ctx, "tcp", addr)
+				if err != nil {
+					return nil, err
+				}
+
+				option := Option{
+					Config: cfg,
+				}
+
+				tlsConn, err := NewClientJa3(ctx, plainConn, option)
+				if err != nil {
+					return nil, err
+				}
+
+				return tlsConn, nil
+			}
+		}(h.httpProto == "2.0")
 	}
 
+	client := h.client
+	client.Transport = transport
+
+	if timeout > 0 {
+		client.Timeout = timeout
+	}
+
+	response = new(response2.Response).SetRequest(request)
+	begin := time.Now()
+	resp, err = client.Do(request.GetRequest())
+	response.SetResponse(resp)
 	response.SetSpendTime(time.Now().Sub(begin))
+
 	if err != nil {
 		retryMaxTimes := h.retryMaxTimes
 		if request.GetRetryMaxTimes() != nil {

@@ -27,7 +27,7 @@ type Response interface {
 	GetStatusCode() int
 	GetBody() io.ReadCloser
 	GetCookies() []*http.Cookie
-	UnmarshalJson(any) error
+	UnmarshalBody(any) error
 	Xpath() (*xpath.Selector, error)
 	Query() (*query.Selector, error)
 	Json() (gjson.Result, error)

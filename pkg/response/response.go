@@ -75,7 +75,7 @@ func (r *Response) GetBody() io.ReadCloser {
 func (r *Response) GetCookies() []*http.Cookie {
 	return r.Response.Cookies()
 }
-func (r *Response) UnmarshalJson(v any) error {
+func (r *Response) UnmarshalBody(v any) error {
 	vValue := reflect.ValueOf(v)
 	if vValue.Kind() != reflect.Ptr || vValue.IsNil() {
 		return fmt.Errorf("v must be a non-null pointer")
