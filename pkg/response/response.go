@@ -2,7 +2,9 @@ package response
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-query/query"
 	"github.com/lizongying/go-re/re"
@@ -10,6 +12,7 @@ import (
 	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
+	"reflect"
 	"time"
 )
 
@@ -71,6 +74,18 @@ func (r *Response) GetBody() io.ReadCloser {
 }
 func (r *Response) GetCookies() []*http.Cookie {
 	return r.Response.Cookies()
+}
+func (r *Response) UnmarshalJson(v any) error {
+	vValue := reflect.ValueOf(v)
+	if vValue.Kind() != reflect.Ptr || vValue.IsNil() {
+		return fmt.Errorf("v must be a non-null pointer")
+	}
+
+	if len(r.bodyBytes) == 0 {
+		return fmt.Errorf("response is empty")
+	}
+
+	return json.Unmarshal(r.bodyBytes, v)
 }
 
 func (r *Response) GetUniqueKey() string {

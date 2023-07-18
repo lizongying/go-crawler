@@ -60,7 +60,7 @@ url_length_limit:
 enable_compress_middleware: true
 enable_decode_middleware: true
 enable_redirect_middleware: true
-redirect_max_times: 1
+redirect_max_times: 10
 enable_chrome_middleware: true
 enable_device_middleware: false
 enable_proxy_middleware: true
