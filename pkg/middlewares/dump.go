@@ -3,6 +3,7 @@ package middlewares
 import (
 	"context"
 	"github.com/lizongying/go-crawler/pkg"
+	"net/http/httputil"
 )
 
 type DumpMiddleware struct {
@@ -12,6 +13,12 @@ type DumpMiddleware struct {
 
 func (m *DumpMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
 	m.logger.InfoF("request: %+v", request)
+	return
+}
+
+func (m *DumpMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
+	b, _ := httputil.DumpResponse(response.GetResponse(), false)
+	m.logger.DebugF("response: \n%s", string(b))
 	return
 }
 

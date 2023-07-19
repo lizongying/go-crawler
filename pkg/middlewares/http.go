@@ -21,8 +21,13 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request pkg.Request
 	}
 
 	if request.GetMethod() == "" {
-		request.SetMethod("GET")
+		if request.GetBody() != "" {
+			request.SetMethod("POST")
+		} else {
+			request.SetMethod("GET")
+		}
 	}
+
 	if request.GetUrl() == "" {
 		err = errors.New("url is empty")
 		m.logger.Error(err)

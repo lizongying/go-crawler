@@ -283,7 +283,7 @@ func (h *HttpClient) FromCrawler(crawler pkg.Crawler) pkg.HttpClient {
 	h.logger = crawler.GetLogger()
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 	h.retryMaxTimes = config.GetRetryMaxTimes()
-	h.Ja3 = true
+	h.Ja3 = config.GetEnableJa3()
 
 	return h
 }

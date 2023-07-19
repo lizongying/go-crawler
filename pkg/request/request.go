@@ -293,12 +293,22 @@ func (r *Request) SetForm(key string, value string) pkg.Request {
 	if r.Form == nil {
 		r.Form = make(url.Values)
 	}
-	r.Form.Add(key, value)
-	err := r.ParseForm()
-	if err != nil {
-		r.setErr("Form", err)
-		return r
+
+	if r.URL != nil {
+		newValues, err := url.ParseQuery(r.URL.RawQuery)
+		if err != nil {
+			r.setErr("Form", err)
+			return r
+		}
+		if newValues != nil {
+			for k, v := range newValues {
+				r.Form[k] = v
+			}
+		}
 	}
+
+	r.Form.Set(key, value)
+	r.Request.URL.RawQuery = r.Form.Encode()
 	return r
 }
 func (r *Request) GetForm() url.Values {
@@ -308,12 +318,22 @@ func (r *Request) SetPostForm(key string, value string) pkg.Request {
 	if r.PostForm == nil {
 		r.PostForm = make(url.Values)
 	}
-	r.PostForm.Add(key, value)
-	err := r.ParseForm()
-	if err != nil {
-		r.setErr("PostForm", err)
-		return r
+	if r.bodyStr != "" {
+		newValues, err := url.ParseQuery(r.bodyStr)
+		if err != nil {
+			r.setErr("PostForm", err)
+			return r
+		}
+		if newValues != nil {
+			for k, v := range newValues {
+				r.PostForm[k] = v
+			}
+		}
 	}
+
+	r.PostForm.Set(key, value)
+	r.SetBody(r.PostForm.Encode())
+
 	return r
 }
 func (r *Request) GetPostForm() url.Values {

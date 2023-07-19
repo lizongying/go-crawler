@@ -9,6 +9,7 @@ type Config interface {
 	GetProxy() *url.URL
 	GetHttpProto() string
 	GetRequestTimeout() time.Duration
+	GetEnableJa3() bool
 	GetReferrerPolicy() ReferrerPolicy
 	GetUrlLengthLimit() int
 	GetRedirectMaxTimes() uint8

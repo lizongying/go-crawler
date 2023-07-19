@@ -413,7 +413,7 @@
 * request.retry_max_times: 请求重试的最大次数，默认10。
 * request.http_proto: 请求的HTTP协议。默认`2.0`
 * dev_server: 开发服务器的地址。默认`https://localhost:8081`
-* enable_ja3: 是否打印JA3指纹。默认关闭。
+* enable_ja3: 是否修改/打印JA3指纹。默认关闭。
 * scheduler: 调度方式，默认memory（内存调度），可选值memory、redis、kafka。选择redis或kafka后可以实现集群调度。
 * filter: 过滤方式，默认memory（内存过滤），可选值memory、redis。选择redis后可以实现集群过滤。
 
