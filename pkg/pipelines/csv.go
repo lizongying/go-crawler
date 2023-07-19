@@ -29,12 +29,12 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 		return
 	}
 	if item.GetName() != pkg.ItemCsv {
-		m.logger.Warn("item not support csv")
+		m.logger.Warn("item not support", pkg.ItemCsv)
 		return
 	}
 	itemCsv, ok := item.(*items.ItemCsv)
 	if !ok {
-		m.logger.Warn("item not support csv")
+		m.logger.Warn("item parsing failed with", pkg.ItemCsv)
 		return
 	}
 

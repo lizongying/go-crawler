@@ -2,6 +2,8 @@ package pipelines
 
 import (
 	"context"
+	"errors"
+	items2 "github.com/lizongying/go-crawler/internal/items"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -20,8 +22,22 @@ func (m *CustomPipeline) Start(_ context.Context, crawler pkg.Crawler) error {
 	return nil
 }
 
-func (m *CustomPipeline) ProcessItem(_ context.Context, _ pkg.Item) error {
-	m.logger.Debug("item")
+func (m *CustomPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+	if item == nil {
+		err = errors.New("nil item")
+		m.logger.Error(err)
+		return
+	}
+	if item.GetName() != items2.Custom {
+		m.logger.Warn("item not support", items2.Custom)
+		return
+	}
+	itemCustom, ok := item.(*items2.ItemCustom)
+	if !ok {
+		m.logger.Warn("item parsing failed with", items2.Custom)
+		return
+	}
+	m.logger.Debug("itemCustom", itemCustom)
 	return nil
 }
 

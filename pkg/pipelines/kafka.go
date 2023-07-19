@@ -29,12 +29,12 @@ func (m *KafkaPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		return
 	}
 	if item.GetName() != pkg.ItemKafka {
-		m.logger.Warn("item not support kafka")
+		m.logger.Warn("item not support", pkg.ItemKafka)
 		return
 	}
 	itemKafka, ok := item.(*items.ItemKafka)
 	if !ok {
-		m.logger.Warn("item not support kafka")
+		m.logger.Warn("item not parsing failed with", pkg.ItemKafka)
 		return
 	}
 

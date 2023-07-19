@@ -29,12 +29,12 @@ func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		return
 	}
 	if item.GetName() != pkg.ItemMongo {
-		m.logger.Warn("item not support mongo")
+		m.logger.Warn("item not support", pkg.ItemMongo)
 		return
 	}
 	itemMongo, ok := item.(*items.ItemMongo)
 	if !ok {
-		m.logger.Warn("item not support mongo")
+		m.logger.Warn("item parsing failed with", pkg.ItemMongo)
 		return
 	}
 

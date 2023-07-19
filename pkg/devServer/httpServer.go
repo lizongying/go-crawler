@@ -83,6 +83,11 @@ func (h *HttpServer) Run() (err error) {
 					}
 					return &cer, nil
 				},
+				VerifyConnection: func(state tls.ConnectionState) error {
+					h.logger.Info("Version:", state.Version)
+					h.logger.Info("CipherSuite:", state.CipherSuite)
+					return nil
+				},
 			})
 			err = h.srv.Serve(tlsListener)
 		} else {
