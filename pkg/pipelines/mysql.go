@@ -33,7 +33,7 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		m.logger.Warn("item not support", pkg.ItemMysql)
 		return
 	}
-	itemMysql, ok := item.(*items.ItemMysql)
+	itemMysql, ok := item.GetItem().(*items.ItemMysql)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemMysql)
 		return

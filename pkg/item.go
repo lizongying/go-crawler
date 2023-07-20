@@ -16,6 +16,7 @@ const (
 )
 
 type Item interface {
+	GetItem() any
 	GetName() ItemName
 	SetUniqueKey(string) Item
 	GetUniqueKey() string
@@ -36,6 +37,7 @@ type Item interface {
 }
 
 type ItemUnimplemented struct {
+	item      any
 	name      ItemName
 	files     []Request
 	images    []Request
@@ -45,6 +47,13 @@ type ItemUnimplemented struct {
 	data      any
 }
 
+func (i *ItemUnimplemented) SetItem(item any) Item {
+	i.item = item
+	return i
+}
+func (i *ItemUnimplemented) GetItem() any {
+	return i.item
+}
 func (i *ItemUnimplemented) SetName(name ItemName) Item {
 	i.name = name
 	return i

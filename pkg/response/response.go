@@ -12,7 +12,9 @@ import (
 	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
+	"regexp"
 	"time"
 )
 
@@ -190,5 +192,66 @@ func (r *Response) Re() (selector *re.Selector, err error) {
 		return
 	}
 
+	return
+}
+func areSameDomain(url1, url2 *url.URL) bool {
+	// Check if the scheme and host (domain) are the same
+	if url1.Scheme != url2.Scheme || url1.Host != url2.Host {
+		return false
+	}
+
+	// Check if the port (if specified) is the same
+	if url1.Port() != url2.Port() {
+		return false
+	}
+
+	return true
+}
+
+func (r *Response) AllLink() (links []*url.URL) {
+	if r == nil {
+		return
+	}
+
+	if len(r.bodyBytes) == 0 {
+		return
+	}
+
+	selector, err := xpath.NewSelectorFromBytes(r.bodyBytes)
+	if err != nil {
+		return
+	}
+
+	base := r.request.GetRequest().URL
+	for _, v := range selector.FindStrMany("//a/@href") {
+		relative, e := url.Parse(v)
+		if e != nil {
+			continue
+		}
+		relative = base.ResolveReference(relative)
+		if areSameDomain(base, relative) && base.String() != relative.String() {
+			links = append(links, relative)
+		}
+	}
+
+	return
+}
+
+func (r *Response) BodyText() (body string) {
+	if r == nil {
+		return
+	}
+
+	if len(r.bodyBytes) == 0 {
+		return
+	}
+
+	sel, err := query.NewSelectorFromBytes(r.bodyBytes)
+	if err != nil {
+		return
+	}
+	body = sel.Remove("script").FindStrOne("body")
+	body = regexp.MustCompile(` `).ReplaceAllString(body, "")
+	body = regexp.MustCompile(`\n+`).ReplaceAllString(body, "\n")
 	return
 }

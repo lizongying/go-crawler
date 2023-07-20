@@ -32,7 +32,7 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 		m.logger.Warn("item not support", pkg.ItemCsv)
 		return
 	}
-	itemCsv, ok := item.(*items.ItemCsv)
+	itemCsv, ok := item.GetItem().(*items.ItemCsv)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemCsv)
 		return

@@ -8,12 +8,15 @@ import (
 	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"net/url"
+	"regexp"
 )
 
 type Spider struct {
 	pkg.Spider
 	logger               pkg.Logger
 	collectionBaiduBaike string
+	reItem               *regexp.Regexp
 }
 
 func (s *Spider) ParseDetail(ctx context.Context, response pkg.Response) (err error) {
@@ -23,16 +26,12 @@ func (s *Spider) ParseDetail(ctx context.Context, response pkg.Response) (err er
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("ExtraDetail", utils.JsonStr(extra))
-	s.logger.Info("BodyBytes", string(response.GetBodyBytes()))
+	s.logger.Info("extra", utils.JsonStr(extra))
 
-	x, err := response.Xpath()
-	if err != nil {
-		s.logger.Error(err)
+	content := response.BodyText()
+	if content == "" {
 		return
 	}
-
-	content := x.FindNodeOne("//div[contains(@class, 'J-content')]").FindStrOne("string(.)")
 	data := DataWord{
 		Id:      extra.Keyword,
 		Keyword: extra.Keyword,
@@ -50,13 +49,63 @@ func (s *Spider) ParseDetail(ctx context.Context, response pkg.Response) (err er
 	return
 }
 
+func (s *Spider) ParseIndex(ctx context.Context, response pkg.Response) (err error) {
+	links := response.AllLink()
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
+
+	for _, v := range links {
+		r := s.reItem.FindStringSubmatch(v.Path)
+		if len(r) == 2 {
+			decodedString, e := url.QueryUnescape(r[1])
+			if e != nil {
+				continue
+			}
+			err = s.YieldRequest(ctx, request.NewRequest().
+				SetExtra(&ExtraDetail{
+					Keyword: decodedString,
+				}).
+				SetCallBack(s.ParseDetail))
+			if err != nil {
+				s.logger.Error(err)
+				continue
+			}
+		} else {
+			err = s.YieldRequest(ctx, request.NewRequest().
+				SetUrl(v.String()).
+				SetCallBack(s.ParseIndex))
+			if err != nil {
+				s.logger.Error(err)
+				continue
+			}
+		}
+	}
+
+	return
+}
+
 // Test go run cmd/baiduBaikeSpider/* -c dev.yml -m prod
 func (s *Spider) Test(ctx context.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetExtra(&ExtraDetail{
-			Keyword: "动物传染病",
+			Keyword: "周口店遗址",
 		}).
 		SetCallBack(s.ParseDetail))
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
+
+	return
+}
+
+// TestIndex go run cmd/baiduBaikeSpider/* -c dev.yml -m prod -f TestIndex
+func (s *Spider) TestIndex(ctx context.Context, _ string) (err error) {
+	err = s.YieldRequest(ctx, request.NewRequest().
+		SetUrl("https://baike.baidu.com/").
+		SetCallBack(s.ParseIndex))
 	if err != nil {
 		s.logger.Error(err)
 		return
@@ -75,6 +124,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		Spider:               baseSpider,
 		logger:               baseSpider.GetLogger(),
 		collectionBaiduBaike: "baidu_baike",
+		reItem:               regexp.MustCompile(`/item/([^/]+)`),
 	}
 	spider.SetName("baidu-baike")
 
@@ -84,6 +134,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 func main() {
 	app.NewApp(NewSpider,
 		pkg.WithCustomMiddleware(new(Middleware)),
-		//pkg.WithMongoPipeline(),
+		pkg.WithMongoPipeline(),
 	).Run()
 }

@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.26
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.36.0
 	github.com/go-sql-driver/mysql v1.7.1
-	github.com/lizongying/go-query v0.0.0-20230426070941-98a11b3d6cf7
+	github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f
 	github.com/lizongying/go-re v0.0.0-20230522044635-8e45e9501811
 	github.com/lizongying/go-xpath v0.0.0-20230508033725-6786fb94ccc1
 	github.com/pkg/errors v0.9.1

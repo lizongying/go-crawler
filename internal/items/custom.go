@@ -13,5 +13,6 @@ type ItemCustom struct {
 func NewItemCustom() pkg.Item {
 	item := &ItemCustom{}
 	item.SetName(Custom)
+	item.SetItem(item)
 	return item
 }

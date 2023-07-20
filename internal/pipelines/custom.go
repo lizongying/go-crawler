@@ -32,7 +32,7 @@ func (m *CustomPipeline) ProcessItem(_ context.Context, item pkg.Item) (err erro
 		m.logger.Warn("item not support", items2.Custom)
 		return
 	}
-	itemCustom, ok := item.(*items2.ItemCustom)
+	itemCustom, ok := item.GetItem().(*items2.ItemCustom)
 	if !ok {
 		m.logger.Warn("item parsing failed with", items2.Custom)
 		return

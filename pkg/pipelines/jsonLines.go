@@ -30,7 +30,7 @@ func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err
 		m.logger.Warn("item not support", pkg.ItemKafka)
 		return
 	}
-	itemJsonl, ok := item.(*items.ItemJsonl)
+	itemJsonl, ok := item.GetItem().(*items.ItemJsonl)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemKafka)
 		return

@@ -8,6 +8,7 @@ import (
 	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -42,4 +43,7 @@ type Response interface {
 	GetImage() bool
 	GetSkipMiddleware() bool
 	SetSpendTime(time.Duration) Request
+
+	AllLink() []*url.URL
+	BodyText() string
 }

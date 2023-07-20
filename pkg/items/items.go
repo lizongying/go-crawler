@@ -33,6 +33,7 @@ func NewItemMongo(collection string, update bool) pkg.Item {
 		update:     update,
 	}
 	item.SetName(pkg.ItemMongo)
+	item.SetItem(item)
 	return item
 }
 
@@ -55,6 +56,7 @@ func NewItemMysql(table string, update bool) pkg.Item {
 		update: update,
 	}
 	item.SetName(pkg.ItemMysql)
+	item.SetItem(item)
 	return item
 }
 
@@ -72,6 +74,7 @@ func NewItemKafka(topic string) pkg.Item {
 		topic: topic,
 	}
 	item.SetName(pkg.ItemKafka)
+	item.SetItem(item)
 	return item
 }
 
@@ -89,6 +92,7 @@ func NewItemCsv(fileName string) pkg.Item {
 		fileName: fileName,
 	}
 	item.SetName(pkg.ItemCsv)
+	item.SetItem(item)
 	return item
 }
 
@@ -106,5 +110,6 @@ func NewItemJsonl(fileName string) pkg.Item {
 		fileName: fileName,
 	}
 	item.SetName(pkg.ItemJsonl)
+	item.SetItem(item)
 	return item
 }
