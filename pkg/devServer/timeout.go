@@ -3,6 +3,7 @@ package devServer
 import (
 	"github.com/lizongying/go-crawler/pkg"
 	"net/http"
+	"time"
 )
 
 const UrlTimeout = "/timeout"
@@ -21,7 +22,7 @@ func (h *HandlerTimeout) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.logger.Info("exit HandlerTimeout")
 	}()
 
-	//time.Sleep(1 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	w.WriteHeader(http.StatusBadGateway)
 	_, _ = w.Write([]byte("ok"))

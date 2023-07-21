@@ -578,4 +578,12 @@ go get -u github.com/lizongying/go-query@e077670
 
 ```
 
+## Docker build
 
+```shell
+docker build -f ./cmd/testSpider/Dockerfile -t go-crawler/test-spider:latest . 
+```
+
+```shell
+docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirect -m dev
+```

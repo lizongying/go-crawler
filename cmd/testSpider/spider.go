@@ -245,7 +245,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 
 	logger := baseSpider.GetLogger()
 	if baseSpider.GetMode() == "dev" {
-		baseSpider.AddDevServerRoutes(devServer2.NewCustomHandler(logger))
+		baseSpider.AddDevServerRoutes(devServer2.NewHandlerCustom(logger))
 	}
 	//baseSpider.Interval = 0
 	//baseSpider.SetRequestRate("*", time.Second*3, 1)
