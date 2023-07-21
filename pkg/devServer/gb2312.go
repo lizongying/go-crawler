@@ -8,18 +8,18 @@ import (
 
 const UrlGb2312 = "/gb2312"
 
-type Gb2312Handler struct {
+type HandlerGb2312 struct {
 	logger pkg.Logger
 }
 
-func (h *Gb2312Handler) Pattern() string {
+func (h *HandlerGb2312) Pattern() string {
 	return UrlGb2312
 }
 
-func (h *Gb2312Handler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	h.logger.Info("into Gb2312Handler")
+func (h *HandlerGb2312) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+	h.logger.Info("into HandlerGb2312")
 	defer func() {
-		h.logger.Info("exit Gb2312Handler")
+		h.logger.Info("exit HandlerGb2312")
 	}()
 
 	encoder := simplifiedchinese.HZGB2312.NewEncoder()
@@ -30,6 +30,6 @@ func (h *Gb2312Handler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(gb2312Bytes)
 }
 
-func NewGb2312Handler(logger pkg.Logger) *Gb2312Handler {
-	return &Gb2312Handler{logger: logger}
+func NewHandlerGb2312(logger pkg.Logger) *HandlerGb2312 {
+	return &HandlerGb2312{logger: logger}
 }

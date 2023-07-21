@@ -52,7 +52,7 @@ func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error)
 // TestOk go run cmd/testOkSpider/*.go -c example.yml -f TestOk -m dev
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 	// mock server
-	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerOk(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
@@ -77,7 +77,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	spider.SetName("test-ok")
 	host, _ := spider.GetConfig().GetDevServer()
 	spider.SetHost(host.String())
-	spider.AddDevServerRoutes(devServer.NewRobotsTxtHandler(baseSpider.GetLogger()))
+	spider.AddDevServerRoutes(devServer.NewHandlerRobotsTxt(baseSpider.GetLogger()))
 
 	return
 }

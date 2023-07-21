@@ -65,13 +65,16 @@ func NewApp(newSpider pkg.NewSpider, crawlOptions ...pkg.CrawlOption) *fx.App {
 				select {}
 			}
 			if err != nil {
+				logger.Error(err)
 				return
 			}
 
 			err = shutdowner.Shutdown()
 			if err != nil {
+				logger.Error(err)
 				return
 			}
+			logger.Info("Shutdown success")
 
 			return
 		}),

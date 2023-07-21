@@ -9,19 +9,19 @@ import (
 
 const UrlFile = "/statics/"
 
-type FileHandler struct {
+type HandlerFile struct {
 	http.Handler
 	logger pkg.Logger
 }
 
-func (h *FileHandler) Pattern() string {
+func (h *HandlerFile) Pattern() string {
 	return UrlFile
 }
 
-// NewFileHandler curl -k -v -s https://localhost:8081/statics/images/th.jpeg
-func NewFileHandler(logger pkg.Logger) *FileHandler {
+// NewHandlerFile curl -k -v -s https://localhost:8081/statics/images/th.jpeg
+func NewHandlerFile(logger pkg.Logger) *HandlerFile {
 	files, _ := fs.Sub(static.Statics, "statics")
-	return &FileHandler{
+	return &HandlerFile{
 		Handler: http.StripPrefix(UrlFile, http.FileServer(http.FS(files))),
 		logger:  logger,
 	}

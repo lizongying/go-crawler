@@ -435,7 +435,7 @@
 * enable_compress_middleware: 是否开启响应解压缩中间件（gzip、deflate），默认启用。
 * enable_decode_middleware: 是否开启中文解码中间件（GBK、GB2312、Big5编码），默认启用。
 * enable_redirect_middleware: 是否开启重定向中间件，默认启用。
-* redirect_max_times: 重定向的最大次数，默认1。
+* redirect_max_times: 重定向的最大次数，默认10。
 * enable_chrome_middleware: 是否开启Chrome模拟中间件，默认启用。
 * enable_device_middleware: 是否开启设备模拟中间件，默认关闭。
 * enable_proxy_middleware: 是否开启代理中间件，默认启用。
@@ -566,12 +566,12 @@ git clone github.com/lizongying/go-crawler-example
 
 ## TODO
 
-* downloadtimeout
 * AutoThrottle
 * cron
 * max request limit?
 * multi-spider
 * devServer独立拆分
+* Queue Priority
 
 ```shell
 go get -u github.com/lizongying/go-query@e077670

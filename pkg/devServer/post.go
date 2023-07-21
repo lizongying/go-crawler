@@ -9,18 +9,18 @@ import (
 
 const UrlPost = "/post"
 
-type PostHandler struct {
+type HandlerPost struct {
 	logger pkg.Logger
 }
 
-func (h *PostHandler) Pattern() string {
+func (h *HandlerPost) Pattern() string {
 	return UrlPost
 }
 
-func (h *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.logger.Info("into PostHandler")
+func (h *HandlerPost) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("into HandlerPost")
 	defer func() {
-		h.logger.Info("exit PostHandler")
+		h.logger.Info("exit HandlerPost")
 	}()
 
 	body, _ := io.ReadAll(r.Body)
@@ -35,6 +35,6 @@ func (h *PostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(reqDump)
 }
 
-func NewPostHandler(logger pkg.Logger) *PostHandler {
-	return &PostHandler{logger: logger}
+func NewHandlerPost(logger pkg.Logger) *HandlerPost {
+	return &HandlerPost{logger: logger}
 }

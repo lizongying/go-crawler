@@ -81,21 +81,26 @@ func NewClientJa3(ctx context.Context, conn net.Conn, option Option) (net.Conn, 
 var zeroDialer net.Dialer
 
 func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
-	h.logger.DebugF("request: %+v", request.GetRequest())
+	bs, _ := request.Marshal()
+	h.logger.DebugF("request: %s", string(bs))
 
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	if request.GetTimeout() > 0 {
-		//c, cancel := context.WithTimeout(ctx, request.Timeout)
-		//defer cancel()
-		//request.Request = request.Request.WithContext(c)
-	}
-
 	timeout := h.timeout
 	if request.GetTimeout() > 0 {
 		timeout = request.GetTimeout()
+	}
+
+	if timeout > 0 {
+		c := context.Background()
+		if meta, ok := ctx.Value("meta").(pkg.Meta); ok {
+			c = context.WithValue(c, "meta", meta)
+		}
+		c, cancel := context.WithTimeout(c, timeout)
+		defer cancel()
+		request.WithContext(c)
 	}
 
 	// Get a copy of the default root CAs
@@ -176,6 +181,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 			return func(ctx context.Context, network, addr string) (net.Conn, error) {
 				var firstTLSHost string
 				if firstTLSHost, _, err = net.SplitHostPort(addr); err != nil {
+					h.logger.Error(err)
 					return nil, err
 				}
 
@@ -192,6 +198,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 
 				plainConn, err := zeroDialer.DialContext(ctx, "tcp", addr)
 				if err != nil {
+					h.logger.Error(err)
 					return nil, err
 				}
 
@@ -201,6 +208,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 
 				tlsConn, err := NewClientJa3(ctx, plainConn, option)
 				if err != nil {
+					h.logger.Error(err)
 					return nil, err
 				}
 
@@ -210,15 +218,33 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	}
 
 	client := h.client
+
+	redirectMaxTimes := h.redirectMaxTimes
+	if request.GetRetryMaxTimes() != nil {
+		redirectMaxTimes = *request.GetRetryMaxTimes()
+	}
+	client.CheckRedirect = func(redirectMaxTimes uint8) func(req *http.Request, via []*http.Request) error {
+		return func(req *http.Request, via []*http.Request) error {
+			if uint8(len(via)) > redirectMaxTimes {
+				return errors.New(fmt.Sprintf("stopped after %d redirects", redirectMaxTimes))
+			}
+			return nil
+		}
+	}(redirectMaxTimes)
+
 	client.Transport = transport
 
 	if timeout > 0 {
 		client.Timeout = timeout
 	}
-
 	response = new(response2.Response).SetRequest(request)
 	begin := time.Now()
 	resp, err = client.Do(request.GetRequest())
+	if err != nil {
+		h.logger.Info(err)
+		return
+	}
+
 	response.SetResponse(resp)
 	response.SetSpendTime(time.Now().Sub(begin))
 
@@ -263,20 +289,6 @@ func (h *HttpClient) FromCrawler(crawler pkg.Crawler) pkg.HttpClient {
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 
 	h.client = http.DefaultClient
-	h.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		redirectMaxTimes := h.redirectMaxTimes
-
-		ctx := req.Context()
-		redirectMaxTimesVal := ctx.Value("redirect_max_times")
-		if redirectMaxTimesVal != nil {
-			redirectMaxTimes, _ = redirectMaxTimesVal.(uint8)
-		}
-
-		if uint8(len(via)) > redirectMaxTimes {
-			return errors.New(fmt.Sprintf("stopped after %d redirects", redirectMaxTimes))
-		}
-		return nil
-	}
 	h.proxy = config.GetProxy()
 	h.timeout = config.GetRequestTimeout()
 	h.httpProto = config.GetHttpProto()

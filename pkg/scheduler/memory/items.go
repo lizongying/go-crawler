@@ -73,9 +73,10 @@ func (s *Scheduler) YieldItem(ctx context.Context, item pkg.Item) (err error) {
 	}
 
 	// add referrer to item
-	referrer := ctx.Value("referrer")
-	if referrer != nil {
-		item.SetReferrer(referrer.(string))
+	if meta, ok := ctx.Value("meta").(pkg.Meta); ok {
+		if meta.Referrer != nil {
+			item.SetReferrer(meta.Referrer.String())
+		}
 	}
 
 	s.itemActiveChan <- struct{}{}

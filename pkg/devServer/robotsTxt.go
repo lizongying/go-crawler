@@ -9,18 +9,18 @@ import (
 
 const UrlRobotsTxt = "/robots.txt"
 
-type RobotsTxtHandler struct {
+type HandlerRobotsTxt struct {
 	http.Handler
 	logger pkg.Logger
 }
 
-func (h *RobotsTxtHandler) Pattern() string {
+func (h *HandlerRobotsTxt) Pattern() string {
 	return UrlRobotsTxt
 }
 
-func NewRobotsTxtHandler(logger pkg.Logger) *RobotsTxtHandler {
+func NewHandlerRobotsTxt(logger pkg.Logger) *HandlerRobotsTxt {
 	files, _ := fs.Sub(static.Statics, "statics")
-	return &RobotsTxtHandler{
+	return &HandlerRobotsTxt{
 		Handler: http.FileServer(http.FS(files)),
 		logger:  logger,
 	}

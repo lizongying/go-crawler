@@ -7,18 +7,18 @@ import (
 
 const UrlRedirect = "/redirect"
 
-type RedirectHandler struct {
+type HandlerRedirect struct {
 	logger pkg.Logger
 }
 
-func (h *RedirectHandler) Pattern() string {
+func (h *HandlerRedirect) Pattern() string {
 	return UrlRedirect
 }
 
-func (h *RedirectHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.logger.Info("into RedirectHandler")
+func (h *HandlerRedirect) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("into HandlerRedirect")
 	defer func() {
-		h.logger.Info("exit RedirectHandler")
+		h.logger.Info("exit HandlerRedirect")
 	}()
 
 	//http.Redirect(w, r, UrlOk, http.StatusFound)
@@ -27,6 +27,6 @@ func (h *RedirectHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
 }
 
-func NewRedirectHandler(logger pkg.Logger) *RedirectHandler {
-	return &RedirectHandler{logger: logger}
+func NewHandlerRedirect(logger pkg.Logger) *HandlerRedirect {
+	return &HandlerRedirect{logger: logger}
 }

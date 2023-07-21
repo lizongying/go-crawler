@@ -8,18 +8,18 @@ import (
 
 const UrlDeflate = "/deflate"
 
-type DeflateHandler struct {
+type HandlerDeflate struct {
 	logger pkg.Logger
 }
 
-func (h *DeflateHandler) Pattern() string {
+func (h *HandlerDeflate) Pattern() string {
 	return UrlDeflate
 }
 
-func (h *DeflateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.logger.Info("into DeflateHandler")
+func (h *HandlerDeflate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("into HandlerDeflate")
 	defer func() {
-		h.logger.Info("exit DeflateHandler")
+		h.logger.Info("exit HandlerDeflate")
 	}()
 
 	w.Header().Set("Content-Encoding", "deflate")
@@ -32,6 +32,6 @@ func (h *DeflateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = fw.Write([]byte("Hello, Deflate!"))
 }
 
-func NewDeflateHandler(logger pkg.Logger) *DeflateHandler {
-	return &DeflateHandler{logger: logger}
+func NewHandlerDeflate(logger pkg.Logger) *HandlerDeflate {
+	return &HandlerDeflate{logger: logger}
 }

@@ -24,7 +24,7 @@ func TestNewHttpServer(t *testing.T) {
 			config.NewConfig,
 		),
 		fx.Invoke(func(logger pkg.Logger, devServer pkg.DevServer, shutdowner fx.Shutdowner) {
-			devServer.AddRoutes(NewRobotsTxtHandler(logger))
+			devServer.AddRoutes(NewHandlerRobotsTxt(logger))
 			_ = devServer.Run()
 
 			return

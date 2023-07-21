@@ -281,7 +281,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	}
 
 	logger := baseSpider.GetLogger()
-	baseSpider.AddDevServerRoutes(devServer.NewOkHandler(logger))
+	baseSpider.AddDevServerRoutes(devServer.NewHandlerOk(logger))
 
 	spider = &Spider{
 		Spider:         baseSpider,

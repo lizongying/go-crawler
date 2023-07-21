@@ -7,18 +7,18 @@ import (
 
 const UrlInternalServerError = "/internal-server-error"
 
-type InternalServerErrorHandler struct {
+type HandlerInternalServerError struct {
 	logger *logger.Logger
 }
 
-func (*InternalServerErrorHandler) Pattern() string {
+func (*HandlerInternalServerError) Pattern() string {
 	return UrlInternalServerError
 }
 
-func (h *InternalServerErrorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.logger.Info("into InternalServerErrorHandler")
+func (h *HandlerInternalServerError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("into HandlerInternalServerError")
 	defer func() {
-		h.logger.Info("exit InternalServerErrorHandler")
+		h.logger.Info("exit HandlerInternalServerError")
 	}()
 
 	w.WriteHeader(http.StatusInternalServerError)
@@ -29,6 +29,6 @@ func (h *InternalServerErrorHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 	}
 }
 
-func NewInternalServerErrorHandler(logger *logger.Logger) *InternalServerErrorHandler {
-	return &InternalServerErrorHandler{logger: logger}
+func NewHandlerInternalServerError(logger *logger.Logger) *HandlerInternalServerError {
+	return &HandlerInternalServerError{logger: logger}
 }

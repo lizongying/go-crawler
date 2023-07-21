@@ -49,6 +49,7 @@ type Request struct {
 	extra              string
 	extraName          string
 	errors             map[string]error
+	priority           uint8
 }
 
 func (r *Request) SetUniqueKey(uniqueKey string) pkg.Request {
@@ -238,6 +239,13 @@ func (r *Request) setExtraName(name string) {
 }
 func (r *Request) GetExtraName() string {
 	return r.extraName
+}
+func (r *Request) SetPriority(priority uint8) pkg.Request {
+	r.priority = priority
+	return r
+}
+func (r *Request) GetPriority() uint8 {
+	return r.priority
 }
 func (r *Request) setErr(key string, value error) {
 	if r.errors == nil {
@@ -512,6 +520,7 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 		File:             r.GetFile(),
 		Extra:            r.GetExtra(),
 		ExtraName:        r.GetExtraName(),
+		Priority:         r.GetPriority(),
 	}
 	return
 }
@@ -561,6 +570,7 @@ type RequestJson struct {
 	Image              bool                `json:"image,omitempty"`
 	Extra              string              `json:"extra,omitempty"`
 	ExtraName          string              `json:"extra_name,omitempty"`
+	Priority           uint8               `json:"priority,omitempty"`
 }
 
 func (r *RequestJson) SetCallBacks(callbacks map[string]pkg.CallBack) {
@@ -627,6 +637,7 @@ func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 		image:              r.Image,
 		extra:              r.Extra,
 		extraName:          r.ExtraName,
+		priority:           r.Priority,
 	}
 
 	return

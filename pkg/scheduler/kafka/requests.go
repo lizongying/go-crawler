@@ -8,7 +8,6 @@ import (
 	request2 "github.com/lizongying/go-crawler/pkg/request"
 	"github.com/segmentio/kafka-go"
 	"golang.org/x/time/rate"
-	"net/http"
 	"runtime"
 	"time"
 )
@@ -166,17 +165,17 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 }
 
 func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err error) {
-	// add referrer to request
-	referrer := ctx.Value("referrer")
-	if referrer != nil {
-		request.SetReferrer(referrer.(string))
-	}
+	if meta, ok := ctx.Value("meta").(pkg.Meta); ok {
+		// add referrer to request
+		if meta.Referrer != nil {
+			request.SetReferrer(meta.Referrer.String())
+		}
 
-	// add cookies to request
-	cookies := ctx.Value("cookies")
-	if cookies != nil {
-		for _, cookie := range cookies.([]*http.Cookie) {
-			request.AddCookie(cookie)
+		// add cookies to request
+		if len(meta.Cookies) > 0 {
+			for _, cookie := range meta.Cookies {
+				request.AddCookie(cookie)
+			}
 		}
 	}
 

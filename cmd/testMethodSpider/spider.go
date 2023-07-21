@@ -53,7 +53,7 @@ func (s *Spider) ParseGet(ctx context.Context, response pkg.Response) (err error
 
 // TestPost go run cmd/testMethodSpider/*.go -c dev.yml -f TestPost -m dev
 func (s *Spider) TestPost(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewPostHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerPost(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlPost)).
@@ -72,7 +72,7 @@ func (s *Spider) TestPost(ctx context.Context, _ string) (err error) {
 
 // TestGet go run cmd/testMethodSpider/*.go -c dev.yml -f TestGet -m dev
 func (s *Spider) TestGet(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewGetHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerGet(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s?a=0&c=3", s.GetHost(), devServer.UrlGet)).

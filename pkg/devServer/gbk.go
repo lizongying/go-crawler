@@ -8,18 +8,18 @@ import (
 
 const UrlGbk = "/gbk"
 
-type GbkHandler struct {
+type HandlerGbk struct {
 	logger pkg.Logger
 }
 
-func (h *GbkHandler) Pattern() string {
+func (h *HandlerGbk) Pattern() string {
 	return UrlGbk
 }
 
-func (h *GbkHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	h.logger.Info("into GbkHandler")
+func (h *HandlerGbk) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+	h.logger.Info("into HandlerGbk")
 	defer func() {
-		h.logger.Info("exit GbkHandler")
+		h.logger.Info("exit HandlerGbk")
 	}()
 
 	encoder := simplifiedchinese.GBK.NewEncoder()
@@ -30,6 +30,6 @@ func (h *GbkHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(gbkBytes)
 }
 
-func NewGbkHandler(logger pkg.Logger) *GbkHandler {
-	return &GbkHandler{logger: logger}
+func NewHandlerGbk(logger pkg.Logger) *HandlerGbk {
+	return &HandlerGbk{logger: logger}
 }

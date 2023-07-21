@@ -13,16 +13,16 @@ type Message struct {
 
 const UrlRateLimiter = "/rate-limiter"
 
-type RateLimiterHandler struct {
+type HandlerRateLimiter struct {
 	logger  *logger.Logger
 	limiter *rate.Limiter
 }
 
-func (*RateLimiterHandler) Pattern() string {
+func (*HandlerRateLimiter) Pattern() string {
 	return UrlRateLimiter
 }
 
-func (h *RateLimiterHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (h *HandlerRateLimiter) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	message := Message{
@@ -38,8 +38,8 @@ func (h *RateLimiterHandler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func NewRateLimiterHandler(logger *logger.Logger) *RateLimiterHandler {
-	return &RateLimiterHandler{
+func NewHandlerRateLimiter(logger *logger.Logger) *HandlerRateLimiter {
+	return &HandlerRateLimiter{
 		logger:  logger,
 		limiter: rate.NewLimiter(3, 6), // rate 3/s
 	}

@@ -8,18 +8,18 @@ import (
 
 const UrlBig5 = "/big5"
 
-type Big5Handler struct {
+type HandlerBig5 struct {
 	logger pkg.Logger
 }
 
-func (h *Big5Handler) Pattern() string {
+func (h *HandlerBig5) Pattern() string {
 	return UrlBig5
 }
 
-func (h *Big5Handler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	h.logger.Info("into Big5Handler")
+func (h *HandlerBig5) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+	h.logger.Info("into HandlerBig5")
 	defer func() {
-		h.logger.Info("exit Big5Handler")
+		h.logger.Info("exit HandlerBig5")
 	}()
 
 	encoder := traditionalchinese.Big5.NewEncoder()
@@ -33,6 +33,6 @@ func (h *Big5Handler) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(big5Bytes)
 }
 
-func NewBig5Handler(logger pkg.Logger) *Big5Handler {
-	return &Big5Handler{logger: logger}
+func NewHandlerBig5(logger pkg.Logger) *HandlerBig5 {
+	return &HandlerBig5{logger: logger}
 }

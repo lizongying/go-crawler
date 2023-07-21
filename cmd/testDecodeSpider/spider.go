@@ -23,7 +23,7 @@ func (s *Spider) ParseDecode(_ context.Context, response pkg.Response) (err erro
 
 // TestGbk go run cmd/testDecodeSpider/*.go -c dev.yml -f TestGbk -m dev
 func (s *Spider) TestGbk(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewGbkHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerGbk(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGbk)).
@@ -38,7 +38,7 @@ func (s *Spider) TestGbk(ctx context.Context, _ string) (err error) {
 
 // TestGb2312 go run cmd/testDecodeSpider/*.go -c dev.yml -f TestGb2312 -m dev
 func (s *Spider) TestGb2312(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewGb2312Handler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerGb2312(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGb2312)).
@@ -53,7 +53,7 @@ func (s *Spider) TestGb2312(ctx context.Context, _ string) (err error) {
 
 // TestGb18030 go run cmd/testDecodeSpider/*.go -c dev.yml -f TestGb18030 -m dev
 func (s *Spider) TestGb18030(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewGb18030Handler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerGb18030(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGb18030)).
@@ -68,7 +68,7 @@ func (s *Spider) TestGb18030(ctx context.Context, _ string) (err error) {
 
 // TestBig5 go run cmd/testDecodeSpider/*.go -c dev.yml -f TestBig5 -m dev
 func (s *Spider) TestBig5(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewBig5Handler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerBig5(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlBig5)).

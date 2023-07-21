@@ -69,10 +69,6 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
-github.com/lizongying/go-query v0.0.0-20230426070941-98a11b3d6cf7 h1:qAn41nlCcLRmMOALPpGNFQ2akMz27lOv8UKHqj7LSfs=
-github.com/lizongying/go-query v0.0.0-20230426070941-98a11b3d6cf7/go.mod h1:gP12tZ6zLW9cHC4QlQgj0Jak14N3YVI/ZIHD/3ITp9M=
-github.com/lizongying/go-query v0.0.0-20230719185237-8664e04d3883 h1:lCRT7rlrtrYHqpShsgpa2Gwp/fQuP/zT6tNmGAS4uKc=
-github.com/lizongying/go-query v0.0.0-20230719185237-8664e04d3883/go.mod h1:gP12tZ6zLW9cHC4QlQgj0Jak14N3YVI/ZIHD/3ITp9M=
 github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f h1:NlitwGPZLOwMSo8chrEbYBMU1ggJnPPuwYuhXt1uRI8=
 github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f/go.mod h1:gP12tZ6zLW9cHC4QlQgj0Jak14N3YVI/ZIHD/3ITp9M=
 github.com/lizongying/go-re v0.0.0-20230522044635-8e45e9501811 h1:Bg3G5nFwma2c9bNPa70OCOabyL7D6E/qTyB1orz4Ht4=

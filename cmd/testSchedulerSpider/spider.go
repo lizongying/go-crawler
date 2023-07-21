@@ -65,7 +65,7 @@ func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error)
 
 // TestOk go run cmd/testSchedulerSpider/*.go -c dev.yml -f TestOk -m dev
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerOk(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).

@@ -8,18 +8,18 @@ import (
 
 const UrlCookie = "/cookie"
 
-type CookieHandler struct {
+type HandlerCookie struct {
 	logger pkg.Logger
 }
 
-func (h *CookieHandler) Pattern() string {
+func (h *HandlerCookie) Pattern() string {
 	return UrlCookie
 }
 
-func (h *CookieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.logger.Info("into CookieHandler")
+func (h *HandlerCookie) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("into HandlerCookie")
 	defer func() {
-		h.logger.Info("exit CookieHandler")
+		h.logger.Info("exit HandlerCookie")
 	}()
 
 	cookie := &http.Cookie{
@@ -45,6 +45,6 @@ func (h *CookieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func NewCookieHandler(logger pkg.Logger) *CookieHandler {
-	return &CookieHandler{logger: logger}
+func NewHandlerCookie(logger pkg.Logger) *HandlerCookie {
+	return &HandlerCookie{logger: logger}
 }

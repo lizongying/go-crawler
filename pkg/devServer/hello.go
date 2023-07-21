@@ -8,18 +8,18 @@ import (
 
 const UrlHello = "/hello"
 
-type HelloHandler struct {
+type HandlerHello struct {
 	logger *logger.Logger
 }
 
-func (*HelloHandler) Pattern() string {
+func (*HandlerHello) Pattern() string {
 	return UrlHello
 }
 
-func (h *HelloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.logger.Info("into HelloHandler")
+func (h *HandlerHello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.logger.Info("into HandlerHello")
 	defer func() {
-		h.logger.Info("exit HelloHandler")
+		h.logger.Info("exit HandlerHello")
 	}()
 
 	h.logger.InfoF("request: %+v", r)
@@ -27,6 +27,6 @@ func (h *HelloHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.InfoF("body: %s", string(body))
 }
 
-func NewHelloHandler(logger *logger.Logger) *HelloHandler {
-	return &HelloHandler{logger: logger}
+func NewHandlerHello(logger *logger.Logger) *HandlerHello {
+	return &HandlerHello{logger: logger}
 }

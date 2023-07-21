@@ -12,7 +12,8 @@ type DumpMiddleware struct {
 }
 
 func (m *DumpMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
-	m.logger.InfoF("request: %+v", request)
+	bs, _ := request.Marshal()
+	m.logger.InfoF("request: %s", string(bs))
 	return
 }
 

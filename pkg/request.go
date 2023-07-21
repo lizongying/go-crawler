@@ -61,6 +61,8 @@ type Request interface {
 	SetBrowser([]Browser) Request
 	GetBrowser() []Browser
 	GetExtraName() string
+	SetPriority(uint8) Request
+	GetPriority() uint8
 	GetErr() map[string]error
 	SetUrl(string) Request
 	GetUrl() string

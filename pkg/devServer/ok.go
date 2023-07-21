@@ -8,18 +8,18 @@ import (
 
 const UrlOk = "/ok"
 
-type OkHandler struct {
+type HandlerOk struct {
 	logger pkg.Logger
 }
 
-func (h *OkHandler) Pattern() string {
+func (h *HandlerOk) Pattern() string {
 	return UrlOk
 }
 
-func (h *OkHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
-	h.logger.Debug("into OkHandler")
+func (h *HandlerOk) ServeHTTP(w http.ResponseWriter, request *http.Request) {
+	h.logger.Debug("into HandlerOk")
 	defer func() {
-		h.logger.Debug("exit OkHandler")
+		h.logger.Debug("exit HandlerOk")
 	}()
 
 	w.WriteHeader(http.StatusOK)
@@ -30,6 +30,6 @@ func (h *OkHandler) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func NewOkHandler(logger pkg.Logger) *OkHandler {
-	return &OkHandler{logger: logger}
+func NewHandlerOk(logger pkg.Logger) *HandlerOk {
+	return &HandlerOk{logger: logger}
 }

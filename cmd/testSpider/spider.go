@@ -12,6 +12,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strings"
+	"time"
 )
 
 type Spider struct {
@@ -90,6 +91,13 @@ func (s *Spider) ParseRedirect(ctx context.Context, response pkg.Response) (err 
 	return
 }
 
+func (s *Spider) ParseTimeout(ctx context.Context, response pkg.Response) (err error) {
+	s.logger.Info("header", response.GetHeaders())
+	s.logger.Info("body", string(response.GetBodyBytes()))
+
+	return
+}
+
 func (s *Spider) ParseImages(ctx context.Context, response pkg.Response) (err error) {
 	s.logger.Info("Images", utils.JsonStr(response.GetRequest()))
 	s.logger.Info("len", len(response.GetBodyBytes()))
@@ -99,7 +107,7 @@ func (s *Spider) ParseImages(ctx context.Context, response pkg.Response) (err er
 
 // TestUrl go run cmd/testSpider/*.go -c dev.yml -f TestUrl -m dev
 func (s *Spider) TestUrl(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerOk(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk+strings.Repeat("#", 10000))).
@@ -113,7 +121,7 @@ func (s *Spider) TestUrl(ctx context.Context, _ string) (err error) {
 
 // TestOk go run cmd/testSpider/*.go -c dev.yml -f TestOk -m dev
 func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerOk(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
@@ -127,7 +135,7 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 
 // TestHttpAuth go run cmd/testSpider/*.go -c dev.yml -f TestHttpAuth -m dev
 func (s *Spider) TestHttpAuth(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewHttpAuthHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerHttpAuth(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlHttpAuth)).
@@ -141,7 +149,7 @@ func (s *Spider) TestHttpAuth(ctx context.Context, _ string) (err error) {
 
 // TestCookie go run cmd/testSpider/*.go -c dev.yml -f TestCookie -m dev
 func (s *Spider) TestCookie(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewCookieHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerCookie(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlCookie)).
@@ -155,7 +163,7 @@ func (s *Spider) TestCookie(ctx context.Context, _ string) (err error) {
 
 // TestGzip go run cmd/testSpider/*.go -c dev.yml -f TestGzip -m dev
 func (s *Spider) TestGzip(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewGzipHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerGzip(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGzip)).
@@ -168,7 +176,7 @@ func (s *Spider) TestGzip(ctx context.Context, _ string) (err error) {
 
 // TestDeflate go run cmd/testSpider/*.go -c dev.yml -f TestDeflate -m dev
 func (s *Spider) TestDeflate(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewDeflateHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerDeflate(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlDeflate)).
@@ -181,12 +189,26 @@ func (s *Spider) TestDeflate(ctx context.Context, _ string) (err error) {
 
 // TestRedirect go run cmd/testSpider/*.go -c dev.yml -f TestRedirect -m dev
 func (s *Spider) TestRedirect(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRedirectHandler(s.logger))
-	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerRedirect(s.logger))
+	s.AddDevServerRoutes(devServer.NewHandlerOk(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlRedirect)).
 		SetCallBack(s.ParseRedirect))
+	if err != nil {
+		s.logger.Error(err)
+	}
+	return
+}
+
+// TestTimeout go run cmd/testSpider/*.go -c dev.yml -f TestTimeout -m dev
+func (s *Spider) TestTimeout(ctx context.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewHandlerTimeout(s.logger))
+
+	err = s.YieldRequest(ctx, request.NewRequest().
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlTimeout)).
+		SetTimeout(9*time.Second).
+		SetCallBack(s.ParseTimeout))
 	if err != nil {
 		s.logger.Error(err)
 	}
