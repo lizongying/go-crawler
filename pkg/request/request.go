@@ -50,6 +50,7 @@ type Request struct {
 	extraName          string
 	errors             map[string]error
 	priority           uint8
+	fingerprint        string
 }
 
 func (r *Request) SetUniqueKey(uniqueKey string) pkg.Request {
@@ -246,6 +247,13 @@ func (r *Request) SetPriority(priority uint8) pkg.Request {
 }
 func (r *Request) GetPriority() uint8 {
 	return r.priority
+}
+func (r *Request) SetFingerprint(fingerprint string) pkg.Request {
+	r.fingerprint = fingerprint
+	return r
+}
+func (r *Request) GetFingerprint() string {
+	return r.fingerprint
 }
 func (r *Request) setErr(key string, value error) {
 	if r.errors == nil {
@@ -474,14 +482,14 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 		errBack = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
 	}
 	var platform []string
-	if len(r.GetPlatform()) > 0 {
-		for _, v := range r.GetPlatform() {
+	if len(r.platform) > 0 {
+		for _, v := range r.platform {
 			platform = append(platform, string(v))
 		}
 	}
 	var browser []string
-	if len(r.GetBrowser()) > 0 {
-		for _, v := range r.GetBrowser() {
+	if len(r.browser) > 0 {
+		for _, v := range r.browser {
 			browser = append(browser, string(v))
 		}
 	}
@@ -521,6 +529,7 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 		Extra:            r.GetExtra(),
 		ExtraName:        r.GetExtraName(),
 		Priority:         r.GetPriority(),
+		Fingerprint:      r.fingerprint,
 	}
 	return
 }
@@ -571,6 +580,7 @@ type RequestJson struct {
 	Extra              string              `json:"extra,omitempty"`
 	ExtraName          string              `json:"extra_name,omitempty"`
 	Priority           uint8               `json:"priority,omitempty"`
+	Fingerprint        string              `json:"fingerprint,omitempty"`
 }
 
 func (r *RequestJson) SetCallBacks(callbacks map[string]pkg.CallBack) {
@@ -638,6 +648,7 @@ func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 		extra:              r.Extra,
 		extraName:          r.ExtraName,
 		priority:           r.Priority,
+		fingerprint:        r.Fingerprint,
 	}
 
 	return

@@ -452,6 +452,8 @@
 
 ## Example
 
+example.go
+
 ```go
 package main
 
@@ -549,10 +551,8 @@ func main() {
 
 ```
 
-### Test
-
 ```shell
-go run cmd/testOkSpider/*.go -c example.yml -f TestOk -m dev
+go run example.go -c example.yml -f TestOk -m dev
 
 ```
 

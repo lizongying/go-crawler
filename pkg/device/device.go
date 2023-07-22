@@ -3,12 +3,17 @@ package device
 import (
 	"bytes"
 	"encoding/csv"
+	"github.com/lizongying/go-crawler/pkg"
 	"log"
 	"os"
+	"strings"
 )
 
 type Device struct {
-	UserAgent string `name:"User-Agent"`
+	Platform    pkg.Platform
+	Browser     pkg.Browser
+	UserAgent   string
+	Fingerprint string
 }
 
 type Devices struct {
@@ -50,9 +55,14 @@ func readCsvFileFromPath(filePath string) (devices map[string][]Device) {
 
 	devices = make(map[string][]Device)
 	for _, v := range records {
-		devices[v[0]] = append(devices[v[0]], Device{
-			UserAgent: v[1],
-		})
+		device := Device{}
+		if len(v) > 1 {
+			device.UserAgent = v[1]
+		}
+		if len(v) > 2 {
+			device.Fingerprint = v[2]
+		}
+		devices[v[0]] = append(devices[v[0]], device)
 	}
 
 	return
@@ -67,9 +77,18 @@ func readCsvFileFromBytes(bs []byte) (devices map[string][]Device) {
 
 	devices = make(map[string][]Device)
 	for _, v := range records {
-		devices[v[0]] = append(devices[v[0]], Device{
-			UserAgent: v[1],
-		})
+		key := strings.Split(v[0], "-")
+		device := Device{
+			Platform: pkg.Platform(key[0]),
+			Browser:  pkg.Browser(key[1]),
+		}
+		if len(v) > 1 {
+			device.UserAgent = v[1]
+		}
+		if len(v) > 2 {
+			device.Fingerprint = v[2]
+		}
+		devices[v[0]] = append(devices[v[0]], device)
 	}
 
 	return

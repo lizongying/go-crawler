@@ -18,16 +18,8 @@ import (
 	"time"
 )
 
-type Option struct {
-	*tls.Config
-	HelloID   *utls.ClientHelloID
-	HelloSpec *utls.ClientHelloSpec
-	Http2     bool
-}
 type HttpClient struct {
-	Ja3 bool
-	Option
-	DialTimeout      *time.Duration
+	Ja3              bool
 	client           *http.Client
 	proxy            *url.URL
 	timeout          time.Duration
@@ -37,36 +29,36 @@ type HttpClient struct {
 	retryMaxTimes    uint8
 }
 
-func NewClientJa3(ctx context.Context, conn net.Conn, option Option) (net.Conn, error) {
+func NewClientJa3(ctx context.Context, conn net.Conn, cfg *tls.Config, helloID *utls.ClientHelloID, helloSpec *utls.ClientHelloSpec) (net.Conn, error) {
 	config := &utls.Config{
-		Rand:                        option.Rand,
-		Time:                        option.Time,
-		VerifyPeerCertificate:       option.VerifyPeerCertificate,
-		RootCAs:                     option.RootCAs,
-		NextProtos:                  option.NextProtos,
-		ServerName:                  option.ServerName,
-		ClientCAs:                   option.ClientCAs,
-		InsecureSkipVerify:          option.InsecureSkipVerify,
-		CipherSuites:                option.CipherSuites,
-		PreferServerCipherSuites:    option.PreferServerCipherSuites,
-		SessionTicketsDisabled:      option.SessionTicketsDisabled,
-		SessionTicketKey:            option.SessionTicketKey,
-		MinVersion:                  option.MinVersion,
-		MaxVersion:                  option.MaxVersion,
-		DynamicRecordSizingDisabled: option.DynamicRecordSizingDisabled,
-		KeyLogWriter:                option.KeyLogWriter,
+		Rand:                        cfg.Rand,
+		Time:                        cfg.Time,
+		VerifyPeerCertificate:       cfg.VerifyPeerCertificate,
+		RootCAs:                     cfg.RootCAs,
+		NextProtos:                  cfg.NextProtos,
+		ServerName:                  cfg.ServerName,
+		ClientCAs:                   cfg.ClientCAs,
+		InsecureSkipVerify:          cfg.InsecureSkipVerify,
+		CipherSuites:                cfg.CipherSuites,
+		PreferServerCipherSuites:    cfg.PreferServerCipherSuites,
+		SessionTicketsDisabled:      cfg.SessionTicketsDisabled,
+		SessionTicketKey:            cfg.SessionTicketKey,
+		MinVersion:                  cfg.MinVersion,
+		MaxVersion:                  cfg.MaxVersion,
+		DynamicRecordSizingDisabled: cfg.DynamicRecordSizingDisabled,
+		KeyLogWriter:                cfg.KeyLogWriter,
 	}
 
-	if option.HelloID == nil {
-		option.HelloID = &utls.HelloChrome_Auto
+	if helloID == nil {
+		helloID = &utls.HelloChrome_Auto
 	}
-	if option.HelloSpec != nil {
-		option.HelloID = &utls.HelloCustom
+	if helloSpec != nil {
+		helloID = &utls.HelloCustom
 	}
-	c := utls.UClient(conn, config, *option.HelloID)
+	c := utls.UClient(conn, config, *helloID)
 
-	if *option.HelloID == utls.HelloCustom {
-		if err := c.ApplyPreset(option.HelloSpec); err != nil {
+	if *helloID == utls.HelloCustom {
+		if err := c.ApplyPreset(helloSpec); err != nil {
 			return nil, err
 		}
 	}
@@ -152,32 +144,24 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		httpProto = request.GetHttpProto()
 	}
 	if httpProto != "2.0" {
-		transport.ForceAttemptHTTP2 = false
-	} else {
-		transport.ForceAttemptHTTP2 = true
-	}
-
-	if h.DialTimeout == nil {
-		dialTimeout := 10 * time.Second
-		h.DialTimeout = &dialTimeout
-	}
-
-	var resp *http.Response
-	if h.httpProto == "2.0" {
-		request.GetRequest().Proto = "HTTP/2.0"
-		request.GetRequest().ProtoMajor = 2
-		request.GetRequest().ProtoMinor = 0
-
-	} else {
 		request.GetRequest().Proto = "HTTP/1.1"
 		request.GetRequest().ProtoMajor = 1
 		request.GetRequest().ProtoMinor = 1
+		transport.ForceAttemptHTTP2 = false
+	} else {
+		request.GetRequest().Proto = "HTTP/2.0"
+		request.GetRequest().ProtoMajor = 2
+		request.GetRequest().ProtoMinor = 0
+		transport.ForceAttemptHTTP2 = true
 	}
+
 	if requiresHTTP1(request.GetRequest()) {
 		transport.TLSClientConfig.NextProtos = nil
 	}
+
+	var resp *http.Response
 	if h.Ja3 {
-		transport.DialTLSContext = func(http2 bool) func(ctx context.Context, network, addr string) (net.Conn, error) {
+		transport.DialTLSContext = func(request pkg.Request) func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return func(ctx context.Context, network, addr string) (net.Conn, error) {
 				var firstTLSHost string
 				if firstTLSHost, _, err = net.SplitHostPort(addr); err != nil {
@@ -190,7 +174,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 				if cfg.ServerName == "" {
 					cfg.ServerName = firstTLSHost
 				}
-				if http2 {
+				if request.GetHttpProto() == "2.0" {
 					cfg.NextProtos = []string{"h2", "http/1.1"}
 				} else {
 					cfg.NextProtos = []string{"http/1.1"}
@@ -202,11 +186,26 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 					return nil, err
 				}
 
-				option := Option{
-					Config: cfg,
+				var helloID *utls.ClientHelloID
+				var helloSpec *utls.ClientHelloSpec
+
+				switch pkg.Browser(request.GetFingerprint()) {
+				case pkg.Chrome:
+					helloID = &utls.HelloChrome_Auto
+				case pkg.Edge:
+					helloID = &utls.HelloEdge_Auto
+				case pkg.Safari:
+					helloID = &utls.HelloSafari_Auto
+				case pkg.FireFox:
+					helloID = &utls.HelloFirefox_Auto
+				default:
+					helloSpec, err = stringToSpec(request.GetFingerprint())
+					if err != nil {
+						h.logger.Error(err)
+					}
 				}
 
-				tlsConn, err := NewClientJa3(ctx, plainConn, option)
+				tlsConn, err := NewClientJa3(ctx, plainConn, cfg, helloID, helloSpec)
 				if err != nil {
 					h.logger.Error(err)
 					return nil, err
@@ -214,14 +213,14 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 
 				return tlsConn, nil
 			}
-		}(h.httpProto == "2.0")
+		}(request)
 	}
 
 	client := h.client
 
 	redirectMaxTimes := h.redirectMaxTimes
-	if request.GetRetryMaxTimes() != nil {
-		redirectMaxTimes = *request.GetRetryMaxTimes()
+	if request.GetRedirectMaxTimes() != nil {
+		redirectMaxTimes = *request.GetRedirectMaxTimes()
 	}
 	client.CheckRedirect = func(redirectMaxTimes uint8) func(req *http.Request, via []*http.Request) error {
 		return func(req *http.Request, via []*http.Request) error {

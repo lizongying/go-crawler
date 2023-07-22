@@ -63,6 +63,8 @@ type Request interface {
 	GetExtraName() string
 	SetPriority(uint8) Request
 	GetPriority() uint8
+	SetFingerprint(string) Request
+	GetFingerprint() string
 	GetErr() map[string]error
 	SetUrl(string) Request
 	GetUrl() string
