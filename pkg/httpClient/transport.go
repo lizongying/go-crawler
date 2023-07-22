@@ -3,6 +3,7 @@ package httpClient
 import (
 	"crypto/sha256"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	utls "github.com/refraction-networking/utls"
 	"net/http"
@@ -151,15 +152,24 @@ var extMap = map[string]utls.TLSExtension{
 // stringToSpec creates a ClientHelloSpec based on a JA3 string
 func stringToSpec(ja3 string) (*utls.ClientHelloSpec, error) {
 	tokens := strings.Split(ja3, ",")
+	if len(tokens) < 5 {
+		return nil, errors.New("tokens error")
+	}
 
 	version := tokens[0]
 	ciphers := strings.Split(tokens[1], "-")
 	extensions := strings.Split(tokens[2], "-")
 	curves := strings.Split(tokens[3], "-")
+	if len(tokens) < 1 {
+		return nil, errors.New("curves error")
+	}
 	if len(curves) == 1 && curves[0] == "" {
 		curves = []string{}
 	}
 	pointFormats := strings.Split(tokens[4], "-")
+	if len(tokens) < 1 {
+		return nil, errors.New("pointFormats error")
+	}
 	if len(pointFormats) == 1 && pointFormats[0] == "" {
 		pointFormats = []string{}
 	}
@@ -186,7 +196,7 @@ func stringToSpec(ja3 string) (*utls.ClientHelloSpec, error) {
 	}
 	extMap["11"] = &utls.SupportedPointsExtension{SupportedPoints: targetPointFormats}
 
-	// build extenions list
+	// build extensions list
 	var exts []utls.TLSExtension
 	for _, e := range extensions {
 		te, ok := extMap[e]

@@ -199,9 +199,12 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 				case pkg.FireFox:
 					helloID = &utls.HelloFirefox_Auto
 				default:
-					helloSpec, err = stringToSpec(request.GetFingerprint())
-					if err != nil {
-						h.logger.Error(err)
+					if request.GetFingerprint() != "" {
+						helloSpec, err = stringToSpec(request.GetFingerprint())
+						if err != nil {
+							h.logger.Error(err)
+							helloID = &utls.HelloChrome_Auto
+						}
 					}
 				}
 

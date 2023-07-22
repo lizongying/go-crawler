@@ -49,6 +49,8 @@ func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request pkg.Request
 		}
 		if u.Fingerprint != "" {
 			request.SetFingerprint(u.Fingerprint)
+		} else {
+			request.SetFingerprint(string(u.Browser))
 		}
 	}
 
