@@ -57,6 +57,9 @@ type Crawler struct {
 	pkg.Scheduler
 	pkg.Stats
 	pkg.Signal
+
+	methodStarted bool
+	methodActive  chan struct{}
 }
 
 func (c *Crawler) GetMode() string {

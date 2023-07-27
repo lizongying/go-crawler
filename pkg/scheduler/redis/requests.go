@@ -6,12 +6,17 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	request2 "github.com/lizongying/go-crawler/pkg/request"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/time/rate"
 	"runtime"
 	"time"
 )
 
 func (s *Scheduler) Request(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
+	defer func() {
+		s.stateRequest.Set()
+	}()
+
 	if request == nil {
 		err = errors.New("nil request")
 		return
@@ -62,23 +67,60 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 	}
 
 	slot := "*"
-	value, _ := s.requestSlots.Load(slot)
+	value, _ := s.RequestSlotLoad(slot)
 	requestSlot := value.(*rate.Limiter)
 
 	for {
-		req, err := s.redis.BLPop(ctx, 0, s.requestKey).Result()
+		var req string
+		var err error
+		if s.enablePriorityQueue {
+			r, e := s.redis.Do(ctx, "EVALSHA", s.requestKeySha, 1, s.requestKey, s.batch).Result()
+			if e != nil {
+				s.logger.Warn(e)
+				continue
+			}
+			rs, ok := r.([]interface{})
+			if !ok {
+				err = errors.New("req is empty")
+				s.logger.Warn(err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			if len(rs) == 0 {
+				err = errors.New("req is empty")
+				s.logger.Debug(err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			for _, v := range rs {
+				req = v.(string)
+				break
+			}
+			s.logger.Debug("req", req)
+		} else {
+			r, e := s.redis.BLPop(ctx, 0, s.requestKey).Result()
+			if e != nil {
+				s.logger.Warn(e)
+				continue
+			}
+			if len(r) == 0 {
+				err = errors.New("req is empty")
+				s.logger.Warn(err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			req = r[1]
+		}
+
+		err = s.redis.ZRem(ctx, s.requestKey, req).Err()
 		if err != nil {
 			s.logger.Warn(err)
 			continue
 		}
-		if len(req) == 0 {
-			err = errors.New("req is empty")
-			s.logger.Warn(err)
-			continue
-		}
-		//s.logger.DebugF("request: %s", req[1])
+
+		s.logger.DebugF("request: %s", req[1])
 		var requestJson request2.RequestJson
-		err = json.Unmarshal([]byte(req[1]), &requestJson)
+		err = json.Unmarshal([]byte(req), &requestJson)
 		if err != nil {
 			s.logger.Warn(err)
 			continue
@@ -96,7 +138,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		if slot == "" {
 			slot = "*"
 		}
-		slotValue, ok := s.requestSlots.Load(slot)
+		slotValue, ok := s.RequestSlotLoad(slot)
 		if !ok {
 			concurrency := uint8(1)
 			if request.GetConcurrency() != nil {
@@ -106,7 +148,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				concurrency = 1
 			}
 			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
-			s.requestSlots.Store(slot, requestSlot)
+			s.RequestSlotStore(slot, requestSlot)
 		}
 
 		requestSlot = slotValue.(*rate.Limiter)
@@ -116,10 +158,6 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			s.logger.Error(err)
 		}
 		go func(request pkg.Request) {
-			defer func() {
-				<-s.requestActiveChan
-			}()
-
 			response, e := s.Request(ctx, request)
 			if errors.Is(e, pkg.ErrIgnoreRequest) {
 				return
@@ -128,6 +166,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			if e != nil {
 				err = e
 				s.logger.Error(err)
+				s.stateRequest.Out()
 				return
 			}
 
@@ -136,6 +175,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				s.logger.Error(err)
 
 				s.handleError(request.Context(), response, err, request.GetErrBack())
+				s.stateRequest.Out()
 				return
 			}
 
@@ -150,7 +190,10 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 					}
 				}()
 
+				s.stateMethod.In()
 				err = request.GetCallBack()(response.Context(), response)
+				s.stateMethod.Out()
+				s.stateRequest.Out()
 				if e != nil {
 					s.logger.Error(err)
 					s.handleError(response.Context(), response, err, request.GetErrBack())
@@ -164,7 +207,25 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 }
 
 func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err error) {
-	l, err := s.redis.LLen(ctx, s.requestKey).Result()
+	defer func() {
+		s.stateRequest.Set()
+	}()
+
+	c := context.Background()
+	c, cancel := context.WithTimeout(c, 10*time.Second)
+	defer cancel()
+
+	var l int64
+	if s.enablePriorityQueue {
+		l, err = s.redis.ZCard(c, s.requestKey).Result()
+	} else {
+		l, err = s.redis.LLen(c, s.requestKey).Result()
+	}
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
+
 	if int(l) >= defaultRequestMax {
 		err = errors.New("requestChan max limit")
 		s.logger.Error(err)
@@ -185,14 +246,32 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err 
 		}
 	}
 
-	s.requestActiveChan <- struct{}{}
 	bs, err := request.Marshal()
 	s.logger.Debug("request:", string(bs))
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
-	err = s.redis.RPush(ctx, s.requestKey, bs).Err()
+
+	c = context.Background()
+	c, cancel = context.WithTimeout(c, 10*time.Second)
+	defer cancel()
+
+	if s.enablePriorityQueue {
+		z := redis.Z{
+			Score:  float64(request.GetPriority()),
+			Member: bs,
+		}
+		var res int64
+		res, err = s.redis.ZAdd(c, s.requestKey, z).Result()
+		if res == 1 {
+			s.stateRequest.In()
+		}
+	} else {
+		err = s.redis.RPush(c, s.requestKey, bs).Err()
+		s.stateRequest.In()
+	}
+
 	if err != nil {
 		s.logger.Error(err)
 		return
@@ -202,6 +281,10 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err 
 }
 
 func (s *Scheduler) YieldExtra(ctx context.Context, extra any) (err error) {
+	defer func() {
+		s.stateRequest.Set()
+	}()
+
 	l, err := s.redis.LLen(ctx, s.requestKey).Result()
 	if int(l) >= defaultRequestMax {
 		err = errors.New("requestChan max limit")
@@ -209,36 +292,13 @@ func (s *Scheduler) YieldExtra(ctx context.Context, extra any) (err error) {
 		return
 	}
 
-	s.requestActiveChan <- struct{}{}
+	s.stateRequest.In()
 	bs, err := json.Marshal(extra)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
 	s.redis.RPush(ctx, s.requestKey, bs)
-
-	return
-}
-
-func (s *Scheduler) SetRequestRate(slot string, interval time.Duration, concurrency int) {
-	if slot == "" {
-		slot = "*"
-	}
-
-	if concurrency < 1 {
-		concurrency = 1
-	}
-
-	slotValue, ok := s.requestSlots.Load(slot)
-	if !ok {
-		requestSlot := rate.NewLimiter(rate.Every(interval/time.Duration(concurrency)), concurrency)
-		s.requestSlots.Store(slot, requestSlot)
-		return
-	}
-
-	limiter := slotValue.(*rate.Limiter)
-	limiter.SetBurst(concurrency)
-	limiter.SetLimit(rate.Every(interval / time.Duration(concurrency)))
 
 	return
 }

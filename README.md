@@ -376,6 +376,8 @@
 
 ### config
 
+* bot_name: crawler 项目名
+
 数据库配置：
 
 * mongo_enable: 是否启用MongoDB。
@@ -449,6 +451,34 @@
 * enable_mongo_pipeline: 是否开启mongo Pipeline，默认关闭。
 * enable_mysql_pipeline: 是否开启mysql Pipeline，默认关闭。
 * enable_kafka_pipeline: 是否开启kafka Pipeline，默认关闭。
+* enable_priority_queue: 是否开启优先级队列，默认开启，目前只支持redis。
+
+## 关于结果（item）队列
+
+由爬虫处理自己的请求即可，没必要处理其他爬虫的请求。所以本框架虽架构上有预留，但不会去用其他外部队列代替本程序内存队列。
+如处理出现性能问题，建议将结果输出到队列。
+
+## 关于请求队列
+
+* 优先级
+  优先级允许[0-2147483647]，建议在0-255，方便后期可能的调整。
+  因为kafka等队列实现不是很好，暂不支持。
+  使用方法
+    ```go
+    request.SetPriority(0)
+    ```
+
+## 关于单次任务结束的判定
+
+实际生产上，可能会有不同的判定方法，基本无法做到兼容所有情况。特别是如果要支持分布式。
+一般的框架里会延时一段时间，如果队列不再有请求，会判定任务结束，程序关闭。
+本框架里单次任务的停止条件有：
+
+1. 请求和解析方法都已结束
+2. item队列为空
+3. request队列为空，同时必须有request处理过
+
+达到以上条件程序会结束。
 
 ## Example
 

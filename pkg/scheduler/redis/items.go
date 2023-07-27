@@ -5,24 +5,23 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"reflect"
-	"time"
 )
 
 func (s *Scheduler) handleItem(ctx context.Context) {
 	itemConcurrencyChanLen := 0
 	for item := range s.itemChan {
-		itemDelay := s.itemDelay
+		itemDelay := s.GetItemDelay()
 		if itemDelay > 0 {
 			s.itemTimer.Reset(itemDelay)
 		}
 
-		if s.itemConcurrencyNew != s.itemConcurrency {
-			itemConcurrencyChanLen = s.itemConcurrencyNew - s.itemConcurrency + len(s.itemConcurrencyChan)
-			s.itemConcurrencyChan = make(chan struct{}, s.itemConcurrencyNew)
+		if s.GetItemConcurrencyNew() != s.GetItemConcurrency() {
+			itemConcurrencyChanLen = s.GetItemConcurrencyNew() - s.GetItemConcurrency() + len(s.itemConcurrencyChan)
+			s.itemConcurrencyChan = make(chan struct{}, s.GetItemConcurrencyNew())
 			for i := 0; i < itemConcurrencyChanLen; i++ {
 				s.itemConcurrencyChan <- struct{}{}
 			}
-			s.itemConcurrency = s.itemConcurrencyNew
+			s.SetItemConcurrencyRaw(s.GetItemConcurrencyNew())
 		}
 
 		<-s.itemConcurrencyChan
@@ -34,7 +33,7 @@ func (s *Scheduler) handleItem(ctx context.Context) {
 				} else {
 					s.itemConcurrencyChan <- struct{}{}
 				}
-				<-s.itemActiveChan
+				s.stateItem.Out()
 			}()
 
 			err := s.Export(ctx, item)
@@ -79,24 +78,8 @@ func (s *Scheduler) YieldItem(ctx context.Context, item pkg.Item) (err error) {
 		}
 	}
 
-	s.itemActiveChan <- struct{}{}
+	s.stateItem.In()
 	s.itemChan <- item
 
 	return
-}
-
-func (s *Scheduler) SetItemDelay(itemDelay time.Duration) {
-	s.itemDelay = itemDelay
-}
-
-func (s *Scheduler) SetItemConcurrency(itemConcurrency int) {
-	if s.itemConcurrency == itemConcurrency {
-		return
-	}
-
-	if itemConcurrency < 1 {
-		itemConcurrency = 1
-	}
-
-	s.itemConcurrencyNew = itemConcurrency
 }

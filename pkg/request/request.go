@@ -20,7 +20,9 @@ type Request struct {
 	bodyStr            string
 	uniqueKey          string
 	callBack           pkg.CallBack
+	callBackName       string
 	errBack            pkg.ErrBack
+	errBackName        string
 	referrer           string
 	username           string
 	password           string
@@ -62,6 +64,8 @@ func (r *Request) GetUniqueKey() string {
 }
 func (r *Request) SetCallBack(callback pkg.CallBack) pkg.Request {
 	r.callBack = callback
+	name := runtime.FuncForPC(reflect.ValueOf(r.GetCallBack()).Pointer()).Name()
+	r.callBackName = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
 	return r
 }
 func (r *Request) GetCallBack() pkg.CallBack {
@@ -69,6 +73,8 @@ func (r *Request) GetCallBack() pkg.CallBack {
 }
 func (r *Request) SetErrBack(errback pkg.ErrBack) pkg.Request {
 	r.errBack = errback
+	name := runtime.FuncForPC(reflect.ValueOf(r.GetErrBack()).Pointer()).Name()
+	r.errBackName = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
 	return r
 }
 func (r *Request) GetErrBack() pkg.ErrBack {
@@ -471,16 +477,6 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 	if r.proxy != nil {
 		proxy = r.proxy.String()
 	}
-	var callBack string
-	if r.GetCallBack() != nil {
-		name := runtime.FuncForPC(reflect.ValueOf(r.GetCallBack()).Pointer()).Name()
-		callBack = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
-	}
-	var errBack string
-	if r.GetErrBack() != nil {
-		name := runtime.FuncForPC(reflect.ValueOf(r.GetErrBack()).Pointer()).Name()
-		errBack = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
-	}
 	var platform []string
 	if len(r.platform) > 0 {
 		for _, v := range r.platform {
@@ -500,8 +496,8 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 		BodyStr:          r.GetBody(),
 		Header:           r.Header,
 		UniqueKey:        r.GetUniqueKey(),
-		CallBack:         callBack,
-		ErrBack:          errBack,
+		CallBack:         r.callBackName,
+		ErrBack:          r.errBackName,
 		Referrer:         r.GetReferrer(),
 		Username:         r.GetUsername(),
 		Password:         r.GetPassword(),

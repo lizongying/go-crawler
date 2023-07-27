@@ -11,9 +11,11 @@ import (
 	"time"
 )
 
+const defaultBotName = "crawler"
 const defaultHttpProto = "2.0"
 const defaultDevServer = "http://localhost:8081"
 const defaultEnableJa3 = false
+const defaultEnablePriorityQueue = true
 const defaultUrlLengthLimit = 2083
 const defaultEnableCookieMiddleware = true
 const defaultEnableUrlMiddleware = true
@@ -52,7 +54,8 @@ const defaultSchedulerType = pkg.SchedulerMemory
 const defaultLogLongFile = true
 
 type Config struct {
-	MongoEnable bool `yaml:"mongo_enable" json:"-"`
+	BotName     string `yaml:"bot_name" json:"-"`
+	MongoEnable bool   `yaml:"mongo_enable" json:"-"`
 	Mongo       struct {
 		Example struct {
 			Uri      string `yaml:"uri" json:"-"`
@@ -107,6 +110,7 @@ type Config struct {
 	} `yaml:"request" json:"-"`
 	DevServer                 string  `yaml:"dev_server" json:"-"`
 	EnableJa3                 *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
+	EnablePriorityQueue       *bool   `yaml:"enable_priority_queue,omitempty" json:"enable_priority_queue"`
 	EnableReferrerMiddleware  *bool   `yaml:"enable_referrer_middleware,omitempty" json:"enable_referrer_middleware"`
 	ReferrerPolicy            *string `yaml:"referrer_policy_middleware,omitempty" json:"referrer_policy_middleware"`
 	EnableHttpAuthMiddleware  *bool   `yaml:"enable_http_auth_middleware,omitempty" json:"enable_http_auth_middleware"`
@@ -125,7 +129,7 @@ type Config struct {
 	EnableCompressMiddleware  *bool   `yaml:"enable_compress_middleware,omitempty" json:"enable_compress_middleware"`
 	EnableDecodeMiddleware    *bool   `yaml:"enable_decode_middleware,omitempty" json:"enable_decode_middleware"`
 	EnableRedirectMiddleware  *bool   `yaml:"enable_redirect_middleware,omitempty" json:"enable_redirect_middleware"`
-	RedirectMaxTimes          *uint8  `yaml:"redirect_max_times" json:"-"`
+	RedirectMaxTimes          *uint8  `yaml:"redirect_max_times,omitempty" json:"redirect_max_times"`
 	EnableChromeMiddleware    *bool   `yaml:"enable_chrome_middleware,omitempty" json:"enable_chrome_middleware"`
 	EnableDeviceMiddleware    *bool   `yaml:"enable_device_middleware,omitempty" json:"enable_device_middleware"`
 	EnableProxyMiddleware     *bool   `yaml:"enable_proxy_middleware,omitempty" json:"enable_proxy_middleware"`
@@ -139,6 +143,14 @@ type Config struct {
 	EnableMongoPipeline       *bool   `yaml:"enable_mongo_pipeline,omitempty" json:"enable_mongo_pipeline"`
 	EnableMysqlPipeline       *bool   `yaml:"enable_mysql_pipeline,omitempty" json:"enable_mysql_pipeline"`
 	EnableKafkaPipeline       *bool   `yaml:"enable_kafka_pipeline,omitempty" json:"enable_kafka_pipeline"`
+}
+
+func (c *Config) GetBotName() string {
+	if c.BotName != "" {
+		return c.BotName
+	}
+
+	return defaultBotName
 }
 
 func (c *Config) GetProxy() *url.URL {
@@ -178,7 +190,14 @@ func (c *Config) GetEnableJa3() bool {
 
 	return *c.EnableJa3
 }
+func (c *Config) GetEnablePriorityQueue() bool {
+	if c.EnablePriorityQueue == nil {
+		enablePriorityQueue := defaultEnablePriorityQueue
+		c.EnablePriorityQueue = &enablePriorityQueue
+	}
 
+	return *c.EnablePriorityQueue
+}
 func (c *Config) GetReferrerPolicy() pkg.ReferrerPolicy {
 	if c.ReferrerPolicy == nil {
 		referrerPolicy := string(pkg.DefaultReferrerPolicy)

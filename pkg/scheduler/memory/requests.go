@@ -10,6 +10,10 @@ import (
 )
 
 func (s *Scheduler) Request(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
+	defer func() {
+		s.stateRequest.Set()
+	}()
+
 	if request == nil {
 		err = errors.New("nil request")
 		return
@@ -60,7 +64,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 	}
 
 	slot := "*"
-	value, _ := s.requestSlots.Load(slot)
+	value, _ := s.RequestSlotLoad(slot)
 	requestSlot := value.(*rate.Limiter)
 
 	for request := range s.requestChan {
@@ -68,7 +72,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		if slot == "" {
 			slot = "*"
 		}
-		slotValue, ok := s.requestSlots.Load(slot)
+		slotValue, ok := s.RequestSlotLoad(slot)
 		if !ok {
 			concurrency := uint8(1)
 			if request.GetConcurrency() != nil {
@@ -78,7 +82,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				concurrency = 1
 			}
 			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
-			s.requestSlots.Store(slot, requestSlot)
+			s.RequestSlotStore(slot, requestSlot)
 		}
 
 		requestSlot = slotValue.(*rate.Limiter)
@@ -88,10 +92,6 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			s.logger.Error(err)
 		}
 		go func(request pkg.Request) {
-			defer func() {
-				<-s.requestActiveChan
-			}()
-
 			response, e := s.Request(ctx, request)
 			if errors.Is(e, pkg.ErrIgnoreRequest) {
 				return
@@ -100,6 +100,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			if e != nil {
 				err = e
 				s.logger.Error(err)
+				s.stateRequest.Out()
 				return
 			}
 
@@ -108,6 +109,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				s.logger.Error(err)
 
 				s.handleError(request.Context(), response, err, request.GetErrBack())
+				s.stateRequest.Out()
 				return
 			}
 
@@ -122,7 +124,10 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 					}
 				}()
 
+				s.stateMethod.In()
 				err = request.GetCallBack()(response.Context(), response)
+				s.stateMethod.Out()
+				s.stateRequest.Out()
 				if e != nil {
 					s.logger.Error(err)
 					s.handleError(response.Context(), response, err, request.GetErrBack())
@@ -136,6 +141,10 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 }
 
 func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err error) {
+	defer func() {
+		s.stateRequest.Set()
+	}()
+
 	if len(s.requestChan) >= defaultRequestMax {
 		err = errors.New("requestChan max limit")
 		s.logger.Error(err)
@@ -156,31 +165,8 @@ func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err 
 		}
 	}
 
-	s.requestActiveChan <- struct{}{}
+	s.stateRequest.In()
 	s.requestChan <- request
-
-	return
-}
-
-func (s *Scheduler) SetRequestRate(slot string, interval time.Duration, concurrency int) {
-	if slot == "" {
-		slot = "*"
-	}
-
-	if concurrency < 1 {
-		concurrency = 1
-	}
-
-	slotValue, ok := s.requestSlots.Load(slot)
-	if !ok {
-		requestSlot := rate.NewLimiter(rate.Every(interval/time.Duration(concurrency)), concurrency)
-		s.requestSlots.Store(slot, requestSlot)
-		return
-	}
-
-	limiter := slotValue.(*rate.Limiter)
-	limiter.SetBurst(concurrency)
-	limiter.SetLimit(rate.Every(interval / time.Duration(concurrency)))
 
 	return
 }

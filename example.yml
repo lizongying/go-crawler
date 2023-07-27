@@ -1,3 +1,4 @@
+bot_name: crawler
 mongo_enable: false
 mongo:
   example:
@@ -42,6 +43,7 @@ request:
   http_proto: 2.0
 dev_server: https://localhost:8081
 enable_ja3: false
+enable_priority_queue: true
 enable_stats_middleware: true
 enable_dump_middleware: true
 scheduler: memory

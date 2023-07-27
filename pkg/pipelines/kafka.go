@@ -74,9 +74,7 @@ func (m *KafkaPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		return
 	}
 
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	ctx = context.Background()
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
