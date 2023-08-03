@@ -1,11 +1,7 @@
 package pkg
 
-import (
-	"context"
-)
-
 type Downloader interface {
-	Download(context.Context, Request) (Response, error)
+	Download(Context, Request) (Response, error)
 	GetMiddlewareNames() map[uint8]string
 	GetMiddlewares() []Middleware
 	SetMiddleware(Middleware, uint8)
@@ -30,5 +26,4 @@ type Downloader interface {
 	WithDecodeMiddleware()
 	WithDeviceMiddleware()
 	WithCustomMiddleware(Middleware)
-	FromCrawler(Crawler) Downloader
 }

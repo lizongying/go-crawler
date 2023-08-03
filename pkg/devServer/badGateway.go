@@ -1,21 +1,21 @@
 package devServer
 
 import (
-	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg"
 	"net/http"
 )
 
 const UrlBadGateway = "/bad-gateway"
 
-type HandlerBadGateway struct {
-	logger *logger.Logger
+type RouteBadGateway struct {
+	logger pkg.Logger
 }
 
-func (h *HandlerBadGateway) Pattern() string {
+func (h *RouteBadGateway) Pattern() string {
 	return UrlBadGateway
 }
 
-func (h *HandlerBadGateway) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (h *RouteBadGateway) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	h.logger.Info("into HandlerBadGateway")
 	defer func() {
 		h.logger.Info("exit HandlerBadGateway")
@@ -29,6 +29,6 @@ func (h *HandlerBadGateway) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func NewHandlerBadGateway(logger *logger.Logger) *HandlerBadGateway {
-	return &HandlerBadGateway{logger: logger}
+func NewRouteBadGateway(logger pkg.Logger) pkg.Route {
+	return &RouteBadGateway{logger: logger}
 }

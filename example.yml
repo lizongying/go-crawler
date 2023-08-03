@@ -41,6 +41,7 @@ request:
     - 200
   retry_max_times: 10
   http_proto: 2.0
+enable_dev_server: false
 dev_server: https://localhost:8081
 enable_ja3: false
 enable_priority_queue: true

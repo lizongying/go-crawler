@@ -18,13 +18,13 @@ type FileMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger         pkg.Logger
 	s3             *s3.Client
-	stats          pkg.StatsWithImage
 	bucketName     string
 	key            string
-	ContenttypeMap map[string]string
+	ContentTypeMap map[string]string
 }
 
-func (m *FileMiddleware) ProcessResponse(ctx context.Context, response pkg.Response) (err error) {
+func (m *FileMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
+	spider := m.GetSpider()
 	if len(response.GetBodyBytes()) == 0 {
 		err = errors.New("BodyBytes empty")
 		m.logger.Error(err)
@@ -36,7 +36,7 @@ func (m *FileMiddleware) ProcessResponse(ctx context.Context, response pkg.Respo
 		i := new(media.File)
 		i.SetName(utils.StrMd5(response.GetUrl()))
 		ext := ""
-		if e, ok := m.ContenttypeMap[response.GetHeader("Content-Type")]; ok {
+		if e, ok := m.ContentTypeMap[response.GetHeader("Content-Type")]; ok {
 			ext = e
 		}
 
@@ -61,25 +61,30 @@ func (m *FileMiddleware) ProcessResponse(ctx context.Context, response pkg.Respo
 		}
 
 		response.SetFiles(append(response.GetFiles(), i))
-		if m.stats != nil {
-			m.stats.IncImageTotal()
+
+		stats, ok := spider.GetStats().(pkg.StatsWithImage)
+		if ok {
+			stats.IncImageTotal()
 		}
 	}
 
 	return
 }
 
-func (m *FileMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *FileMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(FileMiddleware).FromCrawler(crawler)
+		return new(FileMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
+	crawler := spider.GetCrawler()
 	m.s3 = crawler.GetS3()
-	m.stats, _ = crawler.GetStats().(pkg.StatsWithImage)
-	m.bucketName = "crawler"
-	m.ContenttypeMap = map[string]string{
+	m.bucketName = crawler.GetConfig().GetBotName()
+	m.ContentTypeMap = map[string]string{
 		"image/jpeg": "jpeg",
+		"image/png":  "png",
+		"image/gif":  "gif",
 	}
 	return m
 }

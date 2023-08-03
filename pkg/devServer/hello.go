@@ -1,22 +1,22 @@
 package devServer
 
 import (
-	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg"
 	"io"
 	"net/http"
 )
 
 const UrlHello = "/hello"
 
-type HandlerHello struct {
-	logger *logger.Logger
+type RouteHello struct {
+	logger pkg.Logger
 }
 
-func (*HandlerHello) Pattern() string {
+func (h *RouteHello) Pattern() string {
 	return UrlHello
 }
 
-func (h *HandlerHello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RouteHello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("into HandlerHello")
 	defer func() {
 		h.logger.Info("exit HandlerHello")
@@ -27,6 +27,6 @@ func (h *HandlerHello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.InfoF("body: %s", string(body))
 }
 
-func NewHandlerHello(logger *logger.Logger) *HandlerHello {
-	return &HandlerHello{logger: logger}
+func NewRouteHello(logger pkg.Logger) pkg.Route {
+	return &RouteHello{logger: logger}
 }

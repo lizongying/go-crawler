@@ -11,7 +11,7 @@ const (
 )
 
 type Filter interface {
-	IsExist(context.Context, any) (bool, error)
-	Store(context.Context, any) error
+	IsExist(Context, any) (bool, error)
+	Store(Context, any) error
 	Clean(context.Context) error
 }

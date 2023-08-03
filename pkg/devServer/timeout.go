@@ -8,15 +8,15 @@ import (
 
 const UrlTimeout = "/timeout"
 
-type HandlerTimeout struct {
+type RouteTimeout struct {
 	logger pkg.Logger
 }
 
-func (h *HandlerTimeout) Pattern() string {
+func (h *RouteTimeout) Pattern() string {
 	return UrlTimeout
 }
 
-func (h *HandlerTimeout) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RouteTimeout) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("into HandlerTimeout")
 	defer func() {
 		h.logger.Info("exit HandlerTimeout")
@@ -28,6 +28,6 @@ func (h *HandlerTimeout) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("ok"))
 }
 
-func NewHandlerTimeout(logger pkg.Logger) *HandlerTimeout {
-	return &HandlerTimeout{logger: logger}
+func NewRouteTimeout(logger pkg.Logger) pkg.Route {
+	return &RouteTimeout{logger: logger}
 }

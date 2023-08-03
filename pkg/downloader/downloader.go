@@ -1,7 +1,6 @@
 package downloader
 
 import (
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
@@ -13,15 +12,15 @@ import (
 
 type Downloader struct {
 	middlewares        []pkg.Middleware
-	processRequestFns  []func(context.Context, pkg.Request) error
-	processResponseFns []func(context.Context, pkg.Response) error
+	processRequestFns  []func(pkg.Context, pkg.Request) error
+	processResponseFns []func(pkg.Context, pkg.Response) error
 	httpClient         pkg.HttpClient
-	crawler            pkg.Crawler
+	spider             pkg.Spider
 	logger             pkg.Logger
 	locker             sync.Mutex
 }
 
-func (d *Downloader) processRequest(ctx context.Context, request pkg.Request) (err error) {
+func (d *Downloader) processRequest(ctx pkg.Context, request pkg.Request) (err error) {
 	if request.GetSkipMiddleware() {
 		return
 	}
@@ -38,11 +37,7 @@ func (d *Downloader) processRequest(ctx context.Context, request pkg.Request) (e
 	return
 }
 
-func (d *Downloader) Download(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
 	err = d.processRequest(ctx, request)
 	if err != nil {
 		if errors.Is(err, pkg.ErrIgnoreRequest) {
@@ -70,7 +65,7 @@ func (d *Downloader) Download(ctx context.Context, request pkg.Request) (respons
 	if err != nil {
 		d.logger.Error(err)
 		if errors.Is(err, pkg.ErrNeedRetry) {
-			return d.Download(request.Context(), request)
+			return d.Download(ctx, request)
 		}
 		return
 	}
@@ -88,7 +83,7 @@ func (d *Downloader) Download(ctx context.Context, request pkg.Request) (respons
 	return
 }
 
-func (d *Downloader) processResponse(ctx context.Context, response pkg.Response) (err error) {
+func (d *Downloader) processResponse(ctx pkg.Context, response pkg.Response) (err error) {
 	if response.GetSkipMiddleware() {
 		return
 	}
@@ -125,7 +120,7 @@ func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
-	middleware = middleware.FromCrawler(d.crawler)
+	middleware = middleware.FromSpider(d.spider)
 
 	name := reflect.TypeOf(middleware).Elem().String()
 	middleware.SetName(name)
@@ -143,8 +138,8 @@ func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
 		return d.middlewares[i].GetOrder() < d.middlewares[j].GetOrder()
 	})
 
-	var processRequestFns []func(context.Context, pkg.Request) error
-	var processResponseFns []func(context.Context, pkg.Response) error
+	var processRequestFns []func(pkg.Context, pkg.Request) error
+	var processResponseFns []func(pkg.Context, pkg.Response) error
 	for _, v := range d.middlewares {
 		processRequestFns = append(processRequestFns, v.ProcessRequest)
 		processResponseFns = append(processResponseFns, v.ProcessResponse)
@@ -231,15 +226,15 @@ func (d *Downloader) WithHttpMiddleware() {
 func (d *Downloader) WithStatsMiddleware() {
 	d.SetMiddleware(new(middlewares.StatsMiddleware), 210)
 }
-func (d *Downloader) FromCrawler(crawler pkg.Crawler) pkg.Downloader {
+func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 	if d == nil {
-		return new(Downloader).FromCrawler(crawler)
+		return new(Downloader).FromSpider(spider)
 	}
 
-	d.httpClient = new(httpClient.HttpClient).FromCrawler(crawler)
-	d.crawler = crawler
-	d.logger = crawler.GetLogger()
-	config := crawler.GetConfig()
+	d.spider = spider
+	d.httpClient = new(httpClient.HttpClient).FromSpider(spider)
+	d.logger = spider.GetLogger()
+	config := spider.GetCrawler().GetConfig()
 
 	// set middlewares
 	if config.GetEnableDumpMiddleware() {

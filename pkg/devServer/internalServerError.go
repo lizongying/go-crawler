@@ -1,21 +1,21 @@
 package devServer
 
 import (
-	"github.com/lizongying/go-crawler/pkg/logger"
+	"github.com/lizongying/go-crawler/pkg"
 	"net/http"
 )
 
 const UrlInternalServerError = "/internal-server-error"
 
-type HandlerInternalServerError struct {
-	logger *logger.Logger
+type RouteInternalServerError struct {
+	logger pkg.Logger
 }
 
-func (*HandlerInternalServerError) Pattern() string {
+func (h *RouteInternalServerError) Pattern() string {
 	return UrlInternalServerError
 }
 
-func (h *HandlerInternalServerError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RouteInternalServerError) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("into HandlerInternalServerError")
 	defer func() {
 		h.logger.Info("exit HandlerInternalServerError")
@@ -29,6 +29,6 @@ func (h *HandlerInternalServerError) ServeHTTP(w http.ResponseWriter, r *http.Re
 	}
 }
 
-func NewHandlerInternalServerError(logger *logger.Logger) *HandlerInternalServerError {
-	return &HandlerInternalServerError{logger: logger}
+func NewRouteInternalServerError(logger pkg.Logger) pkg.Route {
+	return &RouteInternalServerError{logger: logger}
 }

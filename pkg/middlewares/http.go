@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
@@ -10,16 +9,11 @@ import (
 
 type HttpMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger  pkg.Logger
-	crawler pkg.Crawler
-	stats   pkg.Stats
+	logger pkg.Logger
 }
 
-func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request pkg.Request) (err error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (m *HttpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
+	spider := m.GetSpider()
 	if request.GetMethod() == "" {
 		if request.GetBody() != "" {
 			request.SetMethod("POST")
@@ -31,7 +25,7 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request pkg.Request
 	if request.GetUrl() == "" {
 		err = errors.New("url is empty")
 		m.logger.Error(err)
-		m.stats.IncRequestError()
+		spider.IncRequestError()
 		return
 	}
 	request.SetCreateTime(utils.NowStr())
@@ -51,24 +45,23 @@ func (m *HttpMiddleware) ProcessRequest(ctx context.Context, request pkg.Request
 		}
 	}
 
-	ok := m.crawler.IsAllowedDomain(request.GetURL())
+	ok := spider.IsAllowedDomain(request.GetURL())
 	if !ok {
 		err = errors.New("it's not a allowed domain")
 		m.logger.Error(err)
-		m.stats.IncRequestError()
+		spider.IncRequestError()
 		return
 	}
 
 	return
 }
 
-func (m *HttpMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *HttpMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(HttpMiddleware).FromCrawler(crawler)
+		return new(HttpMiddleware).FromSpider(spider)
 	}
 
-	m.crawler = crawler
-	m.logger = crawler.GetLogger()
-	m.stats = crawler.GetStats()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

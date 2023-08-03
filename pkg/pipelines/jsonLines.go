@@ -15,15 +15,15 @@ import (
 type JsonLinesPipeline struct {
 	pkg.UnimplementedPipeline
 	files  sync.Map
-	stats  pkg.Stats
 	logger pkg.Logger
 }
 
-func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
+func (m *JsonLinesPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+	spider := m.GetSpider()
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 	if item.GetName() != pkg.ItemJsonl {
@@ -39,7 +39,7 @@ func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err
 	if itemJsonl.GetFileName() == "" {
 		err = errors.New("fileName is empty")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
@@ -47,7 +47,7 @@ func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
@@ -59,7 +59,7 @@ func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err
 			err = os.MkdirAll(filepath.Dir(filename), 0744)
 			if err != nil {
 				m.logger.Error(err)
-				m.stats.IncItemError()
+				spider.IncItemError()
 				return
 			}
 		}
@@ -67,14 +67,14 @@ func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err
 			file, err = os.Create(filename)
 			if err != nil {
 				m.logger.Error(err)
-				m.stats.IncItemError()
+				spider.IncItemError()
 				return
 			}
 		} else {
 			file, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 			if err != nil {
 				m.logger.Error(err)
-				m.stats.IncItemError()
+				spider.IncItemError()
 				return
 			}
 		}
@@ -86,15 +86,15 @@ func (m *JsonLinesPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err
 	_, err = file.WriteString(fmt.Sprintf("%s\n", utils.JsonStr(data)))
 	if err != nil {
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return err
 	}
 
-	m.stats.IncItemSuccess()
+	spider.IncItemSuccess()
 	return
 }
 
-func (m *JsonLinesPipeline) SpiderStop(_ context.Context) (err error) {
+func (m *JsonLinesPipeline) SpiderStop(_ pkg.Context) (err error) {
 	m.files.Range(func(key, value any) bool {
 		err = value.(*os.File).Close()
 		if err != nil {
@@ -105,12 +105,12 @@ func (m *JsonLinesPipeline) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func (m *JsonLinesPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
+func (m *JsonLinesPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(JsonLinesPipeline).FromCrawler(crawler)
+		return new(JsonLinesPipeline).FromSpider(spider)
 	}
 
-	m.stats = crawler.GetStats()
-	m.logger = crawler.GetLogger()
+	m.UnimplementedPipeline.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

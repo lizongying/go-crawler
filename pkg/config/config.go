@@ -13,6 +13,7 @@ import (
 
 const defaultBotName = "crawler"
 const defaultHttpProto = "2.0"
+const defaultEnableDevServer = false
 const defaultDevServer = "http://localhost:8081"
 const defaultEnableJa3 = false
 const defaultEnablePriorityQueue = true
@@ -108,6 +109,7 @@ type Config struct {
 		RetryMaxTimes *uint8 `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
+	EnableDevServer           *bool   `yaml:"enable_dev_server,omitempty" json:"enable_dev_server"`
 	DevServer                 string  `yaml:"dev_server" json:"-"`
 	EnableJa3                 *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
 	EnablePriorityQueue       *bool   `yaml:"enable_priority_queue,omitempty" json:"enable_priority_queue"`
@@ -172,15 +174,33 @@ func (c *Config) GetHttpProto() string {
 
 	return defaultHttpProto
 }
+func (c *Config) GetEnableDevServer() bool {
+	if c.EnableDevServer == nil {
+		enableDevServer := defaultEnableDevServer
+		c.EnableDevServer = &enableDevServer
+	}
 
-func (c *Config) GetDevServer() (URL *url.URL, err error) {
+	return *c.EnableDevServer
+}
+func (c *Config) SetEnableDevServer(enable bool) {
+	c.EnableDevServer = &enable
+}
+func (c *Config) GetDevServer() *url.URL {
+	var URL *url.URL
+	var err error
 	if c.DevServer != "" {
 		URL, err = url.Parse(c.DevServer)
-		return
+		if err != nil {
+			return nil
+		}
+		return URL
 	}
 
 	URL, err = url.Parse(defaultDevServer)
-	return
+	if err != nil {
+		return nil
+	}
+	return URL
 }
 func (c *Config) GetEnableJa3() bool {
 	if c.EnableJa3 == nil {

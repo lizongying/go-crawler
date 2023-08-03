@@ -6,14 +6,11 @@ import (
 
 type Signal struct {
 	spider       pkg.Spider
+	logger       pkg.Logger
 	spiderOpened []func(spider pkg.Spider)
 	spiderClosed []func(spider pkg.Spider)
-	logger       pkg.Logger
 }
 
-func (s *Signal) SetSpider(spider pkg.Spider) {
-	s.spider = spider
-}
 func (s *Signal) RegisterSpiderOpened(fn func(spider pkg.Spider)) {
 	s.spiderOpened = append(s.spiderOpened, fn)
 }
@@ -31,11 +28,12 @@ func (s *Signal) SpiderClosed() {
 	}
 }
 
-func (s *Signal) FromCrawler(crawler pkg.Crawler) pkg.Signal {
+func (s *Signal) FromSpider(spider pkg.Spider) pkg.Signal {
 	if s == nil {
-		return new(Signal).FromCrawler(crawler)
+		return new(Signal).FromSpider(spider)
 	}
 
-	s.logger = crawler.GetLogger()
+	s.spider = spider
+	s.logger = spider.GetLogger()
 	return s
 }

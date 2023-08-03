@@ -50,5 +50,8 @@ type Config interface {
 	GetRequestInterval() uint
 	GetOkHttpCodes() []int
 	GetFilter() FilterType
-	GetDevServer() (URL *url.URL, err error)
+	GetScheduler() SchedulerType
+	GetEnableDevServer() bool
+	SetEnableDevServer(enable bool)
+	GetDevServer() *url.URL
 }

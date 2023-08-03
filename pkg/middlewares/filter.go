@@ -7,16 +7,18 @@ import (
 
 type FilterMiddleware struct {
 	pkg.UnimplementedMiddleware
-	stats  pkg.Stats
 	logger pkg.Logger
 	filter pkg.Filter
 }
 
-func (m *FilterMiddleware) ProcessRequest(ctx context.Context, request pkg.Request) (err error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (m *FilterMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
+	err = m.UnimplementedMiddleware.Start(ctx, spider)
+	m.filter = spider.GetFilter()
+	return
+}
 
+func (m *FilterMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) (err error) {
+	spider := m.GetSpider()
 	skipFilter := false
 	if request.GetSkipFilter() != nil {
 		skipFilter = *request.GetSkipFilter()
@@ -40,7 +42,7 @@ func (m *FilterMiddleware) ProcessRequest(ctx context.Context, request pkg.Reque
 	if ok {
 		err = pkg.ErrIgnoreRequest
 		m.logger.InfoF("%s in filter", request.GetUniqueKey())
-		m.stats.IncRequestIgnore()
+		spider.IncRequestIgnore()
 		return
 	}
 
@@ -48,21 +50,16 @@ func (m *FilterMiddleware) ProcessRequest(ctx context.Context, request pkg.Reque
 }
 
 func (m *FilterMiddleware) Stop(ctx context.Context) (err error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	err = m.filter.Clean(ctx)
 	return
 }
 
-func (m *FilterMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *FilterMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(FilterMiddleware).FromCrawler(crawler)
+		return new(FilterMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
-	m.filter = crawler.GetFilter()
-	m.stats = crawler.GetStats()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

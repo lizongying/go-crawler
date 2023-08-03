@@ -9,15 +9,15 @@ import (
 
 const UrlPost = "/post"
 
-type HandlerPost struct {
+type RoutePost struct {
 	logger pkg.Logger
 }
 
-func (h *HandlerPost) Pattern() string {
+func (h *RoutePost) Pattern() string {
 	return UrlPost
 }
 
-func (h *HandlerPost) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RoutePost) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("into HandlerPost")
 	defer func() {
 		h.logger.Info("exit HandlerPost")
@@ -35,6 +35,6 @@ func (h *HandlerPost) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(reqDump)
 }
 
-func NewHandlerPost(logger pkg.Logger) *HandlerPost {
-	return &HandlerPost{logger: logger}
+func NewRoutePost(logger pkg.Logger) pkg.Route {
+	return &RoutePost{logger: logger}
 }

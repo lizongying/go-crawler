@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
@@ -15,15 +14,15 @@ type Spider struct {
 	logger pkg.Logger
 }
 
-func (s *Spider) ParseDecode(_ context.Context, response pkg.Response) (err error) {
+func (s *Spider) ParseDecode(_ pkg.Context, response pkg.Response) (err error) {
 	s.logger.Info("header", response.GetHeaders())
 	s.logger.Info("body", string(response.GetBodyBytes()))
 	return
 }
 
-// TestGbk go run cmd/testDecodeSpider/*.go -c dev.yml -f TestGbk -m dev
-func (s *Spider) TestGbk(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewHandlerGbk(s.logger))
+// TestGbk go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGbk -m dev
+func (s *Spider) TestGbk(ctx pkg.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewRouteGbk(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGbk)).
@@ -36,9 +35,9 @@ func (s *Spider) TestGbk(ctx context.Context, _ string) (err error) {
 	return
 }
 
-// TestGb2312 go run cmd/testDecodeSpider/*.go -c dev.yml -f TestGb2312 -m dev
-func (s *Spider) TestGb2312(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewHandlerGb2312(s.logger))
+// TestGb2312 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGb2312 -m dev
+func (s *Spider) TestGb2312(ctx pkg.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewRouteGb2312(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGb2312)).
@@ -51,9 +50,9 @@ func (s *Spider) TestGb2312(ctx context.Context, _ string) (err error) {
 	return
 }
 
-// TestGb18030 go run cmd/testDecodeSpider/*.go -c dev.yml -f TestGb18030 -m dev
-func (s *Spider) TestGb18030(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewHandlerGb18030(s.logger))
+// TestGb18030 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGb18030 -m dev
+func (s *Spider) TestGb18030(ctx pkg.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewRouteGb18030(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGb18030)).
@@ -66,9 +65,9 @@ func (s *Spider) TestGb18030(ctx context.Context, _ string) (err error) {
 	return
 }
 
-// TestBig5 go run cmd/testDecodeSpider/*.go -c dev.yml -f TestBig5 -m dev
-func (s *Spider) TestBig5(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewHandlerBig5(s.logger))
+// TestBig5 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestBig5 -m dev
+func (s *Spider) TestBig5(ctx pkg.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewRouteBig5(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlBig5)).
@@ -91,9 +90,10 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),
 	}
-	spider.SetName("test-decode")
-	host, _ := spider.GetConfig().GetDevServer()
-	spider.SetHost(host.String())
+	spider.WithOptions(
+		pkg.WithName("test-decode"),
+		pkg.WithHost("https://localhost:8081"),
+	)
 
 	return
 }

@@ -8,15 +8,15 @@ import (
 
 const UrlGet = "/get"
 
-type HandlerGet struct {
+type RouteGet struct {
 	logger pkg.Logger
 }
 
-func (h *HandlerGet) Pattern() string {
+func (h *RouteGet) Pattern() string {
 	return UrlGet
 }
 
-func (h *HandlerGet) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RouteGet) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("into HandlerGet")
 	defer func() {
 		h.logger.Info("exit HandlerGet")
@@ -31,6 +31,6 @@ func (h *HandlerGet) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(reqDump)
 }
 
-func NewHandlerGet(logger pkg.Logger) *HandlerGet {
-	return &HandlerGet{logger: logger}
+func NewRouteGet(logger pkg.Logger) pkg.Route {
+	return &RouteGet{logger: logger}
 }

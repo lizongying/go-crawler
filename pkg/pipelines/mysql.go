@@ -15,18 +15,18 @@ import (
 
 type MysqlPipeline struct {
 	pkg.UnimplementedPipeline
-	crawler pkg.Crawler
-	stats   pkg.Stats
+	mode    string
 	logger  pkg.Logger
 	mysql   *sql.DB
 	timeout time.Duration
 }
 
-func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
+func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+	spider := m.GetSpider()
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 	if item.GetName() != pkg.ItemMysql {
@@ -42,7 +42,7 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	if itemMysql.GetTable() == "" {
 		err = errors.New("table is empty")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
@@ -50,17 +50,17 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
-	if m.crawler.GetMode() == "test" {
+	if m.mode == "test" {
 		m.logger.Debug("current mode don't need save")
-		m.stats.IncItemIgnore()
+		spider.IncItemIgnore()
 		return
 	}
 
-	ctx = context.Background()
+	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
@@ -82,7 +82,7 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	stmt, err := m.mysql.PrepareContext(ctx, s)
 	if err != nil {
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 	res, err := stmt.ExecContext(ctx, values...)
@@ -90,7 +90,7 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 		e, o := err.(*mysql.MySQLError)
 		if !o {
 			m.logger.Error(e)
-			m.stats.IncItemError()
+			spider.IncItemError()
 			return
 		}
 
@@ -100,53 +100,54 @@ func (m *MysqlPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 			stmt, err = m.mysql.PrepareContext(ctx, s)
 			if err != nil {
 				m.logger.Error(err)
-				m.stats.IncItemError()
+				spider.IncItemError()
 				return
 			}
 
 			res, err = stmt.ExecContext(ctx, values...)
 			if err != nil {
 				m.logger.Error(err)
-				m.stats.IncItemError()
+				spider.IncItemError()
 				return
 			}
 
 			_, err = res.RowsAffected()
 			if err != nil {
 				m.logger.Error(err)
-				m.stats.IncItemError()
+				spider.IncItemError()
 				return
 			}
 
 			m.logger.Info(itemMysql.GetTable(), "update success", itemMysql.GetId())
 		} else {
 			m.logger.Error(err)
-			m.stats.IncItemError()
+			spider.IncItemError()
 			return
 		}
 	} else {
 		id, e := res.LastInsertId()
 		if e != nil {
 			m.logger.Error(e)
-			m.stats.IncItemError()
+			spider.IncItemError()
 			return
 		}
 
 		m.logger.Info(itemMysql.GetTable(), "insert success", id)
 	}
 
-	m.stats.IncItemSuccess()
+	spider.IncItemSuccess()
 	return
 }
 
-func (m *MysqlPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
+func (m *MysqlPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(MysqlPipeline).FromCrawler(crawler)
+		return new(MysqlPipeline).FromSpider(spider)
 	}
 
-	m.crawler = crawler
-	m.stats = crawler.GetStats()
-	m.logger = crawler.GetLogger()
+	m.UnimplementedPipeline.FromSpider(spider)
+	crawler := spider.GetCrawler()
+	m.mode = crawler.GetMode()
+	m.logger = spider.GetLogger()
 	m.mysql = crawler.GetMysql()
 	m.timeout = time.Minute
 	return m

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
@@ -16,7 +15,7 @@ type Spider struct {
 	logger pkg.Logger
 }
 
-func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error) {
+func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
 	err = response.UnmarshalExtra(&extra)
 	if err != nil {
@@ -49,11 +48,8 @@ func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error)
 	return
 }
 
-// TestOk go run cmd/testOkSpider/*.go -c example.yml -f TestOk -m dev
-func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
-	// mock server
-	s.AddDevServerRoutes(devServer.NewHandlerOk(s.logger))
-
+// TestOk go run cmd/testOkSpider/*.go -c example.yml -n test-ok -f TestOk -m dev
+func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
@@ -74,14 +70,17 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),
 	}
-	spider.SetName("test-ok")
-	host, _ := spider.GetConfig().GetDevServer()
-	spider.SetHost(host.String())
-	spider.AddDevServerRoutes(devServer.NewHandlerRobotsTxt(baseSpider.GetLogger()))
+	spider.WithOptions(
+		pkg.WithName("test-ok"),
+		pkg.WithHost("https://localhost:8081"),
+	)
 
 	return
 }
 
 func main() {
-	app.NewApp(NewSpider).Run()
+	app.NewApp(NewSpider).Run(
+		//pkg.WithDevServerRoute(devServer.NewRouteRobotsTxt),
+		pkg.WithDevServerRoute(devServer.NewRouteOk),
+	)
 }

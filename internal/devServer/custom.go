@@ -7,15 +7,15 @@ import (
 
 const UrlCustom = "/custom"
 
-type HandlerCustom struct {
+type RouteCustom struct {
 	logger pkg.Logger
 }
 
-func (h *HandlerCustom) Pattern() string {
+func (h *RouteCustom) Pattern() string {
 	return UrlCustom
 }
 
-func (h *HandlerCustom) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (h *RouteCustom) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte(`Custom`))
 	if err != nil {
@@ -24,6 +24,6 @@ func (h *HandlerCustom) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func NewHandlerCustom(logger pkg.Logger) *HandlerCustom {
-	return &HandlerCustom{logger: logger}
+func NewRouteCustom(logger pkg.Logger) pkg.Route {
+	return &RouteCustom{logger: logger}
 }

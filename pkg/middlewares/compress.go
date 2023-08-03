@@ -3,7 +3,6 @@ package middlewares
 import (
 	"bytes"
 	"compress/flate"
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"io"
@@ -14,7 +13,7 @@ type CompressMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *CompressMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
+func (m *CompressMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
 	if response.GetHeader("Content-Encoding") == "deflate" {
 		reader := flate.NewReader(bytes.NewReader(response.GetBodyBytes()))
 		defer func() {
@@ -37,11 +36,12 @@ func (m *CompressMiddleware) ProcessResponse(_ context.Context, response pkg.Res
 	return
 }
 
-func (m *CompressMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *CompressMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(CompressMiddleware).FromCrawler(crawler)
+		return new(CompressMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

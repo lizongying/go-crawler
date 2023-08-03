@@ -1,8 +1,6 @@
 package pkg
 
-import (
-	"context"
-)
+import "context"
 
 type Exporter interface {
 	Export(context.Context, Item) error
@@ -21,5 +19,4 @@ type Exporter interface {
 	WithMysqlPipeline()
 	WithKafkaPipeline()
 	WithCustomPipeline(Pipeline)
-	FromCrawler(Crawler) Exporter
 }

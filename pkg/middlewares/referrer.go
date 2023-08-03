@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -11,7 +10,7 @@ type ReferrerMiddleware struct {
 	referrerPolicy pkg.ReferrerPolicy
 }
 
-func (m *ReferrerMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
+func (m *ReferrerMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	if m.referrerPolicy == pkg.NoReferrerPolicy && request.GetHeaders() != nil && request.GetHeader("Referer") != "" {
 		//request.Header.Del("Referer")
 	}
@@ -23,22 +22,23 @@ func (m *ReferrerMiddleware) ProcessRequest(_ context.Context, request pkg.Reque
 	return
 }
 
-func (m *ReferrerMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
+func (m *ReferrerMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
 	// add referrer to context
-	if response.GetUrl() != "" {
-		ctx := context.WithValue(response.Context(), "referrer", response.GetUrl())
-		response.WithContext(ctx)
+	if response.GetURL() != nil {
+		ctx.Meta.Referrer = response.GetURL()
 	}
 
 	return
 }
 
-func (m *ReferrerMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *ReferrerMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(ReferrerMiddleware).FromCrawler(crawler)
+		return new(ReferrerMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	crawler := spider.GetCrawler()
+	m.logger = spider.GetLogger()
 	m.referrerPolicy = crawler.GetConfig().GetReferrerPolicy()
 	return m
 }

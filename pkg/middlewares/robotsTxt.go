@@ -18,15 +18,18 @@ type RobotsTxtMiddleware struct {
 	ignoreUrl []string
 }
 
-func (m *RobotsTxtMiddleware) Start(ctx context.Context, crawler pkg.Crawler) (err error) {
-	host := crawler.GetSpider().GetHost()
+func (m *RobotsTxtMiddleware) SpiderOpened(spider pkg.Spider) {
+	host := spider.GetHost()
 	if host == "" {
 		m.logger.Warn("host is emtpy")
 		return
 	}
-	r, e := crawler.GetScheduler().Request(ctx, request.NewRequest().SetUrl(fmt.Sprintf("%s/robots.txt", host)).SetSkipMiddleware(true))
+
+	ctx := pkg.Context{
+		Spider: spider,
+	}
+	r, e := spider.Request(ctx, request.NewRequest().SetUrl(fmt.Sprintf("%s/robots.txt", host)).SetSkipMiddleware(true))
 	if e != nil {
-		err = e
 		m.logger.Error(e)
 		return
 	}
@@ -35,10 +38,15 @@ func (m *RobotsTxtMiddleware) Start(ctx context.Context, crawler pkg.Crawler) (e
 		return
 	}
 	m.group = robots.FindGroup(m.userAgent)
+}
+
+func (m *RobotsTxtMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
+	err = m.UnimplementedMiddleware.Start(ctx, spider)
+	spider.GetSignal().RegisterSpiderOpened(m.SpiderOpened)
 	return
 }
 
-func (m *RobotsTxtMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
+func (m *RobotsTxtMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	if m.group == nil {
 		return
 	}
@@ -57,14 +65,14 @@ func (m *RobotsTxtMiddleware) ProcessRequest(_ context.Context, request pkg.Requ
 	return
 }
 
-func (m *RobotsTxtMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *RobotsTxtMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(RobotsTxtMiddleware).FromCrawler(crawler)
+		return new(RobotsTxtMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	m.userAgent = "*"
 	m.ignoreUrl = []string{"/robots.txt"}
-
 	return m
 }

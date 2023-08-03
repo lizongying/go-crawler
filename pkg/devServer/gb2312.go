@@ -8,15 +8,15 @@ import (
 
 const UrlGb2312 = "/gb2312"
 
-type HandlerGb2312 struct {
+type RouteGb2312 struct {
 	logger pkg.Logger
 }
 
-func (h *HandlerGb2312) Pattern() string {
+func (h *RouteGb2312) Pattern() string {
 	return UrlGb2312
 }
 
-func (h *HandlerGb2312) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (h *RouteGb2312) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	h.logger.Info("into HandlerGb2312")
 	defer func() {
 		h.logger.Info("exit HandlerGb2312")
@@ -30,6 +30,6 @@ func (h *HandlerGb2312) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(gb2312Bytes)
 }
 
-func NewHandlerGb2312(logger pkg.Logger) *HandlerGb2312 {
-	return &HandlerGb2312{logger: logger}
+func NewRouteGb2312(logger pkg.Logger) pkg.Route {
+	return &RouteGb2312{logger: logger}
 }

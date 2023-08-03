@@ -1,12 +1,11 @@
 package pkg
 
 type Signal interface {
-	SetSpider(Spider)
 	RegisterSpiderOpened(func(Spider))
 	RegisterSpiderClosed(func(Spider))
 	SpiderOpened()
 	SpiderClosed()
-	FromCrawler(Crawler) Signal
+	FromSpider(Spider) Signal
 }
 
 type SignalType string

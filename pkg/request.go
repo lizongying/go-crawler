@@ -108,5 +108,5 @@ type RequestJson interface {
 	ToRequest() (Request, error)
 }
 
-type CallBack func(context.Context, Response) error
-type ErrBack func(context.Context, Response, error)
+type CallBack func(Context, Response) error
+type ErrBack func(Context, Response, error)

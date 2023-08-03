@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -11,7 +10,7 @@ type UrlMiddleware struct {
 	logger         pkg.Logger
 }
 
-func (m *UrlMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
+func (m *UrlMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	if m.urlLengthLimit < len(request.GetUrl()) {
 		err = pkg.ErrUrlLengthLimit
 		m.logger.Error(err)
@@ -21,12 +20,14 @@ func (m *UrlMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (
 	return
 }
 
-func (m *UrlMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *UrlMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(UrlMiddleware).FromCrawler(crawler)
+		return new(UrlMiddleware).FromSpider(spider)
 	}
 
+	m.UnimplementedMiddleware.FromSpider(spider)
+	crawler := spider.GetCrawler()
 	m.urlLengthLimit = crawler.GetConfig().GetUrlLengthLimit()
-	m.logger = crawler.GetLogger()
+	m.logger = spider.GetLogger()
 	return m
 }

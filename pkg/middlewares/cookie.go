@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -10,22 +9,22 @@ type CookieMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *CookieMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
+func (m *CookieMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
 	// add cookies to context
 	cookies := response.GetCookies()
 	if len(cookies) > 0 {
-		ctx := context.WithValue(response.Context(), "cookies", cookies)
-		response.GetRequest().WithContext(ctx)
+		ctx.Meta.Cookies = cookies
 	}
 
 	return
 }
 
-func (m *CookieMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *CookieMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(CookieMiddleware).FromCrawler(crawler)
+		return new(CookieMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

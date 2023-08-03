@@ -37,6 +37,7 @@ type Response interface {
 	GetUniqueKey() string
 	UnmarshalExtra(any) error
 	GetUrl() string
+	GetURL() *url.URL
 	Context() context.Context
 	WithContext(context.Context) Request
 	GetFile() bool

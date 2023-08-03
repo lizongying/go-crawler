@@ -243,7 +243,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	begin := time.Now()
 	resp, err = client.Do(request.GetRequest())
 	if err != nil {
-		h.logger.Info(err)
+		h.logger.Error(err)
 		return
 	}
 
@@ -282,19 +282,19 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	return
 }
 
-func (h *HttpClient) FromCrawler(crawler pkg.Crawler) pkg.HttpClient {
+func (h *HttpClient) FromSpider(spider pkg.Spider) pkg.HttpClient {
 	if h == nil {
-		return new(HttpClient).FromCrawler(crawler)
+		return new(HttpClient).FromSpider(spider)
 	}
 
-	config := crawler.GetConfig()
+	config := spider.GetCrawler().GetConfig()
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 
 	h.client = http.DefaultClient
 	h.proxy = config.GetProxy()
 	h.timeout = config.GetRequestTimeout()
 	h.httpProto = config.GetHttpProto()
-	h.logger = crawler.GetLogger()
+	h.logger = spider.GetLogger()
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 	h.retryMaxTimes = config.GetRetryMaxTimes()
 	h.Ja3 = config.GetEnableJa3()

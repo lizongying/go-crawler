@@ -10,15 +10,15 @@ const UrlHttpAuth = "/http-auth"
 const username = "username"
 const password = "password"
 
-type HandlerHttpAuth struct {
+type RouteHttpAuth struct {
 	logger pkg.Logger
 }
 
-func (h *HandlerHttpAuth) Pattern() string {
+func (h *RouteHttpAuth) Pattern() string {
 	return UrlHttpAuth
 }
 
-func (h *HandlerHttpAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RouteHttpAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("into HandlerHttpAuth")
 	_, err := w.Write([]byte(fmt.Sprintf("Header: %v", r.Header)))
 	if err != nil {
@@ -39,6 +39,6 @@ func (h *HandlerHttpAuth) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = fmt.Fprint(w, "Hello, authenticated user!")
 }
 
-func NewHandlerHttpAuth(logger pkg.Logger) *HandlerHttpAuth {
-	return &HandlerHttpAuth{logger: logger}
+func NewRouteHttpAuth(logger pkg.Logger) pkg.Route {
+	return &RouteHttpAuth{logger: logger}
 }

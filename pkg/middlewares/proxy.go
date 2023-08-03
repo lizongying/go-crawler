@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -10,16 +9,17 @@ type ProxyMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *ProxyMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
+func (m *ProxyMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 
 	return
 }
 
-func (m *ProxyMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *ProxyMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(ProxyMiddleware).FromCrawler(crawler)
+		return new(ProxyMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

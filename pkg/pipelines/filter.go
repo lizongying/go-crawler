@@ -12,11 +12,13 @@ type FilterPipeline struct {
 	logger pkg.Logger
 }
 
-func (m *FilterPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (m *FilterPipeline) Start(ctx context.Context, spider pkg.Spider) (err error) {
+	err = m.UnimplementedPipeline.Start(ctx, spider)
+	m.filter = spider.GetFilter()
+	return nil
+}
 
+func (m *FilterPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
@@ -30,16 +32,17 @@ func (m *FilterPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err er
 	}
 	m.logger.Info("uniqueKey", uniqueKey)
 
+	ctx := pkg.Context{}
 	err = m.filter.Store(ctx, uniqueKey)
 	return
 }
 
-func (m *FilterPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
+func (m *FilterPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(FilterPipeline).FromCrawler(crawler)
+		return new(FilterPipeline).FromSpider(spider)
 	}
 
-	m.filter = crawler.GetFilter()
-	m.logger = crawler.GetLogger()
+	m.UnimplementedPipeline.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

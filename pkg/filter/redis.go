@@ -27,7 +27,8 @@ func (f *RedisFilter) SpiderOpened(spider pkg.Spider) {
 	}
 }
 
-func (f *RedisFilter) IsExist(ctx context.Context, uniqueKey any) (ok bool, err error) {
+func (f *RedisFilter) IsExist(c pkg.Context, uniqueKey any) (ok bool, err error) {
+	ctx := c.Context()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -36,7 +37,8 @@ func (f *RedisFilter) IsExist(ctx context.Context, uniqueKey any) (ok bool, err 
 	return
 }
 
-func (f *RedisFilter) Store(ctx context.Context, uniqueKey any) (err error) {
+func (f *RedisFilter) Store(c pkg.Context, uniqueKey any) (err error) {
+	ctx := c.Context()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -54,14 +56,14 @@ func (f *RedisFilter) Clean(ctx context.Context) (err error) {
 	return
 }
 
-func (f *RedisFilter) FromCrawler(crawler pkg.Crawler) pkg.Filter {
+func (f *RedisFilter) FromSpider(spider pkg.Spider) pkg.Filter {
 	if f == nil {
-		return new(RedisFilter).FromCrawler(crawler)
+		return new(RedisFilter).FromSpider(spider)
 	}
 
-	crawler.GetSignal().RegisterSpiderOpened(f.SpiderOpened)
+	spider.GetSignal().RegisterSpiderOpened(f.SpiderOpened)
 
-	f.rdb = crawler.GetRedis()
-	f.logger = crawler.GetLogger()
+	f.rdb = spider.GetCrawler().GetRedis()
+	f.logger = spider.GetLogger()
 	return f
 }

@@ -1,20 +1,20 @@
 package pipelines
 
 import (
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"golang.org/x/net/context"
 )
 
 type DumpPipeline struct {
 	pkg.UnimplementedPipeline
-	stats  pkg.Stats
 	logger pkg.Logger
 }
 
 func (m *DumpPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
-	m.stats.IncItemTotal()
+	spider := m.GetSpider()
+	spider.IncItemTotal()
 
 	if item == nil {
 		err = errors.New("nil item")
@@ -36,12 +36,12 @@ func (m *DumpPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error)
 	return
 }
 
-func (m *DumpPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
+func (m *DumpPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(DumpPipeline).FromCrawler(crawler)
+		return new(DumpPipeline).FromSpider(spider)
 	}
 
-	m.stats = crawler.GetStats()
-	m.logger = crawler.GetLogger()
+	m.UnimplementedPipeline.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

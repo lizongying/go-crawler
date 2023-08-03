@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
@@ -16,7 +15,7 @@ type Spider struct {
 	logger pkg.Logger
 }
 
-func (s *Spider) ParsePost(ctx context.Context, response pkg.Response) (err error) {
+func (s *Spider) ParsePost(_ pkg.Context, response pkg.Response) (err error) {
 	dumpRequest, err := httputil.DumpRequestOut(response.GetRequest().GetRequest(), false)
 	if err != nil {
 		s.logger.Error(err)
@@ -34,7 +33,7 @@ func (s *Spider) ParsePost(ctx context.Context, response pkg.Response) (err erro
 	return
 }
 
-func (s *Spider) ParseGet(ctx context.Context, response pkg.Response) (err error) {
+func (s *Spider) ParseGet(_ pkg.Context, response pkg.Response) (err error) {
 	dumpRequest, err := httputil.DumpRequestOut(response.GetRequest().GetRequest(), false)
 	if err != nil {
 		s.logger.Error(err)
@@ -51,9 +50,9 @@ func (s *Spider) ParseGet(ctx context.Context, response pkg.Response) (err error
 	return
 }
 
-// TestPost go run cmd/testMethodSpider/*.go -c dev.yml -f TestPost -m dev
-func (s *Spider) TestPost(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewHandlerPost(s.logger))
+// TestPost go run cmd/testMethodSpider/*.go -c dev.yml -n test-method -f TestPost -m dev
+func (s *Spider) TestPost(ctx pkg.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewRoutePost(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlPost)).
@@ -70,9 +69,9 @@ func (s *Spider) TestPost(ctx context.Context, _ string) (err error) {
 	return
 }
 
-// TestGet go run cmd/testMethodSpider/*.go -c dev.yml -f TestGet -m dev
-func (s *Spider) TestGet(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewHandlerGet(s.logger))
+// TestGet go run cmd/testMethodSpider/*.go -c dev.yml -n test-method -f TestGet -m dev
+func (s *Spider) TestGet(ctx pkg.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewRouteGet(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s?a=0&c=3", s.GetHost(), devServer.UrlGet)).
@@ -93,14 +92,14 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		return
 	}
 
-	logger := baseSpider.GetLogger()
 	spider = &Spider{
 		Spider: baseSpider,
-		logger: logger,
+		logger: baseSpider.GetLogger(),
 	}
-	spider.SetName("test-method")
-	host, _ := spider.GetConfig().GetDevServer()
-	spider.SetHost(host.String())
+	spider.WithOptions(
+		pkg.WithName("test-method"),
+		pkg.WithHost("https://localhost:8081"),
+	)
 
 	return
 }

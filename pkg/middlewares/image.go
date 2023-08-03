@@ -19,12 +19,12 @@ type ImageMiddleware struct {
 	pkg.UnimplementedMiddleware
 	logger     pkg.Logger
 	s3         *s3.Client
-	stats      pkg.StatsWithImage
 	bucketName string
 	key        string
 }
 
-func (m *ImageMiddleware) ProcessResponse(ctx context.Context, response pkg.Response) (err error) {
+func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
+	spider := m.GetSpider()
 	if len(response.GetBodyBytes()) == 0 {
 		err = errors.New("BodyBytes empty")
 		m.logger.Error(err)
@@ -69,22 +69,24 @@ func (m *ImageMiddleware) ProcessResponse(ctx context.Context, response pkg.Resp
 		}
 
 		response.SetImages(append(response.GetImages(), i))
-		if m.stats != nil {
-			m.stats.IncImageTotal()
+		stats, ok := spider.GetStats().(pkg.StatsWithImage)
+		if ok {
+			stats.IncImageTotal()
 		}
 	}
 
 	return
 }
 
-func (m *ImageMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *ImageMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(ImageMiddleware).FromCrawler(crawler)
+		return new(ImageMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	crawler := spider.GetCrawler()
+	m.logger = spider.GetLogger()
 	m.s3 = crawler.GetS3()
-	m.stats, _ = crawler.GetStats().(pkg.StatsWithImage)
-	m.bucketName = "crawler"
+	m.bucketName = crawler.GetConfig().GetBotName()
 	return m
 }

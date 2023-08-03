@@ -50,7 +50,7 @@ func (s *Scheduler) handleItem(ctx context.Context) {
 	return
 }
 
-func (s *Scheduler) YieldItem(ctx context.Context, item pkg.Item) (err error) {
+func (s *Scheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err error) {
 	data := item.GetData()
 	if data == nil {
 		err = errors.New("nil data")
@@ -72,10 +72,9 @@ func (s *Scheduler) YieldItem(ctx context.Context, item pkg.Item) (err error) {
 	}
 
 	// add referrer to item
-	if meta, ok := ctx.Value("meta").(pkg.Meta); ok {
-		if meta.Referrer != nil {
-			item.SetReferrer(meta.Referrer.String())
-		}
+	referrer := ctx.Meta.Referrer
+	if referrer != nil {
+		item.SetReferrer(referrer.String())
 	}
 
 	s.stateItem.In()

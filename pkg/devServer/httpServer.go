@@ -3,6 +3,7 @@ package devServer
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
@@ -152,11 +153,13 @@ func (h *HttpServer) GetRoutes() (routes []string) {
 }
 
 func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (httpServer pkg.DevServer) {
-	devServer, err := config.GetDevServer()
-	if err != nil {
+	devServer := config.GetDevServer()
+	if devServer == nil {
+		err := errors.New("nil devServer")
 		logger.Error(err)
 		return
 	}
+
 	srv := &http.Server{}
 	httpServer = &HttpServer{
 		url:       devServer,

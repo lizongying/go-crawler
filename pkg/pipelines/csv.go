@@ -17,15 +17,15 @@ import (
 type CsvPipeline struct {
 	pkg.UnimplementedPipeline
 	files  sync.Map
-	stats  pkg.Stats
 	logger pkg.Logger
 }
 
-func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
+func (m *CsvPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+	spider := m.GetSpider()
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 	if item.GetName() != pkg.ItemCsv {
@@ -41,7 +41,7 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 	if itemCsv.GetFileName() == "" {
 		err = errors.New("fileName is empty")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
@@ -49,7 +49,7 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
@@ -71,7 +71,7 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 			err = os.MkdirAll(filepath.Dir(filename), 0744)
 			if err != nil {
 				m.logger.Error(err)
-				m.stats.IncItemError()
+				spider.IncItemError()
 				return
 			}
 		}
@@ -79,7 +79,7 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 			file, err = os.Create(filename)
 			if err != nil {
 				m.logger.Error(err)
-				m.stats.IncItemError()
+				spider.IncItemError()
 				return
 			}
 			create = true
@@ -87,7 +87,7 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 			file, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 			if err != nil {
 				m.logger.Error(err)
-				m.stats.IncItemError()
+				spider.IncItemError()
 				return
 			}
 		}
@@ -126,11 +126,11 @@ func (m *CsvPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error
 	_, err = file.WriteString(fmt.Sprintf("%s\n", strings.Join(lines, ",")))
 	if err != nil {
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return err
 	}
 
-	m.stats.IncItemSuccess()
+	spider.IncItemSuccess()
 	return
 }
 
@@ -145,12 +145,12 @@ func (m *CsvPipeline) Stop(_ context.Context) (err error) {
 	return
 }
 
-func (m *CsvPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
+func (m *CsvPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(CsvPipeline).FromCrawler(crawler)
+		return new(CsvPipeline).FromSpider(spider)
 	}
 
-	m.stats = crawler.GetStats()
-	m.logger = crawler.GetLogger()
+	m.UnimplementedPipeline.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

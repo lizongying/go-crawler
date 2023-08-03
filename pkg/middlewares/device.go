@@ -18,7 +18,18 @@ type DeviceMiddleware struct {
 	browsers  []pkg.Browser
 }
 
-func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
+func (m *DeviceMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
+	err = m.UnimplementedMiddleware.Start(ctx, spider)
+	if len(spider.GetPlatforms()) > 0 {
+		m.platforms = spider.GetPlatforms()
+	}
+	if len(spider.GetBrowsers()) > 0 {
+		m.browsers = spider.GetBrowsers()
+	}
+	return
+}
+
+func (m *DeviceMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	platforms := m.platforms
 	if len(request.GetPlatform()) > 0 {
 		platforms = request.GetPlatform()
@@ -57,22 +68,16 @@ func (m *DeviceMiddleware) ProcessRequest(_ context.Context, request pkg.Request
 	return
 }
 
-func (m *DeviceMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *DeviceMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(DeviceMiddleware).FromCrawler(crawler)
+		return new(DeviceMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
-
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	devices, _ := device.NewDevicesFromBytes(static.Devices)
 	m.uaAll = devices.Devices
 	m.platforms = []pkg.Platform{pkg.Windows, pkg.Mac, pkg.Android, pkg.Iphone, pkg.Ipad, pkg.Linux}
-	if len(crawler.GetPlatforms()) > 0 {
-		m.platforms = crawler.GetPlatforms()
-	}
 	m.browsers = []pkg.Browser{pkg.Chrome, pkg.Edge, pkg.Safari, pkg.FireFox}
-	if len(crawler.GetBrowsers()) > 0 {
-		m.browsers = crawler.GetBrowsers()
-	}
 	return m
 }

@@ -99,6 +99,9 @@ func (r *Response) UnmarshalExtra(v any) error {
 func (r *Response) GetUrl() string {
 	return r.request.GetUrl()
 }
+func (r *Response) GetURL() *url.URL {
+	return r.request.GetURL()
+}
 func (r *Response) Context() context.Context {
 	return r.request.Context()
 }

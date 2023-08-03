@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"github.com/lizongying/go-crawler/pkg"
 	"net/http/httputil"
 )
@@ -11,23 +10,24 @@ type DumpMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *DumpMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
+func (m *DumpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	bs, _ := request.Marshal()
 	m.logger.InfoF("request: %s", string(bs))
 	return
 }
 
-func (m *DumpMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
+func (m *DumpMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
 	b, _ := httputil.DumpResponse(response.GetResponse(), false)
 	m.logger.DebugF("response: \n%s", string(b))
 	return
 }
 
-func (m *DumpMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *DumpMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(DumpMiddleware).FromCrawler(crawler)
+		return new(DumpMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

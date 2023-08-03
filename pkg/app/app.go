@@ -14,49 +14,69 @@ import (
 	"go.uber.org/fx"
 )
 
-func NewApp(newSpider pkg.NewSpider, crawlOptions ...pkg.CrawlOption) *fx.App {
-	return fx.New(
-		fx.Provide(
-			cli.NewCli,
-			db.NewMongoDb,
-			db.NewMysql,
-			db.NewKafka,
-			db.NewKafkaReader,
-			db.NewRedis,
-			db.NewS3,
-			fx.Annotate(
-				logger.NewLogger,
-				fx.As(new(pkg.Logger)),
-			),
-			config.NewConfig,
-			//fx.Annotate(
-			//	config.NewConfig,
-			//	fx.As(new(pkg.Config)),
-			//),
-			fx.Annotate(
-				spider.NewBaseSpider,
-				fx.As(new(pkg.Spider)),
-				fx.ResultTags(`name:"baseSpider"`),
-			),
-			devServer.NewHttpServer,
-			fx.Annotate(
-				newSpider,
-				fx.ParamTags(`name:"baseSpider"`),
-			),
-			crawler.NewCrawler,
-		),
-		fx.Invoke(func(logger pkg.Logger, spider pkg.Spider, crawler pkg.Crawler, shutdowner fx.Shutdowner) {
-			ctx := context.Background()
+type App struct {
+	newSpiders []pkg.NewSpider
+}
 
+func NewApp(newSpiders ...pkg.NewSpider) *App {
+	return &App{
+		newSpiders: newSpiders,
+	}
+}
+
+func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
+	constructors := []any{cli.NewCli,
+		db.NewMongoDb,
+		db.NewMysql,
+		db.NewKafka,
+		db.NewKafkaReader,
+		db.NewRedis,
+		db.NewS3,
+		fx.Annotate(
+			logger.NewLogger,
+			fx.As(new(pkg.Logger)),
+		),
+		config.NewConfig,
+		//fx.Annotate(
+		//	config.NewConfig,
+		//	fx.As(new(pkg.Config)),
+		//),
+		fx.Annotate(
+			spider.NewBaseSpider,
+			fx.ResultTags(`name:"baseSpider"`),
+		),
+		devServer.NewHttpServer,
+		fx.Annotate(
+			crawler.NewCrawler,
+			fx.ParamTags(`group:"spiders"`),
+		),
+	}
+
+	for _, v := range a.newSpiders {
+		constructors = append(constructors, fx.Annotate(
+			v,
+			fx.ParamTags(`name:"baseSpider"`),
+			fx.ResultTags(`group:"spiders"`),
+		))
+	}
+
+	fx.New(
+		fx.Provide(constructors...),
+		fx.Invoke(func(logger pkg.Logger, crawler pkg.Crawler, shutdowner fx.Shutdowner) {
+			var err error
 			for _, v := range crawlOptions {
 				v(crawler)
 			}
 
-			crawler.SetSpider(spider)
-			err := crawler.Start(ctx)
+			ctx := context.Background()
+
+			err = crawler.Start(ctx)
 			if err != nil {
 				logger.Error(err)
-				_ = shutdowner.Shutdown()
+				err = shutdowner.Shutdown()
+				if err != nil {
+					logger.Error(err)
+				}
 				return
 			}
 
@@ -66,6 +86,10 @@ func NewApp(newSpider pkg.NewSpider, crawlOptions ...pkg.CrawlOption) *fx.App {
 			}
 			if err != nil {
 				logger.Error(err)
+				err = shutdowner.Shutdown()
+				if err != nil {
+					logger.Error(err)
+				}
 				return
 			}
 
@@ -74,9 +98,9 @@ func NewApp(newSpider pkg.NewSpider, crawlOptions ...pkg.CrawlOption) *fx.App {
 				logger.Error(err)
 				return
 			}
-			logger.Info("Shutdown success")
 
+			logger.Info("Shutdown success")
 			return
 		}),
-	)
+	).Run()
 }

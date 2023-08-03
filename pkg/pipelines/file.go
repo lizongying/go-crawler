@@ -8,18 +8,19 @@ import (
 
 type FilePipeline struct {
 	pkg.UnimplementedPipeline
-	stats     pkg.Stats
 	scheduler pkg.Scheduler
 	logger    pkg.Logger
 }
 
-func (m *FilePipeline) Start(_ context.Context, crawler pkg.Crawler) error {
-	m.scheduler = crawler.GetScheduler()
+func (m *FilePipeline) Start(ctx context.Context, spider pkg.Spider) (err error) {
+	err = m.UnimplementedPipeline.Start(ctx, spider)
+	m.scheduler = spider.GetScheduler()
 	return nil
 }
 
-func (m *FilePipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
-	m.stats.IncItemTotal()
+func (m *FilePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+	spider := m.GetSpider()
+	spider.IncItemTotal()
 
 	if item == nil {
 		err = errors.New("nil item")
@@ -33,6 +34,7 @@ func (m *FilePipeline) ProcessItem(ctx context.Context, item pkg.Item) (err erro
 	}
 
 	for _, i := range files {
+		ctx := pkg.Context{}
 		r, e := m.scheduler.Request(ctx, i)
 		if e != nil {
 			m.logger.Error(e)
@@ -44,12 +46,12 @@ func (m *FilePipeline) ProcessItem(ctx context.Context, item pkg.Item) (err erro
 	return
 }
 
-func (m *FilePipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
+func (m *FilePipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(FilePipeline).FromCrawler(crawler)
+		return new(FilePipeline).FromSpider(spider)
 	}
 
-	m.stats = crawler.GetStats()
-	m.logger = crawler.GetLogger()
+	m.UnimplementedPipeline.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

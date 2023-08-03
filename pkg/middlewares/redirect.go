@@ -11,7 +11,7 @@ type RedirectMiddleware struct {
 	redirectMaxTimes uint8
 }
 
-func (m *RedirectMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
+func (m *RedirectMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	redirectMaxTimes := m.redirectMaxTimes
 	if request.GetRedirectMaxTimes() != nil {
 		redirectMaxTimes = *request.GetRedirectMaxTimes()
@@ -23,12 +23,14 @@ func (m *RedirectMiddleware) ProcessRequest(_ context.Context, request pkg.Reque
 	return
 }
 
-func (m *RedirectMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *RedirectMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(RedirectMiddleware).FromCrawler(crawler)
+		return new(RedirectMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	crawler := spider.GetCrawler()
+	m.logger = spider.GetLogger()
 	m.redirectMaxTimes = crawler.GetConfig().GetRedirectMaxTimes()
 	return m
 }

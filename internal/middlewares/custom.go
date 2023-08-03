@@ -14,18 +14,18 @@ func (m *CustomMiddleware) GetName() string {
 	return "custom"
 }
 
-func (m *CustomMiddleware) Start(_ context.Context, crawler pkg.Crawler) error {
-	_ = m.FromCrawler(crawler)
+func (m *CustomMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
+	err = m.UnimplementedMiddleware.Start(ctx, spider)
 	m.logger.Debug("start")
 	return nil
 }
 
-func (m *CustomMiddleware) ProcessRequest(_ context.Context, request pkg.Request) error {
+func (m *CustomMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) error {
 	m.logger.Debug("request", request)
 	return nil
 }
 
-func (m *CustomMiddleware) ProcessResponse(_ context.Context, response pkg.Response) error {
+func (m *CustomMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) error {
 	m.logger.Debug("response", response)
 	return nil
 }
@@ -35,7 +35,12 @@ func (m *CustomMiddleware) Stop(_ context.Context) error {
 	return nil
 }
 
-func (m *CustomMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
-	m.logger = crawler.GetLogger()
+func (m *CustomMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
+	if m == nil {
+		return new(CustomMiddleware).FromSpider(spider)
+	}
+
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

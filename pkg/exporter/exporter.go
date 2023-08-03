@@ -13,7 +13,7 @@ import (
 type Exporter struct {
 	pipelines      []pkg.Pipeline
 	processItemFns []func(context.Context, pkg.Item) error
-	crawler        pkg.Crawler
+	spider         pkg.Spider
 	logger         pkg.Logger
 	locker         sync.Mutex
 }
@@ -49,7 +49,7 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 	e.locker.Lock()
 	defer e.locker.Unlock()
 
-	pipeline = pipeline.FromCrawler(e.crawler)
+	pipeline = pipeline.FromSpider(e.spider)
 
 	name := reflect.TypeOf(pipeline).Elem().String()
 	pipeline.SetName(name)
@@ -125,12 +125,13 @@ func (e *Exporter) WithKafkaPipeline() {
 func (e *Exporter) WithCustomPipeline(pipeline pkg.Pipeline) {
 	e.SetPipeline(pipeline, 110)
 }
-func (e *Exporter) FromCrawler(crawler pkg.Crawler) pkg.Exporter {
+func (e *Exporter) FromSpider(spider pkg.Spider) pkg.Exporter {
 	if e == nil {
-		return new(Exporter).FromCrawler(crawler)
+		return new(Exporter).FromSpider(spider)
 	}
 
-	e.crawler = crawler
+	crawler := spider.GetCrawler()
+	e.spider = spider
 	e.logger = crawler.GetLogger()
 	config := crawler.GetConfig()
 

@@ -32,6 +32,7 @@ type Scheduler struct {
 	couldStop    chan struct{}
 	kafkaWriter  *kafka.Writer
 	kafkaReader  *kafka.Reader
+	config       pkg.Config
 }
 
 func (s *Scheduler) GetInterval() time.Duration {
@@ -40,23 +41,25 @@ func (s *Scheduler) GetInterval() time.Duration {
 func (s *Scheduler) SetInterval(interval time.Duration) {
 	s.interval = interval
 }
-func (s *Scheduler) Start(ctx context.Context) (err error) {
+func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
+
+	s.initScheduler(ctx)
 
 	s.logger.Info("middlewares", s.GetMiddlewareNames())
 	s.logger.Info("pipelines", s.GetPipelineNames())
 
 	for _, v := range s.GetPipelines() {
-		e := v.Start(ctx, s.crawler)
+		e := v.Start(ctx, s.GetSpider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("pipeline break", v.GetName())
 			break
 		}
 	}
 	for _, v := range s.GetMiddlewares() {
-		e := v.Start(ctx, s.crawler)
+		e := v.Start(ctx, s.GetSpider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("middlewares break", v.GetName())
 			break
@@ -86,7 +89,7 @@ func (s *Scheduler) Start(ctx context.Context) (err error) {
 	return
 }
 
-func (s *Scheduler) Stop(ctx context.Context) (err error) {
+func (s *Scheduler) StopScheduler(ctx context.Context) (err error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -115,32 +118,33 @@ func (s *Scheduler) Stop(ctx context.Context) (err error) {
 
 	return
 }
-func (s *Scheduler) SpiderOpened(spider pkg.Spider) {
-	s.requestKey = fmt.Sprintf("crawler-%s-request", spider.GetName())
+func (s *Scheduler) initScheduler(_ context.Context) {
+	s.requestKey = fmt.Sprintf("crawler-%s-request", s.GetSpider().GetName())
 	s.logger.Info("request key", s.requestKey)
 	s.kafkaWriter.Topic = s.requestKey
 	s.kafkaReader = kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  s.kafkaReader.Config().Brokers,
 		MaxBytes: 10e6, // 10MB
 		Topic:    s.requestKey,
-		GroupID:  "crawler",
+		GroupID:  s.config.GetBotName(),
 	})
 }
-func (s *Scheduler) FromCrawler(crawler pkg.Crawler) pkg.Scheduler {
+func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	if s == nil {
-		return new(Scheduler).FromCrawler(crawler)
+		return new(Scheduler).FromSpider(spider)
 	}
 
-	crawler.GetSignal().RegisterSpiderOpened(s.SpiderOpened)
-
+	s.UnimplementedScheduler.SetSpider(spider)
+	crawler := spider.GetCrawler()
 	config := crawler.GetConfig()
+	s.config = config
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
 	s.itemChan = make(chan pkg.Item, defaultChanItemMax)
 	s.couldStop = make(chan struct{})
 
-	s.SetDownloader(new(downloader.Downloader).FromCrawler(crawler))
-	s.SetExporter(new(exporter.Exporter).FromCrawler(crawler))
+	s.SetDownloader(new(downloader.Downloader).FromSpider(spider))
+	s.SetExporter(new(exporter.Exporter).FromSpider(spider))
 	s.crawler = crawler
 	s.logger = crawler.GetLogger()
 	s.stateRequest = pkg.NewState()

@@ -8,15 +8,15 @@ import (
 
 const UrlBig5 = "/big5"
 
-type HandlerBig5 struct {
+type RouteBig5 struct {
 	logger pkg.Logger
 }
 
-func (h *HandlerBig5) Pattern() string {
+func (h *RouteBig5) Pattern() string {
 	return UrlBig5
 }
 
-func (h *HandlerBig5) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
+func (h *RouteBig5) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	h.logger.Info("into HandlerBig5")
 	defer func() {
 		h.logger.Info("exit HandlerBig5")
@@ -33,6 +33,6 @@ func (h *HandlerBig5) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(big5Bytes)
 }
 
-func NewHandlerBig5(logger pkg.Logger) *HandlerBig5 {
-	return &HandlerBig5{logger: logger}
+func NewRouteBig5(logger pkg.Logger) pkg.Route {
+	return &RouteBig5{logger: logger}
 }

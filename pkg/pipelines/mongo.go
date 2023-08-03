@@ -14,18 +14,18 @@ import (
 
 type MongoPipeline struct {
 	pkg.UnimplementedPipeline
-	crawler pkg.Crawler
-	stats   pkg.Stats
+	mode    string
 	logger  pkg.Logger
 	mongoDb *mongo.Database
 	timeout time.Duration
 }
 
-func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err error) {
+func (m *MongoPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+	spider := m.GetSpider()
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 	if item.GetName() != pkg.ItemMongo {
@@ -41,14 +41,14 @@ func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
 	if itemMongo.GetCollection() == "" {
 		err = errors.New("collection is empty")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
@@ -56,7 +56,7 @@ func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
@@ -64,17 +64,17 @@ func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	bs, err := bson.Marshal(data)
 	if err != nil {
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
-	if m.crawler.GetMode() == "test" {
+	if m.mode == "test" {
 		m.logger.Debug("current mode don't need save")
-		m.stats.IncItemIgnore()
+		spider.IncItemIgnore()
 		return
 	}
 
-	ctx = context.Background()
+	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
@@ -91,22 +91,23 @@ func (m *MongoPipeline) ProcessItem(ctx context.Context, item pkg.Item) (err err
 	}
 	if err != nil {
 		m.logger.Error(err)
-		m.stats.IncItemError()
+		spider.IncItemError()
 		return
 	}
 
-	m.stats.IncItemSuccess()
+	spider.IncItemSuccess()
 	return
 }
 
-func (m *MongoPipeline) FromCrawler(crawler pkg.Crawler) pkg.Pipeline {
+func (m *MongoPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(MongoPipeline).FromCrawler(crawler)
+		return new(MongoPipeline).FromSpider(spider)
 	}
 
-	m.crawler = crawler
-	m.stats = crawler.GetStats()
-	m.logger = crawler.GetLogger()
+	m.UnimplementedPipeline.FromSpider(spider)
+	crawler := spider.GetCrawler()
+	m.mode = crawler.GetMode()
+	m.logger = spider.GetLogger()
 	m.mongoDb = crawler.GetMongoDb()
 	m.timeout = time.Minute
 	return m

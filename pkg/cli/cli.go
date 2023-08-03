@@ -2,12 +2,12 @@ package cli
 
 import (
 	"flag"
-	"log"
 	"os"
 )
 
 type Cli struct {
 	ConfigFile string
+	SpiderName string
 	StartFunc  string
 	Args       string
 	Mode       string
@@ -15,6 +15,7 @@ type Cli struct {
 
 func NewCli() (c *Cli, err error) {
 	configFilePtr := flag.String("c", os.Getenv("CRAWLER_CONFIG_FILE"), "config file")
+	spiderNamePtr := flag.String("n", os.Getenv("CRAWLER_SPIDER_NAME"), "spider name")
 	startFuncPtr := flag.String("f", os.Getenv("CRAWLER_START_FUNC"), "start func")
 	argsPtr := flag.String("a", os.Getenv("CRAWLER_ARGS"), "args")
 	modePtr := flag.String("m", os.Getenv("CRAWLER_MODE"), "mode")
@@ -22,6 +23,7 @@ func NewCli() (c *Cli, err error) {
 	flag.Parse()
 
 	configFile := *configFilePtr
+	spiderName := *spiderNamePtr
 	startFunc := *startFuncPtr
 	if startFunc == "" {
 		startFunc = "Test"
@@ -32,10 +34,9 @@ func NewCli() (c *Cli, err error) {
 		mode = "test"
 	}
 
-	log.Printf("func=%s, args=%s\n", startFunc, args)
-
 	c = &Cli{
 		ConfigFile: configFile,
+		SpiderName: spiderName,
 		StartFunc:  startFunc,
 		Args:       args,
 		Mode:       mode,

@@ -18,11 +18,12 @@
 ## Usage
 
 * 基本架构
-    * Spider：在Spider里可以发起请求和解析内容。您需要使用`spider.SetName(name)`方法为每个Spider设置一个唯一名称。
-    * BaseSpider：BaseSpider实现了Spider的公共方法，避免了在每个Spider中重复编写相同的代码。
-    * Crawler：Crawler集成了Spider、Downloader（下载器）、Exporter（导出器）、Scheduler（调度器）等组件，是爬虫的逻辑处理中心。
-* crawler选项。
-    * WithMode 设置模式（Mode）。
+    * Spider：在Spider里可以发起请求和解析内容。您需要为每个Spider设置一个唯一名称。
+    * BaseSpider：BaseSpider集成了Spider、Downloader（下载器）、Exporter（导出器）、Scheduler（调度器）等组件，是爬虫的逻辑处理中心。
+    * Crawler：Crawler里可以有多个Spider，同时管理Spider的启动和关闭等
+* spider选项。
+    * WithName 设置爬虫唯一名称。
+    * WithHost 设置爬虫host，用于基于host的过滤或robot.txt的支持。
     * WithPlatforms 设置浏览器平台（Platforms）。
     * WithBrowsers 设置浏览器（Browsers）。
     * WithLogger 设置日志（Logger）。
@@ -64,6 +65,8 @@
     * WithTimeout 设置请求的超时时间（Timeout）。
     * WithInterval 设置请求的间隔时间（Interval）。
     * WithOkHttpCodes 设置正常的HTTP状态码（OkHttpCodes）。
+* crawler选项。
+    * WithDevServerRoute 设置开发服务Route，包括内置或自定义的。需要配置enable_dev_server: true
 * Item
 
   Item用于存储需要导出的数据和一些其他辅助信息。
@@ -105,10 +108,7 @@
       
       ```
       ```go
-      app.NewApp(NewSpider,
-      pkg.WithMongoPipeline(),
-      ).Run()
-
+      spider.WithOptions(pkg.WithMongoPipeline())
       ```
         * pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
             * `items.NewItemNone()`
@@ -346,35 +346,46 @@
       `http://localhost:8081`表示使用HTTP协议，`https://localhost:8081`表示使用HTTPS协议。
     * 默认显示JA3指纹。JA3是一种用于TLS客户端指纹识别的算法，它可以显示与服务器建立连接时客户端使用的TLS版本和加密套件等信息。
     * 您可以使用tls工具来生成服务器的私钥和证书，以便在devServer中使用HTTPS。tls工具可以帮助您生成自签名的证书，用于本地开发和测试环境。
-    * devServer内置了多种handler，这些handler提供了丰富的功能，可以模拟各种网络情景，帮助进行开发和调试。
-      您可以根据需要选择合适的handler，并将其配置到devServer中，以模拟特定的网络响应和行为。
-        * BadGatewayHandler 模拟返回502状态码
-        * Big5Handler 模拟使用big5编码
-        * CookieHandler 模拟返回cookie
-        * DeflateHandler 模拟使用Deflate压缩
-        * FileHandler 模拟输出文件
-        * Gb2312Handler 模拟使用gb2312编码
-        * Gb18030Handler 模拟使用gb18030编码
-        * GbkHandler 模拟使用gbk编码
-        * GzipHandler 模拟使用gzip压缩
-        * HelloHandler 打印请求的header和body信息
-        * HttpAuthHandler 模拟http-auth认证
-        * InternalServerErrorHandler 模拟返回500状态码
-        * OkHandler 模拟正常输出，返回200状态码
-        * RateLimiterHandler 模拟速率限制，目前基于全部请求，不区分用户。可与HttpAuthHandler配合使用。
-        * RedirectHandler 模拟302临时跳转，需要同时启用OkHandler
-        * RobotsTxtHandler 返回robots.txt文件
+    * devServer内置了多种Route，这些Route提供了丰富的功能，可以模拟各种网络情景，帮助进行开发和调试。
+      您可以根据需要选择合适的route，并将其配置到devServer中，以模拟特定的网络响应和行为。
+        * BadGatewayRoute 模拟返回502状态码
+        * Big5Route 模拟使用big5编码
+        * CookieRoute 模拟返回cookie
+        * DeflateRoute 模拟使用Deflate压缩
+        * FileRoute 模拟输出文件
+        * Gb2312Route 模拟使用gb2312编码
+        * Gb18030Route 模拟使用gb18030编码
+        * GbkRoute 模拟使用gbk编码
+        * GzipRoute 模拟使用gzip压缩
+        * HelloRoute 打印请求的header和body信息
+        * HttpAuthRoute 模拟http-auth认证
+        * InternalServerErrorRoute 模拟返回500状态码
+        * OkRoute 模拟正常输出，返回200状态码
+        * RateLimiterRoute 模拟速率限制，目前基于全部请求，不区分用户。可与HttpAuthRoute配合使用。
+        * RedirectRoute 模拟302临时跳转，需要同时启用OkRoute
+        * RobotsTxtRoute 返回robots.txt文件
 
-### args
+### 启动参数
 
-通过配置环境变量和启动参数，您可以更灵活地配置和控制爬虫的行为，包括选择配置文件、指定入口方法、传递额外参数以及设定启动模式。这样的设计可以提高爬虫的可配置性和可扩展性，使得爬虫框架更适应各种不同的应用场景。
+通过配置环境变量或参数，您可以更灵活地启动爬虫，包括选择配置文件、指定爬虫名称、指定入口方法、传递额外参数以及设定启动模式。
 
-* CRAWLER_CONFIG_FILE -c 配置文件路径，必须进行配置。
-* CRAWLER_START_FUNC -f 入口方法名称，默认Test。
-* CRAWLER_ARGS -a 额外的参数，该参数是非必须项。建议使用JSON字符串。参数会被入口方法调用。
-* CRAWLER_MODE -m 启动模式，默认test。您可以根据需要使用不同的模式，如dev、prod等，以区分开发和生产环境。
+* 配置文件路径，必须进行配置。
+    * 环境变量 CRAWLER_CONFIG_FILE
+    * 启动参数 -c
+* 爬虫名称。
+    * 环境变量 CRAWLER_SPIDER_NAME
+    * 启动参数 -n
+* 入口方法名称，默认Test。
+    * 环境变量 CRAWLER_START_FUNC
+    * 启动参数 -f
+* 额外的参数，该参数是非必须项。建议使用JSON字符串。参数会被入口方法调用。
+    * 环境变量 CRAWLER_ARGS
+    * 启动参数 -a
+* 启动模式，默认test。您可以根据需要使用不同的模式，如dev、prod等，以区分开发和生产环境。
+    * 环境变量 CRAWLER_MODE
+    * 启动参数 -m
 
-### config
+### 配置
 
 * bot_name: crawler 项目名
 
@@ -414,7 +425,8 @@
 * request.ok_http_codes: 请求正常的HTTP状态码。
 * request.retry_max_times: 请求重试的最大次数，默认10。
 * request.http_proto: 请求的HTTP协议。默认`2.0`
-* dev_server: 开发服务器的地址。默认`https://localhost:8081`
+* enable_dev_server: true 是否启用开发服务
+* dev_server: 开发服务的地址。默认`https://localhost:8081`
 * enable_ja3: 是否修改/打印JA3指纹。默认关闭。
 * scheduler: 调度方式，默认memory（内存调度），可选值memory、redis、kafka。选择redis或kafka后可以实现集群调度。
 * filter: 过滤方式，默认memory（内存过滤），可选值memory、redis。选择redis后可以实现集群过滤。
@@ -462,6 +474,7 @@
 
 * 优先级
   优先级允许[0-2147483647]，建议在0-255，方便后期可能的调整。
+  0的优先级最高，最先被处理。
   因为kafka等队列实现不是很好，暂不支持。
   使用方法
     ```go
@@ -480,9 +493,22 @@
 
 达到以上条件程序会结束。
 
+## 如何阻止爬虫停止？
+
+在Stop方法中返回`pkg.DontStopErr`即可
+
+```go
+func (s *Spider) Stop(ctx context.Context) (err error) {
+err = pkg.DontStopErr
+
+return
+}
+
+```
+
 ## Example
 
-example.go
+exampleSpider.go
 
 ```go
 package main
@@ -511,7 +537,7 @@ type Spider struct {
 	logger pkg.Logger
 }
 
-func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error) {
+func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
 	err = response.UnmarshalExtra(&extra)
 	if err != nil {
@@ -544,10 +570,7 @@ func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error)
 	return
 }
 
-func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
-	// mock server
-	s.AddDevServerRoutes(devServer.NewOkHandler(s.logger))
-
+func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
@@ -568,21 +591,22 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),
 	}
-	spider.SetName("test-ok")
-	host, _ := spider.GetConfig().GetDevServer()
-	spider.SetHost(host.String())
+	spider.WithOptions(
+		pkg.WithName("example"),
+		pkg.WithHost("https://localhost:8081"),
+	)
 
 	return
 }
 
 func main() {
-	app.NewApp(NewSpider).Run()
+	app.NewApp(NewSpider).Run(pkg.WithDevServerRoute(devServer.NewRouteOk))
 }
 
 ```
 
 ```shell
-go run example.go -c example.yml -f TestOk -m dev
+go run exampleSpider.go -c example.yml -n example -f TestOk -m dev
 
 ```
 
@@ -598,10 +622,11 @@ git clone github.com/lizongying/go-crawler-example
 
 * AutoThrottle
 * cron
-* max request limit?
-* multi-spider
 * devServer独立拆分
-* Queue Priority
+* monitor
+* statistics
+* from extra
+* Stats
 
 ```shell
 go get -u github.com/lizongying/go-query@e077670

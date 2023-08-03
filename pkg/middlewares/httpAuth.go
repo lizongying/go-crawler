@@ -1,23 +1,21 @@
 package middlewares
 
 import (
-	"context"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
 type HttpAuthMiddleware struct {
 	pkg.UnimplementedMiddleware
-	username string
-	password string
-	logger   pkg.Logger
+	logger pkg.Logger
 }
 
-func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
-	username := m.username
+func (m *HttpAuthMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) (err error) {
+	spider := m.GetSpider()
+	username := spider.GetUsername()
 	if request.GetUsername() != "" {
 		username = request.GetUsername()
 	}
-	password := m.password
+	password := spider.GetPassword()
 	if request.GetPassword() != "" {
 		password = request.GetPassword()
 	}
@@ -30,13 +28,12 @@ func (m *HttpAuthMiddleware) ProcessRequest(_ context.Context, request pkg.Reque
 	return
 }
 
-func (m *HttpAuthMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *HttpAuthMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(HttpAuthMiddleware).FromCrawler(crawler)
+		return new(HttpAuthMiddleware).FromSpider(spider)
 	}
 
-	m.username = crawler.GetUsername()
-	m.password = crawler.GetPassword()
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

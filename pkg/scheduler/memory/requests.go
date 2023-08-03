@@ -9,7 +9,8 @@ import (
 	"time"
 )
 
-func (s *Scheduler) Request(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
+func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
+	spider := s.GetSpider()
 	defer func() {
 		s.stateRequest.Set()
 	}()
@@ -21,21 +22,15 @@ func (s *Scheduler) Request(ctx context.Context, request pkg.Request) (response 
 
 	s.logger.DebugF("request: %+v", request)
 
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
 	response, err = s.Download(ctx, request)
 	if err != nil {
 		if errors.Is(err, pkg.ErrIgnoreRequest) {
 			s.logger.Info(err)
+			spider.IncRequestIgnore()
 			return
 		}
 
 		s.logger.Error(err)
-		if request != nil {
-			ctx = request.Context()
-		}
 		s.handleError(ctx, response, err, request.GetErrBack())
 		return
 	}
@@ -45,20 +40,18 @@ func (s *Scheduler) Request(ctx context.Context, request pkg.Request) (response 
 	return
 }
 
-func (s *Scheduler) handleError(ctx context.Context, response pkg.Response, err error, fn func(context.Context, pkg.Response, error)) {
+func (s *Scheduler) handleError(ctx pkg.Context, response pkg.Response, err error, fn func(pkg.Context, pkg.Response, error)) {
+	spider := s.GetSpider()
 	if fn != nil {
 		fn(ctx, response, err)
 	} else {
 		s.logger.Warn("nil ErrBack")
 	}
-	if errors.Is(err, pkg.ErrIgnoreRequest) {
-		s.crawler.GetStats().IncRequestIgnore()
-	} else {
-		s.crawler.GetStats().IncRequestError()
-	}
+	spider.IncRequestError()
 }
 
 func (s *Scheduler) handleRequest(ctx context.Context) {
+	spider := s.GetSpider()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -92,8 +85,11 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			s.logger.Error(err)
 		}
 		go func(request pkg.Request) {
-			response, e := s.Request(ctx, request)
+			c := pkg.Context{}
+			response, e := s.Request(c, request)
 			if errors.Is(e, pkg.ErrIgnoreRequest) {
+				s.logger.Info(err)
+				spider.IncRequestIgnore()
 				return
 			}
 
@@ -108,65 +104,74 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				err = errors.New("nil CallBack")
 				s.logger.Error(err)
 
-				s.handleError(request.Context(), response, err, request.GetErrBack())
+				s.handleError(c, response, err, request.GetErrBack())
 				s.stateRequest.Out()
 				return
 			}
 
-			go func(response pkg.Response) {
+			go func(ctx pkg.Context, response pkg.Response) {
 				defer func() {
 					if r := recover(); r != nil {
 						buf := make([]byte, 1<<16)
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
 						s.logger.Error(err)
-						s.handleError(response.Context(), response, err, request.GetErrBack())
+						s.handleError(ctx, response, err, request.GetErrBack())
 					}
 				}()
 
 				s.stateMethod.In()
-				err = request.GetCallBack()(response.Context(), response)
+				err = request.GetCallBack()(ctx, response)
 				s.stateMethod.Out()
 				s.stateRequest.Out()
 				if e != nil {
 					s.logger.Error(err)
-					s.handleError(response.Context(), response, err, request.GetErrBack())
+					s.handleError(ctx, response, err, request.GetErrBack())
 					return
 				}
-			}(response)
+			}(c, response)
 		}(request)
 	}
 
 	return
 }
 
-func (s *Scheduler) YieldRequest(ctx context.Context, request pkg.Request) (err error) {
+func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
 	defer func() {
 		s.stateRequest.Set()
 	}()
 
 	if len(s.requestChan) >= defaultRequestMax {
-		err = errors.New("requestChan max limit")
+		err = errors.New("exceeded the maximum number of requests")
 		s.logger.Error(err)
 		return
 	}
 
-	if meta, ok := ctx.Value("meta").(pkg.Meta); ok {
-		// add referrer to request
-		if meta.Referrer != nil {
-			request.SetReferrer(meta.Referrer.String())
-		}
+	meta := ctx.Meta
 
-		// add cookies to request
-		if len(meta.Cookies) > 0 {
-			for _, cookie := range meta.Cookies {
-				request.AddCookie(cookie)
-			}
+	// add referrer to request
+	if meta.Referrer != nil {
+		request.SetReferrer(meta.Referrer.String())
+	}
+
+	// add cookies to request
+	if len(meta.Cookies) > 0 {
+		for _, cookie := range meta.Cookies {
+			request.AddCookie(cookie)
 		}
 	}
 
 	s.stateRequest.In()
 	s.requestChan <- request
 
+	return
+}
+
+func (s *Scheduler) YieldExtra(ctx pkg.Context, extra any) (err error) {
+	defer func() {
+		s.stateRequest.Set()
+	}()
+
+	s.stateRequest.In()
 	return
 }

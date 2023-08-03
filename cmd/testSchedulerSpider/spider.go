@@ -16,7 +16,7 @@ type Spider struct {
 	logger pkg.Logger
 }
 
-func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error) {
+func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
 	err = response.UnmarshalExtra(&extra)
 	if err != nil {
@@ -24,7 +24,7 @@ func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error)
 		return
 	}
 	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", string(response.GetBodyBytes()))
+	//s.logger.Info("response", string(response.GetBodyBytes()))
 
 	if extra.Count > 10 {
 		return
@@ -65,9 +65,9 @@ func (s *Spider) ParseOk(ctx context.Context, response pkg.Response) (err error)
 	return
 }
 
-// TestOk go run cmd/testSchedulerSpider/*.go -c dev.yml -f TestOk -m dev
-func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewHandlerOk(s.logger))
+// TestOk go run cmd/testSchedulerSpider/*.go -c dev.yml -n test-scheduler -f TestOk -m dev
+func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
+	s.AddDevServerRoutes(devServer.NewRouteOk(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
@@ -83,8 +83,13 @@ func (s *Spider) TestOk(ctx context.Context, _ string) (err error) {
 }
 
 func (s *Spider) Stop(ctx context.Context) (err error) {
-	//err = pkg.DontStopErr
+	err = s.Spider.Stop(ctx)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 
+	//err = pkg.DontStopErr
 	return
 }
 
@@ -98,13 +103,14 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),
 	}
-	spider.SetName("test-scheduler")
-	host, _ := spider.GetConfig().GetDevServer()
-	spider.SetHost(host.String())
+	spider.WithOptions(
+		pkg.WithName("test-scheduler"),
+		pkg.WithHost("https://localhost:8081"),
+	)
 
 	return
 }
 
 func main() {
-	app.NewApp(NewSpider, pkg.WithJsonLinesPipeline()).Run()
+	app.NewApp(NewSpider).Run()
 }

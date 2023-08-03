@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/http"
 	"reflect"
 	"sort"
@@ -13,51 +12,30 @@ import (
 
 type StatsMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger       pkg.Logger
-	interval     time.Duration
-	timer        *time.Timer
-	chanStop     chan struct{}
-	statusOK     int
-	statusIgnore int
-	statusErr    int
-	crawler      pkg.Crawler
-	stats        pkg.Stats
+	logger   pkg.Logger
+	interval time.Duration
+	timer    *time.Timer
+	chanStop chan struct{}
 }
 
-func (m *StatsMiddleware) Start(_ context.Context, crawler pkg.Crawler) (err error) {
-	m.stats = crawler.GetStats()
+func (m *StatsMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
+	err = m.UnimplementedMiddleware.Start(ctx, spider)
 	m.chanStop = make(chan struct{})
 	m.timer = time.NewTimer(m.interval)
-	go m.log()
+	go m.log(spider)
 	return
 }
 
-func (m *StatsMiddleware) ProcessRequest(_ context.Context, request pkg.Request) (err error) {
-	m.stats.IncRequestTotal()
-	return
-}
-
-func (m *StatsMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
-	if response == nil {
-		m.stats.IncStatusErr()
-	} else {
-		if response.GetResponse() != nil && response.GetStatusCode() == http.StatusOK {
-			m.stats.IncStatusOk()
-		} else {
-			m.stats.IncStatusErr()
-		}
-	}
-	return
-}
-
-func (m *StatsMiddleware) SpiderStop(_ context.Context) (err error) {
+func (m *StatsMiddleware) Stop(_ context.Context) (err error) {
+	spider := m.GetSpider()
 	m.timer.Stop()
 	m.chanStop <- struct{}{}
-	m.logger.Debug(utils.JsonStr(m.stats))
+
 	kv := make(map[string]uint32)
-	getKV(reflect.ValueOf(m.stats).Elem(), kv)
+	getKV(reflect.ValueOf(spider.GetStats()).Elem(), kv)
+
 	var sl []any
-	sl = append(sl, m.crawler.GetSpider().GetName())
+	sl = append(sl, spider.GetName())
 	keys := make([]string, 0)
 	for k := range kv {
 		keys = append(keys, k)
@@ -70,16 +48,35 @@ func (m *StatsMiddleware) SpiderStop(_ context.Context) (err error) {
 	return
 }
 
-func (m *StatsMiddleware) log() {
+func (m *StatsMiddleware) ProcessRequest(_ pkg.Context, _ pkg.Request) (err error) {
+	spider := m.GetSpider()
+	spider.IncRequestTotal()
+	return
+}
+
+func (m *StatsMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
+	spider := m.GetSpider()
+	if response == nil {
+		spider.IncStatusErr()
+	} else {
+		if response.GetResponse() != nil && response.GetStatusCode() == http.StatusOK {
+			spider.IncStatusOk()
+		} else {
+			spider.IncStatusErr()
+		}
+	}
+	return
+}
+
+func (m *StatsMiddleware) log(spider pkg.Spider) {
 	for {
 		m.timer.Reset(m.interval)
 		select {
 		case <-m.timer.C:
-			m.logger.Debug(utils.JsonStr(m.stats))
 			kv := make(map[string]uint32)
-			getKV(reflect.ValueOf(m.stats).Elem(), kv)
+			getKV(reflect.ValueOf(spider.GetStats()).Elem(), kv)
 			var sl []any
-			sl = append(sl, m.crawler.GetSpider().GetName())
+			sl = append(sl, spider.GetName())
 			keys := make([]string, 0)
 			for k := range kv {
 				keys = append(keys, k)
@@ -116,13 +113,13 @@ func getKV(v reflect.Value, m map[string]uint32) {
 	}
 }
 
-func (m *StatsMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *StatsMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(StatsMiddleware).FromCrawler(crawler)
+		return new(StatsMiddleware).FromSpider(spider)
 	}
 
-	m.crawler = crawler
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	m.interval = time.Minute
 	return m
 }

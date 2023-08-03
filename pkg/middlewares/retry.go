@@ -15,7 +15,14 @@ type RetryMiddleware struct {
 	retryMaxTimes uint8
 }
 
-func (m *RetryMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
+func (m *RetryMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
+	err = m.UnimplementedMiddleware.Start(ctx, spider)
+	m.okHttpCodes = append(m.okHttpCodes, spider.GetOkHttpCodes()...)
+	m.retryMaxTimes = spider.GetRetryMaxTimes()
+	return
+}
+
+func (m *RetryMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
 	request := response.GetRequest()
 
 	retryMaxTimes := m.retryMaxTimes
@@ -43,13 +50,13 @@ func (m *RetryMiddleware) ProcessResponse(_ context.Context, response pkg.Respon
 	return
 }
 
-func (m *RetryMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *RetryMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(RetryMiddleware).FromCrawler(crawler)
+		return new(RetryMiddleware).FromSpider(spider)
 	}
-	m.logger = crawler.GetLogger()
-	m.okHttpCodes = crawler.GetOkHttpCodes()
+
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	m.okHttpCodes = append(m.okHttpCodes, http.StatusMovedPermanently, http.StatusFound)
-	m.retryMaxTimes = crawler.GetRetryMaxTimes()
 	return m
 }

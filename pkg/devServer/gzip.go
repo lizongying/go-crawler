@@ -8,15 +8,15 @@ import (
 
 const UrlGzip = "/gzip"
 
-type HandlerGzip struct {
+type RouteGzip struct {
 	logger pkg.Logger
 }
 
-func (h *HandlerGzip) Pattern() string {
+func (h *RouteGzip) Pattern() string {
 	return UrlGzip
 }
 
-func (h *HandlerGzip) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RouteGzip) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("into HandlerGzip")
 	defer func() {
 		h.logger.Info("exit HandlerGzip")
@@ -32,6 +32,6 @@ func (h *HandlerGzip) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = gw.Write([]byte("Hello, Gzip!"))
 }
 
-func NewHandlerGzip(logger pkg.Logger) *HandlerGzip {
-	return &HandlerGzip{logger: logger}
+func NewRouteGzip(logger pkg.Logger) pkg.Route {
+	return &RouteGzip{logger: logger}
 }

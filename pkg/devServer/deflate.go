@@ -8,15 +8,15 @@ import (
 
 const UrlDeflate = "/deflate"
 
-type HandlerDeflate struct {
+type RouteDeflate struct {
 	logger pkg.Logger
 }
 
-func (h *HandlerDeflate) Pattern() string {
+func (h *RouteDeflate) Pattern() string {
 	return UrlDeflate
 }
 
-func (h *HandlerDeflate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RouteDeflate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.logger.Info("into HandlerDeflate")
 	defer func() {
 		h.logger.Info("exit HandlerDeflate")
@@ -32,6 +32,6 @@ func (h *HandlerDeflate) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = fw.Write([]byte("Hello, Deflate!"))
 }
 
-func NewHandlerDeflate(logger pkg.Logger) *HandlerDeflate {
-	return &HandlerDeflate{logger: logger}
+func NewRouteDeflate(logger pkg.Logger) pkg.Route {
+	return &RouteDeflate{logger: logger}
 }

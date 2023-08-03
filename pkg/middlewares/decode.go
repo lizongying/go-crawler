@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"context"
 	"github.com/lizongying/go-crawler/pkg"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/simplifiedchinese"
@@ -14,7 +13,7 @@ type DecodeMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *DecodeMiddleware) ProcessResponse(_ context.Context, response pkg.Response) (err error) {
+func (m *DecodeMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
 	contentType := strings.ToUpper(response.GetHeader("Content-Type"))
 
 	var decoder *encoding.Decoder
@@ -44,11 +43,12 @@ func (m *DecodeMiddleware) ProcessResponse(_ context.Context, response pkg.Respo
 	return
 }
 
-func (m *DecodeMiddleware) FromCrawler(crawler pkg.Crawler) pkg.Middleware {
+func (m *DecodeMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	if m == nil {
-		return new(DecodeMiddleware).FromCrawler(crawler)
+		return new(DecodeMiddleware).FromSpider(spider)
 	}
 
-	m.logger = crawler.GetLogger()
+	m.UnimplementedMiddleware.FromSpider(spider)
+	m.logger = spider.GetLogger()
 	return m
 }

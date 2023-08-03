@@ -24,13 +24,19 @@ type Scheduler interface {
 	SetItemDelay(time.Duration)
 	SetItemConcurrency(int)
 	SetRequestRate(string, time.Duration, int)
-	YieldItem(context.Context, Item) error
-	Request(context.Context, Request) (Response, error)
-	YieldRequest(context.Context, Request) error
-	Start(context.Context) error
-	Stop(context.Context) error
+	YieldItem(Context, Item) error
+	Request(Context, Request) (Response, error)
+	YieldRequest(Context, Request) error
+	YieldExtra(Context, any) error
+	StartScheduler(context.Context) error
+	StopScheduler(context.Context) error
+	GetSpider() Spider
+	SetSpider(spider Spider)
 	GetInterval() time.Duration
 	SetInterval(time.Duration)
+
+	Downloader
+	Exporter
 }
 
 type UnimplementedScheduler struct {
@@ -41,8 +47,16 @@ type UnimplementedScheduler struct {
 
 	Downloader
 	Exporter
+
+	spider Spider
 }
 
+func (s *UnimplementedScheduler) GetSpider() Spider {
+	return s.spider
+}
+func (s *UnimplementedScheduler) SetSpider(spider Spider) {
+	s.spider = spider
+}
 func (s *UnimplementedScheduler) GetDownloader() Downloader {
 	return s.Downloader
 }
