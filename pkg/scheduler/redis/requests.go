@@ -113,7 +113,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			continue
 		}
 
-		s.logger.DebugF("request: %s", req[1])
+		s.logger.DebugF("request: %s", req)
 		var requestJson request2.RequestJson
 		err = json.Unmarshal([]byte(req), &requestJson)
 		if err != nil {

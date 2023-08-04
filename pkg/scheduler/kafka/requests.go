@@ -74,7 +74,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			s.logger.Warn(err)
 			continue
 		}
-		//s.logger.DebugF("request: %s", req[1])
+		//s.logger.DebugF("request: %s", req)
 		var requestJson request2.RequestJson
 		err = json.Unmarshal(req.Value, &requestJson)
 		if err != nil {

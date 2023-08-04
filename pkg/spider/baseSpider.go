@@ -214,7 +214,7 @@ func (s *BaseSpider) registerParser() {
 	callBacks := make(map[string]pkg.CallBack)
 	errBacks := make(map[string]pkg.ErrBack)
 	rv := reflect.ValueOf(s.spider)
-	rt := rv.Elem().Type()
+	rt := rv.Type()
 	l := rt.NumMethod()
 	for i := 0; i < l; i++ {
 		name := rt.Method(i).Name

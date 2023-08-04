@@ -100,7 +100,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	}
 
 	c.logger.Info("name", c.spiderName)
-	c.logger.Info("start func", c.startFunc)
+	c.logger.Info("func", c.startFunc)
 	c.logger.Info("args", c.args)
 	c.logger.Info("mode", c.mode)
 	c.logger.Info("allowedDomains", spider.GetAllowedDomains())
