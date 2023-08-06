@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
@@ -81,11 +80,6 @@ func (s *Spider) TestBig5(ctx pkg.Context, _ string) (err error) {
 }
 
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
-	if baseSpider == nil {
-		err = errors.New("nil baseSpider")
-		return
-	}
-
 	spider = &Spider{
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),
@@ -94,7 +88,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		pkg.WithName("test-decode"),
 		pkg.WithHost("https://localhost:8081"),
 	)
-
 	return
 }
 

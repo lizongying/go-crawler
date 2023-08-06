@@ -83,8 +83,7 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 }
 
 func (s *Spider) Stop(ctx context.Context) (err error) {
-	err = s.Spider.Stop(ctx)
-	if err != nil {
+	if err = s.Spider.Stop(ctx); err != nil {
 		s.logger.Error(err)
 		return
 	}
