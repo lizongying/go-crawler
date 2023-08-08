@@ -71,11 +71,30 @@ func (r *Response) GetHeader(key string) string {
 func (r *Response) GetStatusCode() int {
 	return r.Response.StatusCode
 }
+func (r *Response) SetStatusCode(statusCode int) pkg.Response {
+	r.Response.StatusCode = statusCode
+	return r
+}
 func (r *Response) GetBody() io.ReadCloser {
 	return r.Response.Body
 }
 func (r *Response) GetCookies() []*http.Cookie {
 	return r.Response.Cookies()
+}
+func (r *Response) SetCookies(cookies ...*http.Cookie) pkg.Response {
+	if r.Response == nil {
+		r.Response = new(http.Response)
+	}
+	if r.Header == nil {
+		r.Header = make(http.Header)
+	}
+	for _, cookie := range cookies {
+		if v := cookie.String(); v != "" {
+			r.Header.Add("Set-Cookie", v)
+		}
+	}
+
+	return r
 }
 func (r *Response) UnmarshalBody(v any) error {
 	vValue := reflect.ValueOf(v)

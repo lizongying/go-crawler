@@ -30,7 +30,7 @@ func (m *DumpPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error)
 	}
 
 	m.logger.Debug("referrer", item.GetReferrer())
-	m.logger.Debug("item.Data:", utils.JsonStr(data))
+	m.logger.Info("item.Data:", utils.JsonStr(data))
 
 	//m.stats.IncItemSuccess()
 	return

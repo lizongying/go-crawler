@@ -65,6 +65,8 @@ type Request interface {
 	GetPriority() uint8
 	SetFingerprint(string) Request
 	GetFingerprint() string
+	SetClient(Client) Request
+	GetClient() Client
 	GetErr() map[string]error
 	SetUrl(string) Request
 	GetUrl() string
@@ -110,3 +112,11 @@ type RequestJson interface {
 
 type CallBack func(Context, Response) error
 type ErrBack func(Context, Response, error)
+
+type Client string
+
+const (
+	ClientDefault Client = ""
+	ClientGo      Client = "go"
+	ClientBrowser Client = "browser"
+)

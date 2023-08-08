@@ -53,6 +53,7 @@ type Request struct {
 	errors             map[string]error
 	priority           uint8
 	fingerprint        string
+	client             pkg.Client
 }
 
 func (r *Request) SetUniqueKey(uniqueKey string) pkg.Request {
@@ -260,6 +261,13 @@ func (r *Request) SetFingerprint(fingerprint string) pkg.Request {
 }
 func (r *Request) GetFingerprint() string {
 	return r.fingerprint
+}
+func (r *Request) SetClient(client pkg.Client) pkg.Request {
+	r.client = client
+	return r
+}
+func (r *Request) GetClient() pkg.Client {
+	return r.client
 }
 func (r *Request) setErr(key string, value error) {
 	if r.errors == nil {
@@ -526,6 +534,7 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 		ExtraName:        r.GetExtraName(),
 		Priority:         r.GetPriority(),
 		Fingerprint:      r.fingerprint,
+		Client:           string(r.client),
 	}
 	return
 }
@@ -577,6 +586,7 @@ type RequestJson struct {
 	ExtraName          string              `json:"extra_name,omitempty"`
 	Priority           uint8               `json:"priority,omitempty"`
 	Fingerprint        string              `json:"fingerprint,omitempty"`
+	Client             string              `json:"client,omitempty"`
 }
 
 func (r *RequestJson) SetCallBacks(callbacks map[string]pkg.CallBack) {
@@ -645,6 +655,7 @@ func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 		extraName:          r.ExtraName,
 		priority:           r.Priority,
 		fingerprint:        r.Fingerprint,
+		client:             pkg.Client(r.Client),
 	}
 
 	return

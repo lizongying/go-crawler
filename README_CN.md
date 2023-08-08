@@ -678,3 +678,4 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 * 支持分布式
 * 支持Redis、Kafka作为消息队列
 * 支持自动Cookie、重定向
+* 支持浏览器CDP

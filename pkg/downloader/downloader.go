@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
+	"github.com/lizongying/go-crawler/pkg/httpClient/browser"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"reflect"
 	"sort"
@@ -15,6 +16,7 @@ type Downloader struct {
 	processRequestFns  []func(pkg.Context, pkg.Request) error
 	processResponseFns []func(pkg.Context, pkg.Response) error
 	httpClient         pkg.HttpClient
+	browser            pkg.HttpClient
 	spider             pkg.Spider
 	logger             pkg.Logger
 	locker             sync.Mutex
@@ -54,7 +56,11 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 		return
 	}
 
-	response, err = d.httpClient.DoRequest(request.Context(), request)
+	client := d.httpClient
+	if request.GetClient() == pkg.ClientBrowser {
+		client = d.browser
+	}
+	response, err = client.DoRequest(request.Context(), request)
 	if err != nil {
 		d.logger.Error(err)
 		return
@@ -233,6 +239,7 @@ func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 
 	d.spider = spider
 	d.httpClient = new(httpClient.HttpClient).FromSpider(spider)
+	d.browser = new(browser.Browser).FromSpider(spider)
 	d.logger = spider.GetLogger()
 	config := spider.GetCrawler().GetConfig()
 

@@ -433,13 +433,13 @@ func main() {
   The framework comes with several built-in parsing modules. You can choose the one that suits your specific spider's
   needs to extract the required data from web pages.
 
-    * Query Selector: go-query is a library for handling query selectors. You can use the query selector syntax to
+    * Query Selector: [go-query](https://github.com/lizongying/go-query) is a library for handling query selectors. You can use the query selector syntax to
       extract data from HTML by calling the `response.Query()` method.
-    * XPath Selector: go-xpath is a library for XPath selection. You can use XPath expressions to extract data from HTML
+    * XPath Selector: [go-xpath](https://github.com/lizongying/go-xpath) is a library for XPath selection. You can use XPath expressions to extract data from HTML
       by calling the `response.Xpath()` method.
     * GJSON: GJSON is a library for handling JSON. You can use the gjson syntax to extract data from JSON by calling
       the `response.Json()` method.
-    * Regular Expression Selector: go-re is a library for handling regular expressions. You can use regular expressions
+    * Regular Expression Selector: [go-re](https://github.com/lizongying/go-re) is a library for handling regular expressions. You can use regular expressions
       to extract data from the response by calling the `response.Re()` method.
 
 * Proxy

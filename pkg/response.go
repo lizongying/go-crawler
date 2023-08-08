@@ -26,8 +26,10 @@ type Response interface {
 	GetHeaders() http.Header
 	GetHeader(string) string
 	GetStatusCode() int
+	SetStatusCode(statusCode int) Response
 	GetBody() io.ReadCloser
 	GetCookies() []*http.Cookie
+	SetCookies(...*http.Cookie) Response
 	UnmarshalBody(any) error
 	Xpath() (*xpath.Selector, error)
 	Query() (*query.Selector, error)
