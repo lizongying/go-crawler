@@ -34,6 +34,8 @@ type Spider struct {
 	logger pkg.Logger
 }
 
+// some spider funcs
+
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	spider = &Spider{
 		Spider: baseSpider,
@@ -183,6 +185,7 @@ func main() {
   and custom ones defined within the spider's module.
   Please make sure that the order values for different middleware and pipelines are not duplicated. If there are
   duplicate order values, the later middleware or pipeline will replace the earlier ones.
+
 * Middleware
 
   In the framework, built-in middleware has pre-defined `order` values that are multiples of 10, such as 10, 20, 30, and
@@ -421,9 +424,49 @@ func main() {
         - To enable this pipeline, include the `pkg.WithCustomPipeline(new(CustomPipeline))` option in the `NewApp`
           function.
 
+* Request
+
+    * `SetFingerprint(string) Request` Many websites nowadays implement security measures based on SSL fingerprints. By
+      setting this parameter, you can perform disguising. If the fingerprint is `pkg.Browser`, the framework will
+      automatically select a suitable fingerprint for this browser. If the fingerprint is in the ja3 format, the
+      framework will apply this SSL fingerprint. If the fingerprint is empty, the framework will choose based on the
+      user-agent. Note that the framework will only make modifications when `enable_ja3 = true`, and it uses the default
+      SSL configuration of the Go programming language.
+    * `SetClient(Client) Request` Some websites might implement security measures based on browser fingerprints, or the
+      requests might require complex simulation. In such cases, it's recommended to use a headless browser. By setting
+      the Client to `pkg.Browser`, the framework will automatically enable a headless browser for processing.
+    * `SetAjax(bool) Request` If you need to use a headless browser and the request is an AJAX request, please set
+      this option to true. The framework will handle the request as an XHR (XMLHttpRequest) request. You may also
+      need to set the referrer.
+
+* Response
+
+  The `Response` wraps around `http.Response` and provides the following functionalities:
+
+    - `Xpath() (*xpath.Selector, error)`
+      Returns an XPath selector, for specific syntax, please refer
+      to [go-xpath](https://github.com/lizongying/go-xpath).
+
+    - `Query() (*query.Selector, error)`
+      Returns a CSS selector, for specific syntax, please refer to [go-query](https://github.com/lizongying/go-query).
+
+    - `Json() (gjson.Result, error)`
+      Returns a gjson selector, for specific syntax, please refer to gjson.
+
+    - `Re() (*re.Selector, error)`
+      Returns a regular expression selector, for specific syntax, please refer
+      to [go-re](https://github.com/lizongying/go-re).
+
+    - `AllLink() []*url.URL`
+      Retrieves all links from the response.
+
+    - `BodyText() string`
+      Retrieves the cleaned text content without HTML tags, the handling may be rough.
+
 * Signals
 
-  You need to register the `func(pkg.Spider)` method for the following signals:
+  By using signals, it's possible to capture crawler events and perform certain actions. You need to register
+  the `func(pkg.Spider)` method for the following signals:
 
     * SpiderOpened: Indicates the start of the spider. You can register it using `RegisterSpiderOpened`.
     * SpiderClosed: Indicates the end of the spider. You can register it using `RegisterSpiderClosed`.
@@ -433,13 +476,16 @@ func main() {
   The framework comes with several built-in parsing modules. You can choose the one that suits your specific spider's
   needs to extract the required data from web pages.
 
-    * Query Selector: [go-query](https://github.com/lizongying/go-query) is a library for handling query selectors. You can use the query selector syntax to
+    * Query Selector: [go-query](https://github.com/lizongying/go-query) is a library for handling query selectors. You
+      can use the query selector syntax to
       extract data from HTML by calling the `response.Query()` method.
-    * XPath Selector: [go-xpath](https://github.com/lizongying/go-xpath) is a library for XPath selection. You can use XPath expressions to extract data from HTML
+    * XPath Selector: [go-xpath](https://github.com/lizongying/go-xpath) is a library for XPath selection. You can use
+      XPath expressions to extract data from HTML
       by calling the `response.Xpath()` method.
     * GJSON: GJSON is a library for handling JSON. You can use the gjson syntax to extract data from JSON by calling
       the `response.Json()` method.
-    * Regular Expression Selector: [go-re](https://github.com/lizongying/go-re) is a library for handling regular expressions. You can use regular expressions
+    * Regular Expression Selector: [go-re](https://github.com/lizongying/go-re) is a library for handling regular
+      expressions. You can use regular expressions
       to extract data from the response by calling the `response.Re()` method.
 
 * Proxy

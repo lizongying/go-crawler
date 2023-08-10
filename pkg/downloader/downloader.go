@@ -57,7 +57,7 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 	}
 
 	client := d.httpClient
-	if request.GetClient() == pkg.ClientBrowser {
+	if request.Client() == pkg.ClientBrowser {
 		client = d.browser
 	}
 	response, err = client.DoRequest(request.Context(), request)

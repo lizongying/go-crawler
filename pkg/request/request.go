@@ -54,6 +54,7 @@ type Request struct {
 	priority           uint8
 	fingerprint        string
 	client             pkg.Client
+	ajax               bool
 }
 
 func (r *Request) SetUniqueKey(uniqueKey string) pkg.Request {
@@ -262,12 +263,19 @@ func (r *Request) SetFingerprint(fingerprint string) pkg.Request {
 func (r *Request) GetFingerprint() string {
 	return r.fingerprint
 }
+func (r *Request) Client() pkg.Client {
+	return r.client
+}
 func (r *Request) SetClient(client pkg.Client) pkg.Request {
 	r.client = client
 	return r
 }
-func (r *Request) GetClient() pkg.Client {
-	return r.client
+func (r *Request) Ajax() bool {
+	return r.ajax
+}
+func (r *Request) SetAjax(ajax bool) pkg.Request {
+	r.ajax = ajax
+	return r
 }
 func (r *Request) setErr(key string, value error) {
 	if r.errors == nil {
@@ -396,19 +404,27 @@ func (r *Request) SetBody(bodyStr string) pkg.Request {
 func (r *Request) GetBody() string {
 	return r.bodyStr
 }
+func (r *Request) GetHeader(key string) string {
+	return r.Header.Get(key)
+}
 func (r *Request) SetHeader(key string, value string) pkg.Request {
 	if r.Header == nil {
 		r.Header = make(http.Header)
 	}
-	r.Header.Set(key, value)
-
+	r.Header.Set(http.CanonicalHeaderKey(key), value)
 	return r
 }
 func (r *Request) GetHeaders() http.Header {
 	return r.Header
 }
-func (r *Request) GetHeader(key string) string {
-	return r.Header.Get(key)
+func (r *Request) SetHeaders(headers map[string]string) pkg.Request {
+	if r.Header == nil {
+		r.Header = make(http.Header)
+	}
+	for key, value := range headers {
+		r.Header.Set(http.CanonicalHeaderKey(key), value)
+	}
+	return r
 }
 func (r *Request) SetFile(file bool) pkg.Request {
 	r.file = file
@@ -535,6 +551,7 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 		Priority:         r.GetPriority(),
 		Fingerprint:      r.fingerprint,
 		Client:           string(r.client),
+		Ajax:             r.ajax,
 	}
 	return
 }
@@ -548,8 +565,8 @@ func (r *Request) Marshal() ([]byte, error) {
 }
 
 type RequestJson struct {
-	callbacks          map[string]pkg.CallBack
-	errbacks           map[string]pkg.ErrBack
+	callBacks          map[string]pkg.CallBack
+	errBacks           map[string]pkg.ErrBack
 	Method             string              `json:"method,omitempty"`
 	Url                string              `json:"url,omitempty"`
 	BodyStr            string              `json:"body,omitempty"`
@@ -587,13 +604,14 @@ type RequestJson struct {
 	Priority           uint8               `json:"priority,omitempty"`
 	Fingerprint        string              `json:"fingerprint,omitempty"`
 	Client             string              `json:"client,omitempty"`
+	Ajax               bool                `json:"ajax,omitempty"`
 }
 
-func (r *RequestJson) SetCallBacks(callbacks map[string]pkg.CallBack) {
-	r.callbacks = callbacks
+func (r *RequestJson) SetCallBacks(callBacks map[string]pkg.CallBack) {
+	r.callBacks = callBacks
 }
-func (r *RequestJson) SetErrBacks(errbacks map[string]pkg.ErrBack) {
-	r.errbacks = errbacks
+func (r *RequestJson) SetErrBacks(errBacks map[string]pkg.ErrBack) {
+	r.errBacks = errBacks
 }
 func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 	req, err := http.NewRequest(r.Method, r.Url, strings.NewReader(r.BodyStr))
@@ -624,8 +642,8 @@ func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 		Request:            req,
 		bodyStr:            r.BodyStr,
 		uniqueKey:          r.UniqueKey,
-		callBack:           r.callbacks[r.CallBack],
-		errBack:            r.errbacks[r.ErrBack],
+		callBack:           r.callBacks[r.CallBack],
+		errBack:            r.errBacks[r.ErrBack],
 		referrer:           r.Referrer,
 		username:           r.Username,
 		password:           r.Password,
@@ -656,6 +674,7 @@ func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 		priority:           r.Priority,
 		fingerprint:        r.Fingerprint,
 		client:             pkg.Client(r.Client),
+		ajax:               r.Ajax,
 	}
 
 	return

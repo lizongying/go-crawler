@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+const (
+	GET  = "GET"
+	POST = "POST"
+	HEAD = "HEAD"
+)
+
 type Request interface {
 	SetUniqueKey(string) Request
 	GetUniqueKey() string
@@ -65,8 +71,10 @@ type Request interface {
 	GetPriority() uint8
 	SetFingerprint(string) Request
 	GetFingerprint() string
+	Client() Client
 	SetClient(Client) Request
-	GetClient() Client
+	Ajax() bool
+	SetAjax(bool) Request
 	GetErr() map[string]error
 	SetUrl(string) Request
 	GetUrl() string
@@ -84,9 +92,10 @@ type Request interface {
 	GetMethod() string
 	SetBody(string) Request
 	GetBody() string
+	GetHeader(string) string
 	SetHeader(string, string) Request
 	GetHeaders() http.Header
-	GetHeader(string) string
+	SetHeaders(map[string]string) Request
 	SetFile(bool) Request
 	GetFile() bool
 	SetImage(bool) Request

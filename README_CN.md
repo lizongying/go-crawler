@@ -32,6 +32,8 @@ type Spider struct {
 	logger pkg.Logger
 }
 
+// some spider funcs
+
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	spider = &Spider{
 		Spider: baseSpider,
@@ -309,9 +311,31 @@ func main() {
         * 自定义pipeline
         * 在NewApp中加入crawler选项`pkg.WithCustomPipeline(new(CustomPipeline))`启用该Pipeline。
 
+* Request
+
+    * `SetFingerprint(string) Request` 现在很多网站都对ssl指纹进行了风控，通过设置此参数，可以进行伪装。
+      如果fingerprint是`pkg.Browser`,框架会自动选择此浏览器合适的指纹。
+      如果fingerprint是ja3格式指纹，框架会应用此ssl指纹。
+      如果fingerprint为空，框架会根据user-agent进行选择。
+      注意框架仅会在`enable_ja3 = true` 的情况下进行修改，默认使用golang自身的ssl配置。
+    * `SetClient(Client) Request` 一些网站可能会对浏览器指纹进行风控，或者请求模拟比较复杂。
+      这种情况下建议使用无头浏览器，设置Client为`pkg.Browser`后，框架会自动启用无头浏览器进行处理。
+    * `SetAjax(bool) Request` 如果需要使用无头浏览器，并且请求是ajax，请设置此选项为true，框架会进行xhr请求。可能需要设置referrer。
+
+* Response
+
+  Response对http.Response进行了一些包装。
+    * `Xpath() (*xpath.Selector, error)`
+      返回Xpath选择器，具体语法请参考 [go-xpath](https://github.com/lizongying/go-xpath)
+    * `Query() (*query.Selector, error)` 返回CSS选择器，具体语法请参考 [go-query](https://github.com/lizongying/go-query)
+    * `Json() (gjson.Result, error)` 返回gjson选择器，具体语法请参考 gjson
+    * `Re() (*re.Selector, error)` 返回正则选择器，具体语法请参考 [go-re](https://github.com/lizongying/go-re)
+    * `AllLink() []*url.URL` 可以获取response中的所有链接。
+    * `BodyText() string` 可以获取清理过html标签的正文，处理比较粗糙。
+
 * 信号（Signal）
 
-  需要注册`func(pkg.Spider)`方法
+  通过信号可以获取爬虫事件，做一些事情。需要注册`func(pkg.Spider)`方法
     * SpiderOpened 爬虫开始，通过`RegisterSpiderOpened`注册
     * SpiderClosed 爬虫结束，通过`RegisterSpiderClosed`注册
 

@@ -9,6 +9,7 @@ import (
 	response2 "github.com/lizongying/go-crawler/pkg/response"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -39,6 +40,8 @@ var browserOptions = []string{
 }
 
 type Browser struct {
+	proxy        *url.URL
+	timeout      time.Duration
 	browser      *rod.Browser
 	hijackRouter *rod.HijackRouter
 	logger       pkg.Logger
@@ -52,14 +55,14 @@ func (b *Browser) init() (err error) {
 		l.Set(flags.Flag(strings.TrimLeft(arg, "-")))
 	}
 
-	chromeUrl, err := l.Launch()
+	u, err := l.Launch()
 	if err != nil {
 		b.logger.Error(err)
 		return
 	}
 
-	b.browser = rod.New()
-	if err = b.browser.ControlURL(chromeUrl).Connect(); err != nil {
+	b.browser = rod.New().ControlURL(u)
+	if err = b.browser.Connect(); err != nil {
 		b.logger.Error(err)
 		return
 	}
@@ -91,7 +94,7 @@ func (b *Browser) init() (err error) {
 	return
 }
 
-func (b *Browser) DoRequest(ctx context.Context, req pkg.Request) (response pkg.Response, err error) {
+func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
 	if b == nil {
 		err = errors.New("browser nil")
 		return
@@ -121,29 +124,83 @@ func (b *Browser) DoRequest(ctx context.Context, req pkg.Request) (response pkg.
 		}
 	}()
 
-	for k := range req.GetHeaders() {
-		page.MustSetExtraHeaders(k, req.GetHeader(k))
-	}
-
-	for _, v := range req.GetCookies() {
-		page.MustSetCookies(&proto.NetworkCookieParam{
-			Name:  v.Name,
-			Value: v.Value,
-		})
-	}
-
 	start := time.Now()
 	page = page.Context(ctx)
-	if err = page.Navigate(req.GetUrl()); err != nil {
+	Url := request.GetUrl()
+	if request.Ajax() {
+		Url = request.GetReferrer()
+	} else {
+		for k := range request.GetHeaders() {
+			page.MustSetExtraHeaders(k, request.GetHeader(k))
+		}
+
+		for _, v := range request.GetCookies() {
+			page.MustSetCookies(&proto.NetworkCookieParam{
+				Name:  v.Name,
+				Value: v.Value,
+			})
+		}
+	}
+	//wait := page.WaitNavigation(proto.PageLifecycleEventNameNetworkIdle)
+	if err = page.Navigate(Url); err != nil {
 		b.logger.Error(err)
 		return
 	}
 
-	page.WaitNavigation(proto.PageLifecycleEventNameNetworkIdle)()
+	//wait()
+	time.Sleep(2 * time.Second)
 
 	response = new(response2.Response)
-	response.SetRequest(req)
+	response.SetRequest(request)
 	response.SetResponse(new(http.Response))
+
+	if request.Ajax() {
+		headers := make(map[string]string)
+		for k := range request.GetHeaders() {
+			headers[k] = request.GetHeader(k)
+		}
+		timeout := b.timeout
+		if request.GetTimeout() > 0 {
+			timeout = request.GetTimeout()
+		}
+		res, e := page.Eval(`
+(url, method, headers, body, timeout) => {
+	return new Promise((resolve, reject) => {
+		const xhr = new XMLHttpRequest();
+		xhr.timeout = timeout;
+		xhr.open(method, url, true);
+		for (k in headers) {
+			xhr.setRequestHeader(k, headers[k]);
+		};
+        xhr.onload = function() {
+           if (xhr.status >= 200 && xhr.status < 300) {
+               resolve({
+					status: xhr.status,
+					body: xhr.responseText,
+				});
+           } else {
+               reject(xhr.statusText);
+           }
+        };
+		xhr.ontimeout = function () {
+		   reject('timeout');
+		};
+        xhr.onerror = function() {
+           reject(xhr.statusText);
+        };
+		xhr.send(body);
+	})
+}`, request.GetUrl(), request.GetMethod(), headers, request.GetBody(), int(timeout/time.Millisecond))
+		if e != nil {
+			err = e
+			return
+		}
+
+		response.SetStatusCode(res.Value.Get("status").Int())
+		response.SetBodyBytes([]byte(res.Value.Get("body").Str()))
+		return
+	}
+
 	response.SetStatusCode(200)
 
 	if source, _ := page.HTML(); source != "" {
@@ -198,6 +255,10 @@ func (b *Browser) FromSpider(spider pkg.Spider) pkg.HttpClient {
 	}
 
 	b.logger = spider.GetLogger()
+	config := spider.GetCrawler().GetConfig()
+	b.proxy = config.GetProxy()
+	b.timeout = config.GetRequestTimeout()
+
 	err := b.init()
 	if err != nil {
 		b.logger.Error(err)
