@@ -40,7 +40,7 @@ func (m *ImagePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 			m.logger.Error(e)
 			continue
 		}
-		item.SetImages(r.GetImages())
+		item.SetImages(r.Images())
 	}
 
 	return

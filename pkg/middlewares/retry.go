@@ -17,8 +17,8 @@ type RetryMiddleware struct {
 
 func (m *RetryMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
 	err = m.UnimplementedMiddleware.Start(ctx, spider)
-	m.okHttpCodes = append(m.okHttpCodes, spider.GetOkHttpCodes()...)
-	m.retryMaxTimes = spider.GetRetryMaxTimes()
+	m.okHttpCodes = append(m.okHttpCodes, spider.OkHttpCodes()...)
+	m.retryMaxTimes = spider.RetryMaxTimes()
 	return
 }
 
@@ -26,24 +26,24 @@ func (m *RetryMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) 
 	request := response.GetRequest()
 
 	retryMaxTimes := m.retryMaxTimes
-	if request.GetRetryMaxTimes() != nil {
-		retryMaxTimes = *request.GetRetryMaxTimes()
+	if request.RetryMaxTimes() != nil {
+		retryMaxTimes = *request.RetryMaxTimes()
 	}
 
 	okHttpCodes := m.okHttpCodes
-	if len(request.GetOkHttpCodes()) > 0 {
-		okHttpCodes = request.GetOkHttpCodes()
+	if len(request.OkHttpCodes()) > 0 {
+		okHttpCodes = request.OkHttpCodes()
 	}
-	if retryMaxTimes > 0 && (response.GetResponse() == nil || !utils.InSlice(response.GetStatusCode(), okHttpCodes)) {
-		if request.GetRetryTimes() < retryMaxTimes {
-			request.SetRetryTimes(request.GetRetryTimes() + 1)
-			m.logger.Info(request.GetUniqueKey(), "retry times:", request.GetRetryTimes(), "SpendTime:", request.GetSpendTime())
+	if retryMaxTimes > 0 && (response.GetResponse() == nil || !utils.InSlice(response.StatusCode(), okHttpCodes)) {
+		if request.RetryTimes() < retryMaxTimes {
+			request.SetRetryTimes(request.RetryTimes() + 1)
+			m.logger.Info(request.UniqueKey(), "retry times:", request.RetryTimes(), "SpendTime:", request.SpendTime())
 			err = pkg.ErrNeedRetry
 			return
 		}
 
 		err = errors.New("retry max times")
-		m.logger.Error(request.GetUniqueKey(), err, request.GetRetryTimes(), retryMaxTimes)
+		m.logger.Error(request.UniqueKey(), err, request.RetryTimes(), retryMaxTimes)
 		return
 	}
 

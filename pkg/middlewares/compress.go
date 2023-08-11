@@ -15,7 +15,7 @@ type CompressMiddleware struct {
 
 func (m *CompressMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
 	if response.GetHeader("Content-Encoding") == "deflate" {
-		reader := flate.NewReader(bytes.NewReader(response.GetBodyBytes()))
+		reader := flate.NewReader(bytes.NewReader(response.BodyBytes()))
 		defer func() {
 			e := reader.Close()
 			if e != nil {

@@ -17,18 +17,20 @@ type Response interface {
 	GetResponse() *http.Response
 	SetRequest(Request) Response
 	GetRequest() Request
+	BodyBytes() []byte
 	SetBodyBytes([]byte) Response
-	GetBodyBytes() []byte
+	BodyStr() string
+	SetBodyStr(string) Response
+	Files() []File
 	SetFiles([]File) Response
-	GetFiles() []File
+	Images() []Image
 	SetImages([]Image) Response
-	GetImages() []Image
-	GetHeaders() http.Header
+	Headers() http.Header
 	GetHeader(string) string
-	GetStatusCode() int
+	StatusCode() int
 	SetStatusCode(statusCode int) Response
 	GetBody() io.ReadCloser
-	GetCookies() []*http.Cookie
+	Cookies() []*http.Cookie
 	SetCookies(...*http.Cookie) Response
 	UnmarshalBody(any) error
 	Xpath() (*xpath.Selector, error)
@@ -36,15 +38,15 @@ type Response interface {
 	Json() (gjson.Result, error)
 	Re() (*re.Selector, error)
 
-	GetUniqueKey() string
+	UniqueKey() string
 	UnmarshalExtra(any) error
 	GetUrl() string
 	GetURL() *url.URL
 	Context() context.Context
 	WithContext(context.Context) Request
-	GetFile() bool
-	GetImage() bool
-	GetSkipMiddleware() bool
+	File() bool
+	Image() bool
+	SkipMiddleware() bool
 	SetSpendTime(time.Duration) Request
 
 	AllLink() []*url.URL

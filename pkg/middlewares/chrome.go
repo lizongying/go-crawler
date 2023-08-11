@@ -10,7 +10,7 @@ type ChromeMiddleware struct {
 }
 
 func (m *ChromeMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
-	if request.GetHeaders() == nil {
+	if request.Headers() == nil {
 		request.SetHeader("Accept", "*/*")
 		request.SetHeader("Cache-Control", "no-cache")
 		request.SetHeader("Content-Type", "text/plain;charset=UTF-8")

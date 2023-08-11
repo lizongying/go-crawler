@@ -33,7 +33,7 @@ func (m *RobotsTxtMiddleware) SpiderOpened(spider pkg.Spider) {
 		m.logger.Error(e)
 		return
 	}
-	robots, err := robotstxt.FromBytes(r.GetBodyBytes())
+	robots, err := robotstxt.FromBytes(r.BodyBytes())
 	if err != nil {
 		return
 	}

@@ -40,35 +40,42 @@ func (r *Response) SetRequest(request pkg.Request) pkg.Response {
 func (r *Response) GetRequest() pkg.Request {
 	return r.request
 }
+func (r *Response) BodyBytes() []byte {
+	return r.bodyBytes
+}
 func (r *Response) SetBodyBytes(bodyBytes []byte) pkg.Response {
 	r.bodyBytes = bodyBytes
 	return r
 }
-func (r *Response) GetBodyBytes() []byte {
-	return r.bodyBytes
+func (r *Response) BodyStr() string {
+	return string(r.bodyBytes)
+}
+func (r *Response) SetBodyStr(bodyStr string) pkg.Response {
+	r.bodyBytes = []byte(bodyStr)
+	return r
 }
 func (r *Response) SetFiles(files []pkg.File) pkg.Response {
 	r.files = files
 	return r
 }
-func (r *Response) GetFiles() []pkg.File {
+func (r *Response) Files() []pkg.File {
 	return r.files
 }
 func (r *Response) SetImages(images []pkg.Image) pkg.Response {
 	r.images = images
 	return r
 }
-func (r *Response) GetImages() []pkg.Image {
+func (r *Response) Images() []pkg.Image {
 	return r.images
 }
 
-func (r *Response) GetHeaders() http.Header {
+func (r *Response) Headers() http.Header {
 	return r.Response.Header
 }
 func (r *Response) GetHeader(key string) string {
 	return r.Response.Header.Get(key)
 }
-func (r *Response) GetStatusCode() int {
+func (r *Response) StatusCode() int {
 	return r.Response.StatusCode
 }
 func (r *Response) SetStatusCode(statusCode int) pkg.Response {
@@ -78,7 +85,7 @@ func (r *Response) SetStatusCode(statusCode int) pkg.Response {
 func (r *Response) GetBody() io.ReadCloser {
 	return r.Response.Body
 }
-func (r *Response) GetCookies() []*http.Cookie {
+func (r *Response) Cookies() []*http.Cookie {
 	return r.Response.Cookies()
 }
 func (r *Response) SetCookies(cookies ...*http.Cookie) pkg.Response {
@@ -109,8 +116,8 @@ func (r *Response) UnmarshalBody(v any) error {
 	return json.Unmarshal(r.bodyBytes, v)
 }
 
-func (r *Response) GetUniqueKey() string {
-	return r.request.GetUniqueKey()
+func (r *Response) UniqueKey() string {
+	return r.request.UniqueKey()
 }
 func (r *Response) UnmarshalExtra(v any) error {
 	return r.request.UnmarshalExtra(v)
@@ -127,14 +134,14 @@ func (r *Response) Context() context.Context {
 func (r *Response) WithContext(ctx context.Context) pkg.Request {
 	return r.request.WithContext(ctx)
 }
-func (r *Response) GetFile() bool {
-	return r.request.GetFile()
+func (r *Response) File() bool {
+	return r.request.File()
 }
-func (r *Response) GetImage() bool {
-	return r.request.GetImage()
+func (r *Response) Image() bool {
+	return r.request.Image()
 }
-func (r *Response) GetSkipMiddleware() bool {
-	return r.request.GetSkipMiddleware()
+func (r *Response) SkipMiddleware() bool {
+	return r.request.SkipMiddleware()
 }
 func (r *Response) SetSpendTime(spendTime time.Duration) pkg.Request {
 	return r.request.SetSpendTime(spendTime)

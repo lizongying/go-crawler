@@ -40,7 +40,7 @@ func (m *FilePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error)
 			m.logger.Error(e)
 			continue
 		}
-		item.SetFiles(r.GetFiles())
+		item.SetFiles(r.Files())
 	}
 
 	return

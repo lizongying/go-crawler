@@ -61,20 +61,20 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 	requestSlot := value.(*rate.Limiter)
 
 	for request := range s.requestChan {
-		slot = request.GetSlot()
+		slot = request.Slot()
 		if slot == "" {
 			slot = "*"
 		}
 		slotValue, ok := s.RequestSlotLoad(slot)
 		if !ok {
 			concurrency := uint8(1)
-			if request.GetConcurrency() != nil {
-				concurrency = *request.GetConcurrency()
+			if request.Concurrency() != nil {
+				concurrency = *request.Concurrency()
 			}
 			if concurrency < 1 {
 				concurrency = 1
 			}
-			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
+			requestSlot = rate.NewLimiter(rate.Every(request.Interval()/time.Duration(concurrency)), int(concurrency))
 			s.RequestSlotStore(slot, requestSlot)
 		}
 

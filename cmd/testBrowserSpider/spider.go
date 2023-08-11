@@ -13,7 +13,7 @@ type Spider struct {
 }
 
 func (s *Spider) ParseOk(_ pkg.Context, response pkg.Response) (err error) {
-	s.logger.Info(string(response.GetBodyBytes()))
+	s.logger.Info(response.BodyStr())
 	return
 }
 
@@ -49,7 +49,7 @@ func (s *Spider) TestAjax(ctx pkg.Context, _ string) (err error) {
 			"x-swa-di-uid":         "56ea542ba5f73b08673847766bf7c0c7f085",
 			"x-swa-di-usid":        "3ff654fb14a1e4c8f4c63b4eaf8ccc3a4a84",
 			"x-user-experience-id": "07dbd15f-3744-4e1a-87a9-4ca7f580c5b3"}).
-		SetBody(string(b)).
+		SetBodyBytes(b).
 		SetAjax(true).
 		SetReferrer("https://www.southwest.com").
 		SetClient(pkg.ClientBrowser).

@@ -35,7 +35,7 @@ type Scheduler struct {
 	config       pkg.Config
 }
 
-func (s *Scheduler) GetInterval() time.Duration {
+func (s *Scheduler) Interval() time.Duration {
 	return s.interval
 }
 func (s *Scheduler) SetInterval(interval time.Duration) {

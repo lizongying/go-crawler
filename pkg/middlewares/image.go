@@ -25,15 +25,15 @@ type ImageMiddleware struct {
 
 func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
 	spider := m.GetSpider()
-	if len(response.GetBodyBytes()) == 0 {
+	if len(response.BodyBytes()) == 0 {
 		err = errors.New("BodyBytes empty")
 		m.logger.Error(err)
 		return
 	}
 
-	isImage := response.GetImage()
+	isImage := response.Image()
 	if isImage {
-		img, name, e := image.Decode(bytes.NewReader(response.GetBodyBytes()))
+		img, name, e := image.Decode(bytes.NewReader(response.BodyBytes()))
 		if e != nil {
 			err = e
 			m.logger.Error(err)
@@ -54,7 +54,7 @@ func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response
 			uploadParams := &s3.PutObjectInput{
 				Bucket: &m.bucketName,
 				Key:    &key,
-				Body:   bytes.NewReader(response.GetBodyBytes()),
+				Body:   bytes.NewReader(response.BodyBytes()),
 			}
 
 			// Upload the file
@@ -68,7 +68,7 @@ func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response
 			i.SetStorePath(storePath)
 		}
 
-		response.SetImages(append(response.GetImages(), i))
+		response.SetImages(append(response.Images(), i))
 		stats, ok := spider.GetStats().(pkg.StatsWithImage)
 		if ok {
 			stats.IncImageTotal()

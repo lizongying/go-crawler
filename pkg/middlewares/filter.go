@@ -20,20 +20,20 @@ func (m *FilterMiddleware) Start(ctx context.Context, spider pkg.Spider) (err er
 func (m *FilterMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) (err error) {
 	spider := m.GetSpider()
 	skipFilter := false
-	if request.GetSkipFilter() != nil {
-		skipFilter = *request.GetSkipFilter()
+	if request.SkipFilter() != nil {
+		skipFilter = *request.SkipFilter()
 	}
 	if skipFilter {
 		m.logger.Debug("SkipFilter")
 		return
 	}
 
-	if request.GetUniqueKey() == "" {
+	if request.UniqueKey() == "" {
 		m.logger.Debug("UniqueKey is empty")
 		return
 	}
 
-	ok, e := m.filter.IsExist(ctx, request.GetUniqueKey())
+	ok, e := m.filter.IsExist(ctx, request.UniqueKey())
 	if err != nil {
 		err = e
 		return
@@ -41,7 +41,7 @@ func (m *FilterMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) 
 
 	if ok {
 		err = pkg.ErrIgnoreRequest
-		m.logger.InfoF("%s in filter", request.GetUniqueKey())
+		m.logger.InfoF("%s in filter", request.UniqueKey())
 		spider.IncRequestIgnore()
 		return
 	}

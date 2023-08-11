@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
@@ -22,7 +21,7 @@ func (s *Spider) ParsePost(_ pkg.Context, response pkg.Response) (err error) {
 		return
 	}
 	s.logger.InfoF("request:\n%s", dumpRequest)
-	s.logger.InfoF("body:\n%s", response.GetRequest().GetBody())
+	s.logger.InfoF("body:\n%s", response.GetRequest().BodyStr())
 
 	dumpResponse, err := httputil.DumpResponse(response.GetResponse(), false)
 	if err != nil {
@@ -54,14 +53,13 @@ func (s *Spider) ParseGet(_ pkg.Context, response pkg.Response) (err error) {
 func (s *Spider) TestPost(ctx pkg.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewRoutePost(s.logger))
 
-	err = s.YieldRequest(ctx, request.NewRequest().
+	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlPost)).
-		SetMethod("POST").
-		SetBody("a=0").
+		SetMethod(pkg.POST).
+		SetBodyStr("a=0").
 		SetPostForm("a", "1").
 		SetPostForm("b", "2").
-		SetCallBack(s.ParsePost))
-	if err != nil {
+		SetCallBack(s.ParsePost)); err != nil {
 		s.logger.Error(err)
 		return
 	}
@@ -73,12 +71,11 @@ func (s *Spider) TestPost(ctx pkg.Context, _ string) (err error) {
 func (s *Spider) TestGet(ctx pkg.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewRouteGet(s.logger))
 
-	err = s.YieldRequest(ctx, request.NewRequest().
+	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s?a=0&c=3", s.GetHost(), devServer.UrlGet)).
 		SetForm("a", "1").
 		SetForm("b", "2").
-		SetCallBack(s.ParseGet))
-	if err != nil {
+		SetCallBack(s.ParseGet)); err != nil {
 		s.logger.Error(err)
 		return
 	}
@@ -87,11 +84,6 @@ func (s *Spider) TestGet(ctx pkg.Context, _ string) (err error) {
 }
 
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
-	if baseSpider == nil {
-		err = errors.New("nil baseSpider")
-		return
-	}
-
 	spider = &Spider{
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),

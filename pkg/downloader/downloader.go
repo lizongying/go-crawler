@@ -23,7 +23,7 @@ type Downloader struct {
 }
 
 func (d *Downloader) processRequest(ctx pkg.Context, request pkg.Request) (err error) {
-	if request.GetSkipMiddleware() {
+	if request.SkipMiddleware() {
 		return
 	}
 	for k, v := range d.processRequestFns {
@@ -65,7 +65,7 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 		d.logger.Error(err)
 		return
 	}
-	d.logger.Debug("StatusCode", response.GetStatusCode())
+	d.logger.Debug("StatusCode", response.StatusCode())
 
 	err = d.processResponse(ctx, response)
 	if err != nil {
@@ -90,7 +90,7 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 }
 
 func (d *Downloader) processResponse(ctx pkg.Context, response pkg.Response) (err error) {
-	if response.GetSkipMiddleware() {
+	if response.SkipMiddleware() {
 		return
 	}
 	for k, v := range d.processResponseFns {

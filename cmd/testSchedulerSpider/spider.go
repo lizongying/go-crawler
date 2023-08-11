@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
@@ -18,20 +17,19 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	err = response.UnmarshalExtra(&extra)
-	if err != nil {
+	if err = response.UnmarshalExtra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
 	s.logger.Info("extra", utils.JsonStr(extra))
-	//s.logger.Info("response", string(response.GetBodyBytes()))
+	//s.logger.Info("response", response.BodyStr())
 
 	if extra.Count > 10 {
 		return
 	}
 
 	//err = s.YieldItem(ctx, items.NewItemJsonl("image").
-	//	SetUniqueKey(response.GetUniqueKey()).
+	//	SetUniqueKey(response.UniqueKey()).
 	//	SetData(&DataImage{
 	//		DataOk: DataOk{
 	//			Count: extra.Count,
@@ -52,16 +50,17 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	//	}).
 	//	SetCallBack(s.ParseOk).
 	//	SetUniqueKey(strconv.Itoa(count)))
-	err = s.YieldRequest(ctx, request.NewRequest().
+	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(response.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: count,
 		}).
 		SetPriority(uint8(count)).
-		SetCallBack(s.ParseOk))
-	if err != nil {
+		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
+		return
 	}
+
 	return
 }
 
@@ -69,16 +68,16 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.AddDevServerRoutes(devServer.NewRouteOk(s.logger))
 
-	err = s.YieldRequest(ctx, request.NewRequest().
+	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		//SetUniqueKey("0").
 		SetPriority(0).
-		SetCallBack(s.ParseOk))
-
-	if err != nil {
+		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
+		return
 	}
+
 	return
 }
 
@@ -93,11 +92,6 @@ func (s *Spider) Stop(ctx context.Context) (err error) {
 }
 
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
-	if baseSpider == nil {
-		err = errors.New("nil baseSpider")
-		return
-	}
-
 	spider = &Spider{
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),

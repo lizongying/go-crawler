@@ -31,12 +31,12 @@ func (m *DeviceMiddleware) Start(ctx context.Context, spider pkg.Spider) (err er
 
 func (m *DeviceMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	platforms := m.platforms
-	if len(request.GetPlatform()) > 0 {
-		platforms = request.GetPlatform()
+	if len(request.Platforms()) > 0 {
+		platforms = request.Platforms()
 	}
 	browsers := m.browsers
-	if len(request.GetBrowser()) > 0 {
-		browsers = request.GetBrowser()
+	if len(request.Browsers()) > 0 {
+		browsers = request.Browsers()
 	}
 
 	var ua []device.Device

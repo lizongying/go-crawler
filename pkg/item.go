@@ -19,21 +19,21 @@ type Item interface {
 	GetItem() any
 	GetName() ItemName
 	SetUniqueKey(string) Item
-	GetUniqueKey() string
+	UniqueKey() string
 	SetId(any) Item
 	GetId() any
 	SetData(any) Item
 	GetData() any
 	SetReferrer(string) Item
-	GetReferrer() string
+	Referrer() string
 	SetFilesRequest([]Request) Item
 	GetFilesRequest() []Request
 	SetFiles([]File) Item
-	GetFiles() []File
+	Files() []File
 	SetImagesRequest([]Request) Item
 	GetImagesRequest() []Request
 	SetImages([]Image) Item
-	GetImages() []Image
+	Images() []Image
 }
 
 type ItemUnimplemented struct {
@@ -65,7 +65,7 @@ func (i *ItemUnimplemented) SetUniqueKey(uniqueKey string) Item {
 	i.uniqueKey = uniqueKey
 	return i
 }
-func (i *ItemUnimplemented) GetUniqueKey() string {
+func (i *ItemUnimplemented) UniqueKey() string {
 	return i.uniqueKey
 }
 func (i *ItemUnimplemented) SetId(id any) Item {
@@ -90,7 +90,7 @@ func (i *ItemUnimplemented) SetReferrer(referrer string) Item {
 	i.referrer = referrer
 	return i
 }
-func (i *ItemUnimplemented) GetReferrer() string {
+func (i *ItemUnimplemented) Referrer() string {
 	return i.referrer
 }
 func (i *ItemUnimplemented) SetFilesRequest(files []Request) Item {
@@ -126,7 +126,7 @@ func (i *ItemUnimplemented) SetFiles(files []File) Item {
 	}
 	return i
 }
-func (i *ItemUnimplemented) GetFiles() []File {
+func (i *ItemUnimplemented) Files() []File {
 	f := reflect.ValueOf(i.data).Elem().FieldByName("Files")
 	if f.IsValid() && f.Type().Kind() == reflect.Slice {
 		return f.Interface().([]File)
@@ -147,7 +147,7 @@ func (i *ItemUnimplemented) SetImages(images []Image) Item {
 	}
 	return i
 }
-func (i *ItemUnimplemented) GetImages() []Image {
+func (i *ItemUnimplemented) Images() []Image {
 	img := reflect.ValueOf(i.data).Elem().FieldByName("Images")
 	if img.IsValid() && img.Type().Kind() == reflect.Slice {
 		return img.Interface().([]Image)

@@ -11,7 +11,7 @@ type CookieMiddleware struct {
 
 func (m *CookieMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
 	// add cookies to context
-	cookies := response.GetCookies()
+	cookies := response.Cookies()
 	if len(cookies) > 0 {
 		ctx.Meta.Cookies = cookies
 	}

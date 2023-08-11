@@ -12,9 +12,9 @@ type Spider interface {
 	SetName(string) Spider
 	GetHost() string
 	SetHost(string) Spider
-	GetUsername() string
+	Username() string
 	SetUsername(string) Spider
-	GetPassword() string
+	Password() string
 	SetPassword(string) Spider
 	GetPlatforms() []Platform
 	SetPlatforms(...Platform) Spider
@@ -32,11 +32,11 @@ type Spider interface {
 	DelAllowedDomain(string) error
 	CleanAllowedDomains()
 	IsAllowedDomain(*url.URL) bool
-	GetRetryMaxTimes() uint8
+	RetryMaxTimes() uint8
 	SetRetryMaxTimes(uint8) Spider
-	GetTimeout() time.Duration
+	Timeout() time.Duration
 	SetTimeout(time.Duration) Spider
-	GetOkHttpCodes() []int
+	OkHttpCodes() []int
 	SetOkHttpCodes(...int) Spider
 	GetStats() Stats
 	SetStats(Stats) Spider

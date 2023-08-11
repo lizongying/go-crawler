@@ -13,8 +13,8 @@ type RedirectMiddleware struct {
 
 func (m *RedirectMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	redirectMaxTimes := m.redirectMaxTimes
-	if request.GetRedirectMaxTimes() != nil {
-		redirectMaxTimes = *request.GetRedirectMaxTimes()
+	if request.RedirectMaxTimes() != nil {
+		redirectMaxTimes = *request.RedirectMaxTimes()
 	}
 	if redirectMaxTimes > 0 {
 		ctx := context.WithValue(request.Context(), "redirect_max_times", redirectMaxTimes)

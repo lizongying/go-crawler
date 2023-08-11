@@ -25,7 +25,7 @@ func (m *FilterPipeline) ProcessItem(_ context.Context, item pkg.Item) (err erro
 		return
 	}
 
-	uniqueKey := item.GetUniqueKey()
+	uniqueKey := item.UniqueKey()
 	if uniqueKey == "" {
 		m.logger.Debug("uniqueKey is empty")
 		return

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
@@ -17,17 +16,15 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	err = response.UnmarshalExtra(&extra)
-	if err != nil {
+	if err = response.UnmarshalExtra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
 
-	err = s.YieldItem(ctx, items.NewItemNone().
+	if err = s.YieldItem(ctx, items.NewItemNone().
 		SetData(&DataOk{
 			Count: extra.Count,
-		}))
-	if err != nil {
+		})); err != nil {
 		s.logger.Error(err)
 		return err
 	}
@@ -36,36 +33,33 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 		return
 	}
 
-	err = s.YieldRequest(ctx, request.NewRequest().
+	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(response.GetUrl()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
-		SetCallBack(s.ParseOk))
-	if err != nil {
+		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
+		return
 	}
+
 	return
 }
 
 // TestOk go run cmd/testOkSpider/*.go -c example.yml -n test-ok -f TestOk -m dev
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
-	err = s.YieldRequest(ctx, request.NewRequest().
+	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
-		SetCallBack(s.ParseOk))
-	if err != nil {
+		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
+		return
 	}
+
 	return
 }
 
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
-	if baseSpider == nil {
-		err = errors.New("nil baseSpider")
-		return
-	}
-
 	spider = &Spider{
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),

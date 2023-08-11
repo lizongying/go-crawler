@@ -59,7 +59,7 @@ func (m *StatsMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) 
 	if response == nil {
 		spider.IncStatusErr()
 	} else {
-		if response.GetResponse() != nil && response.GetStatusCode() == http.StatusOK {
+		if response.GetResponse() != nil && response.StatusCode() == http.StatusOK {
 			spider.IncStatusOk()
 		} else {
 			spider.IncStatusErr()

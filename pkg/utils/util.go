@@ -128,15 +128,15 @@ func StrMd5(sl ...string) string {
 func Request2Curl(r pkg.Request) string {
 	var args []string
 	args = append(args, "curl")
-	if r.GetMethod() != "GET" {
+	if r.GetMethod() != pkg.GET {
 		args = append(args, "-X", r.GetMethod())
 	}
 	args = append(args, fmt.Sprintf(`'%s'`, r.GetUrl()))
-	for k := range r.GetHeaders() {
+	for k := range r.Headers() {
 		args = append(args, fmt.Sprintf(`-H '%s: %s'`, k, r.GetHeader(k)))
 	}
-	if r.GetBody() != "" {
-		args = append(args, fmt.Sprintf(`--data-raw '%s'`, r.GetBody()))
+	if r.BodyStr() != "" {
+		args = append(args, fmt.Sprintf(`--data-raw '%s'`, r.BodyStr()))
 	}
 
 	return fmt.Sprint(strings.Join(args, " "))

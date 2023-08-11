@@ -11,12 +11,12 @@ type ReferrerMiddleware struct {
 }
 
 func (m *ReferrerMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
-	if m.referrerPolicy == pkg.NoReferrerPolicy && request.GetHeaders() != nil && request.GetHeader("Referer") != "" {
+	if m.referrerPolicy == pkg.NoReferrerPolicy && request.Headers() != nil && request.GetHeader("Referer") != "" {
 		//request.Header.Del("Referer")
 	}
 
-	if m.referrerPolicy == pkg.DefaultReferrerPolicy && request.GetHeaders() != nil && request.GetReferrer() != "" {
-		request.SetHeader("Referer", request.GetReferrer())
+	if m.referrerPolicy == pkg.DefaultReferrerPolicy && request.Headers() != nil && request.Referrer() != "" {
+		request.SetHeader("Referer", request.Referrer())
 	}
 
 	return

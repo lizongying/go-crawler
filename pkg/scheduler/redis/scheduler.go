@@ -41,7 +41,7 @@ type Scheduler struct {
 	batch               uint8
 }
 
-func (s *Scheduler) GetInterval() time.Duration {
+func (s *Scheduler) Interval() time.Duration {
 	return s.interval
 }
 func (s *Scheduler) SetInterval(interval time.Duration) {

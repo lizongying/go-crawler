@@ -32,7 +32,7 @@ func (m *DecodeMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response)
 
 	if decoder != nil {
 		var bodyBytes []byte
-		bodyBytes, err = decoder.Bytes(response.GetBodyBytes())
+		bodyBytes, err = decoder.Bytes(response.BodyBytes())
 		if err != nil {
 			m.logger.Error(err)
 			return

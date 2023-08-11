@@ -118,9 +118,9 @@ func main() {
         * `GetName() pkg.ItemName`
           获取Item的具体类型，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemMysql、pkg.ItemKafka等，用于Item反序列化到具体Item实现。
         * `SetReferrer(string)` 设置referrer，可以用于记录请求的来源，一般不需要自己设置，由ReferrerMiddleware自动设置。
-        * `GetReferrer() string` 获取referrer。
+        * `Referrer() string` 获取referrer。
         * `SetUniqueKey(string)` 设置uniqueKey，可以用于过滤和其他唯一用途。
-        * `GetUniqueKey() string` 获取uniqueKey。
+        * `UniqueKey() string` 获取uniqueKey。
         * `SetId(any)` 设置id，主要用于保存数据时的主键，和uniqueKey的一个区别是，id可能是在Response中产生，请求时不一定能获得。
         * `GetId() any` 获取id。
         * `SetData(any)` 设置data，这是要存储的完整数据。为了规范化，强制要求指针类型。存储到不同的目标时，data需要设置不同的格式。
@@ -128,11 +128,11 @@ func main() {
         * `SetFilesRequest([]pkg.Request)` 设置文件的请求。这是一个slice，可以下载多个文件。
         * `GetFilesRequest() []pkg.Request` 获取文件的请求。
         * `SetFiles([]pkg.File)` 设置文件。下载后的文件通过这个方法设置到Item中。
-        * `GetFiles() []pkg.File` 获取文件。
+        * `Files() []pkg.File` 获取文件。
         * `SetImagesRequest([]pkg.Request)` 设置图片的请求。这是一个slice，可以下载多个图片。
         * `GetImagesRequest() []pkg.Request` 获取图片的请求。
         * `SetImages([]pkg.Image)` 设置图片。下载后的图片通过这个方法设置到Item中。
-        * `GetImages() []pkg.Image` 获取图片。
+        * `Images() []pkg.Image` 获取图片。
     * 内置Item实现：框架提供了一些内置的Item实现，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemMysql、pkg.ItemKafka等。
       您可以根据需要，返回Item，并开启相应的Pipeline。如：
       ```go

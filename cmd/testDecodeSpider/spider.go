@@ -14,8 +14,8 @@ type Spider struct {
 }
 
 func (s *Spider) ParseDecode(_ pkg.Context, response pkg.Response) (err error) {
-	s.logger.Info("header", response.GetHeaders())
-	s.logger.Info("body", string(response.GetBodyBytes()))
+	s.logger.Info("header", response.Headers())
+	s.logger.Info("body", response.BodyStr())
 	return
 }
 

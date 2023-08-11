@@ -128,13 +128,13 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 	page = page.Context(ctx)
 	Url := request.GetUrl()
 	if request.Ajax() {
-		Url = request.GetReferrer()
+		Url = request.Referrer()
 	} else {
-		for k := range request.GetHeaders() {
+		for k := range request.Headers() {
 			page.MustSetExtraHeaders(k, request.GetHeader(k))
 		}
 
-		for _, v := range request.GetCookies() {
+		for _, v := range request.Cookies() {
 			page.MustSetCookies(&proto.NetworkCookieParam{
 				Name:  v.Name,
 				Value: v.Value,
@@ -156,12 +156,12 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 
 	if request.Ajax() {
 		headers := make(map[string]string)
-		for k := range request.GetHeaders() {
+		for k := range request.Headers() {
 			headers[k] = request.GetHeader(k)
 		}
 		timeout := b.timeout
-		if request.GetTimeout() > 0 {
-			timeout = request.GetTimeout()
+		if request.Timeout() > 0 {
+			timeout = request.Timeout()
 		}
 		res, e := page.Eval(`
 (url, method, headers, body, timeout) => {
@@ -190,7 +190,7 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
         };
 		xhr.send(body);
 	})
-}`, request.GetUrl(), request.GetMethod(), headers, request.GetBody(), int(timeout/time.Millisecond))
+}`, request.GetUrl(), request.GetMethod(), headers, request.BodyStr(), int(timeout/time.Millisecond))
 		if e != nil {
 			err = e
 			return

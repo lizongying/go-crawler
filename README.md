@@ -134,9 +134,9 @@ func main() {
           which is used for deserializing the Item to the specific Item implementation.
         * `SetReferrer(string)`: Set the referrer, which can be used to record the source of the request. Generally,
           there is no need to set it manually as it is automatically set by the `ReferrerMiddleware`.
-        * `GetReferrer() string`: Get the referrer.
+        * `Referrer() string`: Get the referrer.
         * `SetUniqueKey(string)`: Set the unique key, which can be used for filtering and other unique purposes.
-        * `GetUniqueKey() string`: Get the unique key.
+        * `UniqueKey() string`: Get the unique key.
         * `SetId(any)`: Set the ID, mainly used as the primary key when saving data. One difference from `UniqueKey` is
           that `Id` may be generated in the Response and may not be obtained when making the request.
         * `GetId() any`: Get the ID.
@@ -147,12 +147,12 @@ func main() {
           download multiple files.
         * `GetFilesRequest() []pkg.Request`: Get the requests for downloading files.
         * `SetFiles([]pkg.File)`: Set the downloaded files using this method.
-        * `GetFiles() []pkg.File`: Get the downloaded files.
+        * `Files() []pkg.File`: Get the downloaded files.
         * `SetImagesRequest([]pkg.Request)`: Set the requests for downloading images. This is a slice and can be used to
           download multiple images.
         * `GetImagesRequest() []pkg.Request`: Get the requests for downloading images.
         * `SetImages([]pkg.Image)`: Set the downloaded images using this method.
-        * `GetImages() []pkg.Image`: Get the downloaded images.
+        * `Images() []pkg.Image`: Get the downloaded images.
     * Built-in Item Implementations: The framework provides some built-in Item implementations, such
       as `pkg.ItemNone`, `pkg.ItemCsv`, `pkg.ItemJsonl`, `pkg.ItemMongo`, `pkg.ItemMysql`, `pkg.ItemKafka`, etc.
       You can return an Item as needed and enable the corresponding Pipeline. For example:

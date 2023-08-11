@@ -104,7 +104,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	c.logger.Info("args", c.args)
 	c.logger.Info("mode", c.mode)
 	c.logger.Info("allowedDomains", spider.GetAllowedDomains())
-	c.logger.Info("okHttpCodes", spider.GetOkHttpCodes())
+	c.logger.Info("okHttpCodes", spider.OkHttpCodes())
 	c.logger.Info("platforms", spider.GetPlatforms())
 	c.logger.Info("browsers", spider.GetBrowsers())
 	c.logger.Info("referrerPolicy", c.config.GetReferrerPolicy())

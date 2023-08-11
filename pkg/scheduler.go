@@ -32,7 +32,7 @@ type Scheduler interface {
 	StopScheduler(context.Context) error
 	GetSpider() Spider
 	SetSpider(spider Spider)
-	GetInterval() time.Duration
+	Interval() time.Duration
 	SetInterval(time.Duration)
 
 	Downloader

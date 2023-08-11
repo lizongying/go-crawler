@@ -26,14 +26,14 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 		return
 	}
 	s.logger.Info("ExtraOk", utils.JsonStr(extra))
-	s.logger.Info("BodyBytes", string(response.GetBodyBytes()))
+	s.logger.Info("response", response.BodyStr())
 
 	if extra.Count > 0 {
 		return
 	}
 
 	err = s.YieldItem(ctx, items.NewItemJsonl("image").
-		SetUniqueKey(response.GetUniqueKey()).
+		SetUniqueKey(response.UniqueKey()).
 		SetData(&DataImage{
 			DataOk: DataOk{
 				Count: extra.Count,

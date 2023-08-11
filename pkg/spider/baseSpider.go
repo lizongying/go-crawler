@@ -69,14 +69,14 @@ func (s *BaseSpider) SetHost(host string) pkg.Spider {
 	s.host = host
 	return s
 }
-func (s *BaseSpider) GetUsername() string {
+func (s *BaseSpider) Username() string {
 	return s.username
 }
 func (s *BaseSpider) SetUsername(username string) pkg.Spider {
 	s.username = username
 	return s
 }
-func (s *BaseSpider) GetPassword() string {
+func (s *BaseSpider) Password() string {
 	return s.password
 }
 func (s *BaseSpider) SetPassword(password string) pkg.Spider {
@@ -117,21 +117,21 @@ func (s *BaseSpider) SetBrowsers(browsers ...pkg.Browser) pkg.Spider {
 	}
 	return s
 }
-func (s *BaseSpider) GetRetryMaxTimes() uint8 {
+func (s *BaseSpider) RetryMaxTimes() uint8 {
 	return s.retryMaxTimes
 }
 func (s *BaseSpider) SetRetryMaxTimes(retryMaxTimes uint8) pkg.Spider {
 	s.retryMaxTimes = retryMaxTimes
 	return s
 }
-func (s *BaseSpider) GetTimeout() time.Duration {
+func (s *BaseSpider) Timeout() time.Duration {
 	return s.timeout
 }
 func (s *BaseSpider) SetTimeout(timeout time.Duration) pkg.Spider {
 	s.timeout = timeout
 	return s
 }
-func (s *BaseSpider) GetOkHttpCodes() (httpCodes []int) {
+func (s *BaseSpider) OkHttpCodes() (httpCodes []int) {
 	httpCodes = s.okHttpCodes
 	return
 }
