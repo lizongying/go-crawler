@@ -287,7 +287,6 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	}
 
 	s.Signal.SpiderClosed()
-
 	return
 }
 func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {

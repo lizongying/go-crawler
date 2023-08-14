@@ -12,11 +12,12 @@ const CleanFilterOnSpiderOpened = true
 type RedisFilter struct {
 	key    string
 	rdb    *redis.Client
+	spider pkg.Spider
 	logger pkg.Logger
 }
 
-func (f *RedisFilter) SpiderOpened(spider pkg.Spider) {
-	f.key = fmt.Sprintf("crawler:%s:filter", spider.GetName())
+func (f *RedisFilter) SpiderOpened() {
+	f.key = fmt.Sprintf("crawler:%s:filter", f.spider.GetName())
 	f.logger.Debug("filter key", f.key)
 	ctx := context.Background()
 	if CleanFilterOnSpiderOpened {
@@ -63,6 +64,7 @@ func (f *RedisFilter) FromSpider(spider pkg.Spider) pkg.Filter {
 
 	spider.GetSignal().RegisterSpiderOpened(f.SpiderOpened)
 
+	f.spider = spider
 	f.rdb = spider.GetCrawler().GetRedis()
 	f.logger = spider.GetLogger()
 	return f

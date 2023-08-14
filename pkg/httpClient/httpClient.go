@@ -281,7 +281,9 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 
 	return
 }
-
+func (h *HttpClient) Close(_ context.Context) (err error) {
+	return
+}
 func (h *HttpClient) FromSpider(spider pkg.Spider) pkg.HttpClient {
 	if h == nil {
 		return new(HttpClient).FromSpider(spider)

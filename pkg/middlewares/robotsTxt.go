@@ -12,23 +12,24 @@ import (
 
 type RobotsTxtMiddleware struct {
 	pkg.UnimplementedMiddleware
+	spider    pkg.Spider
 	logger    pkg.Logger
 	userAgent string
 	group     *robotstxt.Group
 	ignoreUrl []string
 }
 
-func (m *RobotsTxtMiddleware) SpiderOpened(spider pkg.Spider) {
-	host := spider.GetHost()
+func (m *RobotsTxtMiddleware) SpiderOpened() {
+	host := m.spider.GetHost()
 	if host == "" {
 		m.logger.Warn("host is emtpy")
 		return
 	}
 
 	ctx := pkg.Context{
-		Spider: spider,
+		Spider: m.spider,
 	}
-	r, e := spider.Request(ctx, request.NewRequest().SetUrl(fmt.Sprintf("%s/robots.txt", host)).SetSkipMiddleware(true))
+	r, e := m.spider.Request(ctx, request.NewRequest().SetUrl(fmt.Sprintf("%s/robots.txt", host)).SetSkipMiddleware(true))
 	if e != nil {
 		m.logger.Error(e)
 		return
@@ -71,6 +72,7 @@ func (m *RobotsTxtMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	}
 
 	m.UnimplementedMiddleware.FromSpider(spider)
+	m.spider = spider
 	m.logger = spider.GetLogger()
 	m.userAgent = "*"
 	m.ignoreUrl = []string{"/robots.txt"}

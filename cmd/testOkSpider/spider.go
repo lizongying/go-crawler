@@ -30,6 +30,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	}
 
 	if extra.Count > 0 {
+		s.logger.Info("manual stop")
 		return
 	}
 
@@ -74,7 +75,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 
 func main() {
 	app.NewApp(NewSpider).Run(
-		//pkg.WithDevServerRoute(devServer.NewRouteRobotsTxt),
 		pkg.WithDevServerRoute(devServer.NewRouteOk),
 	)
 }

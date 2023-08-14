@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
@@ -16,7 +17,7 @@ type Downloader struct {
 	processRequestFns  []func(pkg.Context, pkg.Request) error
 	processResponseFns []func(pkg.Context, pkg.Response) error
 	httpClient         pkg.HttpClient
-	browser            pkg.HttpClient
+	browserManager     *browser.Manager
 	spider             pkg.Spider
 	logger             pkg.Logger
 	locker             sync.Mutex
@@ -58,7 +59,14 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 
 	client := d.httpClient
 	if request.Client() == pkg.ClientBrowser {
-		client = d.browser
+		var b *browser.Browser
+		b, err = d.browserManager.Pop(context.Background())
+		if err != nil {
+			d.logger.Error(err)
+			return
+		}
+		client = b
+		defer d.browserManager.Put(b)
 	}
 	response, err = client.DoRequest(request.Context(), request)
 	if err != nil {
@@ -232,6 +240,9 @@ func (d *Downloader) WithHttpMiddleware() {
 func (d *Downloader) WithStatsMiddleware() {
 	d.SetMiddleware(new(middlewares.StatsMiddleware), 210)
 }
+func (d *Downloader) Close() {
+	d.browserManager.Close()
+}
 func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 	if d == nil {
 		return new(Downloader).FromSpider(spider)
@@ -239,8 +250,11 @@ func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 
 	d.spider = spider
 	d.httpClient = new(httpClient.HttpClient).FromSpider(spider)
-	d.browser = new(browser.Browser).FromSpider(spider)
+	d.browserManager = new(browser.Manager).FromSpider(spider)
 	d.logger = spider.GetLogger()
+
+	spider.GetSignal().RegisterSpiderClosed(d.Close)
+
 	config := spider.GetCrawler().GetConfig()
 
 	// set middlewares

@@ -1,8 +1,10 @@
 package pkg
 
+type SignalFn func()
+
 type Signal interface {
-	RegisterSpiderOpened(func(Spider))
-	RegisterSpiderClosed(func(Spider))
+	RegisterSpiderOpened(SignalFn)
+	RegisterSpiderClosed(SignalFn)
 	SpiderOpened()
 	SpiderClosed()
 	FromSpider(Spider) Signal

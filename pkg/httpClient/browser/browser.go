@@ -19,7 +19,7 @@ import (
 	"github.com/go-rod/stealth"
 )
 
-var browserOptions = []string{
+var browserFlags = []string{
 	"--disable-gpu",
 	"--disable-demo-mode",
 	"--disable-cookie-encryption",
@@ -35,24 +35,46 @@ var browserOptions = []string{
 	"--hide-scrollbars",
 	"--metrics-recording-only",
 	"--mute-audio",
-	"--no-sandbox",
 	"--no-zygote",
 }
 
 type Browser struct {
 	proxy        *url.URL
 	timeout      time.Duration
+	cancel       context.CancelFunc
 	browser      *rod.Browser
 	hijackRouter *rod.HijackRouter
 	logger       pkg.Logger
+	launcher     *Launcher
 }
 
 func (b *Browser) init() (err error) {
-	l := launcher.New().Env("TZ=Asia/Shanghai").
-		Leakless(true).
-		Headless(true)
-	for _, arg := range browserOptions {
-		l.Set(flags.Flag(strings.TrimLeft(arg, "-")))
+	l := &Launcher{
+		Launcher: launcher.New().
+			//StartURL("").
+			NoSandbox(true).
+			Env("TZ=Asia/Shanghai").
+			Leakless(true).
+			Headless(true),
+	}
+	ctx := context.Background()
+	ctx, b.cancel = context.WithTimeout(ctx, b.timeout)
+	l.Context(ctx)
+
+	l.managed = true
+	if !l.managed {
+		err = errors.New("managed")
+		return
+	}
+
+	if b.proxy != nil {
+		l.Proxy(b.proxy.String())
+	}
+
+	if len(browserFlags) != 0 {
+		for _, flag := range browserFlags {
+			l.Set(flags.Flag(strings.TrimLeft(flag, "-")))
+		}
 	}
 
 	u, err := l.Launch()
@@ -61,6 +83,7 @@ func (b *Browser) init() (err error) {
 		return
 	}
 
+	b.launcher = l
 	b.browser = rod.New().ControlURL(u)
 	if err = b.browser.Connect(); err != nil {
 		b.logger.Error(err)
@@ -69,7 +92,7 @@ func (b *Browser) init() (err error) {
 
 	if err = b.browser.IgnoreCertErrors(true); err != nil {
 		b.logger.Error(err)
-		err = b.Close()
+		err = b.Close(nil)
 		if err != nil {
 			b.logger.Error(err)
 			return
@@ -231,8 +254,9 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 	return
 }
 
-func (b *Browser) Close() (err error) {
+func (b *Browser) Close(_ context.Context) (err error) {
 	if b == nil {
+		err = errors.New("browser nil")
 		return
 	}
 
@@ -246,10 +270,33 @@ func (b *Browser) Close() (err error) {
 		return
 	}
 
+	if b.launcher.Has(flags.Leakless) {
+		b.launcher.Kill()
+	}
+
+	if !b.launcher.Has(flags.KeepUserDataDir) {
+		b.launcher.Cleanup()
+	}
+
 	return
 }
 
-func (b *Browser) FromSpider(spider pkg.Spider) pkg.HttpClient {
+func NewBrowser(logger pkg.Logger, proxy *url.URL, timeout time.Duration) (b *Browser, err error) {
+	b = &Browser{
+		logger:  logger,
+		proxy:   proxy,
+		timeout: timeout,
+	}
+
+	if err = b.init(); err != nil {
+		b.logger.Error(err)
+		return
+	}
+
+	return
+}
+
+func (b *Browser) FromSpider(spider pkg.Spider) *Browser {
 	if b == nil {
 		return new(Browser).FromSpider(spider)
 	}
