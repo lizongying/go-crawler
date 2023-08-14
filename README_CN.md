@@ -411,7 +411,7 @@ func main() {
 
 ### 启动
 
-通过配置环境变量或参数，您可以更灵活地启动爬虫，包括选择配置文件、指定爬虫名称、指定入口方法、传递额外参数以及设定启动模式。
+通过配置环境变量或参数，您可以更灵活地启动爬虫，包括选择配置文件、指定爬虫名称、指定初始方法、传递额外参数以及设定启动模式。
 
 ```shell
 spider -c example.yml -n example -f TestOk -m dev
@@ -423,7 +423,7 @@ spider -c example.yml -n example -f TestOk -m dev
 * 爬虫名称，必须进行配置。
     * 环境变量 `CRAWLER_SPIDER_NAME`
     * 启动参数 `-n`
-* 入口方法名称，默认Test，注意大小写需一致。
+* 初始方法名称，默认Test，注意大小写需一致。
     * 环境变量 `CRAWLER_START_FUNC`
     * 启动参数 `-f`
 * 额外的参数，该参数是非必须项。建议使用JSON字符串。参数会被传递到初始方法中。
@@ -517,6 +517,20 @@ spider -c example.yml -n example -f TestOk -m dev
 * filter: 过滤方式，默认memory（内存过滤），可选值memory、redis。选择redis后可以实现集群过滤。
 
 ## 一些问题
+
+* 一些框架里都有start_urls，此框架中怎么设置？
+  本框架里，去掉了这种方式。可以显式地在初始方法里建立request，可以对request进行额外地处理，实际上可能会更方便些。
+    ```go
+    startUrls := []string{"/a.html", "/b.html"}
+    for _, v:=range startUrls {
+		if err = s.YieldRequest(ctx, request.NewRequest().
+            SetUrl(fmt.Sprintf("https://a.com%s", v)).
+            SetCallBack(s.Parse)); err != nil {
+            s.logger.Error(err)
+        }
+    }
+
+    ```
 
 * 有哪些可以提高爬虫性能的方式？
 

@@ -687,6 +687,21 @@ Other Configurations:
 
 ## Some Question
 
+* In some frameworks, there is a presence of `start_urls`. How is it set up in this framework?
+
+  In this framework, this approach has been removed. It's possible to explicitly create requests within the initial
+  method and perform additional processing on those requests, which can actually be more convenient.
+    ```go
+    startUrls := []string{"/a.html", "/b.html"}
+    for _, v:=range startUrls {
+		if err = s.YieldRequest(ctx, request.NewRequest().
+            SetUrl(fmt.Sprintf("https://a.com%s", v)).
+            SetCallBack(s.Parse)); err != nil {
+            s.logger.Error(err)
+        }
+    }
+
+    ```
 * What are the ways to improve spider performance?
 
   To improve the performance of the spider, you can consider disabling some unused middleware or pipelines to reduce
