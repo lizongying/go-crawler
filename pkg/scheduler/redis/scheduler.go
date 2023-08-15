@@ -48,6 +48,12 @@ func (s *Scheduler) SetInterval(interval time.Duration) {
 	s.interval = interval
 }
 func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
+	if s.redis == nil {
+		err = errors.New(`redis nil. please check if "redis_enable: false"`)
+		s.logger.Error(err)
+		return
+	}
+
 	if ctx == nil {
 		ctx = context.Background()
 	}

@@ -51,7 +51,7 @@ type Config interface {
 	GetOkHttpCodes() []int
 	GetFilter() FilterType
 	GetScheduler() SchedulerType
-	GetEnableDevServer() bool
-	SetEnableDevServer(enable bool)
-	GetDevServer() *url.URL
+	DevServerEnable() bool
+	SetDevServerEnable(enable bool)
+	DevServerHost() *url.URL
 }

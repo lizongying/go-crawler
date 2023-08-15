@@ -10,8 +10,7 @@ import (
 	"testing"
 )
 
-// go test -v ./pkg/devServer/*.go -run NewHttpServer
-func TestNewHttpServer(t *testing.T) {
+func Run(routeFn func(pkg.Logger) pkg.Route) {
 	_ = os.Setenv("CRAWLER_CONFIG_FILE", "/Users/lizongying/IdeaProjects/go-crawler/dev.yml")
 	fx.New(
 		fx.Provide(
@@ -24,10 +23,20 @@ func TestNewHttpServer(t *testing.T) {
 			config.NewConfig,
 		),
 		fx.Invoke(func(logger pkg.Logger, devServer pkg.DevServer, shutdowner fx.Shutdowner) {
-			devServer.AddRoutes(NewRouteRobotsTxt(logger))
+			devServer.AddRoutes(routeFn(logger))
 			_ = devServer.Run()
 
 			return
 		}),
 	).Run()
+}
+
+// go test -v ./pkg/devServer/*.go -run TestNewRouteRobotsTxt
+func TestNewRouteRobotsTxt(t *testing.T) {
+	Run(NewRouteRobotsTxt)
+}
+
+// go test -v ./pkg/devServer/*.go -run TestOk
+func TestOk(t *testing.T) {
+	Run(NewRouteOk)
 }

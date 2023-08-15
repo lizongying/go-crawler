@@ -73,6 +73,11 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 		d.logger.Error(err)
 		return
 	}
+	if response == nil {
+		err = errors.New("response nil")
+		d.logger.Error(err)
+		return
+	}
 	d.logger.Debug("StatusCode", response.StatusCode())
 
 	err = d.processResponse(ctx, response)

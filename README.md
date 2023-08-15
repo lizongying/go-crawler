@@ -631,6 +631,11 @@ Log Configuration:
 * `log.long_file:` If set to true (default), it logs the full file path.
 * `log.level:` Log level, options are DEBUG/INFO/WARN/ERROR.
 
+* `dev_server`: Development Server
+    * `enable: false`: Whether to enable the development server.
+    * `host: https://localhost:8081`: The address of the development server.
+    * `client_auth: 0` Client authentication type, 0 means no authentication.
+
 Middleware and Pipeline Configuration:
 
 * `enable_stats_middleware:` Whether to enable the statistics middleware, enabled by default.
@@ -677,8 +682,6 @@ Other Configurations:
 * `request.ok_http_codes`: Normal HTTP status codes for requests.
 * `request.retry_max_times`: Maximum number of retries for requests. Default is 10.
 * `request.http_proto`: HTTP protocol for requests. Default is `2.0`.
-* `enable_dev_server`: Whether to enable the development server. Default is `true`.
-* `dev_server`: Address of the development server. Default is `https://localhost:8081`.
 * `enable_ja3`: Whether to modify/print JA3 fingerprints. Default is disabled.
 * `scheduler`: Scheduler method. Default is `memory` (memory-based scheduling). Options are `memory`, `redis`, `kafka`.
   Selecting `redis` or `kafka` enables cluster scheduling.

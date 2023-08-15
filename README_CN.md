@@ -467,6 +467,11 @@ spider -c example.yml -n example -f TestOk -m dev
 * `log.long_file:` 如果设置为true（默认），则记录完整文件路径。
 * `log.level:` 日志级别，可选DEBUG/INFO/WARN/ERROR。
 
+* `dev_server`: 开发服务
+    * `enable: false` 是否启用开发服务
+    * `host: https://localhost:8081` 开发服务的地址。
+    * `client_auth: 0` 客户端验证类型，0 不验证。
+
 中间件和Pipeline配置
 
 * `enable_stats_middleware:` 是否开启统计中间件，默认启用。
@@ -510,8 +515,6 @@ spider -c example.yml -n example -f TestOk -m dev
 * request.ok_http_codes: 请求正常的HTTP状态码。
 * request.retry_max_times: 请求重试的最大次数，默认10。
 * request.http_proto: 请求的HTTP协议。默认`2.0`
-* enable_dev_server: true 是否启用开发服务
-* dev_server: 开发服务的地址。默认`https://localhost:8081`
 * enable_ja3: 是否修改/打印JA3指纹。默认关闭。
 * scheduler: 调度方式，默认memory（内存调度），可选值memory、redis、kafka。选择redis或kafka后可以实现集群调度。
 * filter: 过滤方式，默认memory（内存过滤），可选值memory、redis。选择redis后可以实现集群过滤。
@@ -519,6 +522,7 @@ spider -c example.yml -n example -f TestOk -m dev
 ## 一些问题
 
 * 一些框架里都有start_urls，此框架中怎么设置？
+
   本框架里，去掉了这种方式。可以显式地在初始方法里建立request，可以对request进行额外地处理，实际上可能会更方便些。
     ```go
     startUrls := []string{"/a.html", "/b.html"}

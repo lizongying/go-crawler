@@ -13,8 +13,9 @@ import (
 
 const defaultBotName = "crawler"
 const defaultHttpProto = "2.0"
-const defaultEnableDevServer = false
-const defaultDevServer = "http://localhost:8081"
+const defaultDevServerEnable = false
+const defaultDevServerHost = "http://localhost:8081"
+const defaultDevServerClientAuth = uint8(0)
 const defaultEnableJa3 = false
 const defaultEnablePriorityQueue = true
 const defaultUrlLengthLimit = 2083
@@ -109,8 +110,11 @@ type Config struct {
 		RetryMaxTimes *uint8 `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
-	EnableDevServer           *bool   `yaml:"enable_dev_server,omitempty" json:"enable_dev_server"`
-	DevServer                 string  `yaml:"dev_server" json:"-"`
+	DevServer struct {
+		Enable     *bool  `yaml:"enable,omitempty" json:"enable"`
+		Host       string `yaml:"host,omitempty" json:"host"`
+		ClientAuth *uint8 `yaml:"client_auth,omitempty" json:"client_auth"`
+	} `yaml:"dev_server" json:"dev_server"`
 	EnableJa3                 *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
 	EnablePriorityQueue       *bool   `yaml:"enable_priority_queue,omitempty" json:"enable_priority_queue"`
 	EnableReferrerMiddleware  *bool   `yaml:"enable_referrer_middleware,omitempty" json:"enable_referrer_middleware"`
@@ -174,33 +178,42 @@ func (c *Config) GetHttpProto() string {
 
 	return defaultHttpProto
 }
-func (c *Config) GetEnableDevServer() bool {
-	if c.EnableDevServer == nil {
-		enableDevServer := defaultEnableDevServer
-		c.EnableDevServer = &enableDevServer
+func (c *Config) DevServerEnable() bool {
+	if c.DevServer.Enable == nil {
+		devServerEnable := defaultDevServerEnable
+		c.DevServer.Enable = &devServerEnable
 	}
-
-	return *c.EnableDevServer
+	return *c.DevServer.Enable
 }
-func (c *Config) SetEnableDevServer(enable bool) {
-	c.EnableDevServer = &enable
+func (c *Config) SetDevServerEnable(enable bool) {
+	c.DevServer.Enable = &enable
 }
-func (c *Config) GetDevServer() *url.URL {
+func (c *Config) DevServerHost() *url.URL {
 	var URL *url.URL
 	var err error
-	if c.DevServer != "" {
-		URL, err = url.Parse(c.DevServer)
+	if c.DevServer.Host != "" {
+		URL, err = url.Parse(c.DevServer.Host)
 		if err != nil {
 			return nil
 		}
 		return URL
 	}
 
-	URL, err = url.Parse(defaultDevServer)
+	URL, err = url.Parse(defaultDevServerHost)
 	if err != nil {
 		return nil
 	}
 	return URL
+}
+func (c *Config) DevServerClientAuth() uint8 {
+	if c.DevServer.ClientAuth == nil {
+		DevServerClientAuth := defaultDevServerClientAuth
+		c.DevServer.ClientAuth = &DevServerClientAuth
+	}
+	return *c.DevServer.ClientAuth
+}
+func (c *Config) SetDevServerClientAuth(clientAuth uint8) {
+	c.DevServer.ClientAuth = &clientAuth
 }
 func (c *Config) GetEnableJa3() bool {
 	if c.EnableJa3 == nil {

@@ -172,7 +172,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		crawler.AddSpider(v)
 	}
 
-	if config.GetEnableDevServer() {
+	if config.DevServerEnable() {
 		err = crawler.RunDevServer()
 		if err != nil {
 			logger.Error(err)

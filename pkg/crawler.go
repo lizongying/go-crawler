@@ -33,8 +33,8 @@ type CrawlOption func(Crawler)
 
 func WithDevServerRoute(route func(logger Logger) Route) CrawlOption {
 	return func(crawler Crawler) {
-		if !crawler.GetConfig().GetEnableDevServer() {
-			crawler.GetConfig().SetEnableDevServer(true)
+		if !crawler.GetConfig().DevServerEnable() {
+			crawler.GetConfig().SetDevServerEnable(true)
 			_ = crawler.RunDevServer()
 		}
 

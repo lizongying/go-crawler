@@ -51,10 +51,11 @@ var cipherSuiteMap = map[uint16]string{
 }
 
 type HttpServer struct {
-	url       *url.URL
-	enableJa3 bool
-	srv       *http.Server
-	logger    pkg.Logger
+	url        *url.URL
+	enableJa3  bool
+	clientAuth uint8
+	srv        *http.Server
+	logger     pkg.Logger
 
 	mux    *http.ServeMux
 	routes map[string]struct{}
@@ -112,7 +113,8 @@ func (h *HttpServer) Run() (err error) {
 				h.logger.Error(err)
 				return
 			}
-			tlsListener := tls.NewListener(listener, &tls.Config{
+
+			conf := &tls.Config{
 				GetCertificate: func(info *tls.ClientHelloInfo) (*tls.Certificate, error) {
 					if h.enableJa3 {
 						h.logger.Debug("ja3", convertToJA3(info))
@@ -123,7 +125,11 @@ func (h *HttpServer) Run() (err error) {
 					h.logger.Debug("Version:", versionMap[state.Version], "CipherSuite:", cipherSuiteMap[state.CipherSuite])
 					return nil
 				},
-			})
+			}
+			if h.clientAuth != 0 {
+				conf.ClientAuth = tls.ClientAuthType(h.clientAuth)
+			}
+			tlsListener := tls.NewListener(listener, conf)
 			err = h.srv.Serve(tlsListener)
 		} else {
 			err = h.srv.Serve(listener)
@@ -153,7 +159,7 @@ func (h *HttpServer) GetRoutes() (routes []string) {
 }
 
 func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (httpServer pkg.DevServer) {
-	devServer := config.GetDevServer()
+	devServer := config.DevServerHost()
 	if devServer == nil {
 		err := errors.New("nil devServer")
 		logger.Error(err)
@@ -162,12 +168,13 @@ func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (h
 
 	srv := &http.Server{}
 	httpServer = &HttpServer{
-		url:       devServer,
-		enableJa3: config.GetEnableJa3(),
-		srv:       srv,
-		logger:    logger,
-		mux:       http.NewServeMux(),
-		routes:    make(map[string]struct{}),
+		url:        devServer,
+		enableJa3:  config.GetEnableJa3(),
+		clientAuth: config.DevServerClientAuth(),
+		srv:        srv,
+		logger:     logger,
+		mux:        http.NewServeMux(),
+		routes:     make(map[string]struct{}),
 	}
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {
