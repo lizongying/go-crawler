@@ -1,4 +1,4 @@
-package devServer
+package mockServer
 
 import (
 	"github.com/lizongying/go-crawler/pkg"

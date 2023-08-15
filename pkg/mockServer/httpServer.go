@@ -1,4 +1,4 @@
-package devServer
+package mockServer
 
 import (
 	"context"
@@ -158,19 +158,19 @@ func (h *HttpServer) GetRoutes() (routes []string) {
 	return
 }
 
-func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (httpServer pkg.DevServer) {
-	devServer := config.DevServerHost()
-	if devServer == nil {
-		err := errors.New("nil devServer")
+func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (httpServer pkg.MockServer) {
+	mockServer := config.MockServerHost()
+	if mockServer == nil {
+		err := errors.New("nil mockServer")
 		logger.Error(err)
 		return
 	}
 
 	srv := &http.Server{}
 	httpServer = &HttpServer{
-		url:        devServer,
+		url:        mockServer,
 		enableJa3:  config.GetEnableJa3(),
-		clientAuth: config.DevServerClientAuth(),
+		clientAuth: config.MockServerClientAuth(),
 		srv:        srv,
 		logger:     logger,
 		mux:        http.NewServeMux(),

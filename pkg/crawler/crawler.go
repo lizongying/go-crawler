@@ -27,7 +27,7 @@ type Crawler struct {
 	Kafka       *kafka.Writer
 	KafkaReader *kafka.Reader
 	S3          *s3.Client
-	devServer   pkg.DevServer
+	mockServer  pkg.MockServer
 }
 
 func (c *Crawler) GetMode() string {
@@ -51,8 +51,8 @@ func (c *Crawler) SetSpiders(spiders []pkg.Spider) {
 func (c *Crawler) AddSpider(spider pkg.Spider) {
 	c.spiders = append(c.spiders, spider)
 }
-func (c *Crawler) RunDevServer() (err error) {
-	err = c.devServer.Run()
+func (c *Crawler) RunMockServer() (err error) {
+	err = c.mockServer.Run()
 	if err != nil {
 		c.logger.Error(err)
 		return
@@ -60,8 +60,8 @@ func (c *Crawler) RunDevServer() (err error) {
 
 	return
 }
-func (c *Crawler) AddDevServerRoutes(routes ...pkg.Route) {
-	c.devServer.AddRoutes(routes...)
+func (c *Crawler) AddMockServerRoutes(routes ...pkg.Route) {
+	c.mockServer.AddRoutes(routes...)
 }
 func (c *Crawler) GetConfig() pkg.Config {
 	return c.config
@@ -145,7 +145,7 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, s3 *s3.Client, devServer pkg.DevServer) (crawler pkg.Crawler, err error) {
+func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, s3 *s3.Client, mockServer pkg.MockServer) (crawler pkg.Crawler, err error) {
 	crawler = &Crawler{
 		spiderName:  cli.SpiderName,
 		startFunc:   cli.StartFunc,
@@ -159,7 +159,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		Kafka:       kafka,
 		KafkaReader: kafkaReader,
 		S3:          s3,
-		devServer:   devServer,
+		mockServer:  mockServer,
 	}
 
 	for _, v := range spiders {
@@ -172,8 +172,8 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		crawler.AddSpider(v)
 	}
 
-	if config.DevServerEnable() {
-		err = crawler.RunDevServer()
+	if config.MockServerEnable() {
+		err = crawler.RunMockServer()
 		if err != nil {
 			logger.Error(err)
 			return

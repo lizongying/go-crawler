@@ -1,4 +1,4 @@
-package devServer
+package mockServer
 
 import (
 	"encoding/json"

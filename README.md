@@ -16,7 +16,7 @@ distributed deployment.
 * Supports multiple storage methods for more flexible data storage.
 * Provides numerous configuration options for richer customization.
 * Allows customizations for components, providing more freedom for feature extensions.
-* Includes a built-in development server for convenient debugging and development.
+* Includes a built-in mock Server for convenient debugging and development.
 * It supports distributed deployment.
 
 ## Usage
@@ -114,8 +114,8 @@ func main() {
     * `WithOkHttpCodes`: Set the normal HTTP status codes.
 
 * Crawler Options
-    * `WithDevServerRoute` Configure development service routes, including built-in or custom ones. You need to
-      set `enable_dev_server: true` to enable the development server.
+    * `WithMockServerRoute` Configure development service routes, including built-in or custom ones. You need to
+      set `mock_server.enable: true` to enable the mock Server.
 
 * Item
 
@@ -527,27 +527,28 @@ func main() {
   app.NewApp(NewExample1Spider, NewExample2Spider).Run()
   ```
 
-* Local DevServer
+* Local MockServer
 
-  To facilitate development and debugging, the framework comes with a built-in local DevServer that can be enabled by
-  setting `enable_dev_server: true` in the configuration. By using the local DevServer, you can more easily simulate and
+  To facilitate development and debugging, the framework comes with a built-in local MockServer that can be enabled by
+  setting `mock_server.enable: true` in the configuration. By using the local MockServer, you can more easily simulate
+  and
   observe network requests and responses, as well as handle custom route logic. This provides developers with a
   convenient tool to quickly locate and resolve issues.
 
-  You can customize routes by implementing the `pkg.Route` interface and registering them with the DevServer in the
-  spider by calling `AddDevServerRoutes(...pkg.Route)`.
+  You can customize routes by implementing the `pkg.Route` interface and registering them with the MockServer in the
+  spider by calling `AddMockServerRoutes(...pkg.Route)`.
 
-    * The DevServer supports both HTTP and HTTPS, and you can specify the DevServer's URL by setting the `dev_server`
+    * The MockServer supports both HTTP and HTTPS, and you can specify the MockServer's URL by setting the `mock_server`
       option. `http://localhost:8081` represents using HTTP protocol, and `https://localhost:8081` represents using
       HTTPS protocol.
-    * By default, the DevServer displays JA3 fingerprints. JA3 is an algorithm used for TLS client fingerprinting, and
+    * By default, the MockServer displays JA3 fingerprints. JA3 is an algorithm used for TLS client fingerprinting, and
       it shows information about the TLS version and cipher suites used by the client when establishing a connection
       with the server.
-    * You can use the tls tool to generate the server's private key and certificate for use with HTTPS in the DevServer.
+    * You can use the tls tool to generate the server's private key and certificate for use with HTTPS in the MockServer.
       The tls tool can help you generate self-signed certificates for local development and testing environments.
-    * The DevServer includes multiple built-in routes that provide rich functionalities to simulate various network
+    * The MockServer includes multiple built-in routes that provide rich functionalities to simulate various network
       scenarios and assist in development and debugging. You can choose the appropriate route based on your needs and
-      configure it in the DevServer to simulate specific network responses and behaviors.
+      configure it in the MockServer to simulate specific network responses and behaviors.
 
         * BadGatewayRoute: Simulates returning a 502 status code.
         * Big5Route: Simulates using the big5 encoding.
@@ -631,9 +632,9 @@ Log Configuration:
 * `log.long_file:` If set to true (default), it logs the full file path.
 * `log.level:` Log level, options are DEBUG/INFO/WARN/ERROR.
 
-* `dev_server`: Development Server
-    * `enable: false`: Whether to enable the development server.
-    * `host: https://localhost:8081`: The address of the development server.
+* `mock_server`: Mock Server
+    * `enable: false`: Whether to enable the mock Server.
+    * `host: https://localhost:8081`: The address of the mock Server.
     * `client_auth: 0` Client authentication type, 0 means no authentication.
 
 Middleware and Pipeline Configuration:
@@ -772,7 +773,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/mockServer"
 	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
@@ -823,7 +824,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
@@ -844,7 +845,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithDevServerRoute(devServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServer.NewRouteOk))
 }
 
 ```
@@ -924,3 +925,5 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 6. Automatic Handling:
     - Cookies: Supported
     - Redirects: Supported
+   
+7. Mock Server:

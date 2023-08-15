@@ -13,9 +13,9 @@ import (
 
 const defaultBotName = "crawler"
 const defaultHttpProto = "2.0"
-const defaultDevServerEnable = false
-const defaultDevServerHost = "http://localhost:8081"
-const defaultDevServerClientAuth = uint8(0)
+const defaultMockServerEnable = false
+const defaultMockServerHost = "http://localhost:8081"
+const defaultMockServerClientAuth = uint8(0)
 const defaultEnableJa3 = false
 const defaultEnablePriorityQueue = true
 const defaultUrlLengthLimit = 2083
@@ -110,11 +110,11 @@ type Config struct {
 		RetryMaxTimes *uint8 `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
-	DevServer struct {
+	MockServer struct {
 		Enable     *bool  `yaml:"enable,omitempty" json:"enable"`
 		Host       string `yaml:"host,omitempty" json:"host"`
 		ClientAuth *uint8 `yaml:"client_auth,omitempty" json:"client_auth"`
-	} `yaml:"dev_server" json:"dev_server"`
+	} `yaml:"mock_server" json:"mock_server"`
 	EnableJa3                 *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
 	EnablePriorityQueue       *bool   `yaml:"enable_priority_queue,omitempty" json:"enable_priority_queue"`
 	EnableReferrerMiddleware  *bool   `yaml:"enable_referrer_middleware,omitempty" json:"enable_referrer_middleware"`
@@ -178,42 +178,42 @@ func (c *Config) GetHttpProto() string {
 
 	return defaultHttpProto
 }
-func (c *Config) DevServerEnable() bool {
-	if c.DevServer.Enable == nil {
-		devServerEnable := defaultDevServerEnable
-		c.DevServer.Enable = &devServerEnable
+func (c *Config) MockServerEnable() bool {
+	if c.MockServer.Enable == nil {
+		mockServerEnable := defaultMockServerEnable
+		c.MockServer.Enable = &mockServerEnable
 	}
-	return *c.DevServer.Enable
+	return *c.MockServer.Enable
 }
-func (c *Config) SetDevServerEnable(enable bool) {
-	c.DevServer.Enable = &enable
+func (c *Config) SetMockServerEnable(enable bool) {
+	c.MockServer.Enable = &enable
 }
-func (c *Config) DevServerHost() *url.URL {
+func (c *Config) MockServerHost() *url.URL {
 	var URL *url.URL
 	var err error
-	if c.DevServer.Host != "" {
-		URL, err = url.Parse(c.DevServer.Host)
+	if c.MockServer.Host != "" {
+		URL, err = url.Parse(c.MockServer.Host)
 		if err != nil {
 			return nil
 		}
 		return URL
 	}
 
-	URL, err = url.Parse(defaultDevServerHost)
+	URL, err = url.Parse(defaultMockServerHost)
 	if err != nil {
 		return nil
 	}
 	return URL
 }
-func (c *Config) DevServerClientAuth() uint8 {
-	if c.DevServer.ClientAuth == nil {
-		DevServerClientAuth := defaultDevServerClientAuth
-		c.DevServer.ClientAuth = &DevServerClientAuth
+func (c *Config) MockServerClientAuth() uint8 {
+	if c.MockServer.ClientAuth == nil {
+		MockServerClientAuth := defaultMockServerClientAuth
+		c.MockServer.ClientAuth = &MockServerClientAuth
 	}
-	return *c.DevServer.ClientAuth
+	return *c.MockServer.ClientAuth
 }
-func (c *Config) SetDevServerClientAuth(clientAuth uint8) {
-	c.DevServer.ClientAuth = &clientAuth
+func (c *Config) SetMockServerClientAuth(clientAuth uint8) {
+	c.MockServer.ClientAuth = &clientAuth
 }
 func (c *Config) GetEnableJa3() bool {
 	if c.EnableJa3 == nil {

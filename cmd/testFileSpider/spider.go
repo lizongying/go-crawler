@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/items"
+	"github.com/lizongying/go-crawler/pkg/mockServer"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strconv"
@@ -40,7 +40,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 			},
 		}).
 		SetImagesRequest([]pkg.Request{
-			request.NewRequest().SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetHost(), devServer.UrlFile)),
+			request.NewRequest().SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetHost(), mockServer.UrlFile)),
 		}))
 	if err != nil {
 		s.logger.Error(err)
@@ -68,11 +68,11 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 // TestOk go run cmd/testFileSpider/*.go -c dev.yml -n test-file -f TestOk -m dev
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRouteOk(s.logger))
-	s.AddDevServerRoutes(devServer.NewRouteFile(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteOk(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteFile(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetUniqueKey("0").
 		SetCallBack(s.ParseOk))

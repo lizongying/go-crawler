@@ -13,7 +13,7 @@ type Route interface {
 	Pattern() string
 }
 
-type DevServer interface {
+type MockServer interface {
 	Run() error
 	AddRoutes(...Route)
 	GetRoutes() []string

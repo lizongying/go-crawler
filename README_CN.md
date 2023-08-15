@@ -14,7 +14,7 @@
 * 支持多种保存方式，数据存储更灵活。
 * 提供了更多的配置选项，配置更丰富。
 * 组件支持自定义，功能拓展更自由。
-* 内置开发服务，调试开发更方便。
+* 内置模拟服务，调试开发更方便。
 * 支持分布式部署
 
 ## 用法
@@ -101,7 +101,7 @@ func main() {
     * `WithInterval` 设置请求的间隔时间。
     * `WithOkHttpCodes` 设置正常的HTTP状态码。
 * crawler选项
-    * WithDevServerRoute 设置开发服务Route，包括内置或自定义的。需要配置`enable_dev_server: true`
+    * WithMockServerRoute 设置模拟服务Route，包括内置或自定义的。需要配置`mock_server.enable: true`
 * Item
 
   Item用于存储需要导出的数据和一些其他辅助信息。
@@ -381,17 +381,17 @@ func main() {
 
     ```
 
-* 为了方便开发和调试，框架内置了本地devServer，在`enable_dev_server: true`配置下会启用。
-  通过使用本地devServer，您可以在开发和调试过程中更方便地模拟和观察网络请求和响应，以及处理自定义路由逻辑。
+* 为了方便开发和调试，框架内置了本地mockServer，在`mock_server.enable: true`配置下会启用。
+  通过使用本地mockServer，您可以在开发和调试过程中更方便地模拟和观察网络请求和响应，以及处理自定义路由逻辑。
   这为开发者提供了一个便捷的工具，有助于快速定位和解决问题。
-  您可以自定义路由（route），只需要实现`pkg.Route` 接口，并通过在Spider中调用`AddDevServerRoutes(...pkg.Route)`
-  方法将其注册到devServer中。
-    * 支持http和https，您可以通过设置`dev_server`选项来指定devServer的URL。
+  您可以自定义路由（route），只需要实现`pkg.Route` 接口，并通过在Spider中调用`AddMockServerRoutes(...pkg.Route)`
+  方法将其注册到mockServer中。
+    * 支持http和https，您可以通过设置`mock_server`选项来指定mockServer的URL。
       `http://localhost:8081`表示使用HTTP协议，`https://localhost:8081`表示使用HTTPS协议。
     * 默认显示JA3指纹。JA3是一种用于TLS客户端指纹识别的算法，它可以显示与服务器建立连接时客户端使用的TLS版本和加密套件等信息。
-    * 您可以使用tls工具来生成服务器的私钥和证书，以便在devServer中使用HTTPS。tls工具可以帮助您生成自签名的证书，用于本地开发和测试环境。
-    * devServer内置了多种Route，这些Route提供了丰富的功能，可以模拟各种网络情景，帮助进行开发和调试。
-      您可以根据需要选择合适的route，并将其配置到devServer中，以模拟特定的网络响应和行为。
+    * 您可以使用tls工具来生成服务器的私钥和证书，以便在mockServer中使用HTTPS。tls工具可以帮助您生成自签名的证书，用于本地开发和测试环境。
+    * mockServer内置了多种Route，这些Route提供了丰富的功能，可以模拟各种网络情景，帮助进行开发和调试。
+      您可以根据需要选择合适的route，并将其配置到mockServer中，以模拟特定的网络响应和行为。
         * BadGatewayRoute 模拟返回502状态码
         * Big5Route 模拟使用big5编码
         * CookieRoute 模拟返回cookie
@@ -467,9 +467,9 @@ spider -c example.yml -n example -f TestOk -m dev
 * `log.long_file:` 如果设置为true（默认），则记录完整文件路径。
 * `log.level:` 日志级别，可选DEBUG/INFO/WARN/ERROR。
 
-* `dev_server`: 开发服务
-    * `enable: false` 是否启用开发服务
-    * `host: https://localhost:8081` 开发服务的地址。
+* `mock_server`: 模拟服务
+    * `enable: false` 是否启用模拟服务
+    * `host: https://localhost:8081` 模拟服务的地址。
     * `client_auth: 0` 客户端验证类型，0 不验证。
 
 中间件和Pipeline配置
@@ -598,7 +598,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/devServer"
+	"github.com/lizongying/go-crawler/pkg/mockServer"
 	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
@@ -649,7 +649,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
@@ -670,7 +670,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithDevServerRoute(devServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServer.NewRouteOk))
 }
 
 ```

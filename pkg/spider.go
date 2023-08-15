@@ -55,7 +55,7 @@ type Spider interface {
 	YieldRequest(Context, Request) error
 	YieldExtra(Context, any) error
 	SetRequestRate(slot string, interval time.Duration, concurrency int)
-	AddDevServerRoutes(...Route)
+	AddMockServerRoutes(...Route)
 	GetMode() string
 
 	SetLogger(Logger) Spider

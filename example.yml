@@ -41,7 +41,7 @@ request:
     - 200
   retry_max_times: 10
   http_proto: 2.0
-dev_server:
+mock_server:
   enable: false
   host: https://localhost:8081
   client_auth: 0

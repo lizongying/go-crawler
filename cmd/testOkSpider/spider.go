@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/items"
+	"github.com/lizongying/go-crawler/pkg/mockServer"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
 
@@ -50,7 +50,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 // TestOk go run cmd/testOkSpider/*.go -c example.yml -n test-ok -f TestOk -m dev
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
@@ -75,6 +75,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 
 func main() {
 	app.NewApp(NewSpider).Run(
-		pkg.WithDevServerRoute(devServer.NewRouteOk),
+		pkg.WithMockServerRoute(mockServer.NewRouteOk),
 	)
 }

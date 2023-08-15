@@ -16,8 +16,8 @@ type Crawler interface {
 	AddSpider(Spider)
 	Start(context.Context) error
 	Stop(context.Context) error
-	RunDevServer() error
-	AddDevServerRoutes(...Route)
+	RunMockServer() error
+	AddMockServerRoutes(...Route)
 	GetLogger() Logger
 	SetLogger(Logger)
 	GetConfig() Config
@@ -31,14 +31,14 @@ type Crawler interface {
 
 type CrawlOption func(Crawler)
 
-func WithDevServerRoute(route func(logger Logger) Route) CrawlOption {
+func WithMockServerRoute(route func(logger Logger) Route) CrawlOption {
 	return func(crawler Crawler) {
-		if !crawler.GetConfig().DevServerEnable() {
-			crawler.GetConfig().SetDevServerEnable(true)
-			_ = crawler.RunDevServer()
+		if !crawler.GetConfig().MockServerEnable() {
+			crawler.GetConfig().SetMockServerEnable(true)
+			_ = crawler.RunMockServer()
 		}
 
-		crawler.AddDevServerRoutes(route(crawler.GetLogger()))
+		crawler.AddMockServerRoutes(route(crawler.GetLogger()))
 	}
 }
 func WithMode(mode string) CrawlOption {

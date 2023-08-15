@@ -1,4 +1,4 @@
-package devServer
+package mockServer
 
 import (
 	"github.com/lizongying/go-crawler/pkg"
@@ -22,21 +22,21 @@ func Run(routeFn func(pkg.Logger) pkg.Route) {
 			),
 			config.NewConfig,
 		),
-		fx.Invoke(func(logger pkg.Logger, devServer pkg.DevServer, shutdowner fx.Shutdowner) {
-			devServer.AddRoutes(routeFn(logger))
-			_ = devServer.Run()
+		fx.Invoke(func(logger pkg.Logger, mockServer pkg.MockServer, shutdowner fx.Shutdowner) {
+			mockServer.AddRoutes(routeFn(logger))
+			_ = mockServer.Run()
 
 			return
 		}),
 	).Run()
 }
 
-// go test -v ./pkg/devServer/*.go -run TestNewRouteRobotsTxt
+// go test -v ./pkg/mockServer/*.go -run TestNewRouteRobotsTxt
 func TestNewRouteRobotsTxt(t *testing.T) {
 	Run(NewRouteRobotsTxt)
 }
 
-// go test -v ./pkg/devServer/*.go -run TestOk
+// go test -v ./pkg/mockServer/*.go -run TestOk
 func TestOk(t *testing.T) {
 	Run(NewRouteOk)
 }

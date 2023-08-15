@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	devServer2 "github.com/lizongying/go-crawler/internal/devServer"
+	mockServer2 "github.com/lizongying/go-crawler/internal/mockServer"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/devServer"
 	"github.com/lizongying/go-crawler/pkg/media"
+	"github.com/lizongying/go-crawler/pkg/mockServer"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strings"
@@ -102,10 +102,10 @@ func (s *Spider) ParseImages(_ pkg.Context, response pkg.Response) (err error) {
 
 // TestUrl go run cmd/testSpider/*.go -c dev.yml -n test -f TestUrl -m dev
 func (s *Spider) TestUrl(ctx pkg.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRouteOk(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteOk(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk+strings.Repeat("#", 10000))).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk+strings.Repeat("#", 10000))).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
@@ -117,10 +117,10 @@ func (s *Spider) TestUrl(ctx pkg.Context, _ string) (err error) {
 
 // TestOk go run cmd/testSpider/*.go -c dev.yml -n test -f TestOk -m dev
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRouteOk(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteOk(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
@@ -132,10 +132,10 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 
 // TestHttpAuth go run cmd/testSpider/*.go -c dev.yml -n test -f TestHttpAuth -m dev
 func (s *Spider) TestHttpAuth(ctx pkg.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRouteHttpAuth(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteHttpAuth(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlHttpAuth)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlHttpAuth)).
 		SetExtra(&ExtraHttpAuth{}).
 		SetCallBack(s.ParseHttpAuth)); err != nil {
 		s.logger.Error(err)
@@ -147,10 +147,10 @@ func (s *Spider) TestHttpAuth(ctx pkg.Context, _ string) (err error) {
 
 // TestCookie go run cmd/testSpider/*.go -c dev.yml -n test -f TestCookie -m dev
 func (s *Spider) TestCookie(ctx pkg.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRouteCookie(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteCookie(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlCookie)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlCookie)).
 		SetExtra(&ExtraCookie{}).
 		SetCallBack(s.ParseCookie)); err != nil {
 		s.logger.Error(err)
@@ -162,10 +162,10 @@ func (s *Spider) TestCookie(ctx pkg.Context, _ string) (err error) {
 
 // TestGzip go run cmd/testSpider/*.go -c dev.yml -n test -f TestGzip -m dev
 func (s *Spider) TestGzip(ctx pkg.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRouteGzip(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteGzip(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlGzip)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlGzip)).
 		SetCallBack(s.ParseGzip)); err != nil {
 		s.logger.Error(err)
 		return
@@ -176,10 +176,10 @@ func (s *Spider) TestGzip(ctx pkg.Context, _ string) (err error) {
 
 // TestDeflate go run cmd/testSpider/*.go -c dev.yml -n test -f TestDeflate -m dev
 func (s *Spider) TestDeflate(ctx pkg.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRouteDeflate(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteDeflate(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlDeflate)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlDeflate)).
 		SetCallBack(s.ParseDeflate)); err != nil {
 		s.logger.Error(err)
 		return
@@ -190,11 +190,11 @@ func (s *Spider) TestDeflate(ctx pkg.Context, _ string) (err error) {
 
 // TestRedirect go run cmd/testSpider/*.go -c dev.yml -n test -f TestRedirect -m dev
 func (s *Spider) TestRedirect(ctx pkg.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRouteRedirect(s.logger))
-	s.AddDevServerRoutes(devServer.NewRouteOk(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteRedirect(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteOk(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlRedirect)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlRedirect)).
 		SetCallBack(s.ParseRedirect)); err != nil {
 		s.logger.Error(err)
 		return
@@ -205,10 +205,10 @@ func (s *Spider) TestRedirect(ctx pkg.Context, _ string) (err error) {
 
 // TestTimeout go run cmd/testSpider/*.go -c dev.yml -n test -f TestTimeout -m dev
 func (s *Spider) TestTimeout(ctx pkg.Context, _ string) (err error) {
-	s.AddDevServerRoutes(devServer.NewRouteTimeout(s.logger))
+	s.AddMockServerRoutes(mockServer.NewRouteTimeout(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), devServer.UrlTimeout)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlTimeout)).
 		SetTimeout(9*time.Second).
 		SetCallBack(s.ParseTimeout)); err != nil {
 		s.logger.Error(err)
@@ -261,5 +261,5 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithDevServerRoute(devServer2.NewRouteCustom))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServer2.NewRouteCustom))
 }
