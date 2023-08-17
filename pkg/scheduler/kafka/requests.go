@@ -236,7 +236,7 @@ func (s *Scheduler) YieldExtra(extra any) (err error) {
 	kafkaWriter := &kafka.Writer{
 		Addr:                   kafka.TCP(strings.Split(s.config.KafkaUri(), ",")...),
 		AllowAutoTopicCreation: true,
-		Topic:                  fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.Spider().GetName(), name),
+		Topic:                  fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.Spider().Name(), name),
 	}
 	defer func() {
 		err = kafkaWriter.Close()
@@ -276,7 +276,7 @@ func (s *Scheduler) GetExtra(extra any) (err error) {
 		msg, err = kafka.NewReader(kafka.ReaderConfig{
 			Brokers:  s.kafkaReader.Config().Brokers,
 			MaxBytes: 10e6, // 10MB
-			Topic:    fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.Spider().GetName(), name),
+			Topic:    fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.Spider().Name(), name),
 			GroupID:  s.config.GetBotName(),
 		}).FetchMessage(ctx)
 		if err != nil {

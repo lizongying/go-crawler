@@ -8,7 +8,7 @@ import (
 )
 
 type Spider interface {
-	GetName() string
+	Name() string
 	SetName(string) Spider
 	GetHost() string
 	SetHost(string) Spider

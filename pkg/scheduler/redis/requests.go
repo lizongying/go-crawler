@@ -304,7 +304,7 @@ func (s *Scheduler) YieldExtra(extra any) (err error) {
 	defer cancel()
 
 	if s.enablePriorityQueue {
-		extraKey := fmt.Sprintf("%s:%s:extra:%s:priority", s.config.GetBotName(), name, spider.GetName())
+		extraKey := fmt.Sprintf("%s:%s:extra:%s:priority", s.config.GetBotName(), name, spider.Name())
 		z := redis.Z{
 			Score:  float64(time.Now().Unix() - 1000000000),
 			Member: bs,
@@ -320,7 +320,7 @@ func (s *Scheduler) YieldExtra(extra any) (err error) {
 			s.Spider().StateRequest().In()
 		}
 	} else {
-		extraKey := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), name, spider.GetName())
+		extraKey := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), name, spider.Name())
 		if err = s.redis.RPush(ctx, extraKey, bs).Err(); err != nil {
 			s.logger.Error(err)
 			return
@@ -352,7 +352,7 @@ func (s *Scheduler) GetExtra(extra any) (err error) {
 	go func() {
 		var msg []byte
 		if s.enablePriorityQueue {
-			key := fmt.Sprintf("%s:%s:extra:%s:priority", s.config.GetBotName(), s.Spider().GetName(), name)
+			key := fmt.Sprintf("%s:%s:extra:%s:priority", s.config.GetBotName(), s.Spider().Name(), name)
 			r, e := s.redis.Do(ctx, "EVALSHA", s.requestKeySha, 1, key, 1).Result()
 			if e != nil {
 				err = e
@@ -375,7 +375,7 @@ func (s *Scheduler) GetExtra(extra any) (err error) {
 				break
 			}
 		} else {
-			key := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), s.Spider().GetName(), name)
+			key := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), s.Spider().Name(), name)
 			r, e := s.redis.BLPop(ctx, 0, key).Result()
 			if e != nil {
 				err = e

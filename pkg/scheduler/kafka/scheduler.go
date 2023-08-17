@@ -50,14 +50,14 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	for _, v := range s.Pipelines() {
 		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("pipeline break", v.GetName())
+			s.logger.Debug("pipeline break", v.Name())
 			break
 		}
 	}
 	for _, v := range s.Middlewares() {
 		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("middlewares break", v.GetName())
+			s.logger.Debug("middlewares break", v.Name())
 			break
 		}
 	}
@@ -94,7 +94,7 @@ func (s *Scheduler) StopScheduler(ctx context.Context) (err error) {
 	return
 }
 func (s *Scheduler) initScheduler(_ context.Context) {
-	s.requestKey = fmt.Sprintf("%s-%s-request", s.config.GetBotName(), s.Spider().GetName())
+	s.requestKey = fmt.Sprintf("%s-%s-request", s.config.GetBotName(), s.Spider().Name())
 	s.logger.Info("request key", s.requestKey)
 	s.kafkaWriter.Topic = s.requestKey
 	s.kafkaReader = kafka.NewReader(kafka.ReaderConfig{

@@ -87,7 +87,7 @@ func (c *Crawler) GetS3() *s3.Client {
 func (c *Crawler) Start(ctx context.Context) (err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
-		if v.GetName() == c.spiderName {
+		if v.Name() == c.spiderName {
 			spider = v
 			break
 		}

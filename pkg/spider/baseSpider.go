@@ -60,7 +60,7 @@ type BaseSpider struct {
 	couldStop    chan struct{}
 }
 
-func (s *BaseSpider) GetName() string {
+func (s *BaseSpider) Name() string {
 	return s.name
 }
 func (s *BaseSpider) SetName(name string) pkg.Spider {
@@ -267,14 +267,14 @@ func (s *BaseSpider) Start(ctx context.Context, startFunc string, args string) (
 		for _, v := range s.Middlewares() {
 			e := v.Stop(ctx)
 			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("middlewares break", v.GetName())
+				s.logger.Debug("middlewares break", v.Name())
 				break
 			}
 		}
 		for _, v := range s.Pipelines() {
 			e := v.Stop(ctx)
 			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("pipeline break", v.GetName())
+				s.logger.Debug("pipeline break", v.Name())
 				break
 			}
 		}
@@ -305,11 +305,8 @@ func (s *BaseSpider) Start(ctx context.Context, startFunc string, args string) (
 
 	res := caller.Call(params)
 	if len(res) < 1 {
-		s.logger.Info(9999)
 		return
 	}
-
-	s.logger.Info(66666)
 
 	if !res[0].IsNil() {
 		var ok bool
@@ -322,7 +319,6 @@ func (s *BaseSpider) Start(ctx context.Context, startFunc string, args string) (
 
 		s.logger.Error(err)
 	}
-	s.logger.Info(77777)
 
 	return
 }

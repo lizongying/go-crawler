@@ -10,7 +10,7 @@ type CustomMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *CustomMiddleware) GetName() string {
+func (m *CustomMiddleware) Name() string {
 	return "custom"
 }
 

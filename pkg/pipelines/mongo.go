@@ -28,11 +28,11 @@ func (m *MongoPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		spider.IncItemError()
 		return
 	}
-	if item.GetName() != pkg.ItemMongo {
+	if item.Name() != pkg.ItemMongo {
 		m.logger.Warn("item not support", pkg.ItemMongo)
 		return
 	}
-	itemMongo, ok := item.GetItem().(*items.ItemMongo)
+	itemMongo, ok := item.Item().(*items.ItemMongo)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemMongo)
 		return
@@ -52,7 +52,7 @@ func (m *MongoPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	data := item.GetData()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
@@ -80,10 +80,10 @@ func (m *MongoPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 
 	res, err := m.mongoDb.Collection(itemMongo.GetCollection()).InsertOne(ctx, bs)
 	if err != nil {
-		if itemMongo.GetUpdate() && !reflect.ValueOf(itemMongo.GetId()).IsZero() && mongo.IsDuplicateKeyError(err) {
-			_, err = m.mongoDb.Collection(itemMongo.GetCollection()).UpdateOne(ctx, bson.M{"_id": itemMongo.GetId()}, bson.M{"$set": itemMongo.GetData()})
+		if itemMongo.GetUpdate() && !reflect.ValueOf(itemMongo.Id()).IsZero() && mongo.IsDuplicateKeyError(err) {
+			_, err = m.mongoDb.Collection(itemMongo.GetCollection()).UpdateOne(ctx, bson.M{"_id": itemMongo.Id()}, bson.M{"$set": itemMongo.Data()})
 			if err == nil {
-				m.logger.Info(itemMongo.GetCollection(), "update success", itemMongo.GetId())
+				m.logger.Info(itemMongo.GetCollection(), "update success", itemMongo.Id())
 			}
 		}
 	} else {

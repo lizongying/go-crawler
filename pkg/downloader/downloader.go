@@ -28,7 +28,7 @@ func (d *Downloader) processRequest(ctx pkg.Context, request pkg.Request) (err e
 		return
 	}
 	for k, v := range d.processRequestFns {
-		name := d.middlewares[k].GetName()
+		name := d.middlewares[k].Name()
 		d.logger.Debug("enter", name, "processRequest")
 		e := v(ctx, request)
 		err = errors.Join(err, e)
@@ -107,7 +107,7 @@ func (d *Downloader) processResponse(ctx pkg.Context, response pkg.Response) (er
 		return
 	}
 	for k, v := range d.processResponseFns {
-		name := d.middlewares[k].GetName()
+		name := d.middlewares[k].Name()
 		d.logger.Debug("enter", name, "ProcessResponse")
 		e := v(ctx, response)
 		err = errors.Join(err, e)
@@ -125,7 +125,7 @@ func (d *Downloader) MiddlewareNames() (middlewares map[uint8]string) {
 
 	middlewares = make(map[uint8]string)
 	for _, v := range d.middlewares {
-		middlewares[v.GetOrder()] = v.GetName()
+		middlewares[v.Order()] = v.Name()
 	}
 
 	return
@@ -145,7 +145,7 @@ func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
 	middleware.SetName(name)
 	middleware.SetOrder(order)
 	for k, v := range d.middlewares {
-		if v.GetName() == name && v.GetOrder() != order {
+		if v.Name() == name && v.Order() != order {
 			d.DelMiddleware(k)
 			break
 		}
@@ -154,7 +154,7 @@ func (d *Downloader) SetMiddleware(middleware pkg.Middleware, order uint8) {
 	d.middlewares = append(d.middlewares, middleware)
 
 	sort.Slice(d.middlewares, func(i, j int) bool {
-		return d.middlewares[i].GetOrder() < d.middlewares[j].GetOrder()
+		return d.middlewares[i].Order() < d.middlewares[j].Order()
 	})
 
 	var processRequestFns []func(pkg.Context, pkg.Request) error

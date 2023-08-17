@@ -16,22 +16,22 @@ const (
 )
 
 type Item interface {
-	GetItem() any
-	GetName() ItemName
+	Item() any
+	Name() ItemName
 	SetUniqueKey(string) Item
 	UniqueKey() string
 	SetId(any) Item
-	GetId() any
+	Id() any
 	SetData(any) Item
-	GetData() any
+	Data() any
 	SetReferrer(string) Item
 	Referrer() string
 	SetFilesRequest([]Request) Item
-	GetFilesRequest() []Request
+	FilesRequest() []Request
 	SetFiles([]File) Item
 	Files() []File
 	SetImagesRequest([]Request) Item
-	GetImagesRequest() []Request
+	ImagesRequest() []Request
 	SetImages([]Image) Item
 	Images() []Image
 }
@@ -51,14 +51,14 @@ func (i *ItemUnimplemented) SetItem(item any) Item {
 	i.item = item
 	return i
 }
-func (i *ItemUnimplemented) GetItem() any {
+func (i *ItemUnimplemented) Item() any {
 	return i.item
 }
 func (i *ItemUnimplemented) SetName(name ItemName) Item {
 	i.name = name
 	return i
 }
-func (i *ItemUnimplemented) GetName() ItemName {
+func (i *ItemUnimplemented) Name() ItemName {
 	return i.name
 }
 func (i *ItemUnimplemented) SetUniqueKey(uniqueKey string) Item {
@@ -72,7 +72,7 @@ func (i *ItemUnimplemented) SetId(id any) Item {
 	i.id = id
 	return i
 }
-func (i *ItemUnimplemented) GetId() any {
+func (i *ItemUnimplemented) Id() any {
 	return i.id
 }
 func (i *ItemUnimplemented) SetData(data any) Item {
@@ -83,7 +83,7 @@ func (i *ItemUnimplemented) SetData(data any) Item {
 	i.data = data
 	return i
 }
-func (i *ItemUnimplemented) GetData() any {
+func (i *ItemUnimplemented) Data() any {
 	return i.data
 }
 func (i *ItemUnimplemented) SetReferrer(referrer string) Item {
@@ -100,7 +100,7 @@ func (i *ItemUnimplemented) SetFilesRequest(files []Request) Item {
 	}
 	return i
 }
-func (i *ItemUnimplemented) GetFilesRequest() []Request {
+func (i *ItemUnimplemented) FilesRequest() []Request {
 	return i.files
 }
 func (i *ItemUnimplemented) SetImagesRequest(images []Request) Item {
@@ -110,7 +110,7 @@ func (i *ItemUnimplemented) SetImagesRequest(images []Request) Item {
 	}
 	return i
 }
-func (i *ItemUnimplemented) GetImagesRequest() []Request {
+func (i *ItemUnimplemented) ImagesRequest() []Request {
 	return i.images
 }
 func (i *ItemUnimplemented) SetFiles(files []File) Item {

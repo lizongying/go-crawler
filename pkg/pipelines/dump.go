@@ -22,7 +22,7 @@ func (m *DumpPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error)
 		return
 	}
 
-	data := item.GetData()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)

@@ -28,7 +28,7 @@ func (m *ImagePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	images := item.GetImagesRequest()
+	images := item.ImagesRequest()
 	if len(images) == 0 {
 		return
 	}

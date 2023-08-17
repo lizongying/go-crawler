@@ -8,9 +8,9 @@ type Middleware interface {
 	ProcessResponse(Context, Response) error
 	Stop(context.Context) error
 	SetName(string)
-	GetName() string
+	Name() string
 	SetOrder(uint8)
-	GetOrder() uint8
+	Order() uint8
 	FromSpider(Spider) Middleware
 }
 
@@ -45,13 +45,13 @@ func (*UnimplementedMiddleware) ProcessResponse(Context, Response) error {
 func (*UnimplementedMiddleware) Stop(context.Context) error {
 	return nil
 }
-func (m *UnimplementedMiddleware) GetName() string {
+func (m *UnimplementedMiddleware) Name() string {
 	return m.name
 }
 func (m *UnimplementedMiddleware) SetName(name string) {
 	m.name = name
 }
-func (m *UnimplementedMiddleware) GetOrder() uint8 {
+func (m *UnimplementedMiddleware) Order() uint8 {
 	return m.order
 }
 func (m *UnimplementedMiddleware) SetOrder(order uint8) {

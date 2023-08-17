@@ -28,11 +28,11 @@ func (m *KafkaPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		spider.IncItemError()
 		return
 	}
-	if item.GetName() != pkg.ItemKafka {
+	if item.Name() != pkg.ItemKafka {
 		m.logger.Warn("item not support", pkg.ItemKafka)
 		return
 	}
-	itemKafka, ok := item.GetItem().(*items.ItemKafka)
+	itemKafka, ok := item.Item().(*items.ItemKafka)
 	if !ok {
 		m.logger.Warn("item not parsing failed with", pkg.ItemKafka)
 		return
@@ -52,7 +52,7 @@ func (m *KafkaPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	data := item.GetData()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
@@ -84,7 +84,7 @@ func (m *KafkaPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 	})
 	err = m.kafkaWriter.WriteMessages(ctx,
 		kafka.Message{
-			Key:   []byte(fmt.Sprint(itemKafka.GetId())),
+			Key:   []byte(fmt.Sprint(itemKafka.Id())),
 			Value: bs,
 		},
 	)

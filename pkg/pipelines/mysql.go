@@ -29,11 +29,11 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		spider.IncItemError()
 		return
 	}
-	if item.GetName() != pkg.ItemMysql {
+	if item.Name() != pkg.ItemMysql {
 		m.logger.Warn("item not support", pkg.ItemMysql)
 		return
 	}
-	itemMysql, ok := item.GetItem().(*items.ItemMysql)
+	itemMysql, ok := item.Item().(*items.ItemMysql)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemMysql)
 		return
@@ -46,7 +46,7 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	data := item.GetData()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
@@ -64,8 +64,8 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	refType := reflect.TypeOf(itemMysql.GetData()).Elem()
-	refValue := reflect.ValueOf(itemMysql.GetData()).Elem()
+	refType := reflect.TypeOf(itemMysql.Data()).Elem()
+	refValue := reflect.ValueOf(itemMysql.Data()).Elem()
 	var columns []string
 	var values []any
 	for i := 0; i < refType.NumField(); i++ {
@@ -94,9 +94,9 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 			return
 		}
 
-		if itemMysql.GetUpdate() && !reflect.ValueOf(itemMysql.GetId()).IsZero() && e.Number == 1062 {
+		if itemMysql.GetUpdate() && !reflect.ValueOf(itemMysql.Id()).IsZero() && e.Number == 1062 {
 			s = fmt.Sprintf(`UPDATE %s SET %s WHERE id=?`, itemMysql.GetTable(), strings.Join(columns, ","))
-			values = append(values, itemMysql.GetId())
+			values = append(values, itemMysql.Id())
 			stmt, err = m.mysql.PrepareContext(ctx, s)
 			if err != nil {
 				m.logger.Error(err)
@@ -118,7 +118,7 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 				return
 			}
 
-			m.logger.Info(itemMysql.GetTable(), "update success", itemMysql.GetId())
+			m.logger.Info(itemMysql.GetTable(), "update success", itemMysql.Id())
 		} else {
 			m.logger.Error(err)
 			spider.IncItemError()

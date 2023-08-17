@@ -129,7 +129,7 @@ func main() {
     }
     ```
     * Item has some common methods:
-        * `GetName() pkg.ItemName`: Get the specific type of the Item, such
+        * `Name() pkg.ItemName`: Get the specific type of the Item, such
           as `pkg.ItemNone`, `pkg.ItemCsv`, `pkg.ItemJsonl`, `pkg.ItemMongo`, `pkg.ItemMysql`, `pkg.ItemKafka`, etc.,
           which is used for deserializing the Item to the specific Item implementation.
         * `SetReferrer(string)`: Set the referrer, which can be used to record the source of the request. Generally,
@@ -139,18 +139,18 @@ func main() {
         * `UniqueKey() string`: Get the unique key.
         * `SetId(any)`: Set the ID, mainly used as the primary key when saving data. One difference from `UniqueKey` is
           that `Id` may be generated in the Response and may not be obtained when making the request.
-        * `GetId() any`: Get the ID.
+        * `Id() any`: Get the ID.
         * `SetData(any)`: Set the data, which is the complete data to be stored. For standardization, it is required to
           be a pointer type. When storing data in different destinations, the data needs to be set in different formats.
-        * `GetData() any`: Get the data.
+        * `Data() any`: Get the data.
         * `SetFilesRequest([]pkg.Request)`: Set the requests for downloading files. This is a slice and can be used to
           download multiple files.
-        * `GetFilesRequest() []pkg.Request`: Get the requests for downloading files.
+        * `FilesRequest() []pkg.Request`: Get the requests for downloading files.
         * `SetFiles([]pkg.File)`: Set the downloaded files using this method.
         * `Files() []pkg.File`: Get the downloaded files.
         * `SetImagesRequest([]pkg.Request)`: Set the requests for downloading images. This is a slice and can be used to
           download multiple images.
-        * `GetImagesRequest() []pkg.Request`: Get the requests for downloading images.
+        * `ImagesRequest() []pkg.Request`: Get the requests for downloading images.
         * `SetImages([]pkg.Image)`: Set the downloaded images using this method.
         * `Images() []pkg.Image`: Get the downloaded images.
     * Built-in Item Implementations: The framework provides some built-in Item implementations, such
@@ -924,6 +924,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 			Count: extra.Count + 1,
 		}).
 		SetCallBack(s.ParseOk))
+	return
 }
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
@@ -931,6 +932,7 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk))
+	return
 }
 
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {

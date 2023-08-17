@@ -26,11 +26,11 @@ func (m *JsonLinesPipeline) ProcessItem(_ context.Context, item pkg.Item) (err e
 		spider.IncItemError()
 		return
 	}
-	if item.GetName() != pkg.ItemJsonl {
+	if item.Name() != pkg.ItemJsonl {
 		m.logger.Warn("item not support", pkg.ItemKafka)
 		return
 	}
-	itemJsonl, ok := item.GetItem().(*items.ItemJsonl)
+	itemJsonl, ok := item.Item().(*items.ItemJsonl)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemKafka)
 		return
@@ -43,7 +43,7 @@ func (m *JsonLinesPipeline) ProcessItem(_ context.Context, item pkg.Item) (err e
 		return
 	}
 
-	data := item.GetData()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)

@@ -47,14 +47,14 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	for _, v := range s.Pipelines() {
 		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("pipeline break", v.GetName())
+			s.logger.Debug("pipeline break", v.Name())
 			break
 		}
 	}
 	for _, v := range s.Middlewares() {
 		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("middlewares break", v.GetName())
+			s.logger.Debug("middlewares break", v.Name())
 			break
 		}
 	}

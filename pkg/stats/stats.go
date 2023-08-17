@@ -3,87 +3,116 @@ package stats
 import "sync/atomic"
 
 type Stats struct {
-	RequestTotal   uint32
-	RequestSuccess uint32
-	RequestIgnore  uint32
-	RequestError   uint32
-	ItemTotal      uint32
-	ItemSuccess    uint32
-	ItemIgnore     uint32
-	ItemError      uint32
-	StatusOk       uint32
-	StatusErr      uint32
+	requestTotal   uint32
+	requestSuccess uint32
+	requestIgnore  uint32
+	requestError   uint32
+	itemTotal      uint32
+	itemSuccess    uint32
+	itemIgnore     uint32
+	itemError      uint32
+	statusOk       uint32
+	statusErr      uint32
 }
 
-func (s *Stats) GetRequestTotal() uint32 {
-	return atomic.LoadUint32(&s.RequestTotal)
+func (s *Stats) RequestTotal() uint32 {
+	return atomic.LoadUint32(&s.requestTotal)
 }
 func (s *Stats) IncRequestTotal() uint32 {
-	return atomic.AddUint32(&s.RequestTotal, 1)
+	return atomic.AddUint32(&s.requestTotal, 1)
 }
-func (s *Stats) GetRequestSuccess() uint32 {
-	return atomic.LoadUint32(&s.RequestSuccess)
+func (s *Stats) RequestSuccess() uint32 {
+	return atomic.LoadUint32(&s.requestSuccess)
 }
 func (s *Stats) IncRequestSuccess() uint32 {
-	return atomic.AddUint32(&s.RequestSuccess, 1)
+	return atomic.AddUint32(&s.requestSuccess, 1)
 }
-func (s *Stats) GetRequestIgnore() uint32 {
-	return atomic.LoadUint32(&s.RequestIgnore)
+func (s *Stats) RequestIgnore() uint32 {
+	return atomic.LoadUint32(&s.requestIgnore)
 }
 func (s *Stats) IncRequestIgnore() uint32 {
-	return atomic.AddUint32(&s.RequestIgnore, 1)
+	return atomic.AddUint32(&s.requestIgnore, 1)
 }
-func (s *Stats) GetRequestError() uint32 {
-	return atomic.LoadUint32(&s.RequestError)
+func (s *Stats) RequestError() uint32 {
+	return atomic.LoadUint32(&s.requestError)
 }
 func (s *Stats) IncRequestError() uint32 {
-	return atomic.AddUint32(&s.RequestError, 1)
+	return atomic.AddUint32(&s.requestError, 1)
 }
-func (s *Stats) GetItemTotal() uint32 {
-	return atomic.LoadUint32(&s.ItemTotal)
+func (s *Stats) ItemTotal() uint32 {
+	return atomic.LoadUint32(&s.itemTotal)
 }
 func (s *Stats) IncItemTotal() uint32 {
-	return atomic.AddUint32(&s.ItemTotal, 1)
+	return atomic.AddUint32(&s.itemTotal, 1)
 }
-func (s *Stats) GetItemSuccess() uint32 {
-	return atomic.LoadUint32(&s.ItemSuccess)
+func (s *Stats) ItemSuccess() uint32 {
+	return atomic.LoadUint32(&s.itemSuccess)
 }
 func (s *Stats) IncItemSuccess() uint32 {
-	return atomic.AddUint32(&s.ItemSuccess, 1)
+	return atomic.AddUint32(&s.itemSuccess, 1)
 }
-func (s *Stats) GetItemIgnore() uint32 {
-	return atomic.LoadUint32(&s.ItemIgnore)
+func (s *Stats) ItemIgnore() uint32 {
+	return atomic.LoadUint32(&s.itemIgnore)
 }
 func (s *Stats) IncItemIgnore() uint32 {
-	return atomic.AddUint32(&s.ItemIgnore, 1)
+	return atomic.AddUint32(&s.itemIgnore, 1)
 }
-func (s *Stats) GetItemError() uint32 {
-	return atomic.LoadUint32(&s.ItemError)
+func (s *Stats) ItemError() uint32 {
+	return atomic.LoadUint32(&s.itemError)
 }
 func (s *Stats) IncItemError() uint32 {
-	return atomic.AddUint32(&s.ItemError, 1)
+	return atomic.AddUint32(&s.itemError, 1)
 }
-func (s *Stats) GetStatusOk() uint32 {
-	return atomic.LoadUint32(&s.StatusOk)
+func (s *Stats) StatusOk() uint32 {
+	return atomic.LoadUint32(&s.statusOk)
 }
 func (s *Stats) IncStatusOk() uint32 {
-	return atomic.AddUint32(&s.StatusOk, 1)
+	return atomic.AddUint32(&s.statusOk, 1)
 }
-func (s *Stats) GetStatusErr() uint32 {
-	return atomic.LoadUint32(&s.StatusErr)
+func (s *Stats) StatusErr() uint32 {
+	return atomic.LoadUint32(&s.statusErr)
 }
 func (s *Stats) IncStatusErr() uint32 {
-	return atomic.AddUint32(&s.StatusOk, 1)
+	return atomic.AddUint32(&s.statusOk, 1)
+}
+func (s *Stats) GetMap() map[string]uint32 {
+	return map[string]uint32{
+		"requestTotal":   s.RequestTotal(),
+		"requestSuccess": s.RequestSuccess(),
+		"requestIgnore":  s.RequestIgnore(),
+		"requestError":   s.RequestError(),
+		"itemTotal":      s.ItemTotal(),
+		"itemSuccess":    s.ItemSuccess(),
+		"itemIgnore":     s.ItemIgnore(),
+		"itemError":      s.ItemError(),
+		"statusOk":       s.StatusOk(),
+		"statusErr":      s.StatusErr(),
+	}
 }
 
 type ImageStats struct {
 	Stats
-	ImageTotal uint32
+	imageTotal uint32
 }
 
-func (s *ImageStats) GetImageTotal() uint32 {
-	return atomic.LoadUint32(&s.ImageTotal)
+func (s *ImageStats) ImageTotal() uint32 {
+	return atomic.LoadUint32(&s.imageTotal)
 }
 func (s *ImageStats) IncImageTotal() uint32 {
-	return atomic.AddUint32(&s.ImageTotal, 1)
+	return atomic.AddUint32(&s.imageTotal, 1)
+}
+func (s *ImageStats) GetMap() map[string]uint32 {
+	return map[string]uint32{
+		"requestTotal":   s.RequestTotal(),
+		"requestSuccess": s.RequestSuccess(),
+		"requestIgnore":  s.RequestIgnore(),
+		"requestError":   s.RequestError(),
+		"itemTotal":      s.ItemTotal(),
+		"itemSuccess":    s.ItemSuccess(),
+		"itemIgnore":     s.ItemIgnore(),
+		"itemError":      s.ItemError(),
+		"statusOk":       s.StatusOk(),
+		"statusErr":      s.StatusErr(),
+		"imageTotal":     s.ImageTotal(),
+	}
 }

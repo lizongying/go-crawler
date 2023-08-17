@@ -17,7 +17,7 @@ type RedisFilter struct {
 }
 
 func (f *RedisFilter) SpiderOpened() {
-	f.key = fmt.Sprintf("crawler:%s:filter", f.spider.GetName())
+	f.key = fmt.Sprintf("crawler:%s:filter", f.spider.Name())
 	f.logger.Debug("filter key", f.key)
 	ctx := context.Background()
 	if CleanFilterOnSpiderOpened {

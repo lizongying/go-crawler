@@ -25,7 +25,7 @@ func (s *Scheduler) handleItem(ctx context.Context) {
 		}
 
 		<-s.itemConcurrencyChan
-		s.logger.Debug(cap(s.itemConcurrencyChan), len(s.itemConcurrencyChan), "id:", item.GetId())
+		s.logger.Debug(cap(s.itemConcurrencyChan), len(s.itemConcurrencyChan), "id:", item.Id())
 		go func(itemConcurrencyChan chan struct{}, item pkg.Item) {
 			defer func() {
 				if itemConcurrencyChan != s.itemConcurrencyChan && itemConcurrencyChanLen < 0 {
@@ -51,7 +51,7 @@ func (s *Scheduler) handleItem(ctx context.Context) {
 }
 
 func (s *Scheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err error) {
-	data := item.GetData()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		s.logger.Error(err)

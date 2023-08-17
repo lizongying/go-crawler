@@ -12,7 +12,7 @@ type CustomPipeline struct {
 	logger pkg.Logger
 }
 
-func (m *CustomPipeline) GetName() string {
+func (m *CustomPipeline) Name() string {
 	return "custom"
 }
 
@@ -28,11 +28,11 @@ func (m *CustomPipeline) ProcessItem(_ context.Context, item pkg.Item) (err erro
 		m.logger.Error(err)
 		return
 	}
-	if item.GetName() != items2.Custom {
+	if item.Name() != items2.Custom {
 		m.logger.Warn("item not support", items2.Custom)
 		return
 	}
-	itemCustom, ok := item.GetItem().(*items2.ItemCustom)
+	itemCustom, ok := item.Item().(*items2.ItemCustom)
 	if !ok {
 		m.logger.Warn("item parsing failed with", items2.Custom)
 		return

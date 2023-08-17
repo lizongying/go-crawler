@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"net/http"
-	"reflect"
 	"sort"
 	"time"
 )
@@ -31,12 +30,10 @@ func (m *StatsMiddleware) Stop(_ context.Context) (err error) {
 	m.timer.Stop()
 	m.chanStop <- struct{}{}
 
-	kv := make(map[string]uint32)
-	getKV(reflect.ValueOf(spider.GetStats()).Elem(), kv)
-
 	var sl []any
-	sl = append(sl, spider.GetName())
+	sl = append(sl, spider.Name())
 	keys := make([]string, 0)
+	kv := spider.GetStats().GetMap()
 	for k := range kv {
 		keys = append(keys, k)
 	}
@@ -73,11 +70,10 @@ func (m *StatsMiddleware) log(spider pkg.Spider) {
 		m.timer.Reset(m.interval)
 		select {
 		case <-m.timer.C:
-			kv := make(map[string]uint32)
-			getKV(reflect.ValueOf(spider.GetStats()).Elem(), kv)
 			var sl []any
-			sl = append(sl, spider.GetName())
+			sl = append(sl, spider.Name())
 			keys := make([]string, 0)
+			kv := spider.GetStats().GetMap()
 			for k := range kv {
 				keys = append(keys, k)
 			}
@@ -88,27 +84,6 @@ func (m *StatsMiddleware) log(spider pkg.Spider) {
 			m.logger.Info(sl...)
 		case <-m.chanStop:
 			return
-		}
-	}
-}
-
-func getKV(v reflect.Value, m map[string]uint32) {
-	t := v.Type()
-
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Field(i)
-		fieldName := t.Field(i).Name
-
-		switch field.Kind() {
-		case reflect.Ptr:
-			if field.IsNil() {
-				continue
-			}
-			getKV(reflect.Indirect(field), m)
-		case reflect.Struct:
-			getKV(field, m)
-		default:
-			m[fieldName] = field.Interface().(uint32)
 		}
 	}
 }

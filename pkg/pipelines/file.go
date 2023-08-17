@@ -28,7 +28,7 @@ func (m *FilePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error)
 		return
 	}
 
-	files := item.GetFilesRequest()
+	files := item.FilesRequest()
 	if len(files) == 0 {
 		return
 	}

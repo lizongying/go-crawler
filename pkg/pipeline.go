@@ -7,9 +7,9 @@ type Pipeline interface {
 	ProcessItem(context.Context, Item) error
 	Stop(context.Context) error
 	SetName(string)
-	GetName() string
+	Name() string
 	SetOrder(uint8)
-	GetOrder() uint8
+	Order() uint8
 	FromSpider(Spider) Pipeline
 	WithContext(context context.Context) Pipeline
 }
@@ -39,13 +39,13 @@ func (*UnimplementedPipeline) ProcessItem(context.Context, Item) error {
 func (*UnimplementedPipeline) Stop(context.Context) error {
 	return nil
 }
-func (p *UnimplementedPipeline) GetName() string {
+func (p *UnimplementedPipeline) Name() string {
 	return p.name
 }
 func (p *UnimplementedPipeline) SetName(name string) {
 	p.name = name
 }
-func (p *UnimplementedPipeline) GetOrder() uint8 {
+func (p *UnimplementedPipeline) Order() uint8 {
 	return p.order
 }
 func (p *UnimplementedPipeline) SetOrder(order uint8) {

@@ -62,14 +62,14 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	for _, v := range s.Pipelines() {
 		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("pipeline break", v.GetName())
+			s.logger.Debug("pipeline break", v.Name())
 			break
 		}
 	}
 	for _, v := range s.Middlewares() {
 		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("middlewares break", v.GetName())
+			s.logger.Debug("middlewares break", v.Name())
 			break
 		}
 	}
@@ -106,9 +106,9 @@ func (s *Scheduler) StopScheduler(ctx context.Context) (err error) {
 	return
 }
 func (s *Scheduler) initScheduler(_ context.Context) {
-	s.requestKey = fmt.Sprintf("%s:%s:request", s.config.GetBotName(), s.Spider().GetName())
+	s.requestKey = fmt.Sprintf("%s:%s:request", s.config.GetBotName(), s.Spider().Name())
 	if s.enablePriorityQueue {
-		s.requestKey = fmt.Sprintf("%s:%s:request:priority", s.config.GetBotName(), s.Spider().GetName())
+		s.requestKey = fmt.Sprintf("%s:%s:request:priority", s.config.GetBotName(), s.Spider().Name())
 		script := `
 local r = redis.call("ZRANGEBYSCORE", KEYS[1], 0, 2147483647, "LIMIT", 0, ARGV[1])
 for _, v in ipairs(r) do

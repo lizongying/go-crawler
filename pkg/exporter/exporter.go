@@ -35,7 +35,7 @@ func (e *Exporter) PipelineNames() (pipelines map[uint8]string) {
 
 	pipelines = make(map[uint8]string)
 	for _, v := range e.pipelines {
-		pipelines[v.GetOrder()] = v.GetName()
+		pipelines[v.Order()] = v.Name()
 	}
 
 	return
@@ -55,7 +55,7 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 	pipeline.SetName(name)
 	pipeline.SetOrder(order)
 	for k, v := range e.pipelines {
-		if v.GetName() == name && v.GetOrder() != order {
+		if v.Name() == name && v.Order() != order {
 			e.DelPipeline(k)
 			break
 		}
@@ -64,7 +64,7 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 	e.pipelines = append(e.pipelines, pipeline)
 
 	sort.Slice(e.pipelines, func(i, j int) bool {
-		return e.pipelines[i].GetOrder() < e.pipelines[j].GetOrder()
+		return e.pipelines[i].Order() < e.pipelines[j].Order()
 	})
 
 	var processItemFns []func(context.Context, pkg.Item) error
