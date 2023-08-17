@@ -544,7 +544,8 @@ func main() {
     * By default, the MockServer displays JA3 fingerprints. JA3 is an algorithm used for TLS client fingerprinting, and
       it shows information about the TLS version and cipher suites used by the client when establishing a connection
       with the server.
-    * You can use the tls tool to generate the server's private key and certificate for use with HTTPS in the MockServer.
+    * You can use the tls tool to generate the server's private key and certificate for use with HTTPS in the
+      MockServer.
       The tls tool can help you generate self-signed certificates for local development and testing environments.
     * The MockServer includes multiple built-in routes that provide rich functionalities to simulate various network
       scenarios and assist in development and debugging. You can choose the appropriate route based on your needs and
@@ -762,6 +763,32 @@ Other Configurations:
 
     ```
 
+* Which should be used in the task queue: `request`, `extra`, or `unique_key`?
+
+  Firstly, it should be noted that these three terms are concepts within this framework:
+    * `request` contains all the fields of a request, including URL, method, headers, and may have undergone middleware
+      processing. The drawback is that it occupies more space, making it somewhat wasteful as a queue value.
+    * `extra` is a structured field within the request and, in the framework's design, it contains information that can
+      construct a unique request (in most cases). For instance, a list page under a category may include the category ID
+      and page number. Similarly, a detail page may include a detail ID. To ensure compatibility with various languages,
+      the storage format in the queue is JSON, which is more space-efficient. It's recommended to use this option.
+    * `unique_key` is a unique identifier for a request within the framework and is a string. While it can represent
+      uniqueness in some cases, it can become cumbersome when requiring a combination of multiple fields to be unique –
+      such as in the case of list pages or detail pages involving both a category and an ID. If memory is constrained (
+      e.g., in Redis usage), it can be used. However, for greater generality, using `extra` might be more convenient.
+
+  Enqueuing:
+    * `YieldExtra` or `MustYieldExtra`
+
+  Dequeuing:
+    * `GetExtra` or `MustGetExtra`
+
+* Whether to use `Must[method]`, such as `MustYieldRequest`?
+
+  `Must[method]` is more concise, but it might be less convenient for troubleshooting errors. Whether to use it depends
+  on the individual style of the user.
+  If there's a need for specific error handling, then regular methods like `YieldRequest` should be used.
+
 ## Complete example
 
 exampleSpider.go
@@ -850,6 +877,80 @@ func main() {
 
 ```
 
+or
+
+```go
+package main
+
+import (
+	"fmt"
+	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/app"
+	"github.com/lizongying/go-crawler/pkg/items"
+	"github.com/lizongying/go-crawler/pkg/mockServer"
+	"github.com/lizongying/go-crawler/pkg/request"
+)
+
+type ExtraOk struct {
+	Count int
+}
+
+type DataOk struct {
+	Count int
+}
+
+type Spider struct {
+	pkg.Spider
+	logger pkg.Logger
+}
+
+func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
+	var extra ExtraOk
+	response.UnmarshalExtra(&extra)
+
+	s.MustYieldItem(ctx, items.NewItemNone().
+		SetData(&DataOk{
+			Count: extra.Count,
+		}))
+
+	if extra.Count > 0 {
+		s.logger.Info("manual stop")
+		return
+	}
+
+	s.MustYieldRequest(ctx, request.NewRequest().
+		SetUrl(response.GetUrl()).
+		SetExtra(&ExtraOk{
+			Count: extra.Count + 1,
+		}).
+		SetCallBack(s.ParseOk))
+}
+
+func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
+	s.MustYieldRequest(ctx, request.NewRequest().
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
+		SetExtra(&ExtraOk{}).
+		SetCallBack(s.ParseOk))
+}
+
+func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
+	spider = &Spider{
+		Spider: baseSpider,
+		logger: baseSpider.GetLogger(),
+	}
+	spider.WithOptions(
+		pkg.WithName("example"),
+		pkg.WithHost("https://localhost:8081"),
+	)
+	return
+}
+
+func main() {
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServer.NewRouteOk))
+}
+
+```
+
 ```shell
 go run exampleSpider.go -c example.yml -n example -f TestOk -m dev
 
@@ -894,6 +995,9 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 * Supports distributed processing.
 * Supports Redis and Kafka as message queues.
 * Supports automatic handling of cookies and redirects.
+* Browser simulation is supported.
+* Mock server is supported.
+* Priority queue is supported.
 
 
 1. Parsing:
@@ -924,5 +1028,5 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 6. Automatic Handling:
     - Cookies: Supported
     - Redirects: Supported
-   
+
 7. Mock Server:

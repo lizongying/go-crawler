@@ -501,6 +501,11 @@ func (r *Request) UnmarshalExtra(v any) (err error) {
 	err = json.Unmarshal([]byte(r.extra), v)
 	return
 }
+func (r *Request) MustUnmarshalExtra(v any) {
+	if err := r.UnmarshalExtra(v); err != nil {
+		panic(err)
+	}
+}
 func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 	var Url string
 	if r.URL != nil {

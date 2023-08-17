@@ -2,8 +2,8 @@ package pkg
 
 type Downloader interface {
 	Download(Context, Request) (Response, error)
-	GetMiddlewareNames() map[uint8]string
-	GetMiddlewares() []Middleware
+	MiddlewareNames() map[uint8]string
+	Middlewares() []Middleware
 	SetMiddleware(Middleware, uint8)
 	DelMiddleware(int)
 	CleanMiddlewares()

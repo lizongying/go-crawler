@@ -119,7 +119,7 @@ func (d *Downloader) processResponse(ctx pkg.Context, response pkg.Response) (er
 	return
 }
 
-func (d *Downloader) GetMiddlewareNames() (middlewares map[uint8]string) {
+func (d *Downloader) MiddlewareNames() (middlewares map[uint8]string) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
@@ -131,7 +131,7 @@ func (d *Downloader) GetMiddlewareNames() (middlewares map[uint8]string) {
 	return
 }
 
-func (d *Downloader) GetMiddlewares() []pkg.Middleware {
+func (d *Downloader) Middlewares() []pkg.Middleware {
 	return d.middlewares
 }
 

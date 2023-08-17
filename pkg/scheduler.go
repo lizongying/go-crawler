@@ -26,6 +26,7 @@ type Scheduler interface {
 	SetItemConcurrency(int)
 	SetRequestRate(string, time.Duration, int)
 	YieldItem(Context, Item) error
+	MustYieldItem(Context, Item)
 	Request(Context, Request) (Response, error)
 	YieldRequest(Context, Request) error
 	MustYieldRequest(Context, Request)
@@ -85,13 +86,13 @@ func (s *UnimplementedScheduler) GetItemDelay() time.Duration {
 func (s *UnimplementedScheduler) SetItemDelay(itemDelay time.Duration) {
 	s.itemDelay = itemDelay
 }
-func (s *UnimplementedScheduler) GetItemConcurrencyNew() int {
+func (s *UnimplementedScheduler) ItemConcurrencyNew() int {
 	return s.itemConcurrencyNew
 }
 func (s *UnimplementedScheduler) SetItemConcurrencyNew(itemConcurrency int) {
 	s.itemConcurrencyNew = itemConcurrency
 }
-func (s *UnimplementedScheduler) GetItemConcurrency() int {
+func (s *UnimplementedScheduler) ItemConcurrency() int {
 	return s.itemConcurrency
 }
 func (s *UnimplementedScheduler) SetItemConcurrencyRaw(itemConcurrency int) {
@@ -144,6 +145,11 @@ func (s *UnimplementedScheduler) SetScheduler(scheduler Scheduler) Scheduler {
 func (s *UnimplementedScheduler) SetLogger(logger Logger) Scheduler {
 	s.logger = logger
 	return s.scheduler
+}
+func (s *UnimplementedScheduler) MustYieldItem(c Context, item Item) {
+	if err := s.scheduler.YieldItem(c, item); err != nil {
+		s.logger.Error(err)
+	}
 }
 func (s *UnimplementedScheduler) MustYieldRequest(c Context, request Request) {
 	if err := s.scheduler.YieldRequest(c, request); err != nil {

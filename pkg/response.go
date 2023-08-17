@@ -40,6 +40,7 @@ type Response interface {
 
 	UniqueKey() string
 	UnmarshalExtra(any) error
+	MustUnmarshalExtra(any)
 	GetUrl() string
 	GetURL() *url.URL
 	Context() context.Context

@@ -105,6 +105,7 @@ type Request interface {
 	Extra() string
 	SetExtra(any) Request
 	UnmarshalExtra(any) error
+	MustUnmarshalExtra(any)
 	ToRequestJson() (RequestJson, error)
 	Marshal() ([]byte, error)
 	SetBasicAuth(string, string) Request

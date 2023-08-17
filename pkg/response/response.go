@@ -122,6 +122,9 @@ func (r *Response) UniqueKey() string {
 func (r *Response) UnmarshalExtra(v any) error {
 	return r.request.UnmarshalExtra(v)
 }
+func (r *Response) MustUnmarshalExtra(v any) {
+	r.request.MustUnmarshalExtra(v)
+}
 func (r *Response) GetUrl() string {
 	return r.request.GetUrl()
 }

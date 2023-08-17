@@ -29,7 +29,7 @@ func (e *Exporter) Export(ctx context.Context, item pkg.Item) (err error) {
 	return
 }
 
-func (e *Exporter) GetPipelineNames() (pipelines map[uint8]string) {
+func (e *Exporter) PipelineNames() (pipelines map[uint8]string) {
 	e.locker.Lock()
 	defer e.locker.Unlock()
 
@@ -41,7 +41,7 @@ func (e *Exporter) GetPipelineNames() (pipelines map[uint8]string) {
 	return
 }
 
-func (e *Exporter) GetPipelines() []pkg.Pipeline {
+func (e *Exporter) Pipelines() []pkg.Pipeline {
 	return e.pipelines
 }
 

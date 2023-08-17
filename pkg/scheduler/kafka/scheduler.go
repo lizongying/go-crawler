@@ -44,17 +44,17 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 
 	s.initScheduler(ctx)
 
-	s.logger.Info("middlewares", s.GetMiddlewareNames())
-	s.logger.Info("pipelines", s.GetPipelineNames())
+	s.logger.Info("middlewares", s.MiddlewareNames())
+	s.logger.Info("pipelines", s.PipelineNames())
 
-	for _, v := range s.GetPipelines() {
+	for _, v := range s.Pipelines() {
 		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("pipeline break", v.GetName())
 			break
 		}
 	}
-	for _, v := range s.GetMiddlewares() {
+	for _, v := range s.Middlewares() {
 		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("middlewares break", v.GetName())
@@ -63,12 +63,12 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	}
 
 	s.itemTimer = time.NewTimer(s.GetItemDelay())
-	if s.GetItemConcurrency() < 1 {
+	if s.ItemConcurrency() < 1 {
 		s.SetItemConcurrencyRaw(1)
 	}
-	s.SetItemConcurrencyNew(s.GetItemConcurrency())
-	s.itemConcurrencyChan = make(chan struct{}, s.GetItemConcurrency())
-	for i := 0; i < s.GetItemConcurrency(); i++ {
+	s.SetItemConcurrencyNew(s.ItemConcurrency())
+	s.itemConcurrencyChan = make(chan struct{}, s.ItemConcurrency())
+	for i := 0; i < s.ItemConcurrency(); i++ {
 		s.itemConcurrencyChan <- struct{}{}
 	}
 

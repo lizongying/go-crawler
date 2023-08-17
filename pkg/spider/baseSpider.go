@@ -264,14 +264,14 @@ func (s *BaseSpider) Start(ctx context.Context, startFunc string, args string) (
 
 	states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
 	states.RegisterSetAndZeroFn(func() {
-		for _, v := range s.GetMiddlewares() {
+		for _, v := range s.Middlewares() {
 			e := v.Stop(ctx)
 			if errors.Is(e, pkg.BreakErr) {
 				s.logger.Debug("middlewares break", v.GetName())
 				break
 			}
 		}
-		for _, v := range s.GetPipelines() {
+		for _, v := range s.Pipelines() {
 			e := v.Stop(ctx)
 			if errors.Is(e, pkg.BreakErr) {
 				s.logger.Debug("pipeline break", v.GetName())

@@ -15,13 +15,13 @@ func (s *Scheduler) handleItem(ctx context.Context) {
 			s.itemTimer.Reset(itemDelay)
 		}
 
-		if s.GetItemConcurrencyNew() != s.GetItemConcurrency() {
-			itemConcurrencyChanLen = s.GetItemConcurrencyNew() - s.GetItemConcurrency() + len(s.itemConcurrencyChan)
-			s.itemConcurrencyChan = make(chan struct{}, s.GetItemConcurrencyNew())
+		if s.ItemConcurrencyNew() != s.ItemConcurrency() {
+			itemConcurrencyChanLen = s.ItemConcurrencyNew() - s.ItemConcurrency() + len(s.itemConcurrencyChan)
+			s.itemConcurrencyChan = make(chan struct{}, s.ItemConcurrencyNew())
 			for i := 0; i < itemConcurrencyChanLen; i++ {
 				s.itemConcurrencyChan <- struct{}{}
 			}
-			s.SetItemConcurrencyRaw(s.GetItemConcurrencyNew())
+			s.SetItemConcurrencyRaw(s.ItemConcurrencyNew())
 		}
 
 		<-s.itemConcurrencyChan

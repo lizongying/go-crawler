@@ -4,8 +4,8 @@ import "context"
 
 type Exporter interface {
 	Export(context.Context, Item) error
-	GetPipelineNames() map[uint8]string
-	GetPipelines() []Pipeline
+	PipelineNames() map[uint8]string
+	Pipelines() []Pipeline
 	SetPipeline(Pipeline, uint8)
 	DelPipeline(int)
 	CleanPipelines()
