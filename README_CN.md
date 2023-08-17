@@ -694,8 +694,8 @@ git clone github.com/lizongying/go-crawler-example
 * cron
 * monitor
 * statistics
-* from extra
 * Stats
+* new base-spider
 
 ```shell
 go get -u github.com/lizongying/go-query@e077670

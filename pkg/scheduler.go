@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"errors"
 	"golang.org/x/time/rate"
 	"sync"
 	"time"
@@ -27,19 +28,28 @@ type Scheduler interface {
 	YieldItem(Context, Item) error
 	Request(Context, Request) (Response, error)
 	YieldRequest(Context, Request) error
-	YieldExtra(Context, any) error
+	MustYieldRequest(Context, Request)
+	YieldExtra(any) error
+	MustYieldExtra(any)
+	GetExtra(any) error
+	MustGetExtra(any)
 	StartScheduler(context.Context) error
 	StopScheduler(context.Context) error
-	GetSpider() Spider
+	Spider() Spider
 	SetSpider(spider Spider)
 	Interval() time.Duration
 	SetInterval(time.Duration)
+
+	SetScheduler(Scheduler) Scheduler
+	SetLogger(Logger) Scheduler
 
 	Downloader
 	Exporter
 }
 
 type UnimplementedScheduler struct {
+	scheduler          Scheduler
+	logger             Logger
 	itemConcurrency    int
 	itemConcurrencyNew int
 	itemDelay          time.Duration
@@ -51,7 +61,7 @@ type UnimplementedScheduler struct {
 	spider Spider
 }
 
-func (s *UnimplementedScheduler) GetSpider() Spider {
+func (s *UnimplementedScheduler) Spider() Spider {
 	return s.spider
 }
 func (s *UnimplementedScheduler) SetSpider(spider Spider) {
@@ -125,4 +135,31 @@ func (s *UnimplementedScheduler) SetRequestRate(slot string, interval time.Durat
 	limiter.SetLimit(rate.Every(interval / time.Duration(concurrency)))
 
 	return
+}
+
+func (s *UnimplementedScheduler) SetScheduler(scheduler Scheduler) Scheduler {
+	s.scheduler = scheduler
+	return s.scheduler
+}
+func (s *UnimplementedScheduler) SetLogger(logger Logger) Scheduler {
+	s.logger = logger
+	return s.scheduler
+}
+func (s *UnimplementedScheduler) MustYieldRequest(c Context, request Request) {
+	if err := s.scheduler.YieldRequest(c, request); err != nil {
+		s.logger.Error(err)
+	}
+}
+func (s *UnimplementedScheduler) MustYieldExtra(extra any) {
+	if err := s.scheduler.YieldExtra(extra); err != nil {
+		s.logger.Error(err)
+	}
+}
+func (s *UnimplementedScheduler) MustGetExtra(extra any) {
+	if err := s.scheduler.GetExtra(extra); err != nil {
+		s.logger.Error(err)
+		if errors.Is(err, ErrQueueTimeout) {
+			panic(ErrQueueTimeout)
+		}
+	}
 }

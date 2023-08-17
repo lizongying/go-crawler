@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/downloader"
 	"github.com/lizongying/go-crawler/pkg/exporter"
 	"golang.org/x/time/rate"
+	"sync"
 	"time"
 )
 
@@ -19,16 +20,14 @@ type Scheduler struct {
 	itemTimer           *time.Timer
 	itemChan            chan pkg.Item
 	requestChan         chan pkg.Request
+	extraChanMap        sync.Map
 
 	concurrency uint8
 	interval    time.Duration
 
-	crawler      pkg.Crawler
-	logger       pkg.Logger
-	stateRequest *pkg.State
-	stateItem    *pkg.State
-	stateMethod  *pkg.State
-	couldStop    chan struct{}
+	crawler pkg.Crawler
+	logger  pkg.Logger
+	config  pkg.Config
 }
 
 func (s *Scheduler) Interval() time.Duration {
@@ -46,14 +45,14 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	s.logger.Info("pipelines", s.GetPipelineNames())
 
 	for _, v := range s.GetPipelines() {
-		e := v.Start(ctx, s.GetSpider())
+		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("pipeline break", v.GetName())
 			break
 		}
 	}
 	for _, v := range s.GetMiddlewares() {
-		e := v.Start(ctx, s.GetSpider())
+		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("middlewares break", v.GetName())
 			break
@@ -88,28 +87,7 @@ func (s *Scheduler) StopScheduler(ctx context.Context) (err error) {
 		ctx = context.Background()
 	}
 
-	s.logger.Debug("Scheduler wait for stop")
-	states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
-	states.RegisterSetAndZeroFn(func() {
-		for _, v := range s.GetMiddlewares() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("middlewares break", v.GetName())
-				break
-			}
-		}
-		for _, v := range s.GetPipelines() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("pipeline break", v.GetName())
-				break
-			}
-		}
-		s.couldStop <- struct{}{}
-	})
-	<-s.couldStop
 	s.logger.Info("Scheduler Stopped")
-
 	return
 }
 func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
@@ -120,21 +98,16 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	s.UnimplementedScheduler.SetSpider(spider)
 	crawler := spider.GetCrawler()
 	config := crawler.GetConfig()
+	s.config = config
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
 	s.requestChan = make(chan pkg.Request, defaultRequestMax)
 	s.itemChan = make(chan pkg.Item, defaultChanItemMax)
-	s.couldStop = make(chan struct{})
 
 	s.SetDownloader(new(downloader.Downloader).FromSpider(spider))
 	s.SetExporter(new(exporter.Exporter).FromSpider(spider))
 	s.crawler = crawler
 	s.logger = crawler.GetLogger()
-	s.stateRequest = pkg.NewState()
-	s.stateItem = pkg.NewState()
-	s.stateMethod = pkg.NewState()
-	s.stateItem.Set()
-	s.stateMethod.Set()
 
 	return s
 }

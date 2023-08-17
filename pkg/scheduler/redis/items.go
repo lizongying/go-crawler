@@ -33,7 +33,7 @@ func (s *Scheduler) handleItem(ctx context.Context) {
 				} else {
 					s.itemConcurrencyChan <- struct{}{}
 				}
-				s.stateItem.Out()
+				s.Spider().StateItem().Out()
 			}()
 
 			err := s.Export(ctx, item)
@@ -77,7 +77,7 @@ func (s *Scheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err error) {
 		item.SetReferrer(referrer.String())
 	}
 
-	s.stateItem.In()
+	s.Spider().StateItem().In()
 	s.itemChan <- item
 
 	return

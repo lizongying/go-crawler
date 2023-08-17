@@ -20,7 +20,7 @@ type StatsMiddleware struct {
 
 func (m *StatsMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
 	err = m.UnimplementedMiddleware.Start(ctx, spider)
-	m.chanStop = make(chan struct{})
+	m.chanStop = make(chan struct{}, 1)
 	m.timer = time.NewTimer(m.interval)
 	go m.log(spider)
 	return

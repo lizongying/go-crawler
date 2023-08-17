@@ -46,7 +46,7 @@ func (s *State) Out() {
 	}
 }
 func (s *State) Zero() bool {
-	return s.count.Load() == 0
+	return s.count.Load() <= 0
 }
 func (s *State) SetAndZero() bool {
 	return s.IsSet() && s.Zero()

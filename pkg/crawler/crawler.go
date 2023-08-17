@@ -135,10 +135,8 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	}
 
 	for _, v := range c.spiders {
-		err = v.Stop(ctx)
-		if err != nil {
+		if err = v.Stop(ctx); err != nil {
 			c.logger.Error(err)
-			continue
 		}
 	}
 

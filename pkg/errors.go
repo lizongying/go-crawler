@@ -12,3 +12,5 @@ var ErrIgnoreResponse = errors.New("IgnoreResponse")
 var ErrNeedRetry = errors.New("need retry")
 var ErrUrlLengthLimit = errors.New("UrlLengthLimit")
 var ErrDropItem = errors.New("DropItem")
+
+var ErrQueueTimeout = errors.New("queue timeout")

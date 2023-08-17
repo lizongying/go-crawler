@@ -869,7 +869,6 @@ git clone github.com/lizongying/go-crawler-example
 * cron
 * monitor
 * statistics
-* from extra
 * Stats
 
 ```shell

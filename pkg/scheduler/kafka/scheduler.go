@@ -24,15 +24,11 @@ type Scheduler struct {
 	concurrency uint8
 	interval    time.Duration
 
-	crawler      pkg.Crawler
-	logger       pkg.Logger
-	stateRequest *pkg.State
-	stateItem    *pkg.State
-	stateMethod  *pkg.State
-	couldStop    chan struct{}
-	kafkaWriter  *kafka.Writer
-	kafkaReader  *kafka.Reader
-	config       pkg.Config
+	crawler     pkg.Crawler
+	logger      pkg.Logger
+	kafkaWriter *kafka.Writer
+	kafkaReader *kafka.Reader
+	config      pkg.Config
 }
 
 func (s *Scheduler) Interval() time.Duration {
@@ -52,14 +48,14 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	s.logger.Info("pipelines", s.GetPipelineNames())
 
 	for _, v := range s.GetPipelines() {
-		e := v.Start(ctx, s.GetSpider())
+		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("pipeline break", v.GetName())
 			break
 		}
 	}
 	for _, v := range s.GetMiddlewares() {
-		e := v.Start(ctx, s.GetSpider())
+		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("middlewares break", v.GetName())
 			break
@@ -94,32 +90,11 @@ func (s *Scheduler) StopScheduler(ctx context.Context) (err error) {
 		ctx = context.Background()
 	}
 
-	s.logger.Debug("Scheduler wait for stop")
-	states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
-	states.RegisterSetAndZeroFn(func() {
-		for _, v := range s.GetMiddlewares() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("middlewares break", v.GetName())
-				break
-			}
-		}
-		for _, v := range s.GetPipelines() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("pipeline break", v.GetName())
-				break
-			}
-		}
-		s.couldStop <- struct{}{}
-	})
-	<-s.couldStop
 	s.logger.Info("Scheduler Stopped")
-
 	return
 }
 func (s *Scheduler) initScheduler(_ context.Context) {
-	s.requestKey = fmt.Sprintf("crawler-%s-request", s.GetSpider().GetName())
+	s.requestKey = fmt.Sprintf("%s-%s-request", s.config.GetBotName(), s.Spider().GetName())
 	s.logger.Info("request key", s.requestKey)
 	s.kafkaWriter.Topic = s.requestKey
 	s.kafkaReader = kafka.NewReader(kafka.ReaderConfig{
@@ -141,17 +116,11 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
 	s.itemChan = make(chan pkg.Item, defaultChanItemMax)
-	s.couldStop = make(chan struct{})
 
 	s.SetDownloader(new(downloader.Downloader).FromSpider(spider))
 	s.SetExporter(new(exporter.Exporter).FromSpider(spider))
 	s.crawler = crawler
 	s.logger = crawler.GetLogger()
-	s.stateRequest = pkg.NewState()
-	s.stateItem = pkg.NewState()
-	s.stateMethod = pkg.NewState()
-	s.stateItem.Set()
-	s.stateMethod.Set()
 	s.kafkaWriter = crawler.GetKafka()
 	s.kafkaReader = crawler.GetKafkaReader()
 

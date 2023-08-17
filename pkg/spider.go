@@ -53,7 +53,11 @@ type Spider interface {
 	YieldItem(Context, Item) error
 	Request(Context, Request) (Response, error)
 	YieldRequest(Context, Request) error
-	YieldExtra(Context, any) error
+	MustYieldRequest(Context, Request)
+	YieldExtra(any) error
+	MustYieldExtra(any)
+	GetExtra(any) error
+	MustGetExtra(any)
 	SetRequestRate(slot string, interval time.Duration, concurrency int)
 	AddMockServerRoutes(...Route)
 	GetMode() string
@@ -70,6 +74,10 @@ type Spider interface {
 
 	Options() []SpiderOption
 	WithOptions(options ...SpiderOption) Spider
+
+	StateRequest() *State
+	StateItem() *State
+	StateMethod() *State
 }
 
 type NewSpider func(Spider) (Spider, error)

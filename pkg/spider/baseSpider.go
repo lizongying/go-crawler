@@ -53,6 +53,11 @@ type BaseSpider struct {
 	logger                pkg.Logger
 	spider                pkg.Spider
 	options               []pkg.SpiderOption
+
+	stateRequest *pkg.State
+	stateItem    *pkg.State
+	stateMethod  *pkg.State
+	couldStop    chan struct{}
 }
 
 func (s *BaseSpider) GetName() string {
@@ -193,6 +198,8 @@ func (s *BaseSpider) GetScheduler() pkg.Scheduler {
 	return s.Scheduler
 }
 func (s *BaseSpider) SetScheduler(scheduler pkg.Scheduler) pkg.Spider {
+	scheduler.SetScheduler(scheduler)
+	scheduler.SetLogger(s.logger)
 	s.Scheduler = scheduler
 	return s
 }
@@ -209,6 +216,15 @@ func (s *BaseSpider) Options() []pkg.SpiderOption {
 func (s *BaseSpider) WithOptions(options ...pkg.SpiderOption) pkg.Spider {
 	s.options = options
 	return s
+}
+func (s *BaseSpider) StateRequest() *pkg.State {
+	return s.stateRequest
+}
+func (s *BaseSpider) StateItem() *pkg.State {
+	return s.stateItem
+}
+func (s *BaseSpider) StateMethod() *pkg.State {
+	return s.stateMethod
 }
 func (s *BaseSpider) registerParser() {
 	callBacks := make(map[string]pkg.CallBack)
@@ -231,6 +247,40 @@ func (s *BaseSpider) registerParser() {
 	s.SetErrBacks(errBacks)
 }
 func (s *BaseSpider) Start(ctx context.Context, startFunc string, args string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			if e, ok := r.(error); ok {
+				if errors.Is(e.(error), pkg.ErrQueueTimeout) {
+					s.logger.Error(pkg.ErrQueueTimeout)
+					return
+				}
+			}
+			buf := make([]byte, 1<<16)
+			runtime.Stack(buf, true)
+			err = errors.New(string(buf))
+			s.logger.Error(err)
+		}
+	}()
+
+	states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
+	states.RegisterSetAndZeroFn(func() {
+		for _, v := range s.GetMiddlewares() {
+			e := v.Stop(ctx)
+			if errors.Is(e, pkg.BreakErr) {
+				s.logger.Debug("middlewares break", v.GetName())
+				break
+			}
+		}
+		for _, v := range s.GetPipelines() {
+			e := v.Stop(ctx)
+			if errors.Is(e, pkg.BreakErr) {
+				s.logger.Debug("pipeline break", v.GetName())
+				break
+			}
+		}
+		s.couldStop <- struct{}{}
+	})
+
 	err = s.StartScheduler(ctx)
 	if err != nil {
 		s.logger.Error(err)
@@ -255,8 +305,11 @@ func (s *BaseSpider) Start(ctx context.Context, startFunc string, args string) (
 
 	res := caller.Call(params)
 	if len(res) < 1 {
+		s.logger.Info(9999)
 		return
 	}
+
+	s.logger.Info(66666)
 
 	if !res[0].IsNil() {
 		var ok bool
@@ -269,6 +322,7 @@ func (s *BaseSpider) Start(ctx context.Context, startFunc string, args string) (
 
 		s.logger.Error(err)
 	}
+	s.logger.Info(77777)
 
 	return
 }
@@ -280,8 +334,9 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 		}
 	}()
 
-	err = s.StopScheduler(ctx)
-	if err != nil {
+	<-s.couldStop
+
+	if err = s.StopScheduler(ctx); err != nil {
 		s.logger.Error(err)
 		return
 	}
@@ -327,7 +382,7 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 }
 func NewBaseSpider(logger pkg.Logger) (pkg.Spider, error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
-	baseSpider := &BaseSpider{
+	s := &BaseSpider{
 		logger:                logger,
 		platforms:             make(map[pkg.Platform]struct{}, 6),
 		browsers:              make(map[pkg.Browser]struct{}, 4),
@@ -335,6 +390,12 @@ func NewBaseSpider(logger pkg.Logger) (pkg.Spider, error) {
 		allowedDomains:        defaultAllowedDomains,
 		Stats:                 &stats.Stats{},
 	}
+	s.stateRequest = pkg.NewState()
+	s.stateItem = pkg.NewState()
+	s.stateMethod = pkg.NewState()
+	s.stateItem.Set()
+	s.stateMethod.Set()
+	s.couldStop = make(chan struct{}, 10) // TODO
 
-	return baseSpider, nil
+	return s, nil
 }

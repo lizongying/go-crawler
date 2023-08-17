@@ -11,11 +11,13 @@ import (
 	"time"
 )
 
+const defaultKafkaUri = "localhost:9092"
 const defaultBotName = "crawler"
 const defaultHttpProto = "2.0"
 const defaultMockServerEnable = false
 const defaultMockServerHost = "http://localhost:8081"
 const defaultMockServerClientAuth = uint8(0)
+const defaultCloseReasonQueueTimeout = uint8(10) // second [0-255], 0 no limit
 const defaultEnableJa3 = false
 const defaultEnablePriorityQueue = true
 const defaultUrlLengthLimit = 2083
@@ -115,6 +117,9 @@ type Config struct {
 		Host       string `yaml:"host,omitempty" json:"host"`
 		ClientAuth *uint8 `yaml:"client_auth,omitempty" json:"client_auth"`
 	} `yaml:"mock_server" json:"mock_server"`
+	CloseReason struct {
+		QueueTimeout *uint8 `yaml:"client_auth,omitempty" json:"client_auth"`
+	} `yaml:"close_reason" json:"close_reason"`
 	EnableJa3                 *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
 	EnablePriorityQueue       *bool   `yaml:"enable_priority_queue,omitempty" json:"enable_priority_queue"`
 	EnableReferrerMiddleware  *bool   `yaml:"enable_referrer_middleware,omitempty" json:"enable_referrer_middleware"`
@@ -151,6 +156,13 @@ type Config struct {
 	EnableKafkaPipeline       *bool   `yaml:"enable_kafka_pipeline,omitempty" json:"enable_kafka_pipeline"`
 }
 
+func (c *Config) KafkaUri() string {
+	if c.Kafka.Example.Uri != "" {
+		return c.Kafka.Example.Uri
+	}
+
+	return defaultKafkaUri
+}
 func (c *Config) GetBotName() string {
 	if c.BotName != "" {
 		return c.BotName
@@ -214,6 +226,13 @@ func (c *Config) MockServerClientAuth() uint8 {
 }
 func (c *Config) SetMockServerClientAuth(clientAuth uint8) {
 	c.MockServer.ClientAuth = &clientAuth
+}
+func (c *Config) CloseReasonQueueTimeout() uint8 {
+	if c.CloseReason.QueueTimeout == nil {
+		closeReasonQueueTimeout := defaultCloseReasonQueueTimeout
+		c.CloseReason.QueueTimeout = &closeReasonQueueTimeout
+	}
+	return *c.CloseReason.QueueTimeout
 }
 func (c *Config) GetEnableJa3() bool {
 	if c.EnableJa3 == nil {

@@ -54,4 +54,6 @@ type Config interface {
 	MockServerEnable() bool
 	SetMockServerEnable(enable bool)
 	MockServerHost() *url.URL
+	CloseReasonQueueTimeout() uint8
+	KafkaUri() string
 }

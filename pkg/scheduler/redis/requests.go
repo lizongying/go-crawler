@@ -15,9 +15,9 @@ import (
 )
 
 func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
-	spider := s.GetSpider()
+	spider := s.Spider()
 	defer func() {
-		s.stateRequest.Set()
+		s.Spider().StateRequest().Set()
 	}()
 
 	if request == nil {
@@ -46,7 +46,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 }
 
 func (s *Scheduler) handleError(ctx pkg.Context, response pkg.Response, err error, fn pkg.ErrBack) {
-	spider := s.GetSpider()
+	spider := s.Spider()
 	if fn != nil {
 		fn(ctx, response, err)
 	} else {
@@ -56,7 +56,7 @@ func (s *Scheduler) handleError(ctx pkg.Context, response pkg.Response, err erro
 }
 
 func (s *Scheduler) handleRequest(ctx context.Context) {
-	spider := s.GetSpider()
+	spider := s.Spider()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -121,8 +121,8 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			continue
 		}
 
-		requestJson.SetCallBacks(s.GetSpider().GetCallBacks())
-		requestJson.SetErrBacks(s.GetSpider().GetErrBacks())
+		requestJson.SetCallBacks(s.Spider().GetCallBacks())
+		requestJson.SetErrBacks(s.Spider().GetErrBacks())
 		request, err := requestJson.ToRequest()
 		s.logger.DebugF("request: %+v", request)
 		if err != nil {
@@ -164,7 +164,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			if e != nil {
 				err = e
 				s.logger.Error(err)
-				s.stateRequest.Out()
+				s.Spider().StateRequest().Out()
 				return
 			}
 
@@ -173,7 +173,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				s.logger.Error(err)
 
 				s.handleError(c, response, err, request.GetErrBack())
-				s.stateRequest.Out()
+				s.Spider().StateRequest().Out()
 				return
 			}
 
@@ -188,10 +188,10 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 					}
 				}()
 
-				s.stateMethod.In()
+				s.Spider().StateMethod().In()
 				err = request.GetCallBack()(ctx, response)
-				s.stateMethod.Out()
-				s.stateRequest.Out()
+				s.Spider().StateMethod().Out()
+				s.Spider().StateRequest().Out()
 				if e != nil {
 					s.logger.Error(err)
 					s.handleError(ctx, response, err, request.GetErrBack())
@@ -206,7 +206,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 
 func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
 	defer func() {
-		s.stateRequest.Set()
+		s.Spider().StateRequest().Set()
 	}()
 
 	c := context.Background()
@@ -263,11 +263,11 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		var res int64
 		res, err = s.redis.ZAdd(c, s.requestKey, z).Result()
 		if res == 1 {
-			s.stateRequest.In()
+			s.Spider().StateRequest().In()
 		}
 	} else {
 		err = s.redis.RPush(c, s.requestKey, bs).Err()
-		s.stateRequest.In()
+		s.Spider().StateRequest().In()
 	}
 
 	if err != nil {
@@ -278,12 +278,12 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 	return
 }
 
-func (s *Scheduler) YieldExtra(ctx pkg.Context, extra any) (err error) {
+func (s *Scheduler) YieldExtra(extra any) (err error) {
 	defer func() {
-		s.stateRequest.Set()
+		s.Spider().StateRequest().Set()
 	}()
 
-	spider := s.GetSpider()
+	spider := s.Spider()
 
 	extraValue := reflect.ValueOf(extra)
 	if extraValue.Kind() != reflect.Ptr || extraValue.IsNil() {
@@ -299,6 +299,10 @@ func (s *Scheduler) YieldExtra(ctx pkg.Context, extra any) (err error) {
 		return
 	}
 
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
 	if s.enablePriorityQueue {
 		extraKey := fmt.Sprintf("%s:%s:extra:%s:priority", s.config.GetBotName(), name, spider.GetName())
 		z := redis.Z{
@@ -306,23 +310,101 @@ func (s *Scheduler) YieldExtra(ctx pkg.Context, extra any) (err error) {
 			Member: bs,
 		}
 		var res int64
-		res, err = s.redis.ZAdd(context.Background(), extraKey, z).Result()
+		res, err = s.redis.ZAdd(ctx, extraKey, z).Result()
 		if err != nil {
 			s.logger.Error(err)
 			return
 		}
+
 		if res == 1 {
-			s.stateRequest.In()
+			s.Spider().StateRequest().In()
 		}
 	} else {
 		extraKey := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), name, spider.GetName())
-		err = s.redis.RPush(context.Background(), extraKey, bs).Err()
+		if err = s.redis.RPush(ctx, extraKey, bs).Err(); err != nil {
+			s.logger.Error(err)
+			return
+		}
+
+		s.Spider().StateRequest().In()
+	}
+
+	return
+}
+
+func (s *Scheduler) GetExtra(extra any) (err error) {
+	defer func() {
+		s.Spider().StateRequest().Out()
+	}()
+
+	extraValue := reflect.ValueOf(extra)
+	if extraValue.Kind() != reflect.Ptr || extraValue.IsNil() {
+		err = errors.New("extra must be a non-null pointer")
+		return
+	}
+
+	name := extraValue.Elem().Type().Name()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.config.CloseReasonQueueTimeout())*time.Second)
+	defer cancel()
+
+	resultChan := make(chan struct{})
+	go func() {
+		var msg []byte
+		if s.enablePriorityQueue {
+			key := fmt.Sprintf("%s:%s:extra:%s:priority", s.config.GetBotName(), s.Spider().GetName(), name)
+			r, e := s.redis.Do(ctx, "EVALSHA", s.requestKeySha, 1, key, 1).Result()
+			if e != nil {
+				err = e
+				s.logger.Error(e)
+				return
+			}
+			rs, ok := r.([]interface{})
+			if !ok {
+				err = errors.New("msg error")
+				s.logger.Error(err)
+				return
+			}
+			if len(rs) == 0 {
+				err = errors.New("msg error")
+				s.logger.Error(err)
+				return
+			}
+			for _, v := range rs {
+				msg = []byte(v.(string))
+				break
+			}
+		} else {
+			key := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), s.Spider().GetName(), name)
+			r, e := s.redis.BLPop(ctx, 0, key).Result()
+			if e != nil {
+				err = e
+				s.logger.Error(e)
+				return
+			}
+			if len(r) == 0 {
+				err = errors.New("msg error")
+				s.logger.Error(err)
+				return
+			}
+			msg = []byte(r[1])
+		}
+
+		err = json.Unmarshal(msg, extra)
 		if err != nil {
 			s.logger.Error(err)
 			return
 		}
-		s.stateRequest.In()
-	}
 
-	return
+		resultChan <- struct{}{}
+	}()
+
+	select {
+	case <-resultChan:
+		return
+	case <-ctx.Done():
+		close(resultChan)
+		err = pkg.ErrQueueTimeout
+		return
+	}
 }

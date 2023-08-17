@@ -26,12 +26,8 @@ type Scheduler struct {
 	concurrency uint8
 	interval    time.Duration
 
-	crawler      pkg.Crawler
-	logger       pkg.Logger
-	stateRequest *pkg.State
-	stateItem    *pkg.State
-	stateMethod  *pkg.State
-	couldStop    chan struct{}
+	crawler pkg.Crawler
+	logger  pkg.Logger
 
 	redis  *redis.Client
 	config pkg.Config
@@ -64,14 +60,14 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	s.logger.Info("pipelines", s.GetPipelineNames())
 
 	for _, v := range s.GetPipelines() {
-		e := v.Start(ctx, s.GetSpider())
+		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("pipeline break", v.GetName())
 			break
 		}
 	}
 	for _, v := range s.GetMiddlewares() {
-		e := v.Start(ctx, s.GetSpider())
+		e := v.Start(ctx, s.Spider())
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("middlewares break", v.GetName())
 			break
@@ -106,34 +102,13 @@ func (s *Scheduler) StopScheduler(ctx context.Context) (err error) {
 		ctx = context.Background()
 	}
 
-	s.logger.Debug("Scheduler wait for stop")
-	states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
-	states.RegisterSetAndZeroFn(func() {
-		for _, v := range s.GetMiddlewares() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("middlewares break", v.GetName())
-				break
-			}
-		}
-		for _, v := range s.GetPipelines() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("pipeline break", v.GetName())
-				break
-			}
-		}
-		s.couldStop <- struct{}{}
-	})
-	<-s.couldStop
 	s.logger.Info("Scheduler Stopped")
-
 	return
 }
 func (s *Scheduler) initScheduler(_ context.Context) {
-	s.requestKey = fmt.Sprintf("%s:%s:request", s.config.GetBotName(), s.GetSpider().GetName())
+	s.requestKey = fmt.Sprintf("%s:%s:request", s.config.GetBotName(), s.Spider().GetName())
 	if s.enablePriorityQueue {
-		s.requestKey = fmt.Sprintf("%s:%s:request:priority", s.config.GetBotName(), s.GetSpider().GetName())
+		s.requestKey = fmt.Sprintf("%s:%s:request:priority", s.config.GetBotName(), s.Spider().GetName())
 		script := `
 local r = redis.call("ZRANGEBYSCORE", KEYS[1], 0, 2147483647, "LIMIT", 0, ARGV[1])
 for _, v in ipairs(r) do
@@ -181,7 +156,6 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
 	s.itemChan = make(chan pkg.Item, defaultChanItemMax)
-	s.couldStop = make(chan struct{})
 
 	s.SetDownloader(new(downloader.Downloader).FromSpider(spider))
 	s.SetExporter(new(exporter.Exporter).FromSpider(spider))
@@ -189,11 +163,6 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	s.logger = crawler.GetLogger()
 	s.redis = crawler.GetRedis()
 	s.batch = 1
-	s.stateRequest = pkg.NewState()
-	s.stateItem = pkg.NewState()
-	s.stateMethod = pkg.NewState()
-	s.stateItem.Set()
-	s.stateMethod.Set()
 
 	return s
 }

@@ -5,14 +5,15 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"golang.org/x/time/rate"
+	"reflect"
 	"runtime"
 	"time"
 )
 
 func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
-	spider := s.GetSpider()
+	spider := s.Spider()
 	defer func() {
-		s.stateRequest.Set()
+		s.Spider().StateRequest().Set()
 	}()
 
 	if request == nil {
@@ -41,7 +42,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 }
 
 func (s *Scheduler) handleError(ctx pkg.Context, response pkg.Response, err error, fn func(pkg.Context, pkg.Response, error)) {
-	spider := s.GetSpider()
+	spider := s.Spider()
 	if fn != nil {
 		fn(ctx, response, err)
 	} else {
@@ -51,7 +52,7 @@ func (s *Scheduler) handleError(ctx pkg.Context, response pkg.Response, err erro
 }
 
 func (s *Scheduler) handleRequest(ctx context.Context) {
-	spider := s.GetSpider()
+	spider := s.Spider()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -96,7 +97,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			if e != nil {
 				err = e
 				s.logger.Error(err)
-				s.stateRequest.Out()
+				s.Spider().StateRequest().Out()
 				return
 			}
 
@@ -105,7 +106,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				s.logger.Error(err)
 
 				s.handleError(c, response, err, request.GetErrBack())
-				s.stateRequest.Out()
+				s.Spider().StateRequest().Out()
 				return
 			}
 
@@ -120,10 +121,10 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 					}
 				}()
 
-				s.stateMethod.In()
+				s.Spider().StateMethod().In()
 				err = request.GetCallBack()(ctx, response)
-				s.stateMethod.Out()
-				s.stateRequest.Out()
+				s.Spider().StateMethod().Out()
+				s.Spider().StateRequest().Out()
 				if e != nil {
 					s.logger.Error(err)
 					s.handleError(ctx, response, err, request.GetErrBack())
@@ -138,7 +139,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 
 func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
 	defer func() {
-		s.stateRequest.Set()
+		s.Spider().StateRequest().Set()
 	}()
 
 	if len(s.requestChan) >= defaultRequestMax {
@@ -161,17 +162,68 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		}
 	}
 
-	s.stateRequest.In()
+	s.Spider().StateRequest().In()
 	s.requestChan <- request
 
 	return
 }
 
-func (s *Scheduler) YieldExtra(ctx pkg.Context, extra any) (err error) {
+func (s *Scheduler) YieldExtra(extra any) (err error) {
 	defer func() {
-		s.stateRequest.Set()
+		s.Spider().StateRequest().In()
+		s.Spider().StateRequest().Set()
 	}()
 
-	s.stateRequest.In()
+	extraValue := reflect.ValueOf(extra)
+	if extraValue.Kind() != reflect.Ptr || extraValue.IsNil() {
+		err = errors.New("extra must be a non-null pointer")
+		return
+	}
+
+	name := extraValue.Elem().Type().Name()
+	extraChan, ok := s.extraChanMap.LoadOrStore(name, func() chan any {
+		extraChan := make(chan any, defaultRequestMax)
+		extraChan <- extra
+		return extraChan
+	}())
+	if ok {
+		extraChan.(chan any) <- extra
+	}
+
 	return
+}
+
+func (s *Scheduler) GetExtra(extra any) (err error) {
+	defer func() {
+		s.Spider().StateRequest().Out()
+	}()
+
+	extraValue := reflect.ValueOf(extra)
+	if extraValue.Kind() != reflect.Ptr || extraValue.IsNil() {
+		err = errors.New("extra must be a non-null pointer")
+		return
+	}
+
+	name := extraValue.Elem().Type().Name()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.config.CloseReasonQueueTimeout())*time.Second)
+	defer cancel()
+
+	resultChan := make(chan struct{})
+	go func() {
+		extraChan, ok := s.extraChanMap.Load(name)
+		if ok {
+			extra = <-extraChan.(chan any)
+			resultChan <- struct{}{}
+		}
+	}()
+
+	select {
+	case <-resultChan:
+		return
+	case <-ctx.Done():
+		close(resultChan)
+		err = pkg.ErrQueueTimeout
+		return
+	}
 }

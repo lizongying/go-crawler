@@ -45,6 +45,8 @@ mock_server:
   enable: false
   host: https://localhost:8081
   client_auth: 0
+close_reason:
+  queue_timeout: 10
 enable_ja3: false
 enable_priority_queue: true
 enable_stats_middleware: true
