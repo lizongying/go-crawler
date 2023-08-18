@@ -576,10 +576,11 @@ configuration file, specifying the spider's name, defining the initial method, p
 setting the startup mode.
 
 ```shell
-spider -c example.yml -n example -f TestOk -m dev
+spider -c example.yml -n example -f TestOk -m once
 ```
 
-* Configuration file path, must be configured.
+* Configuration file path, must be configured. It is recommended to use different configuration files for different
+  environments.
     * Environment variable `CRAWLER_CONFIG_FILE`
     * Startup parameter `-c`
 * Spider name, must be configured.
@@ -592,10 +593,15 @@ spider -c example.yml -n example -f TestOk -m dev
   passed to the initial method.
     * Environment variable `CRAWLER_ARGS`
     * Startup parameter `-a`
-* Startup mode, default is "test". You can use different modes such as "dev" or "prod" as needed to distinguish between
-  development and production environments.
+* Startup mode, default is "manual". You can use different modes as needed
     * Environment variable `CRAWLER_MODE`
     * Startup parameter `-m`
+    * You can use different modes as needed:
+    * Optional values
+        * `manual`: Executes manually (default is no execution); can be managed through the API.
+        * `loop`: Executes repeatedly.
+        * `once`: Executes only once.
+        * `cron`: Executes at scheduled intervals.
 
 ### Configuration
 
@@ -604,6 +610,7 @@ be modified and overridden in individual spiders or specific requests.
 The configuration file needs to be specified at startup using environment variables or parameters. Here are the
 configuration parameters:
 
+* `env: dev`. In the `dev` environment, data will not be written to the database.
 * `bot_name: crawler` Project Name
 
 Database Configuration:
@@ -906,7 +913,7 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	response.UnmarshalExtra(&extra)
+	response.MustUnmarshalExtra(&extra)
 
 	s.MustYieldItem(ctx, items.NewItemNone().
 		SetData(&DataOk{
@@ -954,7 +961,7 @@ func main() {
 ```
 
 ```shell
-go run exampleSpider.go -c example.yml -n example -f TestOk -m dev
+go run exampleSpider.go -c example.yml -n example -f TestOk -m once
 
 ```
 
@@ -986,7 +993,7 @@ docker build -f ./cmd/testSpider/Dockerfile -t go-crawler/test-spider:latest .
 ```
 
 ```shell
-docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirect -m dev
+docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirect -m once
 ```
 
 ## Feature Support Summary

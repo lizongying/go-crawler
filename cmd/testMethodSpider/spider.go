@@ -49,7 +49,7 @@ func (s *Spider) ParseGet(_ pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestPost go run cmd/testMethodSpider/*.go -c dev.yml -n test-method -f TestPost -m dev
+// TestPost go run cmd/testMethodSpider/*.go -c dev.yml -n test-method -f TestPost -m once
 func (s *Spider) TestPost(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRoutePost(s.logger))
 
@@ -67,7 +67,7 @@ func (s *Spider) TestPost(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestGet go run cmd/testMethodSpider/*.go -c dev.yml -n test-method -f TestGet -m dev
+// TestGet go run cmd/testMethodSpider/*.go -c dev.yml -n test-method -f TestGet -m once
 func (s *Spider) TestGet(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteGet(s.logger))
 

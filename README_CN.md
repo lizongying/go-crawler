@@ -414,10 +414,10 @@ func main() {
 通过配置环境变量或参数，您可以更灵活地启动爬虫，包括选择配置文件、指定爬虫名称、指定初始方法、传递额外参数以及设定启动模式。
 
 ```shell
-spider -c example.yml -n example -f TestOk -m dev
+spider -c example.yml -n example -f TestOk -m once
 ```
 
-* 配置文件路径，必须进行配置。
+* 配置文件路径，必须进行配置。建议不同环境使用不同的配置文件。
     * 环境变量 `CRAWLER_CONFIG_FILE`
     * 启动参数 `-c`
 * 爬虫名称，必须进行配置。
@@ -429,15 +429,21 @@ spider -c example.yml -n example -f TestOk -m dev
 * 额外的参数，该参数是非必须项。建议使用JSON字符串。参数会被传递到初始方法中。
     * 环境变量 `CRAWLER_ARGS`
     * 启动参数 `-a`
-* 启动模式，默认test。您可以根据需要使用不同的模式，如dev、prod等，以区分开发和生产环境。
+* 启动模式，默认为manual。您可以根据需要使用不同的模式。
     * 环境变量 `CRAWLER_MODE`
     * 启动参数 `-m`
+    * 可选值
+        * manual 手动执行，默认不执行，可以通过api进行管理。
+        * loop 一直重复执行
+        * once 只执行一次
+        * cron 定时执行
 
 ### 配置
 
 在配置文件中的是全局配置，部分配置可以在爬虫中或者具体的请求中进行修改覆盖。
 配置文件需要在启动时通过环境变量或参数指定，以下是配置参数：
 
+* `env: dev` 环境。dev环境下不会写入数据库。
 * `bot_name: crawler` 项目名
 
 数据库配置：
@@ -725,7 +731,7 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	response.UnmarshalExtra(&extra)
+	response.MustUnmarshalExtra(&extra)
 
 	s.MustYieldItem(ctx, items.NewItemNone().
 		SetData(&DataOk{
@@ -773,7 +779,7 @@ func main() {
 ```
 
 ```shell
-go run exampleSpider.go -c example.yml -n example -f TestOk -m dev
+go run exampleSpider.go -c example.yml -n example -f TestOk -m once
 
 ```
 
@@ -794,6 +800,7 @@ git clone github.com/lizongying/go-crawler-example
 * Stats
 * new base-spider
 * panic stop
+* extra速率限制
 
 ```shell
 go get -u github.com/lizongying/go-query@e077670
@@ -807,7 +814,7 @@ docker build -f ./cmd/testSpider/Dockerfile -t go-crawler/test-spider:latest .
 ```
 
 ```shell
-docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirect -m dev
+docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirect -m once
 ```
 
 ## 功能支持情况

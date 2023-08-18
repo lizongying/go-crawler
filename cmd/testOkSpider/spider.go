@@ -47,7 +47,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestOk go run cmd/testOkSpider/*.go -c example.yml -n test-ok -f TestOk -m dev
+// TestOk go run cmd/testOkSpider/*.go -c example.yml -n test-ok -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).

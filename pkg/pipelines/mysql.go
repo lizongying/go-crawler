@@ -15,7 +15,7 @@ import (
 
 type MysqlPipeline struct {
 	pkg.UnimplementedPipeline
-	mode    string
+	env     string
 	logger  pkg.Logger
 	mysql   *sql.DB
 	timeout time.Duration
@@ -54,7 +54,7 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	if m.mode == "test" {
+	if m.env == "dev" {
 		m.logger.Debug("current mode don't need save")
 		spider.IncItemIgnore()
 		return
@@ -146,7 +146,7 @@ func (m *MysqlPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 
 	m.UnimplementedPipeline.FromSpider(spider)
 	crawler := spider.GetCrawler()
-	m.mode = crawler.GetMode()
+	m.env = spider.GetConfig().GetEnv()
 	m.logger = spider.GetLogger()
 	m.mysql = crawler.GetMysql()
 	m.timeout = time.Minute

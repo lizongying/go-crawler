@@ -64,7 +64,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestOk go run cmd/testSchedulerSpider/*.go -c dev.yml -n test-scheduler -f TestOk -m dev
+// TestOk go run cmd/testSchedulerSpider/*.go -c dev.yml -n test-scheduler -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteOk(s.logger))
 

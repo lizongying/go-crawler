@@ -210,7 +210,7 @@ func (s *Spider) ParseJsonl(ctx pkg.Context, response pkg.Response) (err error) 
 	return
 }
 
-// TestMongo go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestMongo -m dev
+// TestMongo go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestMongo -m once
 func (s *Spider) TestMongo(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
@@ -223,7 +223,7 @@ func (s *Spider) TestMongo(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestMysql go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestMysql -m dev
+// TestMysql go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestMysql -m once
 func (s *Spider) TestMysql(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
@@ -236,7 +236,7 @@ func (s *Spider) TestMysql(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestKafka go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestKafka -m dev
+// TestKafka go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestKafka -m once
 func (s *Spider) TestKafka(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
@@ -249,7 +249,7 @@ func (s *Spider) TestKafka(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestCsv go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestCsv -m dev
+// TestCsv go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestCsv -m once
 func (s *Spider) TestCsv(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
@@ -262,7 +262,7 @@ func (s *Spider) TestCsv(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestJsonl go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestJsonl -m dev
+// TestJsonl go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestJsonl -m once
 func (s *Spider) TestJsonl(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).

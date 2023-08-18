@@ -66,7 +66,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestOk go run cmd/testFileSpider/*.go -c dev.yml -n test-file -f TestOk -m dev
+// TestOk go run cmd/testFileSpider/*.go -c dev.yml -n test-file -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteOk(s.logger))
 	s.AddMockServerRoutes(mockServer.NewRouteFile(s.logger))

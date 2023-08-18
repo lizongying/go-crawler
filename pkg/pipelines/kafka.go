@@ -14,7 +14,7 @@ import (
 
 type KafkaPipeline struct {
 	pkg.UnimplementedPipeline
-	mode        string
+	env         string
 	logger      pkg.Logger
 	kafkaWriter *kafka.Writer
 	timeout     time.Duration
@@ -68,7 +68,7 @@ func (m *KafkaPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	if m.mode == "test" {
+	if m.env == "dev" {
 		m.logger.Debug("current mode don't need save")
 		spider.IncItemIgnore()
 		return
@@ -105,7 +105,7 @@ func (m *KafkaPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 
 	m.UnimplementedPipeline.FromSpider(spider)
 	crawler := spider.GetCrawler()
-	m.mode = crawler.GetMode()
+	m.env = spider.GetConfig().GetEnv()
 	m.logger = spider.GetLogger()
 	m.kafkaWriter = crawler.GetKafka()
 	m.timeout = time.Minute

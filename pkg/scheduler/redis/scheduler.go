@@ -32,7 +32,7 @@ type Scheduler struct {
 	redis  *redis.Client
 	config pkg.Config
 
-	mode                string
+	env                 string
 	enablePriorityQueue bool
 	batch               uint8
 }
@@ -132,7 +132,7 @@ return r
 	}
 
 	s.logger.Debug("request key", s.requestKey)
-	if s.mode == "dev" {
+	if s.env == "dev" {
 		ctx := context.Background()
 		err := s.redis.Del(ctx, s.requestKey).Err()
 		if err != nil {
@@ -151,7 +151,7 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	crawler := spider.GetCrawler()
 	config := crawler.GetConfig()
 	s.config = config
-	s.mode = crawler.GetMode()
+	s.env = spider.GetConfig().GetEnv()
 	s.enablePriorityQueue = config.GetEnablePriorityQueue()
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))

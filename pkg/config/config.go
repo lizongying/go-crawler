@@ -12,10 +12,14 @@ import (
 )
 
 const defaultKafkaUri = "localhost:9092"
+const defaultEnv = "dev"
 const defaultBotName = "crawler"
 const defaultHttpProto = "2.0"
+const defaultApiEnable = true
+const defaultApiHost = "http://localhost:8080"
+const defaultApiKey = ""
 const defaultMockServerEnable = false
-const defaultMockServerHost = "http://localhost:8081"
+const defaultMockServerHost = "https://localhost:8081"
 const defaultMockServerClientAuth = uint8(0)
 const defaultCloseReasonQueueTimeout = uint8(10) // second [0-255], 0 no limit
 const defaultEnableJa3 = false
@@ -58,6 +62,7 @@ const defaultSchedulerType = pkg.SchedulerMemory
 const defaultLogLongFile = true
 
 type Config struct {
+	Env         string `yaml:"env" json:"-"`
 	BotName     string `yaml:"bot_name" json:"-"`
 	MongoEnable bool   `yaml:"mongo_enable" json:"-"`
 	Mongo       struct {
@@ -112,6 +117,11 @@ type Config struct {
 		RetryMaxTimes *uint8 `yaml:"retry_max_times" json:"-"`
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
+	Api struct {
+		Enable *bool  `yaml:"enable,omitempty" json:"enable"`
+		Host   string `yaml:"host,omitempty" json:"host"`
+		Key    string `yaml:"key,omitempty" json:"key"`
+	} `yaml:"api" json:"api"`
 	MockServer struct {
 		Enable     *bool  `yaml:"enable,omitempty" json:"enable"`
 		Host       string `yaml:"host,omitempty" json:"host"`
@@ -163,6 +173,13 @@ func (c *Config) KafkaUri() string {
 
 	return defaultKafkaUri
 }
+func (c *Config) GetEnv() string {
+	if c.Env != "" {
+		return c.Env
+	}
+
+	return defaultEnv
+}
 func (c *Config) GetBotName() string {
 	if c.BotName != "" {
 		return c.BotName
@@ -189,6 +206,42 @@ func (c *Config) GetHttpProto() string {
 	}
 
 	return defaultHttpProto
+}
+func (c *Config) ApiEnable() bool {
+	if c.Api.Enable == nil {
+		apiEnable := defaultApiEnable
+		c.Api.Enable = &apiEnable
+	}
+	return *c.Api.Enable
+}
+func (c *Config) SetApiEnable(enable bool) {
+	c.Api.Enable = &enable
+}
+func (c *Config) ApiHost() *url.URL {
+	var URL *url.URL
+	var err error
+	if c.Api.Host != "" {
+		URL, err = url.Parse(c.Api.Host)
+		if err != nil {
+			return nil
+		}
+		return URL
+	}
+
+	URL, err = url.Parse(defaultApiHost)
+	if err != nil {
+		return nil
+	}
+	return URL
+}
+func (c *Config) ApiKey() string {
+	if c.Api.Key == "" {
+		c.Api.Key = defaultApiKey
+	}
+	return c.Api.Key
+}
+func (c *Config) SetApiKey(key string) {
+	c.Api.Key = key
 }
 func (c *Config) MockServerEnable() bool {
 	if c.MockServer.Enable == nil {
@@ -219,8 +272,8 @@ func (c *Config) MockServerHost() *url.URL {
 }
 func (c *Config) MockServerClientAuth() uint8 {
 	if c.MockServer.ClientAuth == nil {
-		MockServerClientAuth := defaultMockServerClientAuth
-		c.MockServer.ClientAuth = &MockServerClientAuth
+		mockServerClientAuth := defaultMockServerClientAuth
+		c.MockServer.ClientAuth = &mockServerClientAuth
 	}
 	return *c.MockServer.ClientAuth
 }

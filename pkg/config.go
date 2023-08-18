@@ -6,6 +6,7 @@ import (
 )
 
 type Config interface {
+	GetEnv() string
 	GetBotName() string
 	GetProxy() *url.URL
 	GetHttpProto() string

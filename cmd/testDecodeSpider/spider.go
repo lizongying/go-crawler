@@ -19,7 +19,7 @@ func (s *Spider) ParseDecode(_ pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestGbk go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGbk -m dev
+// TestGbk go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGbk -m once
 func (s *Spider) TestGbk(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteGbk(s.logger))
 
@@ -34,7 +34,7 @@ func (s *Spider) TestGbk(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestGb2312 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGb2312 -m dev
+// TestGb2312 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGb2312 -m once
 func (s *Spider) TestGb2312(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteGb2312(s.logger))
 
@@ -49,7 +49,7 @@ func (s *Spider) TestGb2312(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestGb18030 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGb18030 -m dev
+// TestGb18030 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGb18030 -m once
 func (s *Spider) TestGb18030(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteGb18030(s.logger))
 
@@ -64,7 +64,7 @@ func (s *Spider) TestGb18030(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestBig5 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestBig5 -m dev
+// TestBig5 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestBig5 -m once
 func (s *Spider) TestBig5(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteBig5(s.logger))
 

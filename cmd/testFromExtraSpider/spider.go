@@ -18,7 +18,7 @@ func (s *Spider) ParseOk(_ pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestMustOk go run cmd/testFromExtraSpider/*.go -c example.yml -n test-from-extra -f TestMustOk -m dev
+// TestMustOk go run cmd/testFromExtraSpider/*.go -c example.yml -n test-from-extra -f TestMustOk -m once
 func (s *Spider) TestMustOk(ctx pkg.Context, _ string) (err error) {
 	for _, extra := range []*ExtraOk{{
 		Count: 1,
@@ -41,7 +41,7 @@ func (s *Spider) TestMustOk(ctx pkg.Context, _ string) (err error) {
 	}
 }
 
-// TestOk go run cmd/testFromExtraSpider/*.go -c example.yml -n test-from-extra -f TestOk -m dev
+// TestOk go run cmd/testFromExtraSpider/*.go -c example.yml -n test-from-extra -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	for _, extra := range []*ExtraOk{{
 		Count: 1,

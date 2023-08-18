@@ -27,6 +27,8 @@ type Crawler interface {
 	GetMongoDb() *mongo.Database
 	GetMysql() *sql.DB
 	GetS3() *s3.Client
+
+	StartSpider(ctx context.Context, spiderName string, startFunc string, args string) error
 }
 
 type CrawlOption func(Crawler)

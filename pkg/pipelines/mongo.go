@@ -14,7 +14,7 @@ import (
 
 type MongoPipeline struct {
 	pkg.UnimplementedPipeline
-	mode    string
+	env     string
 	logger  pkg.Logger
 	mongoDb *mongo.Database
 	timeout time.Duration
@@ -68,7 +68,7 @@ func (m *MongoPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	if m.mode == "test" {
+	if m.env == "dev" {
 		m.logger.Debug("current mode don't need save")
 		spider.IncItemIgnore()
 		return
@@ -106,7 +106,7 @@ func (m *MongoPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 
 	m.UnimplementedPipeline.FromSpider(spider)
 	crawler := spider.GetCrawler()
-	m.mode = crawler.GetMode()
+	m.env = spider.GetConfig().GetEnv()
 	m.logger = spider.GetLogger()
 	m.mongoDb = crawler.GetMongoDb()
 	m.timeout = time.Minute

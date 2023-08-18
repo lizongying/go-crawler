@@ -100,7 +100,7 @@ func (s *Spider) ParseImages(_ pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestUrl go run cmd/testSpider/*.go -c dev.yml -n test -f TestUrl -m dev
+// TestUrl go run cmd/testSpider/*.go -c dev.yml -n test -f TestUrl -m once
 func (s *Spider) TestUrl(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteOk(s.logger))
 
@@ -115,7 +115,7 @@ func (s *Spider) TestUrl(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestOk go run cmd/testSpider/*.go -c dev.yml -n test -f TestOk -m dev
+// TestOk go run cmd/testSpider/*.go -c dev.yml -n test -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteOk(s.logger))
 
@@ -130,7 +130,7 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestHttpAuth go run cmd/testSpider/*.go -c dev.yml -n test -f TestHttpAuth -m dev
+// TestHttpAuth go run cmd/testSpider/*.go -c dev.yml -n test -f TestHttpAuth -m once
 func (s *Spider) TestHttpAuth(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteHttpAuth(s.logger))
 
@@ -145,7 +145,7 @@ func (s *Spider) TestHttpAuth(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestCookie go run cmd/testSpider/*.go -c dev.yml -n test -f TestCookie -m dev
+// TestCookie go run cmd/testSpider/*.go -c dev.yml -n test -f TestCookie -m once
 func (s *Spider) TestCookie(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteCookie(s.logger))
 
@@ -160,7 +160,7 @@ func (s *Spider) TestCookie(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestGzip go run cmd/testSpider/*.go -c dev.yml -n test -f TestGzip -m dev
+// TestGzip go run cmd/testSpider/*.go -c dev.yml -n test -f TestGzip -m once
 func (s *Spider) TestGzip(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteGzip(s.logger))
 
@@ -174,7 +174,7 @@ func (s *Spider) TestGzip(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestDeflate go run cmd/testSpider/*.go -c dev.yml -n test -f TestDeflate -m dev
+// TestDeflate go run cmd/testSpider/*.go -c dev.yml -n test -f TestDeflate -m once
 func (s *Spider) TestDeflate(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteDeflate(s.logger))
 
@@ -188,7 +188,7 @@ func (s *Spider) TestDeflate(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestRedirect go run cmd/testSpider/*.go -c dev.yml -n test -f TestRedirect -m dev
+// TestRedirect go run cmd/testSpider/*.go -c dev.yml -n test -f TestRedirect -m once
 func (s *Spider) TestRedirect(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteRedirect(s.logger))
 	s.AddMockServerRoutes(mockServer.NewRouteOk(s.logger))
@@ -203,7 +203,7 @@ func (s *Spider) TestRedirect(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestTimeout go run cmd/testSpider/*.go -c dev.yml -n test -f TestTimeout -m dev
+// TestTimeout go run cmd/testSpider/*.go -c dev.yml -n test -f TestTimeout -m once
 func (s *Spider) TestTimeout(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mockServer.NewRouteTimeout(s.logger))
 
@@ -218,7 +218,7 @@ func (s *Spider) TestTimeout(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestImages go run cmd/testSpider/*.go -c dev.yml -n test -f TestImages -m dev
+// TestImages go run cmd/testSpider/*.go -c dev.yml -n test -f TestImages -m once
 func (s *Spider) TestImages(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl("https://chinese.aljazeera.net/wp-content/uploads/2023/03/1-126.jpg").

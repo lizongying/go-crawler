@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/crawler"
@@ -50,6 +51,7 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 			crawler.NewCrawler,
 			fx.ParamTags(`group:"spiders"`),
 		),
+		api.NewApi,
 	}
 
 	for _, v := range a.newSpiders {

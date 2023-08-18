@@ -1,3 +1,4 @@
+env: example
 bot_name: crawler
 mongo_enable: false
 mongo:
@@ -41,6 +42,10 @@ request:
     - 200
   retry_max_times: 10
   http_proto: 2.0
+api:
+  enable: true
+  host: http://localhost:8080
+  key:
 mock_server:
   enable: false
   host: https://localhost:8081

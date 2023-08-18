@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/redis/go-redis/v9"
@@ -28,6 +29,7 @@ type Crawler struct {
 	KafkaReader *kafka.Reader
 	S3          *s3.Client
 	mockServer  pkg.MockServer
+	api         *api.Api
 }
 
 func (c *Crawler) GetMode() string {
@@ -84,10 +86,10 @@ func (c *Crawler) GetRedis() *redis.Client {
 func (c *Crawler) GetS3() *s3.Client {
 	return c.S3
 }
-func (c *Crawler) Start(ctx context.Context) (err error) {
+func (c *Crawler) StartSpider(ctx context.Context, spiderName string, startFunc string, args string) (err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
-		if v.Name() == c.spiderName {
+		if v.Name() == spiderName {
 			spider = v
 			break
 		}
@@ -99,9 +101,9 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		return
 	}
 
-	c.logger.Info("name", c.spiderName)
-	c.logger.Info("func", c.startFunc)
-	c.logger.Info("args", c.args)
+	c.logger.Info("name", spiderName)
+	c.logger.Info("func", startFunc)
+	c.logger.Info("args", args)
 	c.logger.Info("mode", c.mode)
 	c.logger.Info("allowedDomains", spider.GetAllowedDomains())
 	c.logger.Info("okHttpCodes", spider.OkHttpCodes())
@@ -113,13 +115,32 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	c.logger.Info("retryMaxTimes", c.config.GetRetryMaxTimes())
 	c.logger.Info("filter", c.config.GetFilter())
 
-	err = spider.Start(ctx, c.startFunc, c.args)
-	if err != nil {
+	if err = spider.Start(ctx, startFunc, args); err != nil {
 		c.logger.Error(err)
 		return
 	}
 
 	return
+}
+func (c *Crawler) Start(ctx context.Context) (err error) {
+	err = c.api.Run()
+	if err != nil {
+		c.logger.Error(err)
+		return
+	}
+
+	switch c.mode {
+	case "once":
+		return c.StartSpider(ctx, c.spiderName, c.startFunc, c.args)
+	case "loop":
+		for {
+			err = c.StartSpider(ctx, c.spiderName, c.startFunc, c.args)
+		}
+	case "cron":
+		return
+	default:
+		select {}
+	}
 }
 
 func (c *Crawler) Stop(ctx context.Context) (err error) {
@@ -143,7 +164,7 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, s3 *s3.Client, mockServer pkg.MockServer) (crawler pkg.Crawler, err error) {
+func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, s3 *s3.Client, mockServer pkg.MockServer, httpApi *api.Api) (crawler pkg.Crawler, err error) {
 	crawler = &Crawler{
 		spiderName:  cli.SpiderName,
 		startFunc:   cli.StartFunc,
@@ -158,7 +179,13 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		KafkaReader: kafkaReader,
 		S3:          s3,
 		mockServer:  mockServer,
+		api:         httpApi,
 	}
+
+	httpApi.AddRoutes(new(api.RouteHello).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteSpider).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteSpiderRun).FromCrawler(crawler))
+	logger.Info("routes", httpApi.GetRoutes())
 
 	for _, v := range spiders {
 		v.SetSpider(v)
