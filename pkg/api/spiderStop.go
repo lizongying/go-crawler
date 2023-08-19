@@ -10,12 +10,6 @@ import (
 
 const UrlSpiderStop = "/spider/run"
 
-type ReqSpiderStop struct {
-	Name string
-	Func string
-	Args string
-}
-
 type RouteSpiderStop struct {
 	crawler pkg.Crawler
 	logger  pkg.Logger
@@ -32,19 +26,23 @@ func (h *RouteSpiderStop) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req ReqSpiderStop
+	var req pkg.ReqStopSpider
 	if err = json.Unmarshal(body, &req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	if req.TaskId == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
-	err = h.crawler.StartSpider(context.Background(), req.Name, req.Func, req.Args)
+	err = h.crawler.StopSpider(context.Background(), req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	spider := Spider{Name: req.Name}
+	spider := Spider{Name: ""}
 	var resp []byte
 	resp, err = json.Marshal(spider)
 	if err != nil {

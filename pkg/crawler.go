@@ -28,7 +28,8 @@ type Crawler interface {
 	GetMysql() *sql.DB
 	GetS3() *s3.Client
 
-	StartSpider(ctx context.Context, spiderName string, startFunc string, args string) error
+	StartSpider(context.Context, ReqStartSpider) error
+	StopSpider(context.Context, ReqStopSpider) error
 }
 
 type CrawlOption func(Crawler)

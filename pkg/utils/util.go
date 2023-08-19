@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	uuid2 "github.com/google/uuid"
 	"github.com/lizongying/go-crawler/pkg"
 	"io"
 	"os"
@@ -281,4 +282,8 @@ func MapToStruct(data map[string]interface{}, obj interface{}) error {
 	}
 
 	return nil
+}
+
+func uuid() string {
+	return uuid2.New().String()
 }

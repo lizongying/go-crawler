@@ -14,3 +14,4 @@ var ErrUrlLengthLimit = errors.New("UrlLengthLimit")
 var ErrDropItem = errors.New("DropItem")
 
 var ErrQueueTimeout = errors.New("queue timeout")
+var ErrSpiderTimeout = errors.New("spider timeout")

@@ -9,6 +9,7 @@ require (
 	github.com/go-rod/rod v0.114.2
 	github.com/go-rod/stealth v0.4.9
 	github.com/go-sql-driver/mysql v1.7.1
+	github.com/google/uuid v1.3.0
 	github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f
 	github.com/lizongying/go-re v0.0.0-20230522044635-8e45e9501811
 	github.com/lizongying/go-xpath v0.0.0-20230508033725-6786fb94ccc1

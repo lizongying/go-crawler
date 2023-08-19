@@ -246,81 +246,96 @@ func (s *BaseSpider) registerParser() {
 	s.SetCallBacks(callBacks)
 	s.SetErrBacks(errBacks)
 }
-func (s *BaseSpider) Start(ctx context.Context, startFunc string, args string) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			if e, ok := r.(error); ok {
-				if errors.Is(e.(error), pkg.ErrQueueTimeout) {
-					s.logger.Error(pkg.ErrQueueTimeout)
-					return
+func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string, args string) (err error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	resultChan := make(chan struct{})
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				if e, ok := r.(error); ok {
+					if errors.Is(e, pkg.ErrQueueTimeout) {
+						s.logger.Error(pkg.ErrQueueTimeout)
+						return
+					}
+				}
+				buf := make([]byte, 1<<16)
+				runtime.Stack(buf, true)
+				err = errors.New(string(buf))
+				s.logger.Error(err)
+			}
+			resultChan <- struct{}{}
+		}()
+
+		states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
+		states.RegisterSetAndZeroFn(func() {
+			for _, v := range s.Middlewares() {
+				e := v.Stop(ctx)
+				if errors.Is(e, pkg.BreakErr) {
+					s.logger.Debug("middlewares break", v.Name())
+					break
 				}
 			}
-			buf := make([]byte, 1<<16)
-			runtime.Stack(buf, true)
-			err = errors.New(string(buf))
-			s.logger.Error(err)
-		}
-	}()
-
-	states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
-	states.RegisterSetAndZeroFn(func() {
-		for _, v := range s.Middlewares() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("middlewares break", v.Name())
-				break
+			for _, v := range s.Pipelines() {
+				e := v.Stop(ctx)
+				if errors.Is(e, pkg.BreakErr) {
+					s.logger.Debug("pipeline break", v.Name())
+					break
+				}
 			}
-		}
-		for _, v := range s.Pipelines() {
-			e := v.Stop(ctx)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("pipeline break", v.Name())
-				break
-			}
-		}
-		s.couldStop <- struct{}{}
-	})
+			s.couldStop <- struct{}{}
+		})
 
-	err = s.StartScheduler(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	s.Signal.SpiderOpened()
-
-	c := pkg.Context{
-		Spider: s.spider,
-	}
-	params := []reflect.Value{
-		reflect.ValueOf(c),
-		reflect.ValueOf(args),
-	}
-	caller := reflect.ValueOf(s.spider).MethodByName(startFunc)
-	if !caller.IsValid() {
-		err = errors.New("start func is invalid")
-		s.logger.Error(err)
-		return
-	}
-
-	res := caller.Call(params)
-	if len(res) < 1 {
-		return
-	}
-
-	if !res[0].IsNil() {
-		var ok bool
-		err, ok = res[0].Interface().(error)
-		if !ok {
-			err = errors.New("unknown type")
+		if err = s.StartScheduler(ctx); err != nil {
 			s.logger.Error(err)
 			return
 		}
 
-		s.logger.Error(err)
-	}
+		s.Signal.SpiderOpened()
 
-	return
+		c := pkg.Context{
+			Spider: s.spider,
+			TaskId: taskId,
+		}
+		params := []reflect.Value{
+			reflect.ValueOf(c),
+			reflect.ValueOf(args),
+		}
+		caller := reflect.ValueOf(s.spider).MethodByName(startFunc)
+		if !caller.IsValid() {
+			err = errors.New("start func is invalid")
+			s.logger.Error(err)
+			return
+		}
+
+		res := caller.Call(params)
+		if len(res) < 1 {
+			return
+		}
+
+		if !res[0].IsNil() {
+			var ok bool
+			err, ok = res[0].Interface().(error)
+			if !ok {
+				err = errors.New("spider returns an unknown type")
+				s.logger.Error(err)
+				return
+			}
+
+			s.logger.Error(err)
+		}
+	}()
+
+	select {
+	case <-resultChan:
+		return
+	case <-ctx.Done():
+		close(resultChan)
+		err = pkg.ErrSpiderTimeout
+		return
+	}
 }
 func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	s.logger.Debug("BaseSpider wait for stop")

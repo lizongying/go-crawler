@@ -44,13 +44,14 @@ type Spider interface {
 	SetFilter(Filter) Spider
 	GetScheduler() Scheduler
 	SetScheduler(Scheduler) Spider
-	Start(ctx context.Context, startFunc string, args string) error
+	Start(ctx context.Context, taskId string, startFunc string, args string) error
 	Stop(ctx context.Context) error
 	FromCrawler(Crawler) Spider
 
 	GetLogger() Logger
 	GetConfig() Config
 	YieldItem(Context, Item) error
+	MustYieldItem(Context, Item)
 	Request(Context, Request) (Response, error)
 	YieldRequest(Context, Request) error
 	MustYieldRequest(Context, Request)

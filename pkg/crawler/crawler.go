@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/google/uuid"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
@@ -86,7 +87,12 @@ func (c *Crawler) GetRedis() *redis.Client {
 func (c *Crawler) GetS3() *s3.Client {
 	return c.S3
 }
-func (c *Crawler) StartSpider(ctx context.Context, spiderName string, startFunc string, args string) (err error) {
+func (c *Crawler) StartSpider(ctx context.Context, req pkg.ReqStartSpider) (err error) {
+	taskId := req.TaskId
+	c.logger.Info(taskId)
+	spiderName := req.Name
+	startFunc := req.Func
+	args := req.Args
 	var spider pkg.Spider
 	for _, v := range c.spiders {
 		if v.Name() == spiderName {
@@ -115,26 +121,39 @@ func (c *Crawler) StartSpider(ctx context.Context, spiderName string, startFunc 
 	c.logger.Info("retryMaxTimes", c.config.GetRetryMaxTimes())
 	c.logger.Info("filter", c.config.GetFilter())
 
-	if err = spider.Start(ctx, startFunc, args); err != nil {
+	if err = spider.Start(ctx, taskId, startFunc, args); err != nil {
 		c.logger.Error(err)
 		return
 	}
 
 	return
 }
+func (c *Crawler) StopSpider(ctx context.Context, req pkg.ReqStopSpider) (err error) {
+	taskId := req.TaskId
+	c.logger.Info(taskId)
+	return
+}
 func (c *Crawler) Start(ctx context.Context) (err error) {
-	err = c.api.Run()
-	if err != nil {
+	if err = c.api.Run(); err != nil {
 		c.logger.Error(err)
 		return
 	}
 
+	req := pkg.ReqStartSpider{
+		Name: c.spiderName,
+		Func: c.startFunc,
+		Args: c.args,
+	}
 	switch c.mode {
 	case "once":
-		return c.StartSpider(ctx, c.spiderName, c.startFunc, c.args)
+		req.TaskId = uuid.New().String()
+		return c.StartSpider(ctx, req)
 	case "loop":
 		for {
-			err = c.StartSpider(ctx, c.spiderName, c.startFunc, c.args)
+			req.TaskId = uuid.New().String()
+			if err = c.StartSpider(ctx, req); err != nil {
+				c.logger.Error(err)
+			}
 		}
 	case "cron":
 		return
