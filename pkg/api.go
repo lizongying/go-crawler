@@ -1,6 +1,6 @@
 package pkg
 
-type ReqStartSpider struct {
+type ReqSpiderStart struct {
 	TaskId  string
 	Timeout int //second
 	Name    string
@@ -8,7 +8,7 @@ type ReqStartSpider struct {
 	Args    string
 }
 
-type ReqStopSpider struct {
+type ReqSpiderStop struct {
 	TaskId  string
 	Timeout int //second
 }

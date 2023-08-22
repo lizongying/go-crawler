@@ -24,7 +24,7 @@ func (h *RoutePost) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	body, _ := io.ReadAll(r.Body)
-	h.logger.InfoF("body: %s", string(body))
+	h.logger.Infof("body: %s", string(body))
 
 	reqDump, err := httputil.DumpRequest(r, true)
 	if err != nil {

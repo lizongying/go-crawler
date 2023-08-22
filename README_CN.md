@@ -424,19 +424,22 @@ spider -c example.yml -n example -f TestOk -m once
     * 环境变量 `CRAWLER_SPIDER_NAME`
     * 启动参数 `-n`
 * 初始方法名称，默认Test，注意大小写需一致。
-    * 环境变量 `CRAWLER_START_FUNC`
+    * 环境变量 `CRAWLER_SPIDER_FUNC`
     * 启动参数 `-f`
 * 额外的参数，该参数是非必须项。建议使用JSON字符串。参数会被传递到初始方法中。
-    * 环境变量 `CRAWLER_ARGS`
+    * 环境变量 `CRAWLER_SPIDER_ARGS`
     * 启动参数 `-a`
-* 启动模式，默认为manual。您可以根据需要使用不同的模式。
-    * 环境变量 `CRAWLER_MODE`
+* 模式，默认为manual。您可以根据需要使用不同的模式。
+    * 环境变量 `CRAWLER_SPIDER_MODE`
     * 启动参数 `-m`
     * 可选值
         * manual 手动执行，默认不执行，可以通过api进行管理。
         * loop 一直重复执行
         * once 只执行一次
         * cron 定时执行
+* 定时任务。只有在模式为cron下，才会应用此配置。如"every 10 seconds"
+    * 环境变量 `CRAWLER_SPIDER_SPEC`
+    * 启动参数 `-s`
 
 ### 配置
 
@@ -801,9 +804,11 @@ git clone github.com/lizongying/go-crawler-example
 * new base-spider
 * panic stop
 * extra速率限制
+* 没请求完，ctx退出
 
 ```shell
 go get -u github.com/lizongying/go-query@e077670
+go get -u github.com/lizongying/cron@3716ccc
 
 ```
 
@@ -828,3 +833,4 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 * 支持模拟浏览器
 * 支持模拟服务
 * 支持优先级队列
+* 支持定时任务、循环任务、单次任务

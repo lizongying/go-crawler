@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"io"
 	"net/http"
+	"time"
 )
 
 const UrlSpiderRun = "/spider/run"
@@ -27,7 +28,7 @@ func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req pkg.ReqStartSpider
+	var req pkg.ReqSpiderStart
 	if err = json.Unmarshal(body, &req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -36,7 +37,13 @@ func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		req.TaskId = uuid.New().String()
 	}
 
-	err = h.crawler.StartSpider(context.Background(), req)
+	ctx := context.Background()
+	if req.Timeout != 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, time.Duration(req.Timeout)*time.Second)
+		defer cancel()
+	}
+	err = h.crawler.SpiderStart(ctx, req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -55,8 +62,6 @@ func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *RouteSpiderRun) FromCrawler(crawler pkg.Crawler) pkg.Route {

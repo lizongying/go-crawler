@@ -97,7 +97,8 @@ func convertToJA3(info *tls.ClientHelloInfo) string {
 }
 
 func (h *HttpServer) Run() (err error) {
-	h.logger.Info("Starting dev server at", h.url.String())
+	h.logger.Info("Starting mock server at", h.url.String())
+	h.logger.Info("api routes", h.GetRoutes())
 	h.srv.Handler = h.mux
 	listener, e := net.Listen("tcp", h.url.Host)
 	if e != nil {

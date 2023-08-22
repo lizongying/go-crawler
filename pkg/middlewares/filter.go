@@ -41,7 +41,7 @@ func (m *FilterMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) 
 
 	if ok {
 		err = pkg.ErrIgnoreRequest
-		m.logger.InfoF("%s in filter", request.UniqueKey())
+		m.logger.Infof("%s in filter", request.UniqueKey())
 		spider.IncRequestIgnore()
 		return
 	}

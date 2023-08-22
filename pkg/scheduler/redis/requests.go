@@ -25,7 +25,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 		return
 	}
 
-	s.logger.DebugF("request: %+v", request)
+	s.logger.Debugf("request: %+v", request)
 
 	response, err = s.Download(ctx, request)
 	if err != nil {
@@ -40,7 +40,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 		return
 	}
 
-	s.logger.DebugF("request %+v", request.GetRequest())
+	s.logger.Debugf("request %+v", request.GetRequest())
 
 	return
 }
@@ -113,7 +113,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			continue
 		}
 
-		s.logger.DebugF("request: %s", req)
+		s.logger.Debugf("request: %s", req)
 		var requestJson request2.RequestJson
 		err = json.Unmarshal([]byte(req), &requestJson)
 		if err != nil {
@@ -124,7 +124,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		requestJson.SetCallBacks(s.Spider().GetCallBacks())
 		requestJson.SetErrBacks(s.Spider().GetErrBacks())
 		request, err := requestJson.ToRequest()
-		s.logger.DebugF("request: %+v", request)
+		s.logger.Debugf("request: %+v", request)
 		if err != nil {
 			s.logger.Warn(err)
 			continue

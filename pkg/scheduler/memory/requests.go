@@ -21,7 +21,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 		return
 	}
 
-	s.logger.DebugF("request: %+v", request)
+	s.logger.Debugf("request: %+v", request)
 
 	response, err = s.Download(ctx, request)
 	if err != nil {
@@ -36,7 +36,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 		return
 	}
 
-	s.logger.DebugF("request %+v", request)
+	s.logger.Debugf("request %+v", request)
 
 	return
 }
@@ -83,7 +83,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 
 		err := requestSlot.Wait(ctx)
 		if err != nil {
-			s.logger.Error(err)
+			s.logger.Error(err, time.Now(), ctx)
 		}
 		go func(request pkg.Request) {
 			c := pkg.Context{}

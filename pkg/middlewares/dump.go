@@ -12,13 +12,13 @@ type DumpMiddleware struct {
 
 func (m *DumpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	bs, _ := request.Marshal()
-	m.logger.InfoF("request: %s", string(bs))
+	m.logger.Infof("request: %s", string(bs))
 	return
 }
 
 func (m *DumpMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
 	b, _ := httputil.DumpResponse(response.GetResponse(), false)
-	m.logger.DebugF("response: \n%s", string(b))
+	m.logger.Debugf("response: \n%s", string(b))
 	return
 }
 

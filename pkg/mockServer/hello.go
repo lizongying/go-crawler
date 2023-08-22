@@ -22,9 +22,9 @@ func (h *RouteHello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.logger.Info("exit HandlerHello")
 	}()
 
-	h.logger.InfoF("request: %+v", r)
+	h.logger.Infof("request: %+v", r)
 	body, _ := io.ReadAll(r.Body)
-	h.logger.InfoF("body: %s", string(body))
+	h.logger.Infof("body: %s", string(body))
 }
 
 func NewRouteHello(logger pkg.Logger) pkg.Route {

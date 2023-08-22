@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
+	"github.com/lizongying/cron/cron"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
@@ -21,6 +22,7 @@ type Crawler struct {
 	startFunc   string
 	args        string
 	mode        string
+	spec        string
 	config      pkg.Config
 	logger      pkg.Logger
 	MongoDb     *mongo.Database
@@ -87,9 +89,8 @@ func (c *Crawler) GetRedis() *redis.Client {
 func (c *Crawler) GetS3() *s3.Client {
 	return c.S3
 }
-func (c *Crawler) StartSpider(ctx context.Context, req pkg.ReqStartSpider) (err error) {
+func (c *Crawler) SpiderStart(ctx context.Context, req pkg.ReqSpiderStart) (err error) {
 	taskId := req.TaskId
-	c.logger.Info(taskId)
 	spiderName := req.Name
 	startFunc := req.Func
 	args := req.Args
@@ -107,6 +108,7 @@ func (c *Crawler) StartSpider(ctx context.Context, req pkg.ReqStartSpider) (err 
 		return
 	}
 
+	c.logger.Info("taskId", taskId)
 	c.logger.Info("name", spiderName)
 	c.logger.Info("func", startFunc)
 	c.logger.Info("args", args)
@@ -128,7 +130,7 @@ func (c *Crawler) StartSpider(ctx context.Context, req pkg.ReqStartSpider) (err 
 
 	return
 }
-func (c *Crawler) StopSpider(ctx context.Context, req pkg.ReqStopSpider) (err error) {
+func (c *Crawler) SpiderStop(ctx context.Context, req pkg.ReqSpiderStop) (err error) {
 	taskId := req.TaskId
 	c.logger.Info(taskId)
 	return
@@ -139,7 +141,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		return
 	}
 
-	req := pkg.ReqStartSpider{
+	req := pkg.ReqSpiderStart{
 		Name: c.spiderName,
 		Func: c.startFunc,
 		Args: c.args,
@@ -147,16 +149,36 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	switch c.mode {
 	case "once":
 		req.TaskId = uuid.New().String()
-		return c.StartSpider(ctx, req)
+		return c.SpiderStart(ctx, req)
 	case "loop":
 		for {
 			req.TaskId = uuid.New().String()
-			if err = c.StartSpider(ctx, req); err != nil {
+			if err = c.SpiderStart(ctx, req); err != nil {
 				c.logger.Error(err)
 			}
 		}
 	case "cron":
-		return
+		tw := cron.New(cron.WithSecond(), cron.WithLogger(c.logger))
+
+		if _, err = tw.AddJob(c.spec, &cron.Job{
+			Callback: func() {
+				req.TaskId = uuid.New().String()
+				c.logger.Info(req)
+				if err = c.SpiderStart(ctx, req); err != nil {
+					c.logger.Error(err)
+				}
+			},
+		}); err != nil {
+			c.logger.Error(err)
+			return
+		}
+
+		if err = tw.Start(); err != nil {
+			c.logger.Error(err)
+			return
+		}
+
+		select {}
 	default:
 		select {}
 	}
@@ -189,6 +211,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		startFunc:   cli.StartFunc,
 		args:        cli.Args,
 		mode:        cli.Mode,
+		spec:        cli.Spec,
 		config:      config,
 		logger:      logger,
 		MongoDb:     mongoDb,
@@ -204,7 +227,6 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 	httpApi.AddRoutes(new(api.RouteHello).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpider).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpiderRun).FromCrawler(crawler))
-	logger.Info("routes", httpApi.GetRoutes())
 
 	for _, v := range spiders {
 		v.SetSpider(v)

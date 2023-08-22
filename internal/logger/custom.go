@@ -15,7 +15,7 @@ func (l *Logger) Debug(v ...any) {
 	}
 }
 
-func (l *Logger) DebugF(format string, v ...any) {
+func (l *Logger) Debugf(format string, v ...any) {
 	if l.level > pkg.LevelDebug {
 		return
 	}
@@ -27,7 +27,7 @@ func (l *Logger) Info(v ...any) {
 	}
 }
 
-func (l *Logger) InfoF(format string, v ...any) {
+func (l *Logger) Infof(format string, v ...any) {
 	if l.level > pkg.LevelInfo {
 		return
 	}
@@ -39,7 +39,7 @@ func (l *Logger) Warn(v ...any) {
 	}
 }
 
-func (l *Logger) WarnF(format string, v ...any) {
+func (l *Logger) Warnf(format string, v ...any) {
 	if l.level > pkg.LevelWarn {
 		return
 	}
@@ -51,7 +51,7 @@ func (l *Logger) Error(v ...any) {
 	}
 }
 
-func (l *Logger) ErrorF(format string, v ...any) {
+func (l *Logger) Errorf(format string, v ...any) {
 	if l.level > pkg.LevelError {
 		return
 	}

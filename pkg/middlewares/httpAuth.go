@@ -21,7 +21,7 @@ func (m *HttpAuthMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request
 	}
 
 	if username != "" && password != "" {
-		m.logger.InfoF("BasicAuth %s:%s", password, username)
+		m.logger.Infof("BasicAuth %s:%s", password, username)
 		request.SetBasicAuth(username, password)
 	}
 

@@ -74,7 +74,7 @@ var zeroDialer net.Dialer
 
 func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
 	bs, _ := request.Marshal()
-	h.logger.DebugF("request: %s", string(bs))
+	h.logger.Debugf("request: %s", string(bs))
 
 	if ctx == nil {
 		ctx = context.Background()
@@ -259,7 +259,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 			return
 		}
 		h.logger.Error(err, "RetryTimes:", request.RetryTimes())
-		h.logger.ErrorF("request: %+v", request)
+		h.logger.Errorf("request: %+v", request)
 		h.logger.Debug(utils.Request2Curl(request))
 		return
 	}

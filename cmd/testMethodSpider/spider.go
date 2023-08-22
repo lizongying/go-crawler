@@ -20,15 +20,15 @@ func (s *Spider) ParsePost(_ pkg.Context, response pkg.Response) (err error) {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.InfoF("request:\n%s", dumpRequest)
-	s.logger.InfoF("body:\n%s", response.GetRequest().BodyStr())
+	s.logger.Infof("request:\n%s", dumpRequest)
+	s.logger.Infof("body:\n%s", response.GetRequest().BodyStr())
 
 	dumpResponse, err := httputil.DumpResponse(response.GetResponse(), false)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.InfoF("response:\n%s", dumpResponse)
+	s.logger.Infof("response:\n%s", dumpResponse)
 	return
 }
 
@@ -38,14 +38,14 @@ func (s *Spider) ParseGet(_ pkg.Context, response pkg.Response) (err error) {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.InfoF("request:\n%s", dumpRequest)
+	s.logger.Infof("request:\n%s", dumpRequest)
 
 	dumpResponse, err := httputil.DumpResponse(response.GetResponse(), false)
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.InfoF("response:\n%s", dumpResponse)
+	s.logger.Infof("response:\n%s", dumpResponse)
 	return
 }
 

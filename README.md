@@ -587,14 +587,14 @@ spider -c example.yml -n example -f TestOk -m once
     * Environment variable `CRAWLER_SPIDER_NAME`
     * Startup parameter `-n`
 * Initial method, default is "Test". Please note that the case must be consistent.
-    * Environment variable `CRAWLER_START_FUNC`
+    * Environment variable `CRAWLER_SPIDER_FUNC`
     * Startup parameter `-f`
 * Additional parameters, this parameter is optional. It is recommended to use a JSON string. The parameters will be
   passed to the initial method.
-    * Environment variable `CRAWLER_ARGS`
+    * Environment variable `CRAWLER_SPIDER_ARGS`
     * Startup parameter `-a`
 * Startup mode, default is "manual". You can use different modes as needed
-    * Environment variable `CRAWLER_MODE`
+    * Environment variable `CRAWLER_SPIDER_MODE`
     * Startup parameter `-m`
     * You can use different modes as needed:
     * Optional values
@@ -602,6 +602,9 @@ spider -c example.yml -n example -f TestOk -m once
         * `loop`: Executes repeatedly.
         * `once`: Executes only once.
         * `cron`: Executes at scheduled intervals.
+* Scheduled task. This configuration is only applied when the mode is set to "cron", such as "every 10 seconds"
+    * Environment variable `CRAWLER_SPIDER_SPEC`
+    * Startup parameter `-s`
 
 ### Configuration
 
@@ -1007,6 +1010,7 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 * Browser simulation is supported.
 * Mock server is supported.
 * Priority queue is supported.
+* Supports scheduled tasks, recurring tasks, and one-time tasks.
 
 
 1. Parsing:

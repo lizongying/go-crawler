@@ -20,7 +20,8 @@ type Api struct {
 
 func (a *Api) Run() (err error) {
 	go func() {
-		a.logger.Info("Starting api at", a.srv.Addr)
+		a.logger.Infof("Starting api at http://%s\n", a.srv.Addr)
+		a.logger.Info("api routes", a.GetRoutes())
 		if err = a.srv.ListenAndServe(); err != nil {
 			if err.Error() == "http: Server closed" {
 				return

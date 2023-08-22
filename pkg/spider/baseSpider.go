@@ -247,6 +247,11 @@ func (s *BaseSpider) registerParser() {
 	s.SetErrBacks(errBacks)
 }
 func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string, args string) (err error) {
+	timeBegin := time.Now()
+	defer func() {
+		s.logger.Info("spend time", time.Now().Sub(timeBegin))
+	}()
+
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -326,14 +331,18 @@ func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string,
 
 			s.logger.Error(err)
 		}
+
+		<-s.couldStop
 	}()
 
 	select {
 	case <-resultChan:
+		s.logger.Info("finished")
 		return
 	case <-ctx.Done():
 		close(resultChan)
 		err = pkg.ErrSpiderTimeout
+		s.logger.Error(err)
 		return
 	}
 }
@@ -344,8 +353,6 @@ func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 			s.logger.Info("BaseSpider Stopped")
 		}
 	}()
-
-	<-s.couldStop
 
 	if err = s.StopScheduler(ctx); err != nil {
 		s.logger.Error(err)

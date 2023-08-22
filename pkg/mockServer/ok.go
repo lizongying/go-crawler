@@ -1,7 +1,6 @@
 package mockServer
 
 import (
-	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"net/http"
 )
@@ -22,8 +21,7 @@ func (h *RouteOk) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 		h.logger.Debug("exit HandlerOk")
 	}()
 
-	w.WriteHeader(http.StatusOK)
-	_, err := w.Write([]byte(fmt.Sprintf("Header: %v", request.Header)))
+	_, err := w.Write([]byte("ok"))
 	if err != nil {
 		h.logger.Error(err)
 		return
