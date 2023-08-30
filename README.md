@@ -602,7 +602,7 @@ spider -c example.yml -n example -f TestOk -m once
         * `loop`: Executes repeatedly.
         * `once`: Executes only once.
         * `cron`: Executes at scheduled intervals.
-* Scheduled task. This configuration is only applied when the mode is set to "cron", such as "every 10 seconds"
+* Scheduled task. This configuration is only applied when the mode is set to "cron", such as "10s"
     * Environment variable `CRAWLER_SPIDER_SPEC`
     * Startup parameter `-s`
 
@@ -979,7 +979,6 @@ git clone github.com/lizongying/go-crawler-example
 ## TODO
 
 * AutoThrottle
-* cron
 * monitor
 * statistics
 * Stats

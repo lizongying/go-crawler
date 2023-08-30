@@ -437,7 +437,7 @@ spider -c example.yml -n example -f TestOk -m once
         * loop 一直重复执行
         * once 只执行一次
         * cron 定时执行
-* 定时任务。只有在模式为cron下，才会应用此配置。如"every 10 seconds"
+* 定时任务。只有在模式为cron下，才会应用此配置。如"10s"
     * 环境变量 `CRAWLER_SPIDER_SPEC`
     * 启动参数 `-s`
 
@@ -797,7 +797,6 @@ git clone github.com/lizongying/go-crawler-example
 ## TODO
 
 * AutoThrottle
-* cron
 * monitor
 * statistics
 * Stats
@@ -808,7 +807,7 @@ git clone github.com/lizongying/go-crawler-example
 
 ```shell
 go get -u github.com/lizongying/go-query@e077670
-go get -u github.com/lizongying/cron@3716ccc
+go get -u github.com/lizongying/cron@simple-v2
 
 ```
 

@@ -10,6 +10,7 @@ require (
 	github.com/go-rod/stealth v0.4.9
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/google/uuid v1.3.0
+	github.com/lizongying/cron v0.0.5-0.20230830132250-0ef8536e5853
 	github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f
 	github.com/lizongying/go-re v0.0.0-20230522044635-8e45e9501811
 	github.com/lizongying/go-xpath v0.0.0-20230508033725-6786fb94ccc1
@@ -50,7 +51,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
-	github.com/lizongying/cron v0.0.2-0.20230822054719-3716ccc0716c // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

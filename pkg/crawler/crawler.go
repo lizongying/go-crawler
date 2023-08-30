@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
-	"github.com/lizongying/cron/cron"
+	"github.com/lizongying/cron"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
@@ -14,6 +14,9 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 type Crawler struct {
@@ -158,25 +161,37 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 			}
 		}
 	case "cron":
-		tw := cron.New(cron.WithSecond(), cron.WithLogger(c.logger))
 
-		if _, err = tw.AddJob(c.spec, &cron.Job{
-			Callback: func() {
-				req.TaskId = uuid.New().String()
-				c.logger.Info(req)
-				if err = c.SpiderStart(ctx, req); err != nil {
-					c.logger.Error(err)
-				}
-			},
-		}); err != nil {
-			c.logger.Error(err)
+		re := regexp.MustCompile(`(?i)(\d+)([sihdmw])`)
+		r := re.FindStringSubmatch(c.spec)
+		if len(r) != 3 {
 			return
 		}
-
-		if err = tw.Start(); err != nil {
-			c.logger.Error(err)
-			return
+		cr := cron.New(cron.WithLogger(c.logger))
+		cr.MustStart()
+		job := new(cron.Job).Callback(func() {
+			req.TaskId = uuid.New().String()
+			c.logger.Info(req)
+			if err = c.SpiderStart(ctx, req); err != nil {
+				c.logger.Error(err)
+			}
+		})
+		num, _ := strconv.Atoi(r[1])
+		switch strings.ToUpper(r[2]) {
+		case "S":
+			job.EverySecond(uint8(num))
+		case "I":
+			job.EveryMinute(uint8(num))
+		case "H":
+			job.EveryHour(uint8(num))
+		case "D":
+			job.EveryDay(uint8(num))
+		case "M":
+			job.EveryMonth(uint8(num))
+		case "W":
+			job.EveryWeek(uint8(num))
 		}
+		cr.MustAddJob(job)
 
 		select {}
 	default:
