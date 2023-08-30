@@ -161,7 +161,6 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 			}
 		}
 	case "cron":
-
 		re := regexp.MustCompile(`(?i)(\d+)([sihdmw])`)
 		r := re.FindStringSubmatch(c.spec)
 		if len(r) != 3 {
