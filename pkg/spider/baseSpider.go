@@ -256,6 +256,8 @@ func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string,
 		ctx = context.Background()
 	}
 
+	s.Stats = &stats.Stats{}
+
 	resultChan := make(chan struct{})
 	go func() {
 		defer func() {
@@ -406,7 +408,6 @@ func NewBaseSpider(logger pkg.Logger) (pkg.Spider, error) {
 		browsers:              make(map[pkg.Browser]struct{}, 4),
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
-		Stats:                 &stats.Stats{},
 	}
 	s.stateRequest = pkg.NewState()
 	s.stateItem = pkg.NewState()

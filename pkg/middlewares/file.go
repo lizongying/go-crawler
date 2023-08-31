@@ -62,9 +62,9 @@ func (m *FileMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response)
 
 		response.SetFiles(append(response.Files(), i))
 
-		stats, ok := spider.GetStats().(pkg.StatsWithImage)
+		stats, ok := spider.GetStats().(pkg.StatsWithFile)
 		if ok {
-			stats.IncImageTotal()
+			stats.IncFileTotal()
 		}
 	}
 

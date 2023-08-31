@@ -39,7 +39,7 @@ func (m *StatsMiddleware) Stop(_ context.Context) (err error) {
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
-		sl = append(sl, fmt.Sprintf("%s:", k), kv[k])
+		sl = append(sl, fmt.Sprintf("%s: %d,", k, kv[k]))
 	}
 	m.logger.Info(sl...)
 	return
@@ -47,7 +47,7 @@ func (m *StatsMiddleware) Stop(_ context.Context) (err error) {
 
 func (m *StatsMiddleware) ProcessRequest(_ pkg.Context, _ pkg.Request) (err error) {
 	spider := m.GetSpider()
-	spider.IncRequestTotal()
+	spider.IncRequestSuccess()
 	return
 }
 

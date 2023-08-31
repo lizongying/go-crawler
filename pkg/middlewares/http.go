@@ -25,7 +25,6 @@ func (m *HttpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err
 	if request.GetUrl() == "" {
 		err = errors.New("url is empty")
 		m.logger.Error(err)
-		spider.IncRequestError()
 		return
 	}
 	request.SetCreateTime(utils.NowStr())
@@ -49,7 +48,6 @@ func (m *HttpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err
 	if !ok {
 		err = errors.New("it's not a allowed domain")
 		m.logger.Error(err)
-		spider.IncRequestError()
 		return
 	}
 

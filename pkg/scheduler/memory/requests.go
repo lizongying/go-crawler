@@ -11,7 +11,6 @@ import (
 )
 
 func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
-	spider := s.Spider()
 	defer func() {
 		s.Spider().StateRequest().Set()
 	}()
@@ -27,7 +26,6 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 	if err != nil {
 		if errors.Is(err, pkg.ErrIgnoreRequest) {
 			s.logger.Info(err)
-			spider.IncRequestIgnore()
 			return
 		}
 
@@ -52,7 +50,6 @@ func (s *Scheduler) handleError(ctx pkg.Context, response pkg.Response, err erro
 }
 
 func (s *Scheduler) handleRequest(ctx context.Context) {
-	spider := s.Spider()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -90,7 +87,6 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			response, e := s.Request(c, request)
 			if errors.Is(e, pkg.ErrIgnoreRequest) {
 				s.logger.Info(err)
-				spider.IncRequestIgnore()
 				return
 			}
 

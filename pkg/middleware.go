@@ -6,6 +6,7 @@ type Middleware interface {
 	Start(context.Context, Spider) error
 	ProcessRequest(Context, Request) error
 	ProcessResponse(Context, Response) error
+	ProcessError(Context, error)
 	Stop(context.Context) error
 	SetName(string)
 	Name() string
@@ -41,6 +42,8 @@ func (*UnimplementedMiddleware) ProcessRequest(Context, Request) error {
 }
 func (*UnimplementedMiddleware) ProcessResponse(Context, Response) error {
 	return nil
+}
+func (*UnimplementedMiddleware) ProcessError(Context, error) {
 }
 func (*UnimplementedMiddleware) Stop(context.Context) error {
 	return nil

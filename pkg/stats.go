@@ -29,3 +29,17 @@ type StatsWithImage interface {
 	ImageTotal() uint32
 	IncImageTotal() uint32
 }
+
+type StatsWithFile interface {
+	Stats
+	FileTotal() uint32
+	IncFileTotal() uint32
+}
+
+type StatsWithMedia interface {
+	Stats
+	ImageTotal() uint32
+	IncImageTotal() uint32
+	FileTotal() uint32
+	IncFileTotal() uint32
+}

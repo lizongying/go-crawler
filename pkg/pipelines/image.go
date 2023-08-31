@@ -19,9 +19,6 @@ func (m *ImagePipeline) Start(ctx context.Context, spider pkg.Spider) (err error
 }
 
 func (m *ImagePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
-	spider := m.GetSpider()
-	spider.IncItemTotal()
-
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
