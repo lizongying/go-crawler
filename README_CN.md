@@ -17,6 +17,16 @@
 * 内置模拟服务，调试开发更方便。
 * 支持分布式部署
 
+## 安装
+
+```shell
+go get -u github.com/lizongying/go-crawler
+
+# 目前框架更新较为频繁, 建议使用最新版本, 如:
+go get -u github.com/lizongying/go-crawler@d35d98f
+
+```
+
 ## 用法
 
 ```go
@@ -437,7 +447,7 @@ spider -c example.yml -n example -f TestOk -m once
         * loop 一直重复执行
         * once 只执行一次
         * cron 定时执行
-* 定时任务。只有在模式为cron下，才会应用此配置。如"10s"
+* 定时任务。只有在模式为cron下，才会应用此配置。如"1s/2i/3h/4d/5m/6w"
     * 环境变量 `CRAWLER_SPIDER_SPEC`
     * 启动参数 `-s`
 
@@ -799,7 +809,6 @@ git clone github.com/lizongying/go-crawler-example
 * AutoThrottle
 * monitor
 * statistics
-* Stats
 * new base-spider
 * panic stop
 * extra速率限制

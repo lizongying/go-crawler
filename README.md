@@ -19,6 +19,16 @@ distributed deployment.
 * Includes a built-in mock Server for convenient debugging and development.
 * It supports distributed deployment.
 
+## Install
+
+```shell
+go get -u github.com/lizongying/go-crawler
+
+# Currently, the framework is updated frequently. It's advisable to use the latest version, such as:
+go get -u github.com/lizongying/go-crawler@d35d98f
+
+```
+
 ## Usage
 
 ```go
@@ -602,7 +612,7 @@ spider -c example.yml -n example -f TestOk -m once
         * `loop`: Executes repeatedly.
         * `once`: Executes only once.
         * `cron`: Executes at scheduled intervals.
-* Scheduled task. This configuration is only applied when the mode is set to "cron", such as "10s"
+* Scheduled task. This configuration is only applied when the mode is set to "cron", such as "1s/2i/3h/4d/5m/6w"
     * Environment variable `CRAWLER_SPIDER_SPEC`
     * Startup parameter `-s`
 
@@ -981,7 +991,6 @@ git clone github.com/lizongying/go-crawler-example
 * AutoThrottle
 * monitor
 * statistics
-* Stats
 
 ```shell
 go get -u github.com/lizongying/go-query@e077670
