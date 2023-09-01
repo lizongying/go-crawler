@@ -94,6 +94,12 @@ func DumpJson(i interface{}) {
 	fmt.Println(string(m))
 }
 
+// DumpJsonPretty e.g. utils.DumpJsonPretty(s)
+func DumpJsonPretty(i interface{}) {
+	m, _ := json.MarshalIndent(i, "", "	")
+	fmt.Println(string(m))
+}
+
 // DumpFRead e.g. utils.DumpFRead(r, "/tmp/detail.html")
 func DumpFRead(reader *io.ReadCloser, path string) {
 	byteRes, _ := io.ReadAll(*reader)
