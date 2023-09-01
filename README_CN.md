@@ -335,13 +335,20 @@ func main() {
 * Response
 
   Response对http.Response进行了一些包装。
-    * `Xpath() (*xpath.Selector, error)`
+    - `Xpath() (*xpath.Selector, error)`
       返回Xpath选择器，具体语法请参考 [go-xpath](https://github.com/lizongying/go-xpath)
-    * `Query() (*query.Selector, error)` 返回CSS选择器，具体语法请参考 [go-query](https://github.com/lizongying/go-query)
-    * `Json() (gjson.Result, error)` 返回gjson选择器，具体语法请参考 gjson
-    * `Re() (*re.Selector, error)` 返回正则选择器，具体语法请参考 [go-re](https://github.com/lizongying/go-re)
-    * `AllLink() []*url.URL` 可以获取response中的所有链接。
-    * `BodyText() string` 可以获取清理过html标签的正文，处理比较粗糙。
+    - `Query() (*query.Selector, error)`
+      返回CSS选择器，具体语法请参考 [go-query](https://github.com/lizongying/go-query)
+    - `Json() (gjson.Result, error)`
+      返回gjson选择器，具体语法请参考 gjson
+    - `Re() (*re.Selector, error)`
+      返回正则选择器，具体语法请参考 [go-re](https://github.com/lizongying/go-re)
+    - `AllLink() []*url.URL`
+      可以获取response中的所有链接。
+    - `BodyText() string`
+      可以获取清理过html标签的正文，处理比较粗糙。
+    - `AbsoluteURL(relativeUrl string) (absoluteURL *url.URL, err error)`
+      可以获取url绝对地址
 
 * 信号（Signal）
 

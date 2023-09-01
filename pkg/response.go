@@ -52,4 +52,16 @@ type Response interface {
 
 	AllLink() []*url.URL
 	BodyText() string
+
+	AbsoluteURL(relativeUrl string) (absoluteURL *url.URL, err error)
+
+	MustUnmarshalData(v any)
+
+	// UnmarshalData
+	// Parsing data into `v` based on the parsing rules in the `v` field tag.
+	// _json="data.name"
+	// _re="name"
+	// _xpath="//a[@link]"
+	// _css=".class"
+	UnmarshalData(v any) error
 }

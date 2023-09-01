@@ -190,6 +190,15 @@ func (r *Response) Query() (selector *query.Selector, err error) {
 	return
 }
 
+func (r *Response) MustJson() (result gjson.Result) {
+	var err error
+	result, err = r.Json()
+	if err != nil {
+		return
+	}
+	return
+}
+
 // Json return a gjson
 func (r *Response) Json() (result gjson.Result, err error) {
 	if r == nil {
@@ -203,7 +212,6 @@ func (r *Response) Json() (result gjson.Result, err error) {
 	}
 
 	result = gjson.ParseBytes(r.bodyBytes)
-
 	return
 }
 
@@ -285,5 +293,144 @@ func (r *Response) BodyText() (body string) {
 	body = sel.Remove("script").FindStrOne("body")
 	body = regexp.MustCompile(` `).ReplaceAllString(body, "")
 	body = regexp.MustCompile(`\n+`).ReplaceAllString(body, "\n")
+	return
+}
+
+// AbsoluteURL Generating an absolute URL based on a relative URL.
+func (r *Response) AbsoluteURL(relativeUrl string) (absoluteURL *url.URL, err error) {
+	base := r.request.GetRequest().URL
+	var relativeURL *url.URL
+	relativeURL, err = url.Parse(relativeUrl)
+	if err != nil {
+		return
+	}
+	absoluteURL = base.ResolveReference(relativeURL)
+	return
+}
+
+func (r *Response) MustUnmarshalData(v any) {
+	_ = r.UnmarshalData(v)
+}
+func (r *Response) UnmarshalData(v any) (err error) {
+	vValue := reflect.ValueOf(v)
+	if vValue.Kind() != reflect.Ptr || vValue.IsNil() {
+		return fmt.Errorf("`v` must be a non-null pointer")
+	}
+
+	vValue = vValue.Elem()
+	if vValue.Kind() != reflect.Struct {
+		err = errors.New("`*v` must be a struct")
+		return
+	}
+
+	dataType, _ := vValue.Type().FieldByName("Data")
+	eleCount := 0
+	rootPath := dataType.Tag.Get("_json")
+	var rootJson gjson.Result
+	if rootPath != "" {
+		rootJson = r.MustJson().Get(rootPath)
+		if rootJson.IsArray() {
+			eleCount = len(rootJson.Array())
+		}
+	}
+
+	vValue = vValue.FieldByName("Data")
+	if vValue.Kind() == reflect.Slice {
+		eleType := vValue.Type().Elem()
+		if eleType.Kind() != reflect.Struct {
+			err = errors.New("elements of `v` must be a struct")
+			return
+		}
+
+		root := reflect.MakeSlice(vValue.Type(), 0, 0)
+		l := eleType.NumField()
+		for i := 0; i < eleCount; i++ {
+			ele := reflect.New(eleType).Elem()
+			for ii := 0; ii < l; ii++ {
+				elePath := eleType.Field(ii).Tag.Get("_json")
+				if elePath != "" {
+					eleJson := rootJson.Array()[i].Get(elePath)
+					eleField := ele.Field(ii)
+					switch eleType.Field(ii).Type.Kind() {
+					case reflect.Int:
+						eleField.SetInt(eleJson.Int())
+					case reflect.Int8:
+						eleField.SetInt(eleJson.Int())
+					case reflect.Int16:
+						eleField.SetInt(eleJson.Int())
+					case reflect.Int32:
+						eleField.SetInt(eleJson.Int())
+					case reflect.Int64:
+						eleField.SetInt(eleJson.Int())
+					case reflect.String:
+						eleField.SetString(eleJson.String())
+					case reflect.Bool:
+						eleField.SetBool(eleJson.Bool())
+					case reflect.Uint:
+						eleField.SetUint(eleJson.Uint())
+					case reflect.Uint8:
+						eleField.SetUint(eleJson.Uint())
+					case reflect.Uint16:
+						eleField.SetUint(eleJson.Uint())
+					case reflect.Uint32:
+						eleField.SetUint(eleJson.Uint())
+					case reflect.Uint64:
+						eleField.SetUint(eleJson.Uint())
+					case reflect.Float32:
+						eleField.SetFloat(eleJson.Float())
+					case reflect.Float64:
+						eleField.SetFloat(eleJson.Float())
+					}
+				}
+			}
+			root = reflect.Append(root, ele)
+		}
+		vValue.Set(root)
+	} else if vValue.Kind() == reflect.Struct {
+		eleType := vValue.Type()
+
+		l := eleType.NumField()
+		for ii := 0; ii < l; ii++ {
+			elePath := eleType.Field(ii).Tag.Get("_json")
+			if elePath != "" {
+				eleJson := rootJson.Get(elePath)
+				eleField := vValue.Field(ii)
+				switch eleType.Field(ii).Type.Kind() {
+				case reflect.Int:
+					eleField.SetInt(eleJson.Int())
+				case reflect.Int8:
+					eleField.SetInt(eleJson.Int())
+				case reflect.Int16:
+					eleField.SetInt(eleJson.Int())
+				case reflect.Int32:
+					eleField.SetInt(eleJson.Int())
+				case reflect.Int64:
+					eleField.SetInt(eleJson.Int())
+				case reflect.String:
+					eleField.SetString(eleJson.String())
+				case reflect.Bool:
+					eleField.SetBool(eleJson.Bool())
+				case reflect.Uint:
+					eleField.SetUint(eleJson.Uint())
+				case reflect.Uint8:
+					eleField.SetUint(eleJson.Uint())
+				case reflect.Uint16:
+					eleField.SetUint(eleJson.Uint())
+				case reflect.Uint32:
+					eleField.SetUint(eleJson.Uint())
+				case reflect.Uint64:
+					eleField.SetUint(eleJson.Uint())
+				case reflect.Float32:
+					eleField.SetFloat(eleJson.Float())
+				case reflect.Float64:
+					eleField.SetFloat(eleJson.Float())
+				}
+			}
+		}
+	} else {
+		err = errors.New("`*v.Data` must be a slice or struct")
+		return
+	}
+
 	return
 }

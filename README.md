@@ -452,26 +452,22 @@ func main() {
 * Response
 
   The `Response` wraps around `http.Response` and provides the following functionalities:
-
     - `Xpath() (*xpath.Selector, error)`
       Returns an XPath selector, for specific syntax, please refer
       to [go-xpath](https://github.com/lizongying/go-xpath).
-
     - `Query() (*query.Selector, error)`
       Returns a CSS selector, for specific syntax, please refer to [go-query](https://github.com/lizongying/go-query).
-
     - `Json() (gjson.Result, error)`
       Returns a gjson selector, for specific syntax, please refer to gjson.
-
     - `Re() (*re.Selector, error)`
       Returns a regular expression selector, for specific syntax, please refer
       to [go-re](https://github.com/lizongying/go-re).
-
     - `AllLink() []*url.URL`
       Retrieves all links from the response.
-
     - `BodyText() string`
       Retrieves the cleaned text content without HTML tags, the handling may be rough.
+    - `AbsoluteURL(relativeUrl string) (absoluteURL *url.URL, err error)`
+      Retrieves the absolute URL for a given relative URL.
 
 * Signals
 
