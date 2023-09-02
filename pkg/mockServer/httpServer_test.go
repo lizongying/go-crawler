@@ -40,3 +40,8 @@ func TestNewRouteRobotsTxt(t *testing.T) {
 func TestOk(t *testing.T) {
 	Run(NewRouteOk)
 }
+
+// go test -v ./pkg/mockServer/*.go -run TestHtml
+func TestHtml(t *testing.T) {
+	Run(NewRouteHtml)
+}

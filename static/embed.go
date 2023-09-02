@@ -16,3 +16,6 @@ var Key []byte
 
 //go:embed statics
 var Statics embed.FS
+
+//go:embed html
+var Html embed.FS

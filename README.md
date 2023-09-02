@@ -567,6 +567,8 @@ func main() {
         * GbkRoute: Simulates using the gbk encoding.
         * GzipRoute: Simulates using gzip compression.
         * HelloRoute: Prints the header and body information of the request.
+        * HtmlRoute: simulates the return of HTML static files. You can place HTML files inside the `/static/html/`
+          directory for web parsing testing purposes, eliminating the need for redundant requests.
         * HttpAuthRoute: Simulates http-auth authentication.
         * InternalServerErrorRoute: Simulates returning a 500 status code.
         * OkRoute: Simulates normal output, returning a 200 status code.

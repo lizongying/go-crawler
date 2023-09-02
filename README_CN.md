@@ -419,6 +419,7 @@ func main() {
         * GbkRoute 模拟使用gbk编码
         * GzipRoute 模拟使用gzip压缩
         * HelloRoute 打印请求的header和body信息
+        * HtmlRoute 模拟返回html静态文件，可以把html文件放在/static/html/目录内，用于网页解析测试，不用重复请求
         * HttpAuthRoute 模拟http-auth认证
         * InternalServerErrorRoute 模拟返回500状态码
         * OkRoute 模拟正常输出，返回200状态码
