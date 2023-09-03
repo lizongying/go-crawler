@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mockServer"
+	"github.com/lizongying/go-crawler/pkg/mockServers"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
 
@@ -22,9 +22,9 @@ func (s *Spider) ParseOk(_ pkg.Context, response pkg.Response) (err error) {
 // curl -H "Content-Type: application/json" -X POST -d ' {"timeout": 1, "name": "test-from-request", "func":"TestMustOk", "args":"" }' "http://127.0.0.1:8080/spider/run"
 func (s *Spider) TestMustOk(ctx pkg.Context, _ string) (err error) {
 	for _, r := range []pkg.Request{
-		request.NewRequest().SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).SetCallBack(s.ParseOk),
-		request.NewRequest().SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).SetCallBack(s.ParseOk),
-		request.NewRequest().SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).SetCallBack(s.ParseOk),
+		request.NewRequest().SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).SetCallBack(s.ParseOk),
+		request.NewRequest().SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).SetCallBack(s.ParseOk),
+		request.NewRequest().SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).SetCallBack(s.ParseOk),
 	} {
 		s.MustYieldRequest(ctx, r)
 	}
@@ -46,6 +46,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 
 func main() {
 	app.NewApp(NewSpider).Run(
-		pkg.WithMockServerRoute(mockServer.NewRouteOk),
+		pkg.WithMockServerRoute(mockServers.NewRouteOk),
 	)
 }

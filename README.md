@@ -27,7 +27,7 @@ distributed deployment.
 go get -u github.com/lizongying/go-crawler
 
 # Currently, the framework is updated frequently. It's advisable to use the latest version, such as:
-go get -u github.com/lizongying/go-crawler@7b3f6c7
+go get -u github.com/lizongying/go-crawler@latest
 
 ```
 
@@ -454,12 +454,12 @@ func main() {
 * Response
 
   The `Response` wraps around `http.Response` and provides the following functionalities:
-    - `Xpath() (*xpath.Selector, error)`
+    - `Xpath() (*xpath.Selector, error)` `MustXpath() *xpath.Selector`
       Returns an XPath selector, for specific syntax, please refer
       to [go-xpath](https://github.com/lizongying/go-xpath).
-    - `Query() (*query.Selector, error)`
-      Returns a CSS selector, for specific syntax, please refer to [go-query](https://github.com/lizongying/go-query).
-    - `Json() (gjson.Result, error)`
+    - `Css() (*css.Selector, error)` `MustCss() *css.Selector`
+      Returns a CSS selector, for specific syntax, please refer to [go-css](https://github.com/lizongying/go-css).
+    - `Json() (gjson.Result, error)` `MustJson() gjson.Result`
       Returns a gjson selector, for specific syntax, please refer to gjson.
     - `Re() (*re.Selector, error)`
       Returns a regular expression selector, for specific syntax, please refer
@@ -484,9 +484,9 @@ func main() {
   The framework comes with several built-in parsing modules. You can choose the one that suits your specific spider's
   needs to extract the required data from web pages.
 
-    * Query Selector: [go-query](https://github.com/lizongying/go-query) is a library for handling query selectors. You
-      can use the query selector syntax to
-      extract data from HTML by calling the `response.Query()` method.
+    * Css Selector: [go-css](https://github.com/lizongying/go-css) is a library for handling css selectors. You
+      can use the css selector syntax to
+      extract data from HTML by calling the `response.Css()` method.
     * XPath Selector: [go-xpath](https://github.com/lizongying/go-xpath) is a library for XPath selection. You can use
       XPath expressions to extract data from HTML
       by calling the `response.Xpath()` method.
@@ -722,15 +722,15 @@ For example:
 
 ```go
 type DataRanks struct {
-    Data []struct {
-        Name           string  `_json:"name"`
-        FullName       string  `_json:"fullname"`
-        Code           string  `_json:"code"`
-        MarketBalue    int     `_json:"market_value"`
-        MarketValueUsd int     `_json:"market_value_usd"`
-        Marketcap      int     `_json:"marketcap"`
-        Turnoverrate   float32 `_json:"turnoverrate"`
-    } `_json:"data"`
+Data []struct {
+Name           string  `_json:"name"`
+FullName       string  `_json:"fullname"`
+Code           string  `_json:"code"`
+MarketBalue    int     `_json:"market_value"`
+MarketValueUsd int     `_json:"market_value_usd"`
+Marketcap      int     `_json:"marketcap"`
+Turnoverrate   float32 `_json:"turnoverrate"`
+} `_json:"data"`
 }
 ```
 
@@ -1029,7 +1029,8 @@ git clone github.com/lizongying/go-crawler-example
 * statistics
 
 ```shell
-go get -u github.com/lizongying/go-query@e077670
+go get -u github.com/lizongying/go-css@latest
+go get -u github.com/lizongying/go-xpath@latest
 
 ```
 

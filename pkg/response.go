@@ -2,7 +2,7 @@ package pkg
 
 import (
 	"context"
-	"github.com/lizongying/go-query/query"
+	"github.com/lizongying/go-css/css"
 	"github.com/lizongying/go-re/re"
 	"github.com/lizongying/go-xpath/xpath"
 	"github.com/tidwall/gjson"
@@ -35,7 +35,8 @@ type Response interface {
 	UnmarshalBody(any) error
 	MustXpath() *xpath.Selector
 	Xpath() (*xpath.Selector, error)
-	Query() (*query.Selector, error)
+	MustCss() *css.Selector
+	Css() (*css.Selector, error)
 	MustJson() gjson.Result
 	Json() (gjson.Result, error)
 	Re() (*re.Selector, error)

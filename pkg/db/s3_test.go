@@ -6,7 +6,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
-	"github.com/lizongying/go-crawler/pkg/logger"
 	"go.uber.org/fx"
 	"os"
 	"testing"
@@ -20,7 +19,7 @@ func TestNewS3(t *testing.T) {
 			cli.NewCli,
 			NewS3,
 			fx.Annotate(
-				logger.NewLogger,
+				loggers.NewLogger,
 				fx.As(new(pkg.Logger)),
 			),
 			config.NewConfig,

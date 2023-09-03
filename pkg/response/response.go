@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-css/css"
 	"github.com/lizongying/go-query/query"
 	"github.com/lizongying/go-re/re"
 	"github.com/lizongying/go-xpath/xpath"
@@ -150,11 +151,7 @@ func (r *Response) SetSpendTime(spendTime time.Duration) pkg.Request {
 	return r.request.SetSpendTime(spendTime)
 }
 func (r *Response) MustXpath() (selector *xpath.Selector) {
-	var err error
-	selector, err = r.Xpath()
-	if err != nil {
-		return
-	}
+	selector, _ = r.Xpath()
 	return
 }
 
@@ -178,8 +175,13 @@ func (r *Response) Xpath() (selector *xpath.Selector, err error) {
 	return
 }
 
-// Query returns a query selector
-func (r *Response) Query() (selector *query.Selector, err error) {
+func (r *Response) MustCss() (selector *css.Selector) {
+	selector, _ = r.Css()
+	return
+}
+
+// Css returns a css selector
+func (r *Response) Css() (selector *css.Selector, err error) {
 	if r == nil {
 		err = errors.New("response is invalid")
 		return
@@ -190,7 +192,7 @@ func (r *Response) Query() (selector *query.Selector, err error) {
 		return
 	}
 
-	selector, err = query.NewSelectorFromBytes(r.bodyBytes)
+	selector, err = css.NewSelectorFromBytes(r.bodyBytes)
 	if err != nil {
 		return
 	}
@@ -199,11 +201,7 @@ func (r *Response) Query() (selector *query.Selector, err error) {
 }
 
 func (r *Response) MustJson() (result gjson.Result) {
-	var err error
-	result, err = r.Json()
-	if err != nil {
-		return
-	}
+	result, _ = r.Json()
 	return
 }
 
@@ -352,6 +350,16 @@ func (r *Response) UnmarshalData(v any) (err error) {
 		}
 	}
 
+	rootPathCss := dataType.Tag.Get("_css")
+	var rootCss []*css.Selector
+	if rootPathCss != "" {
+		rootCss = r.MustCss().FindNodeMany(rootPathCss)
+		eleCount = len(rootCss)
+		if eleCount == 0 {
+			return
+		}
+	}
+
 	vValue = vValue.FieldByName("Data")
 	if vValue.Kind() == reflect.Slice {
 		eleType := vValue.Type().Elem()
@@ -365,9 +373,9 @@ func (r *Response) UnmarshalData(v any) (err error) {
 		for i := 0; i < eleCount; i++ {
 			ele := reflect.New(eleType).Elem()
 			for ii := 0; ii < l; ii++ {
-				elePath := eleType.Field(ii).Tag.Get("_json")
-				if elePath != "" {
-					eleJson := rootJson.Array()[i].Get(elePath)
+				elePathJson := eleType.Field(ii).Tag.Get("_json")
+				if elePathJson != "" {
+					eleJson := rootJson.Array()[i].Get(elePathJson)
 					eleField := ele.Field(ii)
 					switch eleType.Field(ii).Type.Kind() {
 					case reflect.Int:
@@ -435,6 +443,43 @@ func (r *Response) UnmarshalData(v any) (err error) {
 					case reflect.Float64:
 						eleField.SetFloat(eleXpath.One(elePathXpath).Float64())
 					}
+					continue
+				}
+				elePathCss := eleType.Field(ii).Tag.Get("_css")
+				if elePathCss != "" {
+					eleCss := rootCss[i]
+					eleField := ele.Field(ii)
+					switch eleType.Field(ii).Type.Kind() {
+					case reflect.Int:
+						eleField.SetInt(eleCss.One(elePathCss).Int64())
+					case reflect.Int8:
+						eleField.SetInt(eleCss.One(elePathCss).Int64())
+					case reflect.Int16:
+						eleField.SetInt(eleCss.One(elePathCss).Int64())
+					case reflect.Int32:
+						eleField.SetInt(eleCss.One(elePathCss).Int64())
+					case reflect.Int64:
+						eleField.SetInt(eleCss.One(elePathCss).Int64())
+					case reflect.String:
+						eleField.SetString(eleCss.One(elePathCss).String())
+					case reflect.Bool:
+						eleField.SetBool(eleCss.One(elePathCss).Bool())
+					case reflect.Uint:
+						eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					case reflect.Uint8:
+						eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					case reflect.Uint16:
+						eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					case reflect.Uint32:
+						eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					case reflect.Uint64:
+						eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					case reflect.Float32:
+						eleField.SetFloat(eleCss.One(elePathCss).Float64())
+					case reflect.Float64:
+						eleField.SetFloat(eleCss.One(elePathCss).Float64())
+					}
+					continue
 				}
 			}
 			root = reflect.Append(root, ele)
@@ -445,9 +490,9 @@ func (r *Response) UnmarshalData(v any) (err error) {
 
 		l := eleType.NumField()
 		for ii := 0; ii < l; ii++ {
-			elePath := eleType.Field(ii).Tag.Get("_json")
-			if elePath != "" {
-				eleJson := rootJson.Get(elePath)
+			elePathJson := eleType.Field(ii).Tag.Get("_json")
+			if elePathJson != "" {
+				eleJson := rootJson.Get(elePathJson)
 				eleField := vValue.Field(ii)
 				switch eleType.Field(ii).Type.Kind() {
 				case reflect.Int:
@@ -515,6 +560,43 @@ func (r *Response) UnmarshalData(v any) (err error) {
 				case reflect.Float64:
 					eleField.SetFloat(eleXpath.One(elePathXpath).Float64())
 				}
+				continue
+			}
+			elePathCss := eleType.Field(ii).Tag.Get("_css")
+			if elePathCss != "" {
+				eleCss := rootCss[0]
+				eleField := vValue.Field(ii)
+				switch eleType.Field(ii).Type.Kind() {
+				case reflect.Int:
+					eleField.SetInt(eleCss.One(elePathCss).Int64())
+				case reflect.Int8:
+					eleField.SetInt(eleCss.One(elePathCss).Int64())
+				case reflect.Int16:
+					eleField.SetInt(eleCss.One(elePathCss).Int64())
+				case reflect.Int32:
+					eleField.SetInt(eleCss.One(elePathCss).Int64())
+				case reflect.Int64:
+					eleField.SetInt(eleCss.One(elePathCss).Int64())
+				case reflect.String:
+					eleField.SetString(eleCss.One(elePathCss).String())
+				case reflect.Bool:
+					eleField.SetBool(eleCss.One(elePathCss).Bool())
+				case reflect.Uint:
+					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+				case reflect.Uint8:
+					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+				case reflect.Uint16:
+					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+				case reflect.Uint32:
+					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+				case reflect.Uint64:
+					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+				case reflect.Float32:
+					eleField.SetFloat(eleCss.One(elePathCss).Float64())
+				case reflect.Float64:
+					eleField.SetFloat(eleCss.One(elePathCss).Float64())
+				}
+				continue
 			}
 		}
 	} else {

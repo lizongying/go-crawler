@@ -25,7 +25,7 @@
 go get -u github.com/lizongying/go-crawler
 
 # 目前框架更新较为频繁, 建议使用最新版本, 如:
-go get -u github.com/lizongying/go-crawler@7b3f6c7
+go get -u github.com/lizongying/go-crawler@latest
 
 ```
 
@@ -337,11 +337,11 @@ func main() {
 * Response
 
   Response对http.Response进行了一些包装。
-    - `Xpath() (*xpath.Selector, error)`
+    - `Xpath() (*xpath.Selector, error)` `MustXpath() *xpath.Selector`
       返回Xpath选择器，具体语法请参考 [go-xpath](https://github.com/lizongying/go-xpath)
-    - `Query() (*query.Selector, error)`
-      返回CSS选择器，具体语法请参考 [go-query](https://github.com/lizongying/go-query)
-    - `Json() (gjson.Result, error)`
+    - `Css() (*css.Selector, error)` `MustCss() *css.Selector`
+      返回CSS选择器，具体语法请参考 [go-query](https://github.com/lizongying/go-css)
+    - `Json() (gjson.Result, error)` `MustJson() gjson.Result`
       返回gjson选择器，具体语法请参考 gjson
     - `Re() (*re.Selector, error)`
       返回正则选择器，具体语法请参考 [go-re](https://github.com/lizongying/go-re)
@@ -362,8 +362,8 @@ func main() {
 
   框架内置了多个解析模块。
   您可以根据具体的爬虫需求，选择适合您的解析方式，从网页中提取所需的数据。
-    * query选择器 go-query是一个处理query选择器的库 [go-query](https://github.com/lizongying/go-query)
-        * 通过调用`response.Query()`方法，您可以使用query选择器语法来从HTML中提取数据。
+    * css选择器 go-css是一个处理query选择器的库 [go-query](https://github.com/lizongying/go-css)
+        * 通过调用`response.Css()`方法，您可以使用css选择器语法来从HTML中提取数据。
     * xpath选择器 go-xpath是一个可用于XPath选择的库 [go-xpath](https://github.com/lizongying/go-xpath)
         * 通过调用`response.Xpath()`方法，您可以使用XPath表达式来从HTML中提取数据。
     * gjson gjson是一个用于处理JSON的库
@@ -857,9 +857,10 @@ git clone github.com/lizongying/go-crawler-example
 * 没请求完，ctx退出
 
 ```shell
-go get -u github.com/lizongying/go-query@e077670
+go get -u github.com/lizongying/go-css@latest
+go get -u github.com/lizongying/go-xpath@latest
 go get -u github.com/lizongying/cron@simple-v2
-go get -u github.com/lizongying/go-xpath@046894d
+
 ```
 
 ## Docker build
