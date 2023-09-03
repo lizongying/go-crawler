@@ -33,8 +33,10 @@ type Response interface {
 	Cookies() []*http.Cookie
 	SetCookies(...*http.Cookie) Response
 	UnmarshalBody(any) error
+	MustXpath() *xpath.Selector
 	Xpath() (*xpath.Selector, error)
 	Query() (*query.Selector, error)
+	MustJson() gjson.Result
 	Json() (gjson.Result, error)
 	Re() (*re.Selector, error)
 

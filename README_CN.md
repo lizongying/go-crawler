@@ -3,7 +3,9 @@
 基于golang实现的爬虫框架，编写简单，性能强劲。内置了丰富的实用中间件，支持多种解析、保存方式，支持分布式部署。
 
 [go-crawler](https://github.com/lizongying/go-crawler)
+
 [document](https://pkg.go.dev/github.com/lizongying/go-crawler)
+
 [english](./README.md)
 
 ## 功能
@@ -23,7 +25,7 @@
 go get -u github.com/lizongying/go-crawler
 
 # 目前框架更新较为频繁, 建议使用最新版本, 如:
-go get -u github.com/lizongying/go-crawler@d35d98f
+go get -u github.com/lizongying/go-crawler@7b3f6c7
 
 ```
 
@@ -546,6 +548,38 @@ spider -c example.yml -n example -f TestOk -m once
 * scheduler: 调度方式，默认memory（内存调度），可选值memory、redis、kafka。选择redis或kafka后可以实现集群调度。
 * filter: 过滤方式，默认memory（内存过滤），可选值memory、redis。选择redis后可以实现集群过滤。
 
+## 基于字段标签的网页解析
+
+在本框架里，返回的数据是个结构体。我们仅需在字段上加上解析规则的标签，框架会自动进行网页解析，看起来非常简洁。
+这对于一些简单的爬虫来说，更加便捷高效。特别是需要添加大量的通用爬虫时，仅需要配置这些标签就可以直接解析。
+比如：
+
+```go
+type DataRanks struct {
+Data []struct {
+Name           string  `_json:"name"`
+FullName       string  `_json:"fullname"`
+Code           string  `_json:"code"`
+MarketBalue    int     `_json:"market_value"`
+MarketValueUsd int     `_json:"market_value_usd"`
+Marketcap      int     `_json:"marketcap"`
+Turnoverrate   float32 `_json:"turnoverrate"`
+} `_json:"data"`
+}
+
+```
+
+data可以设置根解析`_json:"data"`， 也就是里面的字段都是在根解析下，仅需要写属性就可以了。`_json:"name"`
+
+根标签和子标签可以混用，比如根标签用xpth，子标签用json
+
+可以使用如下标签：
+
+* `_json:""` gjson 格式
+* `_xpath:""` xpath 格式
+* `_css:""` css 格式
+* `_re:""` re 格式
+
 ## 一些问题
 
 * 一些框架里都有start_urls，此框架中怎么设置？
@@ -825,7 +859,7 @@ git clone github.com/lizongying/go-crawler-example
 ```shell
 go get -u github.com/lizongying/go-query@e077670
 go get -u github.com/lizongying/cron@simple-v2
-
+go get -u github.com/lizongying/go-xpath@046894d
 ```
 
 ## Docker build

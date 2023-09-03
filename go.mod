@@ -13,7 +13,7 @@ require (
 	github.com/lizongying/cron v1.0.0
 	github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f
 	github.com/lizongying/go-re v0.0.0-20230522044635-8e45e9501811
-	github.com/lizongying/go-xpath v0.0.0-20230508033725-6786fb94ccc1
+	github.com/lizongying/go-xpath v0.0.0-20230903075246-046894de53ca
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/refraction-networking/utls v1.3.2
@@ -23,8 +23,8 @@ require (
 	github.com/tidwall/gjson v1.14.4
 	go.mongodb.org/mongo-driver v1.11.3
 	go.uber.org/fx v1.19.2
-	golang.org/x/net v0.9.0
-	golang.org/x/text v0.9.0
+	golang.org/x/net v0.14.0
+	golang.org/x/text v0.13.0
 	golang.org/x/time v0.3.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -69,7 +69,7 @@ require (
 	go.uber.org/dig v1.16.1 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect
-	golang.org/x/crypto v0.5.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
 )

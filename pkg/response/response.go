@@ -149,6 +149,14 @@ func (r *Response) SkipMiddleware() bool {
 func (r *Response) SetSpendTime(spendTime time.Duration) pkg.Request {
 	return r.request.SetSpendTime(spendTime)
 }
+func (r *Response) MustXpath() (selector *xpath.Selector) {
+	var err error
+	selector, err = r.Xpath()
+	if err != nil {
+		return
+	}
+	return
+}
 
 // Xpath returns a xpath selector
 func (r *Response) Xpath() (selector *xpath.Selector, err error) {
@@ -325,12 +333,22 @@ func (r *Response) UnmarshalData(v any) (err error) {
 
 	dataType, _ := vValue.Type().FieldByName("Data")
 	eleCount := 0
-	rootPath := dataType.Tag.Get("_json")
+	rootPathJson := dataType.Tag.Get("_json")
 	var rootJson gjson.Result
-	if rootPath != "" {
-		rootJson = r.MustJson().Get(rootPath)
+	if rootPathJson != "" {
+		rootJson = r.MustJson().Get(rootPathJson)
 		if rootJson.IsArray() {
 			eleCount = len(rootJson.Array())
+		}
+	}
+
+	rootPathXpath := dataType.Tag.Get("_xpath")
+	var rootXpath []*xpath.Selector
+	if rootPathXpath != "" {
+		rootXpath = r.MustXpath().FindNodeMany(rootPathXpath)
+		eleCount = len(rootXpath)
+		if eleCount == 0 {
+			return
 		}
 	}
 
@@ -381,6 +399,42 @@ func (r *Response) UnmarshalData(v any) (err error) {
 					case reflect.Float64:
 						eleField.SetFloat(eleJson.Float())
 					}
+					continue
+				}
+				elePathXpath := eleType.Field(ii).Tag.Get("_xpath")
+				if elePathXpath != "" {
+					eleXpath := rootXpath[i]
+					eleField := ele.Field(ii)
+					switch eleType.Field(ii).Type.Kind() {
+					case reflect.Int:
+						eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					case reflect.Int8:
+						eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					case reflect.Int16:
+						eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					case reflect.Int32:
+						eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					case reflect.Int64:
+						eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					case reflect.String:
+						eleField.SetString(eleXpath.One(elePathXpath).String())
+					case reflect.Bool:
+						eleField.SetBool(eleXpath.One(elePathXpath).Bool())
+					case reflect.Uint:
+						eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					case reflect.Uint8:
+						eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					case reflect.Uint16:
+						eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					case reflect.Uint32:
+						eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					case reflect.Uint64:
+						eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					case reflect.Float32:
+						eleField.SetFloat(eleXpath.One(elePathXpath).Float64())
+					case reflect.Float64:
+						eleField.SetFloat(eleXpath.One(elePathXpath).Float64())
+					}
 				}
 			}
 			root = reflect.Append(root, ele)
@@ -424,6 +478,42 @@ func (r *Response) UnmarshalData(v any) (err error) {
 					eleField.SetFloat(eleJson.Float())
 				case reflect.Float64:
 					eleField.SetFloat(eleJson.Float())
+				}
+				continue
+			}
+			elePathXpath := eleType.Field(ii).Tag.Get("_xpath")
+			if elePathXpath != "" {
+				eleXpath := rootXpath[0]
+				eleField := vValue.Field(ii)
+				switch eleType.Field(ii).Type.Kind() {
+				case reflect.Int:
+					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+				case reflect.Int8:
+					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+				case reflect.Int16:
+					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+				case reflect.Int32:
+					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+				case reflect.Int64:
+					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+				case reflect.String:
+					eleField.SetString(eleXpath.One(elePathXpath).String())
+				case reflect.Bool:
+					eleField.SetBool(eleXpath.One(elePathXpath).Bool())
+				case reflect.Uint:
+					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+				case reflect.Uint8:
+					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+				case reflect.Uint16:
+					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+				case reflect.Uint32:
+					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+				case reflect.Uint64:
+					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+				case reflect.Float32:
+					eleField.SetFloat(eleXpath.One(elePathXpath).Float64())
+				case reflect.Float64:
+					eleField.SetFloat(eleXpath.One(elePathXpath).Float64())
 				}
 			}
 		}

@@ -1,7 +1,6 @@
 package mockServer
 
 import (
-	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/static"
 	"io/fs"
@@ -21,7 +20,6 @@ func (h *RouteHtml) Pattern() string {
 
 // NewRouteHtml curl -k -v -s https://localhost:8081/html/index.html
 func NewRouteHtml(logger pkg.Logger) pkg.Route {
-	fmt.Println(111)
 	files, _ := fs.Sub(static.Html, "html")
 	return &RouteHtml{
 		Handler: http.StripPrefix(UrlHtml, http.FileServer(http.FS(files))),

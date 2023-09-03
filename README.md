@@ -5,7 +5,9 @@ wide range of practical middleware and supports various parsing and storage meth
 distributed deployment.
 
 [go-crawler](https://github.com/lizongying/go-crawler)
+
 [document](https://pkg.go.dev/github.com/lizongying/go-crawler)
+
 [中文](./README_CN.md)
 
 ## Feature
@@ -25,7 +27,7 @@ distributed deployment.
 go get -u github.com/lizongying/go-crawler
 
 # Currently, the framework is updated frequently. It's advisable to use the latest version, such as:
-go get -u github.com/lizongying/go-crawler@d35d98f
+go get -u github.com/lizongying/go-crawler@7b3f6c7
 
 ```
 
@@ -707,6 +709,42 @@ Other Configurations:
   Selecting `redis` or `kafka` enables cluster scheduling.
 * `filter`: Filter method. Default is `memory` (memory-based filtering). Options are `memory`, `redis`.
   Selecting `redis` enables cluster filtering.
+
+## Web Page Parsing Based on Field Tags
+
+In this framework, the returned data is a struct. We only need to add parsing rule tags to the fields, and the framework
+will automatically perform web page parsing, making it appear very clean and concise.
+
+For some simple web scraping tasks, this approach is more convenient and efficient. Especially when you need to create a
+large number of generic web scrapers, you can directly configure these tags for parsing.
+
+For example:
+
+```go
+type DataRanks struct {
+    Data []struct {
+        Name           string  `_json:"name"`
+        FullName       string  `_json:"fullname"`
+        Code           string  `_json:"code"`
+        MarketBalue    int     `_json:"market_value"`
+        MarketValueUsd int     `_json:"market_value_usd"`
+        Marketcap      int     `_json:"marketcap"`
+        Turnoverrate   float32 `_json:"turnoverrate"`
+    } `_json:"data"`
+}
+```
+
+You can set the root parsing for `data` as `_json:"data"`, meaning that the fields inside it are all parsed under the
+root. For example, `_json:"name"`.
+
+You can mix and match root and sub-tags, for instance, use XPath for the root and JSON for the sub-tags.
+
+You can use the following tags:
+
+* `_json:""` for gjson format
+* `_xpath:""` for XPath format
+* `_css:""` for CSS format
+* `_re:""` for regular expression (regex) format
 
 ## Some Question
 
