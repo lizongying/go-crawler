@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/filter"
+	"github.com/lizongying/go-crawler/pkg/filters"
 	kafka2 "github.com/lizongying/go-crawler/pkg/scheduler/kafka"
 	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
 	redis2 "github.com/lizongying/go-crawler/pkg/scheduler/redis"
@@ -382,9 +382,9 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 
 	switch config.GetFilter() {
 	case pkg.FilterMemory:
-		s.SetFilter(new(filter.MemoryFilter).FromSpider(s))
+		s.SetFilter(new(filters.MemoryFilter).FromSpider(s))
 	case pkg.FilterRedis:
-		s.SetFilter(new(filter.RedisFilter).FromSpider(s))
+		s.SetFilter(new(filters.RedisFilter).FromSpider(s))
 	default:
 	}
 

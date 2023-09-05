@@ -1031,6 +1031,7 @@ git clone github.com/lizongying/go-crawler-example
 ```shell
 go get -u github.com/lizongying/go-css@latest
 go get -u github.com/lizongying/go-xpath@latest
+go get -u github.com/lizongying/go-re@latest
 
 ```
 
@@ -1088,3 +1089,4 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
     - Redirects: Supported
 
 7. Mock Server:
+8. DNS Cache

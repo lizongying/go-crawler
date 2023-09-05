@@ -39,6 +39,7 @@ type Response interface {
 	Css() (*css.Selector, error)
 	MustJson() gjson.Result
 	Json() (gjson.Result, error)
+	MustRe() (selector *re.Selector)
 	Re() (*re.Selector, error)
 
 	UniqueKey() string

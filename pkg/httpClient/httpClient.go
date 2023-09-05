@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/DNSCache"
 	response2 "github.com/lizongying/go-crawler/pkg/response"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/lizongying/go-crawler/static"
@@ -15,6 +16,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -27,6 +29,7 @@ type HttpClient struct {
 	logger           pkg.Logger
 	redirectMaxTimes uint8
 	retryMaxTimes    uint8
+	DNSCache         *DNSCache.DNSCache
 }
 
 func NewClientJa3(ctx context.Context, conn net.Conn, cfg *tls.Config, helloID *utls.ClientHelloID, helloSpec *utls.ClientHelloSpec) (net.Conn, error) {
@@ -107,6 +110,26 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		DialContext: (&net.Dialer{
 			Timeout:   60 * time.Second,
 			KeepAlive: 60 * time.Second,
+			Resolver: func() *net.Resolver {
+				resolver := net.DefaultResolver
+				resolver.Dial = func(ctx context.Context, network, address string) (net.Conn, error) {
+					var host string
+					var port string
+					if host, port, err = net.SplitHostPort(address); err != nil {
+						return nil, err
+					}
+					var d net.Dialer
+					if ip, ok := h.DNSCache.Get(host); ok {
+						c, e := d.DialContext(ctx, network, fmt.Sprintf("%s:%s", ip.String(), port))
+						h.logger.Info("RemoteAddr", c.RemoteAddr(), network, address)
+						return c, e
+					}
+					c, e := d.DialContext(ctx, network, address)
+					h.logger.Info("RemoteAddr", c.RemoteAddr(), network, address)
+					return c, e
+				}
+				return resolver
+			}(),
 		}).DialContext,
 		DisableKeepAlives:     true,
 		IdleConnTimeout:       180 * time.Second,
@@ -164,7 +187,8 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		transport.DialTLSContext = func(request pkg.Request) func(ctx context.Context, network, addr string) (net.Conn, error) {
 			return func(ctx context.Context, network, addr string) (net.Conn, error) {
 				var firstTLSHost string
-				if firstTLSHost, _, err = net.SplitHostPort(addr); err != nil {
+				var port string
+				if firstTLSHost, port, err = net.SplitHostPort(addr); err != nil {
 					h.logger.Error(err)
 					return nil, err
 				}
@@ -180,7 +204,21 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 					cfg.NextProtos = []string{"http/1.1"}
 				}
 
-				plainConn, err := zeroDialer.DialContext(ctx, "tcp", addr)
+				var plainConn net.Conn
+				if ip, ok := h.DNSCache.Get(firstTLSHost); ok {
+					if strings.Contains(ip.String(), ".") {
+						plainConn, err = zeroDialer.DialContext(ctx, network, fmt.Sprintf("%s:%s", ip.String(), port))
+					} else {
+						plainConn, err = zeroDialer.DialContext(ctx, network, fmt.Sprintf("[%s]:%s", ip.String(), port))
+					}
+				} else {
+					plainConn, err = zeroDialer.DialContext(ctx, network, addr)
+					if err != nil {
+						h.logger.Error(err)
+						return nil, err
+					}
+					h.DNSCache.ResolveWithRetry(firstTLSHost)
+				}
 				if err != nil {
 					h.logger.Error(err)
 					return nil, err
@@ -300,6 +338,7 @@ func (h *HttpClient) FromSpider(spider pkg.Spider) pkg.HttpClient {
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 	h.retryMaxTimes = config.GetRetryMaxTimes()
 	h.Ja3 = config.GetEnableJa3()
+	h.DNSCache = DNSCache.NewDNSCache(time.Hour*24, 3)
 
 	return h
 }

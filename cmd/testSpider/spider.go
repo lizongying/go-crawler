@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	mockServer2 "github.com/lizongying/go-crawler/internal/mockServers"
+	mockServers2 "github.com/lizongying/go-crawler/internal/mockServers"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/media"
@@ -261,5 +261,5 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServer2.NewRouteCustom))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServers2.NewRouteCustom))
 }

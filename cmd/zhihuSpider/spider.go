@@ -45,7 +45,7 @@ func (s *Spider) ParseDetail(ctx pkg.Context, response pkg.Response) (err error)
 	return
 }
 
-// Test go run cmd/zhihuSpider/*.go -c dev.yml -n zhihu -f Test -m prod
+// Test go run cmd/zhihuSpider/*.go -c dev.yml -n zhihu -f Test -m once
 func (s *Spider) Test(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetExtra(&ExtraDetail{

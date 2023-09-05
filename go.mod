@@ -13,7 +13,7 @@ require (
 	github.com/lizongying/cron v1.0.0
 	github.com/lizongying/go-css v0.0.0-20230903140801-2bc27f5e9ca2
 	github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f
-	github.com/lizongying/go-re v0.0.0-20230522044635-8e45e9501811
+	github.com/lizongying/go-re v0.0.0-20230904021641-cebe6fc09497
 	github.com/lizongying/go-xpath v0.0.0-20230903140046-52fddb54d6c8
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.0.5
