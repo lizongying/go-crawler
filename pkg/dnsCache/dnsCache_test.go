@@ -1,12 +1,12 @@
-package DNSCache
+package dnsCache
 
 import (
 	"testing"
 	"time"
 )
 
-func TestNewDNSCache(t *testing.T) {
-	dnsCache := NewDNSCache(3*time.Second, 3)
+func TestNewDnsCache(t *testing.T) {
+	dnsCache := NewDnsCache(3*time.Second, 3)
 
 	host := "baidu.com"
 	ip, found := dnsCache.Get(host)

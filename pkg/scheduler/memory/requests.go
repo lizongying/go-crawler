@@ -112,7 +112,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 						buf := make([]byte, 1<<16)
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
-						s.logger.Error(err)
+						//s.logger.Error(err)
 						s.handleError(ctx, response, err, request.GetErrBack())
 					}
 				}()

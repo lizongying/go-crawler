@@ -861,7 +861,9 @@ git clone github.com/lizongying/go-crawler-example
 go get -u github.com/lizongying/go-css@latest
 go get -u github.com/lizongying/go-xpath@latest
 go get -u github.com/lizongying/go-re@latest
+go get -u github.com/lizongying/go-re@1b48356
 go get -u github.com/lizongying/go-json@latest
+go get -u github.com/lizongying/go-json@7915011
 go get -u github.com/lizongying/cron@simple-v2
 
 ```
@@ -888,4 +890,4 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 * 支持模拟服务
 * 支持优先级队列
 * 支持定时任务、循环任务、单次任务
-* dns缓存
+* 支持dns缓存

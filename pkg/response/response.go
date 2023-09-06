@@ -327,40 +327,40 @@ func (r *Response) UnmarshalData(v any) (err error) {
 
 	rootPath := ""
 	rootPath = dataType.Tag.Get("_json")
-	var rootJson []*gjson.Selector
+	var rootJsonArray []*gjson.Selector
 	if rootPath != "" {
-		rootJson = r.MustJson().ManySelector(rootPath)
-		eleCount = len(rootJson)
+		rootJsonArray = r.MustJson().ManySelector(rootPath)
+		eleCount = len(rootJsonArray)
 		if eleCount == 0 {
 			return
 		}
 	}
 
 	rootPath = dataType.Tag.Get("_xpath")
-	var rootXpath []*xpath.Selector
+	var rootXpathArray []*xpath.Selector
 	if rootPath != "" {
-		rootXpath = r.MustXpath().FindNodeMany(rootPath)
-		eleCount = len(rootXpath)
+		rootXpathArray = r.MustXpath().FindNodeMany(rootPath)
+		eleCount = len(rootXpathArray)
 		if eleCount == 0 {
 			return
 		}
 	}
 
 	rootPath = dataType.Tag.Get("_css")
-	var rootCss []*css.Selector
+	var rootCssArray []*css.Selector
 	if rootPath != "" {
-		rootCss = r.MustCss().FindNodeMany(rootPath)
-		eleCount = len(rootCss)
+		rootCssArray = r.MustCss().FindNodeMany(rootPath)
+		eleCount = len(rootCssArray)
 		if eleCount == 0 {
 			return
 		}
 	}
 
 	rootPath = dataType.Tag.Get("_re")
-	var rootRe []*re.Result
+	var rootReArray []*re.Selector
 	if rootPath != "" {
-		rootRe = r.MustRe().Many(rootPath)
-		eleCount = len(rootRe)
+		rootReArray = r.MustRe().ManySelector(rootPath)
+		eleCount = len(rootReArray)
 		if eleCount == 0 {
 			return
 		}
@@ -379,12 +379,35 @@ func (r *Response) UnmarshalData(v any) (err error) {
 		for i := 0; i < eleCount; i++ {
 			ele := reflect.New(eleType).Elem()
 			for ii := 0; ii < l; ii++ {
+				eleField := ele.Field(ii)
+				kind := eleField.Kind()
 				elePath := ""
 				elePath = eleType.Field(ii).Tag.Get("_json")
 				if elePath != "" {
-					eleJson := rootJson[i].One(elePath)
-					eleField := ele.Field(ii)
-					switch eleType.Field(ii).Type.Kind() {
+					var rootJson *gjson.Selector
+					if len(rootJsonArray) > 0 {
+						rootJson = rootJsonArray[i]
+					}
+					if len(rootXpathArray) > 0 {
+						rootJson, err = gjson.NewSelectorFromStr(rootXpathArray[i].OutHtml(true))
+						if err != nil {
+							return
+						}
+					}
+					if len(rootCssArray) > 0 {
+						rootJson, err = gjson.NewSelectorFromStr(rootCssArray[i].OutHtml(true))
+						if err != nil {
+							return
+						}
+					}
+					if len(rootReArray) > 0 {
+						rootJson, err = gjson.NewSelectorFromStr(rootReArray[i].String())
+						if err != nil {
+							return
+						}
+					}
+					eleJson := rootJson.One(elePath)
+					switch kind {
 					case reflect.Int:
 						eleField.SetInt(eleJson.Int64())
 					case reflect.Int8:
@@ -418,9 +441,30 @@ func (r *Response) UnmarshalData(v any) (err error) {
 				}
 				elePath = eleType.Field(ii).Tag.Get("_xpath")
 				if elePath != "" {
-					eleXpath := rootXpath[i].One(elePath)
-					eleField := ele.Field(ii)
-					switch eleType.Field(ii).Type.Kind() {
+					var rootXpath *xpath.Selector
+					if len(rootJsonArray) > 0 {
+						rootXpath, err = xpath.NewSelectorFromStr(rootJsonArray[i].String())
+						if err != nil {
+							return
+						}
+					}
+					if len(rootXpathArray) > 0 {
+						rootXpath = rootXpathArray[i]
+					}
+					if len(rootCssArray) > 0 {
+						rootXpath, err = xpath.NewSelectorFromStr(rootCssArray[i].OutHtml(true))
+						if err != nil {
+							return
+						}
+					}
+					if len(rootReArray) > 0 {
+						rootXpath, err = xpath.NewSelectorFromStr(rootReArray[i].String())
+						if err != nil {
+							return
+						}
+					}
+					eleXpath := rootXpath.One(elePath)
+					switch kind {
 					case reflect.Int:
 						eleField.SetInt(eleXpath.Int64())
 					case reflect.Int8:
@@ -454,9 +498,30 @@ func (r *Response) UnmarshalData(v any) (err error) {
 				}
 				elePath = eleType.Field(ii).Tag.Get("_css")
 				if elePath != "" {
-					eleCss := rootCss[i].One(elePath)
-					eleField := ele.Field(ii)
-					switch eleType.Field(ii).Type.Kind() {
+					var rootCss *css.Selector
+					if len(rootJsonArray) > 0 {
+						rootCss, err = css.NewSelectorFromStr(rootJsonArray[i].String())
+						if err != nil {
+							return
+						}
+					}
+					if len(rootXpathArray) > 0 {
+						rootCss, err = css.NewSelectorFromStr(rootXpathArray[i].OutHtml(true))
+						if err != nil {
+							return
+						}
+					}
+					if len(rootCssArray) > 0 {
+						rootCss = rootCssArray[i]
+					}
+					if len(rootReArray) > 0 {
+						rootCss, err = css.NewSelectorFromStr(rootReArray[i].String())
+						if err != nil {
+							return
+						}
+					}
+					eleCss := rootCss.One(elePath)
+					switch kind {
 					case reflect.Int:
 						eleField.SetInt(eleCss.Int64())
 					case reflect.Int8:
@@ -490,38 +555,59 @@ func (r *Response) UnmarshalData(v any) (err error) {
 				}
 				elePath = eleType.Field(ii).Tag.Get("_re")
 				if elePath != "" {
-					//eleSelector := rootRe[i]
-					//eleField := ele.Field(ii)
-					//switch eleType.Field(ii).Type.Kind() {
-					//case reflect.Int:
-					//	eleField.SetInt(eleSelector.One(elePath).Int64())
-					//case reflect.Int8:
-					//	eleField.SetInt(eleSelector.One(elePath).Int64())
-					//case reflect.Int16:
-					//	eleField.SetInt(eleSelector.One(elePath).Int64())
-					//case reflect.Int32:
-					//	eleField.SetInt(eleSelector.One(elePath).Int64())
-					//case reflect.Int64:
-					//	eleField.SetInt(eleSelector.One(elePath).Int64())
-					//case reflect.String:
-					//	eleField.SetString(eleSelector.One(elePath).String())
-					//case reflect.Bool:
-					//	eleField.SetBool(eleSelector.One(elePath).Bool())
-					//case reflect.Uint:
-					//	eleField.SetUint(eleSelector.One(elePath).Uint64())
-					//case reflect.Uint8:
-					//	eleField.SetUint(eleSelector.One(elePath).Uint64())
-					//case reflect.Uint16:
-					//	eleField.SetUint(eleSelector.One(elePath).Uint64())
-					//case reflect.Uint32:
-					//	eleField.SetUint(eleSelector.One(elePath).Uint64())
-					//case reflect.Uint64:
-					//	eleField.SetUint(eleSelector.One(elePath).Uint64())
-					//case reflect.Float32:
-					//	eleField.SetFloat(eleSelector.One(elePath).Float64())
-					//case reflect.Float64:
-					//	eleField.SetFloat(eleSelector.One(elePath).Float64())
-					//}
+					var rootRe *re.Selector
+					if len(rootJsonArray) > 0 {
+						rootRe, err = re.NewSelectorFromStr(rootJsonArray[i].String())
+						if err != nil {
+							return
+						}
+					}
+					if len(rootXpathArray) > 0 {
+						rootRe, err = re.NewSelectorFromStr(rootXpathArray[i].OutHtml(true))
+						if err != nil {
+							return
+						}
+					}
+					if len(rootCssArray) > 0 {
+						rootRe, err = re.NewSelectorFromStr(rootCssArray[i].OutHtml(true))
+						if err != nil {
+							return
+						}
+					}
+					if len(rootReArray) > 0 {
+						rootRe = rootReArray[i]
+					}
+					eleRe := rootRe.One(elePath)
+					switch kind {
+					case reflect.Int:
+						eleField.SetInt(eleRe.Int64())
+					case reflect.Int8:
+						eleField.SetInt(eleRe.Int64())
+					case reflect.Int16:
+						eleField.SetInt(eleRe.Int64())
+					case reflect.Int32:
+						eleField.SetInt(eleRe.Int64())
+					case reflect.Int64:
+						eleField.SetInt(eleRe.Int64())
+					case reflect.String:
+						eleField.SetString(eleRe.String())
+					case reflect.Bool:
+						eleField.SetBool(eleRe.Bool())
+					case reflect.Uint:
+						eleField.SetUint(eleRe.Uint64())
+					case reflect.Uint8:
+						eleField.SetUint(eleRe.Uint64())
+					case reflect.Uint16:
+						eleField.SetUint(eleRe.Uint64())
+					case reflect.Uint32:
+						eleField.SetUint(eleRe.Uint64())
+					case reflect.Uint64:
+						eleField.SetUint(eleRe.Uint64())
+					case reflect.Float32:
+						eleField.SetFloat(eleRe.Float64())
+					case reflect.Float64:
+						eleField.SetFloat(eleRe.Float64())
+					}
 					continue
 				}
 			}
@@ -533,12 +619,35 @@ func (r *Response) UnmarshalData(v any) (err error) {
 
 		l := eleType.NumField()
 		for ii := 0; ii < l; ii++ {
+			eleField := vValue.Field(ii)
+			kind := eleField.Kind()
 			elePath := ""
 			elePath = eleType.Field(ii).Tag.Get("_json")
 			if elePath != "" {
-				eleJson := rootJson[0].One(elePath)
-				eleField := vValue.Field(ii)
-				switch eleType.Field(ii).Type.Kind() {
+				var rootJson *gjson.Selector
+				if len(rootJsonArray) > 0 {
+					rootJson = rootJsonArray[0]
+				}
+				if len(rootXpathArray) > 0 {
+					rootJson, err = gjson.NewSelectorFromStr(rootXpathArray[0].OutHtml(true))
+					if err != nil {
+						return
+					}
+				}
+				if len(rootCssArray) > 0 {
+					rootJson, err = gjson.NewSelectorFromStr(rootCssArray[0].OutHtml(true))
+					if err != nil {
+						return
+					}
+				}
+				if len(rootReArray) > 0 {
+					rootJson, err = gjson.NewSelectorFromStr(rootReArray[0].String())
+					if err != nil {
+						return
+					}
+				}
+				eleJson := rootJson.One(elePath)
+				switch kind {
 				case reflect.Int:
 					eleField.SetInt(eleJson.Int64())
 				case reflect.Int8:
@@ -572,9 +681,30 @@ func (r *Response) UnmarshalData(v any) (err error) {
 			}
 			elePath = eleType.Field(ii).Tag.Get("_xpath")
 			if elePath != "" {
-				eleXpath := rootXpath[0].One(elePath)
-				eleField := vValue.Field(ii)
-				switch eleType.Field(ii).Type.Kind() {
+				var rootXpath *xpath.Selector
+				if len(rootJsonArray) > 0 {
+					rootXpath, err = xpath.NewSelectorFromStr(rootJsonArray[0].String())
+					if err != nil {
+						return
+					}
+				}
+				if len(rootXpathArray) > 0 {
+					rootXpath = rootXpathArray[0]
+				}
+				if len(rootCssArray) > 0 {
+					rootXpath, err = xpath.NewSelectorFromStr(rootCssArray[0].OutHtml(true))
+					if err != nil {
+						return
+					}
+				}
+				if len(rootReArray) > 0 {
+					rootXpath, err = xpath.NewSelectorFromStr(rootReArray[0].String())
+					if err != nil {
+						return
+					}
+				}
+				eleXpath := rootXpath.One(elePath)
+				switch kind {
 				case reflect.Int:
 					eleField.SetInt(eleXpath.Int64())
 				case reflect.Int8:
@@ -608,9 +738,30 @@ func (r *Response) UnmarshalData(v any) (err error) {
 			}
 			elePath = eleType.Field(ii).Tag.Get("_css")
 			if elePath != "" {
-				eleCss := rootCss[0].One(elePath)
-				eleField := vValue.Field(ii)
-				switch eleType.Field(ii).Type.Kind() {
+				var rootCss *css.Selector
+				if len(rootJsonArray) > 0 {
+					rootCss, err = css.NewSelectorFromStr(rootJsonArray[0].String())
+					if err != nil {
+						return
+					}
+				}
+				if len(rootXpathArray) > 0 {
+					rootCss, err = css.NewSelectorFromStr(rootXpathArray[0].OutHtml(true))
+					if err != nil {
+						return
+					}
+				}
+				if len(rootCssArray) > 0 {
+					rootCss = rootCssArray[0]
+				}
+				if len(rootReArray) > 0 {
+					rootCss, err = css.NewSelectorFromStr(rootReArray[0].String())
+					if err != nil {
+						return
+					}
+				}
+				eleCss := rootCss.One(elePath)
+				switch kind {
 				case reflect.Int:
 					eleField.SetInt(eleCss.Int64())
 				case reflect.Int8:
@@ -639,6 +790,63 @@ func (r *Response) UnmarshalData(v any) (err error) {
 					eleField.SetFloat(eleCss.Float64())
 				case reflect.Float64:
 					eleField.SetFloat(eleCss.Float64())
+				}
+				continue
+			}
+			elePath = eleType.Field(ii).Tag.Get("_re")
+			if elePath != "" {
+				var rootRe *re.Selector
+				if len(rootJsonArray) > 0 {
+					rootRe, err = re.NewSelectorFromStr(rootJsonArray[0].String())
+					if err != nil {
+						return
+					}
+				}
+				if len(rootXpathArray) > 0 {
+					rootRe, err = re.NewSelectorFromStr(rootXpathArray[0].OutHtml(true))
+					if err != nil {
+						return
+					}
+				}
+				if len(rootCssArray) > 0 {
+					rootRe, err = re.NewSelectorFromStr(rootCssArray[0].OutHtml(true))
+					if err != nil {
+						return
+					}
+				}
+				if len(rootReArray) > 0 {
+					rootRe = rootReArray[0]
+				}
+				eleRe := rootRe.One(elePath)
+				switch kind {
+				case reflect.Int:
+					eleField.SetInt(eleRe.Int64())
+				case reflect.Int8:
+					eleField.SetInt(eleRe.Int64())
+				case reflect.Int16:
+					eleField.SetInt(eleRe.Int64())
+				case reflect.Int32:
+					eleField.SetInt(eleRe.Int64())
+				case reflect.Int64:
+					eleField.SetInt(eleRe.Int64())
+				case reflect.String:
+					eleField.SetString(eleRe.String())
+				case reflect.Bool:
+					eleField.SetBool(eleRe.Bool())
+				case reflect.Uint:
+					eleField.SetUint(eleRe.Uint64())
+				case reflect.Uint8:
+					eleField.SetUint(eleRe.Uint64())
+				case reflect.Uint16:
+					eleField.SetUint(eleRe.Uint64())
+				case reflect.Uint32:
+					eleField.SetUint(eleRe.Uint64())
+				case reflect.Uint64:
+					eleField.SetUint(eleRe.Uint64())
+				case reflect.Float32:
+					eleField.SetFloat(eleRe.Float64())
+				case reflect.Float64:
+					eleField.SetFloat(eleRe.Float64())
 				}
 				continue
 			}

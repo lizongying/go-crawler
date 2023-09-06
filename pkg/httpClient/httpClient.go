@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/DNSCache"
+	"github.com/lizongying/go-crawler/pkg/DnsCache"
 	response2 "github.com/lizongying/go-crawler/pkg/response"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/lizongying/go-crawler/static"
@@ -29,7 +29,7 @@ type HttpClient struct {
 	logger           pkg.Logger
 	redirectMaxTimes uint8
 	retryMaxTimes    uint8
-	DNSCache         *DNSCache.DNSCache
+	dnsCache         *dnsCache.DnsCache
 }
 
 func NewClientJa3(ctx context.Context, conn net.Conn, cfg *tls.Config, helloID *utls.ClientHelloID, helloSpec *utls.ClientHelloSpec) (net.Conn, error) {
@@ -121,7 +121,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 					var d net.Dialer
 					var c net.Conn
 					var e error
-					if ip, ok := h.DNSCache.Get(host); ok {
+					if ip, ok := h.dnsCache.Get(host); ok {
 						if strings.Contains(ip.String(), ".") {
 							c, e = d.DialContext(ctx, network, fmt.Sprintf("%s:%s", ip.String(), port))
 						} else {
@@ -211,7 +211,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 				}
 
 				var plainConn net.Conn
-				if ip, ok := h.DNSCache.Get(firstTLSHost); ok {
+				if ip, ok := h.dnsCache.Get(firstTLSHost); ok {
 					if strings.Contains(ip.String(), ".") {
 						plainConn, err = zeroDialer.DialContext(ctx, network, fmt.Sprintf("%s:%s", ip.String(), port))
 					} else {
@@ -223,7 +223,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 						h.logger.Error(err)
 						return nil, err
 					}
-					h.DNSCache.ResolveWithRetry(firstTLSHost)
+					h.dnsCache.ResolveWithRetry(firstTLSHost)
 				}
 				if err != nil {
 					h.logger.Error(err)
@@ -344,7 +344,7 @@ func (h *HttpClient) FromSpider(spider pkg.Spider) pkg.HttpClient {
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 	h.retryMaxTimes = config.GetRetryMaxTimes()
 	h.Ja3 = config.GetEnableJa3()
-	h.DNSCache = DNSCache.NewDNSCache(time.Hour*24, 3)
+	h.dnsCache = dnsCache.NewDnsCache(time.Hour*24, 3)
 
 	return h
 }
