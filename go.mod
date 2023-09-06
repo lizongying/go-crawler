@@ -11,11 +11,11 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/google/uuid v1.3.0
 	github.com/lizongying/cron v1.0.0
-	github.com/lizongying/go-css v0.0.0-20230903140801-2bc27f5e9ca2
+	github.com/lizongying/go-css v0.0.0-20230906104236-b58497123e0f
 	github.com/lizongying/go-json v0.0.0-20230906102344-7915011b6304
 	github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f
 	github.com/lizongying/go-re v0.0.0-20230906094757-1b48356fa6db
-	github.com/lizongying/go-xpath v0.0.0-20230903140046-52fddb54d6c8
+	github.com/lizongying/go-xpath v0.0.0-20230906104639-f46eb0e080c4
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/refraction-networking/utls v1.3.2

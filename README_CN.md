@@ -859,7 +859,9 @@ git clone github.com/lizongying/go-crawler-example
 
 ```shell
 go get -u github.com/lizongying/go-css@latest
+go get -u github.com/lizongying/go-css@b584971
 go get -u github.com/lizongying/go-xpath@latest
+go get -u github.com/lizongying/go-xpath@f46eb0e
 go get -u github.com/lizongying/go-re@latest
 go get -u github.com/lizongying/go-re@1b48356
 go get -u github.com/lizongying/go-json@latest

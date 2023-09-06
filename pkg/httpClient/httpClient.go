@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/DnsCache"
+	"github.com/lizongying/go-crawler/pkg/dnsCache"
 	response2 "github.com/lizongying/go-crawler/pkg/response"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/lizongying/go-crawler/static"

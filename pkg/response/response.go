@@ -339,7 +339,7 @@ func (r *Response) UnmarshalData(v any) (err error) {
 	rootPath = dataType.Tag.Get("_xpath")
 	var rootXpathArray []*xpath.Selector
 	if rootPath != "" {
-		rootXpathArray = r.MustXpath().FindNodeMany(rootPath)
+		rootXpathArray = r.MustXpath().ManySelector(rootPath)
 		eleCount = len(rootXpathArray)
 		if eleCount == 0 {
 			return
@@ -349,7 +349,7 @@ func (r *Response) UnmarshalData(v any) (err error) {
 	rootPath = dataType.Tag.Get("_css")
 	var rootCssArray []*css.Selector
 	if rootPath != "" {
-		rootCssArray = r.MustCss().FindNodeMany(rootPath)
+		rootCssArray = r.MustCss().ManySelector(rootPath)
 		eleCount = len(rootCssArray)
 		if eleCount == 0 {
 			return
@@ -389,13 +389,13 @@ func (r *Response) UnmarshalData(v any) (err error) {
 						rootJson = rootJsonArray[i]
 					}
 					if len(rootXpathArray) > 0 {
-						rootJson, err = gjson.NewSelectorFromStr(rootXpathArray[i].OutHtml(true))
+						rootJson, err = gjson.NewSelectorFromStr(rootXpathArray[i].String())
 						if err != nil {
 							return
 						}
 					}
 					if len(rootCssArray) > 0 {
-						rootJson, err = gjson.NewSelectorFromStr(rootCssArray[i].OutHtml(true))
+						rootJson, err = gjson.NewSelectorFromStr(rootCssArray[i].String())
 						if err != nil {
 							return
 						}
@@ -452,7 +452,7 @@ func (r *Response) UnmarshalData(v any) (err error) {
 						rootXpath = rootXpathArray[i]
 					}
 					if len(rootCssArray) > 0 {
-						rootXpath, err = xpath.NewSelectorFromStr(rootCssArray[i].OutHtml(true))
+						rootXpath, err = xpath.NewSelectorFromStr(rootCssArray[i].String())
 						if err != nil {
 							return
 						}
@@ -506,7 +506,7 @@ func (r *Response) UnmarshalData(v any) (err error) {
 						}
 					}
 					if len(rootXpathArray) > 0 {
-						rootCss, err = css.NewSelectorFromStr(rootXpathArray[i].OutHtml(true))
+						rootCss, err = css.NewSelectorFromStr(rootXpathArray[i].String())
 						if err != nil {
 							return
 						}
@@ -563,13 +563,13 @@ func (r *Response) UnmarshalData(v any) (err error) {
 						}
 					}
 					if len(rootXpathArray) > 0 {
-						rootRe, err = re.NewSelectorFromStr(rootXpathArray[i].OutHtml(true))
+						rootRe, err = re.NewSelectorFromStr(rootXpathArray[i].String())
 						if err != nil {
 							return
 						}
 					}
 					if len(rootCssArray) > 0 {
-						rootRe, err = re.NewSelectorFromStr(rootCssArray[i].OutHtml(true))
+						rootRe, err = re.NewSelectorFromStr(rootCssArray[i].String())
 						if err != nil {
 							return
 						}
@@ -629,13 +629,13 @@ func (r *Response) UnmarshalData(v any) (err error) {
 					rootJson = rootJsonArray[0]
 				}
 				if len(rootXpathArray) > 0 {
-					rootJson, err = gjson.NewSelectorFromStr(rootXpathArray[0].OutHtml(true))
+					rootJson, err = gjson.NewSelectorFromStr(rootXpathArray[0].String())
 					if err != nil {
 						return
 					}
 				}
 				if len(rootCssArray) > 0 {
-					rootJson, err = gjson.NewSelectorFromStr(rootCssArray[0].OutHtml(true))
+					rootJson, err = gjson.NewSelectorFromStr(rootCssArray[0].String())
 					if err != nil {
 						return
 					}
@@ -692,7 +692,7 @@ func (r *Response) UnmarshalData(v any) (err error) {
 					rootXpath = rootXpathArray[0]
 				}
 				if len(rootCssArray) > 0 {
-					rootXpath, err = xpath.NewSelectorFromStr(rootCssArray[0].OutHtml(true))
+					rootXpath, err = xpath.NewSelectorFromStr(rootCssArray[0].String())
 					if err != nil {
 						return
 					}
@@ -746,7 +746,7 @@ func (r *Response) UnmarshalData(v any) (err error) {
 					}
 				}
 				if len(rootXpathArray) > 0 {
-					rootCss, err = css.NewSelectorFromStr(rootXpathArray[0].OutHtml(true))
+					rootCss, err = css.NewSelectorFromStr(rootXpathArray[0].String())
 					if err != nil {
 						return
 					}
@@ -803,13 +803,13 @@ func (r *Response) UnmarshalData(v any) (err error) {
 					}
 				}
 				if len(rootXpathArray) > 0 {
-					rootRe, err = re.NewSelectorFromStr(rootXpathArray[0].OutHtml(true))
+					rootRe, err = re.NewSelectorFromStr(rootXpathArray[0].String())
 					if err != nil {
 						return
 					}
 				}
 				if len(rootCssArray) > 0 {
-					rootRe, err = re.NewSelectorFromStr(rootCssArray[0].OutHtml(true))
+					rootRe, err = re.NewSelectorFromStr(rootCssArray[0].String())
 					if err != nil {
 						return
 					}
