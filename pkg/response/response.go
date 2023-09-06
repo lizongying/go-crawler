@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-css/css"
+	"github.com/lizongying/go-json/gjson"
 	"github.com/lizongying/go-query/query"
 	"github.com/lizongying/go-re/re"
 	"github.com/lizongying/go-xpath/xpath"
-	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
 	"net/url"
@@ -168,10 +168,6 @@ func (r *Response) Xpath() (selector *xpath.Selector, err error) {
 	}
 
 	selector, err = xpath.NewSelectorFromBytes(r.bodyBytes)
-	if err != nil {
-		return
-	}
-
 	return
 }
 
@@ -193,20 +189,16 @@ func (r *Response) Css() (selector *css.Selector, err error) {
 	}
 
 	selector, err = css.NewSelectorFromBytes(r.bodyBytes)
-	if err != nil {
-		return
-	}
-
 	return
 }
 
-func (r *Response) MustJson() (result gjson.Result) {
-	result, _ = r.Json()
+func (r *Response) MustJson() (selector *gjson.Selector) {
+	selector, _ = r.Json()
 	return
 }
 
 // Json return a gjson
-func (r *Response) Json() (result gjson.Result, err error) {
+func (r *Response) Json() (selector *gjson.Selector, err error) {
 	if r == nil {
 		err = errors.New("response is invalid")
 		return
@@ -217,7 +209,7 @@ func (r *Response) Json() (result gjson.Result, err error) {
 		return
 	}
 
-	result = gjson.ParseBytes(r.bodyBytes)
+	selector, err = gjson.NewSelectorFromBytes(r.bodyBytes)
 	return
 }
 
@@ -239,10 +231,6 @@ func (r *Response) Re() (selector *re.Selector, err error) {
 	}
 
 	selector, err = re.NewSelectorFromBytes(r.bodyBytes)
-	if err != nil {
-		return
-	}
-
 	return
 }
 func areSameDomain(url1, url2 *url.URL) bool {
@@ -339,11 +327,12 @@ func (r *Response) UnmarshalData(v any) (err error) {
 
 	rootPath := ""
 	rootPath = dataType.Tag.Get("_json")
-	var rootJson gjson.Result
+	var rootJson []*gjson.Selector
 	if rootPath != "" {
-		rootJson = r.MustJson().Get(rootPath)
-		if rootJson.IsArray() {
-			eleCount = len(rootJson.Array())
+		rootJson = r.MustJson().ManySelector(rootPath)
+		eleCount = len(rootJson)
+		if eleCount == 0 {
+			return
 		}
 	}
 
@@ -393,109 +382,109 @@ func (r *Response) UnmarshalData(v any) (err error) {
 				elePath := ""
 				elePath = eleType.Field(ii).Tag.Get("_json")
 				if elePath != "" {
-					eleJson := rootJson.Array()[i].Get(elePath)
+					eleJson := rootJson[i].One(elePath)
 					eleField := ele.Field(ii)
 					switch eleType.Field(ii).Type.Kind() {
 					case reflect.Int:
-						eleField.SetInt(eleJson.Int())
+						eleField.SetInt(eleJson.Int64())
 					case reflect.Int8:
-						eleField.SetInt(eleJson.Int())
+						eleField.SetInt(eleJson.Int64())
 					case reflect.Int16:
-						eleField.SetInt(eleJson.Int())
+						eleField.SetInt(eleJson.Int64())
 					case reflect.Int32:
-						eleField.SetInt(eleJson.Int())
+						eleField.SetInt(eleJson.Int64())
 					case reflect.Int64:
-						eleField.SetInt(eleJson.Int())
+						eleField.SetInt(eleJson.Int64())
 					case reflect.String:
 						eleField.SetString(eleJson.String())
 					case reflect.Bool:
 						eleField.SetBool(eleJson.Bool())
 					case reflect.Uint:
-						eleField.SetUint(eleJson.Uint())
+						eleField.SetUint(eleJson.Uint64())
 					case reflect.Uint8:
-						eleField.SetUint(eleJson.Uint())
+						eleField.SetUint(eleJson.Uint64())
 					case reflect.Uint16:
-						eleField.SetUint(eleJson.Uint())
+						eleField.SetUint(eleJson.Uint64())
 					case reflect.Uint32:
-						eleField.SetUint(eleJson.Uint())
+						eleField.SetUint(eleJson.Uint64())
 					case reflect.Uint64:
-						eleField.SetUint(eleJson.Uint())
+						eleField.SetUint(eleJson.Uint64())
 					case reflect.Float32:
-						eleField.SetFloat(eleJson.Float())
+						eleField.SetFloat(eleJson.Float64())
 					case reflect.Float64:
-						eleField.SetFloat(eleJson.Float())
+						eleField.SetFloat(eleJson.Float64())
 					}
 					continue
 				}
 				elePath = eleType.Field(ii).Tag.Get("_xpath")
 				if elePath != "" {
-					eleXpath := rootXpath[i]
+					eleXpath := rootXpath[i].One(elePath)
 					eleField := ele.Field(ii)
 					switch eleType.Field(ii).Type.Kind() {
 					case reflect.Int:
-						eleField.SetInt(eleXpath.One(elePath).Int64())
+						eleField.SetInt(eleXpath.Int64())
 					case reflect.Int8:
-						eleField.SetInt(eleXpath.One(elePath).Int64())
+						eleField.SetInt(eleXpath.Int64())
 					case reflect.Int16:
-						eleField.SetInt(eleXpath.One(elePath).Int64())
+						eleField.SetInt(eleXpath.Int64())
 					case reflect.Int32:
-						eleField.SetInt(eleXpath.One(elePath).Int64())
+						eleField.SetInt(eleXpath.Int64())
 					case reflect.Int64:
-						eleField.SetInt(eleXpath.One(elePath).Int64())
+						eleField.SetInt(eleXpath.Int64())
 					case reflect.String:
-						eleField.SetString(eleXpath.One(elePath).String())
+						eleField.SetString(eleXpath.String())
 					case reflect.Bool:
-						eleField.SetBool(eleXpath.One(elePath).Bool())
+						eleField.SetBool(eleXpath.Bool())
 					case reflect.Uint:
-						eleField.SetUint(eleXpath.One(elePath).Uint64())
+						eleField.SetUint(eleXpath.Uint64())
 					case reflect.Uint8:
-						eleField.SetUint(eleXpath.One(elePath).Uint64())
+						eleField.SetUint(eleXpath.Uint64())
 					case reflect.Uint16:
-						eleField.SetUint(eleXpath.One(elePath).Uint64())
+						eleField.SetUint(eleXpath.Uint64())
 					case reflect.Uint32:
-						eleField.SetUint(eleXpath.One(elePath).Uint64())
+						eleField.SetUint(eleXpath.Uint64())
 					case reflect.Uint64:
-						eleField.SetUint(eleXpath.One(elePath).Uint64())
+						eleField.SetUint(eleXpath.Uint64())
 					case reflect.Float32:
-						eleField.SetFloat(eleXpath.One(elePath).Float64())
+						eleField.SetFloat(eleXpath.Float64())
 					case reflect.Float64:
-						eleField.SetFloat(eleXpath.One(elePath).Float64())
+						eleField.SetFloat(eleXpath.Float64())
 					}
 					continue
 				}
 				elePath = eleType.Field(ii).Tag.Get("_css")
 				if elePath != "" {
-					eleCss := rootCss[i]
+					eleCss := rootCss[i].One(elePath)
 					eleField := ele.Field(ii)
 					switch eleType.Field(ii).Type.Kind() {
 					case reflect.Int:
-						eleField.SetInt(eleCss.One(elePath).Int64())
+						eleField.SetInt(eleCss.Int64())
 					case reflect.Int8:
-						eleField.SetInt(eleCss.One(elePath).Int64())
+						eleField.SetInt(eleCss.Int64())
 					case reflect.Int16:
-						eleField.SetInt(eleCss.One(elePath).Int64())
+						eleField.SetInt(eleCss.Int64())
 					case reflect.Int32:
-						eleField.SetInt(eleCss.One(elePath).Int64())
+						eleField.SetInt(eleCss.Int64())
 					case reflect.Int64:
-						eleField.SetInt(eleCss.One(elePath).Int64())
+						eleField.SetInt(eleCss.Int64())
 					case reflect.String:
-						eleField.SetString(eleCss.One(elePath).String())
+						eleField.SetString(eleCss.String())
 					case reflect.Bool:
-						eleField.SetBool(eleCss.One(elePath).Bool())
+						eleField.SetBool(eleCss.Bool())
 					case reflect.Uint:
-						eleField.SetUint(eleCss.One(elePath).Uint64())
+						eleField.SetUint(eleCss.Uint64())
 					case reflect.Uint8:
-						eleField.SetUint(eleCss.One(elePath).Uint64())
+						eleField.SetUint(eleCss.Uint64())
 					case reflect.Uint16:
-						eleField.SetUint(eleCss.One(elePath).Uint64())
+						eleField.SetUint(eleCss.Uint64())
 					case reflect.Uint32:
-						eleField.SetUint(eleCss.One(elePath).Uint64())
+						eleField.SetUint(eleCss.Uint64())
 					case reflect.Uint64:
-						eleField.SetUint(eleCss.One(elePath).Uint64())
+						eleField.SetUint(eleCss.Uint64())
 					case reflect.Float32:
-						eleField.SetFloat(eleCss.One(elePath).Float64())
+						eleField.SetFloat(eleCss.Float64())
 					case reflect.Float64:
-						eleField.SetFloat(eleCss.One(elePath).Float64())
+						eleField.SetFloat(eleCss.Float64())
 					}
 					continue
 				}
@@ -544,111 +533,112 @@ func (r *Response) UnmarshalData(v any) (err error) {
 
 		l := eleType.NumField()
 		for ii := 0; ii < l; ii++ {
-			elePathJson := eleType.Field(ii).Tag.Get("_json")
-			if elePathJson != "" {
-				eleJson := rootJson.Get(elePathJson)
+			elePath := ""
+			elePath = eleType.Field(ii).Tag.Get("_json")
+			if elePath != "" {
+				eleJson := rootJson[0].One(elePath)
 				eleField := vValue.Field(ii)
 				switch eleType.Field(ii).Type.Kind() {
 				case reflect.Int:
-					eleField.SetInt(eleJson.Int())
+					eleField.SetInt(eleJson.Int64())
 				case reflect.Int8:
-					eleField.SetInt(eleJson.Int())
+					eleField.SetInt(eleJson.Int64())
 				case reflect.Int16:
-					eleField.SetInt(eleJson.Int())
+					eleField.SetInt(eleJson.Int64())
 				case reflect.Int32:
-					eleField.SetInt(eleJson.Int())
+					eleField.SetInt(eleJson.Int64())
 				case reflect.Int64:
-					eleField.SetInt(eleJson.Int())
+					eleField.SetInt(eleJson.Int64())
 				case reflect.String:
 					eleField.SetString(eleJson.String())
 				case reflect.Bool:
 					eleField.SetBool(eleJson.Bool())
 				case reflect.Uint:
-					eleField.SetUint(eleJson.Uint())
+					eleField.SetUint(eleJson.Uint64())
 				case reflect.Uint8:
-					eleField.SetUint(eleJson.Uint())
+					eleField.SetUint(eleJson.Uint64())
 				case reflect.Uint16:
-					eleField.SetUint(eleJson.Uint())
+					eleField.SetUint(eleJson.Uint64())
 				case reflect.Uint32:
-					eleField.SetUint(eleJson.Uint())
+					eleField.SetUint(eleJson.Uint64())
 				case reflect.Uint64:
-					eleField.SetUint(eleJson.Uint())
+					eleField.SetUint(eleJson.Uint64())
 				case reflect.Float32:
-					eleField.SetFloat(eleJson.Float())
+					eleField.SetFloat(eleJson.Float64())
 				case reflect.Float64:
-					eleField.SetFloat(eleJson.Float())
+					eleField.SetFloat(eleJson.Float64())
 				}
 				continue
 			}
-			elePathXpath := eleType.Field(ii).Tag.Get("_xpath")
-			if elePathXpath != "" {
-				eleXpath := rootXpath[0]
+			elePath = eleType.Field(ii).Tag.Get("_xpath")
+			if elePath != "" {
+				eleXpath := rootXpath[0].One(elePath)
 				eleField := vValue.Field(ii)
 				switch eleType.Field(ii).Type.Kind() {
 				case reflect.Int:
-					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					eleField.SetInt(eleXpath.Int64())
 				case reflect.Int8:
-					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					eleField.SetInt(eleXpath.Int64())
 				case reflect.Int16:
-					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					eleField.SetInt(eleXpath.Int64())
 				case reflect.Int32:
-					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					eleField.SetInt(eleXpath.Int64())
 				case reflect.Int64:
-					eleField.SetInt(eleXpath.One(elePathXpath).Int64())
+					eleField.SetInt(eleXpath.Int64())
 				case reflect.String:
-					eleField.SetString(eleXpath.One(elePathXpath).String())
+					eleField.SetString(eleXpath.String())
 				case reflect.Bool:
-					eleField.SetBool(eleXpath.One(elePathXpath).Bool())
+					eleField.SetBool(eleXpath.Bool())
 				case reflect.Uint:
-					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					eleField.SetUint(eleXpath.Uint64())
 				case reflect.Uint8:
-					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					eleField.SetUint(eleXpath.Uint64())
 				case reflect.Uint16:
-					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					eleField.SetUint(eleXpath.Uint64())
 				case reflect.Uint32:
-					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					eleField.SetUint(eleXpath.Uint64())
 				case reflect.Uint64:
-					eleField.SetUint(eleXpath.One(elePathXpath).Uint64())
+					eleField.SetUint(eleXpath.Uint64())
 				case reflect.Float32:
-					eleField.SetFloat(eleXpath.One(elePathXpath).Float64())
+					eleField.SetFloat(eleXpath.Float64())
 				case reflect.Float64:
-					eleField.SetFloat(eleXpath.One(elePathXpath).Float64())
+					eleField.SetFloat(eleXpath.Float64())
 				}
 				continue
 			}
-			elePathCss := eleType.Field(ii).Tag.Get("_css")
-			if elePathCss != "" {
-				eleCss := rootCss[0]
+			elePath = eleType.Field(ii).Tag.Get("_css")
+			if elePath != "" {
+				eleCss := rootCss[0].One(elePath)
 				eleField := vValue.Field(ii)
 				switch eleType.Field(ii).Type.Kind() {
 				case reflect.Int:
-					eleField.SetInt(eleCss.One(elePathCss).Int64())
+					eleField.SetInt(eleCss.Int64())
 				case reflect.Int8:
-					eleField.SetInt(eleCss.One(elePathCss).Int64())
+					eleField.SetInt(eleCss.Int64())
 				case reflect.Int16:
-					eleField.SetInt(eleCss.One(elePathCss).Int64())
+					eleField.SetInt(eleCss.Int64())
 				case reflect.Int32:
-					eleField.SetInt(eleCss.One(elePathCss).Int64())
+					eleField.SetInt(eleCss.Int64())
 				case reflect.Int64:
-					eleField.SetInt(eleCss.One(elePathCss).Int64())
+					eleField.SetInt(eleCss.Int64())
 				case reflect.String:
-					eleField.SetString(eleCss.One(elePathCss).String())
+					eleField.SetString(eleCss.String())
 				case reflect.Bool:
-					eleField.SetBool(eleCss.One(elePathCss).Bool())
+					eleField.SetBool(eleCss.Bool())
 				case reflect.Uint:
-					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					eleField.SetUint(eleCss.Uint64())
 				case reflect.Uint8:
-					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					eleField.SetUint(eleCss.Uint64())
 				case reflect.Uint16:
-					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					eleField.SetUint(eleCss.Uint64())
 				case reflect.Uint32:
-					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					eleField.SetUint(eleCss.Uint64())
 				case reflect.Uint64:
-					eleField.SetUint(eleCss.One(elePathCss).Uint64())
+					eleField.SetUint(eleCss.Uint64())
 				case reflect.Float32:
-					eleField.SetFloat(eleCss.One(elePathCss).Float64())
+					eleField.SetFloat(eleCss.Float64())
 				case reflect.Float64:
-					eleField.SetFloat(eleCss.One(elePathCss).Float64())
+					eleField.SetFloat(eleCss.Float64())
 				}
 				continue
 			}

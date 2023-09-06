@@ -459,9 +459,9 @@ func main() {
       to [go-xpath](https://github.com/lizongying/go-xpath).
     - `Css() (*css.Selector, error)` `MustCss() *css.Selector`
       Returns a CSS selector, for specific syntax, please refer to [go-css](https://github.com/lizongying/go-css).
-    - `Json() (gjson.Result, error)` `MustJson() gjson.Result`
-      Returns a gjson selector, for specific syntax, please refer to gjson.
-    - `Re() (*re.Selector, error)`
+    - `Json() (*gson.Selector, error)` `MustJson() gjson.Result`
+      Returns a gjson selector, for specific syntax, please refer to [go-json](https://github.com/lizongying/go-json).
+    - `Re() (*re.Selector, error)` `MustRe() *re.Selector`
       Returns a regular expression selector, for specific syntax, please refer
       to [go-re](https://github.com/lizongying/go-re).
     - `AllLink() []*url.URL`
@@ -490,7 +490,8 @@ func main() {
     * XPath Selector: [go-xpath](https://github.com/lizongying/go-xpath) is a library for XPath selection. You can use
       XPath expressions to extract data from HTML
       by calling the `response.Xpath()` method.
-    * GJSON: GJSON is a library for handling JSON. You can use the gjson syntax to extract data from JSON by calling
+    * GJSON Selector: [go-json](https://github.com/lizongying/go-json) is a library for handling JSON. You can use the
+      gjson syntax to extract data from JSON by calling
       the `response.Json()` method.
     * Regular Expression Selector: [go-re](https://github.com/lizongying/go-re) is a library for handling regular
       expressions. You can use regular expressions
@@ -1032,6 +1033,7 @@ git clone github.com/lizongying/go-crawler-example
 go get -u github.com/lizongying/go-css@latest
 go get -u github.com/lizongying/go-xpath@latest
 go get -u github.com/lizongying/go-re@latest
+go get -u github.com/lizongying/go-json@latest
 
 ```
 

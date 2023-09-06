@@ -341,9 +341,9 @@ func main() {
       返回Xpath选择器，具体语法请参考 [go-xpath](https://github.com/lizongying/go-xpath)
     - `Css() (*css.Selector, error)` `MustCss() *css.Selector`
       返回CSS选择器，具体语法请参考 [go-query](https://github.com/lizongying/go-css)
-    - `Json() (gjson.Result, error)` `MustJson() gjson.Result`
-      返回gjson选择器，具体语法请参考 gjson
-    - `Re() (*re.Selector, error)`
+    - `Json() (*gson.Selector, error)` `MustJson() gjson.Result`
+      返回gjson选择器，具体语法请参考 [go-json](https://github.com/lizongying/go-json)
+    - `Re() (*re.Selector, error)` `MustRe() *re.Selector`
       返回正则选择器，具体语法请参考 [go-re](https://github.com/lizongying/go-re)
     - `AllLink() []*url.URL`
       可以获取response中的所有链接。
@@ -366,7 +366,7 @@ func main() {
         * 通过调用`response.Css()`方法，您可以使用css选择器语法来从HTML中提取数据。
     * xpath选择器 go-xpath是一个可用于XPath选择的库 [go-xpath](https://github.com/lizongying/go-xpath)
         * 通过调用`response.Xpath()`方法，您可以使用XPath表达式来从HTML中提取数据。
-    * gjson gjson是一个用于处理JSON的库
+    * gjson go-json是一个用于处理JSON的库 [go-json](https://github.com/lizongying/go-json)
         * 通过调用`response.Json()`方法，您可以使用gjson语法从JSON中提取数据。
     * re选择器 go-re是一个处理正则的库 [go-re](https://github.com/lizongying/go-re)
         * 通过调用`response.Re()`方法，您可以使用正则表达式从返回中提取数据。
@@ -860,6 +860,7 @@ git clone github.com/lizongying/go-crawler-example
 go get -u github.com/lizongying/go-css@latest
 go get -u github.com/lizongying/go-xpath@latest
 go get -u github.com/lizongying/go-re@latest
+go get -u github.com/lizongying/go-json@latest
 go get -u github.com/lizongying/cron@simple-v2
 
 ```

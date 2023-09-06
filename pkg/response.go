@@ -3,9 +3,9 @@ package pkg
 import (
 	"context"
 	"github.com/lizongying/go-css/css"
+	"github.com/lizongying/go-json/gjson"
 	"github.com/lizongying/go-re/re"
 	"github.com/lizongying/go-xpath/xpath"
-	"github.com/tidwall/gjson"
 	"io"
 	"net/http"
 	"net/url"
@@ -37,9 +37,9 @@ type Response interface {
 	Xpath() (*xpath.Selector, error)
 	MustCss() *css.Selector
 	Css() (*css.Selector, error)
-	MustJson() gjson.Result
-	Json() (gjson.Result, error)
-	MustRe() (selector *re.Selector)
+	MustJson() *gjson.Selector
+	Json() (*gjson.Selector, error)
+	MustRe() *re.Selector
 	Re() (*re.Selector, error)
 
 	UniqueKey() string

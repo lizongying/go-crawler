@@ -21,7 +21,7 @@ require (
 	github.com/segmentio/kafka-go v0.4.40
 	github.com/stretchr/testify v1.8.1
 	github.com/temoto/robotstxt v1.1.2
-	github.com/tidwall/gjson v1.14.4
+	github.com/tidwall/gjson v1.16.0
 	go.mongodb.org/mongo-driver v1.11.3
 	go.uber.org/fx v1.19.2
 	golang.org/x/net v0.14.0
@@ -52,6 +52,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
+	github.com/lizongying/go-json v0.0.0-20230906021841-c250055acd2d // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
