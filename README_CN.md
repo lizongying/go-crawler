@@ -26,6 +26,7 @@ go get -u github.com/lizongying/go-crawler
 
 # 目前框架更新较为频繁, 建议使用最新版本, 如:
 go get -u github.com/lizongying/go-crawler@latest
+go get -u github.com/lizongying/go-crawler@0cfd21a
 
 ```
 

@@ -28,6 +28,7 @@ go get -u github.com/lizongying/go-crawler
 
 # Currently, the framework is updated frequently. It's advisable to use the latest version, such as:
 go get -u github.com/lizongying/go-crawler@latest
+go get -u github.com/lizongying/go-crawler@0cfd21a
 
 ```
 

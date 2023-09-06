@@ -119,12 +119,18 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 						return nil, err
 					}
 					var d net.Dialer
+					var c net.Conn
+					var e error
 					if ip, ok := h.DNSCache.Get(host); ok {
-						c, e := d.DialContext(ctx, network, fmt.Sprintf("%s:%s", ip.String(), port))
-						h.logger.Info("RemoteAddr", c.RemoteAddr(), network, address)
-						return c, e
+						if strings.Contains(ip.String(), ".") {
+							c, e = d.DialContext(ctx, network, fmt.Sprintf("%s:%s", ip.String(), port))
+						} else {
+							c, e = d.DialContext(ctx, network, fmt.Sprintf("[%s]:%s", ip.String(), port))
+						}
+					} else {
+						c, e = d.DialContext(ctx, network, address)
 					}
-					c, e := d.DialContext(ctx, network, address)
+
 					h.logger.Info("RemoteAddr", c.RemoteAddr(), network, address)
 					return c, e
 				}
