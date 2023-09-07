@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: shell tidy tls testSpider
+all: tidy tls mitm testSpider
 
 module := $(shell head -n 1 go.mod)
 module := $(subst module ,,${module})
@@ -12,8 +12,12 @@ tidy:
 	go mod tidy
 
 tls:
-	go vet ./cmd/tls
-	go build -ldflags "-s -w" -o ./releases/tls ./cmd/tls
+	go vet ./tools/tls
+	go build -ldflags "-s -w" -o ./releases/tls ./tools/tls
+
+mitm:
+	go vet ./tools/mitm
+	go build -ldflags "-s -w" -o ./releases/mitm ./tools/mitm
 
 testSpider:
 	go vet ./cmd/testSpider

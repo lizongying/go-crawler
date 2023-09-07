@@ -893,3 +893,19 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 * 支持优先级队列
 * 支持定时任务、循环任务、单次任务
 * 支持dns缓存
+
+## 生成签名
+
+```shell
+# 证书签名
+./releases/tls
+
+# 自签名
+./releases/tls -s
+```
+
+## 中间人代理
+
+```shell
+./releases/mitm
+```

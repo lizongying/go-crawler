@@ -8,11 +8,23 @@ import (
 //go:embed devices.csv
 var Devices []byte
 
-//go:embed tls/cert.pem
+//go:embed tls/server_self_crt.pem
 var Cert []byte
 
-//go:embed tls/key.pem
+//go:embed tls/server_self_key.pem
 var Key []byte
+
+//go:embed tls/ca_crt.pem
+var CaCert []byte
+
+//go:embed tls/ca_key.pem
+var CaKey []byte
+
+//go:embed tls/server_crt.pem
+var ServerCert []byte
+
+//go:embed tls/server_key.pem
+var ServerKey []byte
 
 //go:embed statics
 var Statics embed.FS

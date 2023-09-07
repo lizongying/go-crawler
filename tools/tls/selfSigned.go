@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func main() {
+func SelfSigned() {
 	// 生成私钥
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -46,22 +46,34 @@ func main() {
 	}
 
 	// 将证书保存到文件
-	certOut, err := os.Create("static/tls/cert.pem")
-	if err != nil {
-		fmt.Println("无法创建证书文件：", err)
-		return
+	serverCertBlock := pem.Block{Type: "CERTIFICATE", Bytes: derBytes}
+	for _, i := range []string{
+		"static/tls/server_self.crt",
+		"static/tls/server_self_crt.pem",
+	} {
+		out, err := os.Create(i)
+		if err != nil {
+			fmt.Println("无法创建服务器证书文件：", err)
+			return
+		}
+		_ = pem.Encode(out, &serverCertBlock)
+		_ = out.Close()
+		fmt.Println("服务器证书已保存到", i)
 	}
-	_ = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
-	_ = certOut.Close()
-	fmt.Println("证书已保存到 static/tls/cert.pem")
 
 	// 将私钥保存到文件
-	keyOut, err := os.OpenFile("static/tls/key.pem", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		fmt.Println("无法创建私钥文件：", err)
-		return
+	serverKeyBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}
+	for _, i := range []string{
+		"static/tls/server_self.key",
+		"static/tls/server_self_key.pem",
+	} {
+		out, err := os.Create(i)
+		if err != nil {
+			fmt.Println("无法创建服务器私钥文件：", err)
+			return
+		}
+		_ = pem.Encode(out, &serverKeyBlock)
+		_ = out.Close()
+		fmt.Println("服务器私钥已保存到", i)
 	}
-	_ = pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)})
-	_ = keyOut.Close()
-	fmt.Println("私钥已保存到 static/tls/key.pem")
 }

@@ -81,8 +81,6 @@ github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/lizongying/cron v1.0.0 h1:mxAaooETYGsqta04WCmtEzJhRlYonVsweGtFY7bMuCU=
 github.com/lizongying/cron v1.0.0/go.mod h1:DXQE+B2MzkaDNdP0rSZ3vAgZXLHC4fPxEAmAu1af1+Y=
-github.com/lizongying/go-css v0.0.0-20230903140801-2bc27f5e9ca2 h1:HD1PKZ/OpG+rdT2H9gP5bDUbrxjJ35MAfMCQoRongYc=
-github.com/lizongying/go-css v0.0.0-20230903140801-2bc27f5e9ca2/go.mod h1:uXnGqUn4wsh5AJUJMH7dYhSEPdjeMzTktt8r3TjEO9I=
 github.com/lizongying/go-css v0.0.0-20230906104236-b58497123e0f h1:2zaV/KZ/zFTYyBHRjf6EEbHB7gbGIIy3z+QlcKC1rRI=
 github.com/lizongying/go-css v0.0.0-20230906104236-b58497123e0f/go.mod h1:uXnGqUn4wsh5AJUJMH7dYhSEPdjeMzTktt8r3TjEO9I=
 github.com/lizongying/go-json v0.0.0-20230906102344-7915011b6304 h1:LEqGvzkC40ccCRbKFaLY+THBN6xTcRs03EeYNdcEiwE=
@@ -91,8 +89,6 @@ github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f h1:NlitwGPZLOw
 github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f/go.mod h1:gP12tZ6zLW9cHC4QlQgj0Jak14N3YVI/ZIHD/3ITp9M=
 github.com/lizongying/go-re v0.0.0-20230906094757-1b48356fa6db h1:ESoikDPZW2eHg7EBzBW6rdZ0GANAzi2NbIdFiUc4fOI=
 github.com/lizongying/go-re v0.0.0-20230906094757-1b48356fa6db/go.mod h1:khn14nE/hdfP/6Ku4wf5MYe/74K4PyCl9MPkhXIa8XM=
-github.com/lizongying/go-xpath v0.0.0-20230903140046-52fddb54d6c8 h1:jv+6QS5Zq47uc4KgHUSR1r0aB9JiHh/3C290S8d7M4E=
-github.com/lizongying/go-xpath v0.0.0-20230903140046-52fddb54d6c8/go.mod h1:wlEtOc9+EcNKVB9TNsSeNPcYo6DNqmgQeT51h8BmmD0=
 github.com/lizongying/go-xpath v0.0.0-20230906104639-f46eb0e080c4 h1:yGFXQ29+P2WCmzKXJ8qSc+oHABN90NNjfvwMqXv7jA8=
 github.com/lizongying/go-xpath v0.0.0-20230906104639-f46eb0e080c4/go.mod h1:wlEtOc9+EcNKVB9TNsSeNPcYo6DNqmgQeT51h8BmmD0=
 github.com/lizongying/gooptimizer v1.0.2 h1:y3Wj5loP1RivhMV84Jc90lj1iO8MKQrWVq611g46JRY=

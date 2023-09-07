@@ -1093,3 +1093,20 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 
 7. Mock Server:
 8. DNS Cache
+
+## Generate Certificate
+
+```shell
+# CA-Signed Certificate
+./releases/tls
+
+# Self-Signed Certificate
+./releases/tls -s
+
+```
+
+## MITM
+
+```shell
+./releases/mitm
+```
