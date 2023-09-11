@@ -907,5 +907,13 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 ## 中间人代理
 
 ```shell
+# 默认打印请求和返沪内容
+# -r 替换返回内容
 ./releases/mitm
+
+# 测试
+# 其他客户端需要信任ca证书
+curl https://www.baidu.com -x http://localhost:8082 --cacert static/tls/ca.crt
+curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert static/tls/ca.crt
+
 ```
