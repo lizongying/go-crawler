@@ -23,8 +23,10 @@ func CaSigned() {
 
 	// 创建自签名CA证书模板
 	caTemplate := x509.Certificate{
-		SerialNumber:          big.NewInt(1),
-		Subject:               pkix.Name{CommonName: "CA"},
+		SerialNumber: big.NewInt(1),
+		Subject: pkix.Name{
+			CommonName: "GO-MITM",
+		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(10, 0, 0), // 有效期10年
 		BasicConstraintsValid: true,

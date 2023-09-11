@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/tls"
@@ -15,9 +14,7 @@ import (
 	"math/big"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -41,10 +38,14 @@ func (p *Proxy) getCertificate(domain string) (cert *tls.Certificate, err error)
 		Subject: pkix.Name{
 			CommonName: domain,
 		},
-		NotBefore:   time.Now(),
-		NotAfter:    time.Now().AddDate(1, 0, 0),
-		KeyUsage:    x509.KeyUsageDigitalSignature | x509.KeyUsageDataEncipherment,
-		ExtKeyUsage: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		NotBefore: time.Now().AddDate(0, 0, -1),
+		NotAfter:  time.Now().AddDate(1, 0, 0),
+	}
+	ip := net.ParseIP(domain)
+	if ip != nil {
+		serverTemplate.IPAddresses = []net.IP{ip}
+	} else {
+		serverTemplate.DNSNames = []string{domain}
 	}
 	certBytes, err := x509.CreateCertificate(rand.Reader, serverTemplate, p.rootCert, &p.privateKey.PublicKey, p.rootKey)
 	if err != nil {
@@ -86,15 +87,15 @@ func (p *Proxy) doRequest(w http.ResponseWriter, r *http.Request) {
 		r.URL.Scheme = "https"
 	}
 
-	fmt.Println(strings.Repeat("#", 100))
-	fmt.Println("Request:")
-	requestDump, err := httputil.DumpRequest(r, true)
-	if err != nil {
-		fmt.Println("Error dumping request:", err)
-		return
-	}
-	fmt.Println(string(bytes.TrimSpace(requestDump)))
-	fmt.Println(strings.Repeat("#", 100))
+	//fmt.Println(strings.Repeat("#", 100))
+	//fmt.Println("Request:")
+	//requestDump, err := httputil.DumpRequest(r, true)
+	//if err != nil {
+	//	fmt.Println("Error dumping request:", err)
+	//	return
+	//}
+	//fmt.Println(string(bytes.TrimSpace(requestDump)))
+
 	response, err := http.DefaultTransport.RoundTrip(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -108,16 +109,18 @@ func (p *Proxy) doRequest(w http.ResponseWriter, r *http.Request) {
 	copyHeader(w.Header(), response.Header)
 	w.WriteHeader(response.StatusCode)
 
-	fmt.Println("Response:")
-	responseDump, err := httputil.DumpResponse(response, true)
-	if err != nil {
-		fmt.Println("Error dumping response:", err)
-		return
-	}
-	fmt.Println(string(bytes.TrimSpace(responseDump)))
-	fmt.Println(strings.Repeat("#", 100))
+	//fmt.Println(strings.Repeat("#", 100))
+	//fmt.Println("Response:")
+	//responseDump, err := httputil.DumpResponse(response, true)
+	//if err != nil {
+	//	fmt.Println("Error dumping response:", err)
+	//	return
+	//}
+	//fmt.Println(string(bytes.TrimSpace(responseDump)))
 
 	_, _ = io.Copy(w, response.Body)
+
+	fmt.Printf("%d %s %s\n", response.StatusCode, r.Method, r.URL.String())
 }
 
 func (p *Proxy) handleHttps(w http.ResponseWriter, _ *http.Request) {

@@ -912,7 +912,7 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 ./releases/mitm
 
 # 测试
-# 其他客户端需要信任ca证书
+# 其他客户端需要信任ca证书 static/tls/ca_crt.pem
 curl https://www.baidu.com -x http://localhost:8082 --cacert static/tls/ca.crt
 curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert static/tls/ca.crt
 
