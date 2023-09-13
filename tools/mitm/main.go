@@ -7,12 +7,14 @@ import (
 )
 
 func main() {
+	filterPtr := flag.String("f", "", "-f filter")
 	replacePtr := flag.Bool("r", false, "-r replace")
 	proxyPtr := flag.String("p", "", "-p proxy")
 	flag.Parse()
 
 	//*replacePtr = true
-	p, err := NewProxy(*proxyPtr, *replacePtr)
+	//*filterPtr = "baidu"
+	p, err := NewProxy(*filterPtr, *proxyPtr, *replacePtr)
 	if err != nil {
 		return
 	}

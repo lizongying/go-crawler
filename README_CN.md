@@ -908,6 +908,8 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 
 ```shell
 # 默认打印请求和返沪内容
+# -f 正则过滤请求
+# -p 设置请求代理
 # -r 替换返回内容
 ./releases/mitm
 

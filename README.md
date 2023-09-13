@@ -1109,7 +1109,9 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 
 ```shell
 # Print request and response by default
-# -r: Replace the response
+# -f Filter requests using regular expressions.
+# -p Set request proxy.
+# -r Replace the response
 ./releases/mitm
 
 # Test

@@ -15,6 +15,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -29,6 +30,7 @@ type Proxy struct {
 	serialNumber int64
 	replace      bool
 	proxy        *url.URL
+	filter       *regexp.Regexp
 }
 
 func (p *Proxy) getCertificate(domain string) (cert *tls.Certificate, err error) {
@@ -174,8 +176,79 @@ func (p *Proxy) close() (err error) {
 	}
 	return
 }
+func (p *Proxy) forward(w http.ResponseWriter, r *http.Request) {
+	hijacker, ok := w.(http.Hijacker)
+	if !ok {
+		http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
+		return
+	}
+
+	hijack, _, err := hijacker.Hijack()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+	}
+	defer func() {
+		_ = hijack.Close()
+	}()
+
+	r.Header.Del("Proxy-Connection")
+	if r.URL.Host == "" {
+		r.URL.Host = r.Host
+	}
+	if r.URL.Scheme == "" {
+		r.URL.Scheme = "https"
+	}
+
+	conn, err := new(net.Dialer).Dial("tcp", r.Host)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer func() {
+		_ = conn.Close()
+	}()
+
+	if r.Method == "CONNECT" {
+		_, err = fmt.Fprint(hijack, "HTTP/1.1 200 Connection established\r\n\r\n")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+	var g sync.WaitGroup
+	g.Add(2)
+	go func() {
+		defer g.Done()
+		transfer(conn, hijack)
+	}()
+	go func() {
+		defer g.Done()
+		transfer(hijack, conn)
+	}()
+	g.Wait()
+}
+func (p *Proxy) SetFilter(filter string) {
+	p.filter, _ = regexp.Compile(filter)
+}
+func (p *Proxy) ClearFilter() {
+	p.filter = nil
+}
 
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if p.filter != nil {
+		u := r.URL
+		if u.Host == "" {
+			u.Host = r.Host
+		}
+		if u.Scheme == "" {
+			u.Scheme = "https"
+		}
+		if len(p.filter.FindStringIndex(u.String())) == 0 {
+			p.forward(w, r)
+			return
+		}
+	}
+
 	if r.Method == http.MethodConnect {
 		p.handleHttps(w, r)
 	} else {
@@ -205,8 +278,10 @@ func transfer(destination io.WriteCloser, source io.ReadCloser) {
 	_, _ = io.Copy(destination, source)
 }
 
-func NewProxy(proxy string, replace bool) (p *Proxy, err error) {
+func NewProxy(filter string, proxy string, replace bool) (p *Proxy, err error) {
 	p = new(Proxy)
+	p.SetFilter(filter)
+
 	if P, err := url.Parse(proxy); err != nil {
 		p.proxy = P
 	}
