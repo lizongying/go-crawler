@@ -325,7 +325,41 @@ func main() {
         * 在NewApp中加入crawler选项`pkg.WithCustomPipeline(new(CustomPipeline))`启用该Pipeline。
 
 * Request
-
+      
+  创建一个请求
+  ```go
+  // 创建一个请求
+  req := request.NewRequest()
+    
+  // 设置URL
+  req.SetUrl("")
+    
+  // 设置一个请求头
+  req.SetHeader("name", "value")
+    
+  // 一次设置所有请求头
+  req.SetHeaders(map[string]string{"name1": "value1", "name2": "value2"})
+    
+  // 设置字符串请求体
+  req.SetBodyStr(``)
+    
+  // 设置字节数组请求体
+  req.SetBodyBytes([]byte(``))
+    
+  // 设置解析方法
+  var parse func(ctx pkg.Context, response pkg.Response) (err error)
+  req.SetCallBack(parse)
+    
+  // 返回请求
+  s.MustYieldRequest(ctx, req)
+    
+  // 建议这么写，更简单
+  s.MustYieldRequest(ctx, request.NewRequest().
+    SetUrl("").
+    SetBodyStr(``).
+    SetExtra(&Extra{}).
+    SetCallBack(s.Parse))
+  ```
     * `SetFingerprint(string) Request` 现在很多网站都对ssl指纹进行了风控，通过设置此参数，可以进行伪装。
       如果fingerprint是`pkg.Browser`,框架会自动选择此浏览器合适的指纹。
       如果fingerprint是ja3格式指纹，框架会应用此ssl指纹。

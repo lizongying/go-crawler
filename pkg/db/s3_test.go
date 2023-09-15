@@ -6,6 +6,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/loggers"
 	"go.uber.org/fx"
 	"os"
 	"testing"

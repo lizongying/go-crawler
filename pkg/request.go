@@ -94,6 +94,7 @@ type Request interface {
 	SetBodyStr(string) Request
 	BodyBytes() []byte
 	SetBodyBytes([]byte) Request
+	SetBodyJson(bodyJson any) Request
 	GetHeader(string) string
 	SetHeader(string, string) Request
 	Headers() http.Header

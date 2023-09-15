@@ -439,6 +439,40 @@ func main() {
 
 * Request
 
+  Build a request.
+  ```go
+  // Build a request.
+  req := request.NewRequest()
+
+  // Set the URL
+  req.SetUrl("")
+
+  // Set the request header.
+  req.SetHeader("name", "value")
+
+  // Set all request headers at once.
+  req.SetHeaders(map[string]string{"name1": "value1", "name2": "value2"})
+
+  // Set the request content string.
+  req.SetBodyStr(``)
+
+  // Set the request content bytes.
+  req.SetBodyBytes([]byte(``))
+
+  // Set the parsing method
+  var parse func(ctx pkg.Context, response pkg.Response) (err error)
+  req.SetCallBack(parse)
+
+  // Send the request
+  s.MustYieldRequest(ctx, req)
+
+  // Suggest writing it this way, simpler.
+  s.MustYieldRequest(ctx, request.NewRequest().
+    SetUrl("").
+    SetBodyStr(``).
+    SetExtra(&Extra{}).
+    SetCallBack(s.Parse))
+  ```
     * `SetFingerprint(string) Request` Many websites nowadays implement security measures based on SSL fingerprints. By
       setting this parameter, you can perform disguising. If the fingerprint is `pkg.Browser`, the framework will
       automatically select a suitable fingerprint for this browser. If the fingerprint is in the ja3 format, the

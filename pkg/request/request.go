@@ -413,6 +413,16 @@ func (r *Request) SetBodyBytes(bodyBytes []byte) pkg.Request {
 	r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 	return r
 }
+func (r *Request) SetBodyJson(bodyJson any) pkg.Request {
+	bodyBytes, err := json.Marshal(bodyJson)
+	if err != nil {
+		r.setErr("body", err)
+		return r
+	}
+	r.bodyStr = string(bodyBytes)
+	r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+	return r
+}
 func (r *Request) GetHeader(key string) string {
 	return r.Header.Get(key)
 }
