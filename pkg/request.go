@@ -7,11 +7,47 @@ import (
 	"time"
 )
 
+type HTTPMethod uint8
+
 const (
-	GET  = "GET"
-	POST = "POST"
-	HEAD = "HEAD"
+	Unknown HTTPMethod = iota
+	GET
+	POST
+	HEAD
+	PUT
+	DELETE
+	PATCH
+	OPTIONS
+	CONNECT
+	TRACE
 )
+
+func (h HTTPMethod) String() string {
+	switch h {
+	case GET:
+		return http.MethodGet
+	case POST:
+		return http.MethodPost
+	case HEAD:
+		return http.MethodHead
+	case PATCH:
+		return http.MethodPatch
+	case PUT:
+		return http.MethodPut
+	case DELETE:
+		return http.MethodDelete
+	case OPTIONS:
+		return http.MethodOptions
+	case CONNECT:
+		return http.MethodConnect
+	case TRACE:
+		return http.MethodTrace
+	case Unknown:
+		return ""
+	default:
+		return ""
+	}
+}
 
 type Request interface {
 	UniqueKey() string

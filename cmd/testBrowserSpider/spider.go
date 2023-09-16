@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/mockServers"
 	"github.com/lizongying/go-crawler/pkg/request"
+	"net/http"
 )
 
 type Spider struct {
@@ -49,7 +50,7 @@ func (s *Spider) TestAjax(ctx pkg.Context, _ string) (err error) {
 
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl("https://www.southwest.com/api/air-booking/v1/air-booking/page/air/booking/shopping").
-		SetMethod(pkg.POST).
+		SetMethod(http.MethodPost).
 		SetHeaders(map[string]string{
 			"content-type": "application/json",
 			"x-api-key":    "l7xx944d175ea25f4b9c903a583ea82a1c4c",

@@ -8,6 +8,7 @@ import (
 	uuid2 "github.com/google/uuid"
 	"github.com/lizongying/go-crawler/pkg"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -135,7 +136,7 @@ func StrMd5(sl ...string) string {
 func Request2Curl(r pkg.Request) string {
 	var args []string
 	args = append(args, "curl")
-	if r.GetMethod() != pkg.GET {
+	if r.GetMethod() != http.MethodGet {
 		args = append(args, "-X", r.GetMethod())
 	}
 	args = append(args, fmt.Sprintf(`'%s'`, r.GetUrl()))

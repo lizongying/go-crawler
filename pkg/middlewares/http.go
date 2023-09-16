@@ -16,9 +16,9 @@ func (m *HttpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err
 	spider := m.GetSpider()
 	if request.GetMethod() == "" {
 		if request.BodyStr() != "" {
-			request.SetMethod(pkg.POST)
+			request.SetMethod(http.MethodPost)
 		} else {
-			request.SetMethod(pkg.GET)
+			request.SetMethod(http.MethodGet)
 		}
 	}
 

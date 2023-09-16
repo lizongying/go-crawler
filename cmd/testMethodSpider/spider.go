@@ -6,6 +6,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/mockServers"
 	"github.com/lizongying/go-crawler/pkg/request"
+	"net/http"
 	"net/http/httputil"
 )
 
@@ -55,7 +56,7 @@ func (s *Spider) TestPost(ctx pkg.Context, _ string) (err error) {
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlPost)).
-		SetMethod(pkg.POST).
+		SetMethod(http.MethodPost).
 		SetBodyStr("a=0").
 		SetPostForm("a", "1").
 		SetPostForm("b", "2").

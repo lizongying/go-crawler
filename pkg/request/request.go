@@ -381,7 +381,17 @@ func (r *Request) GetPostForm() url.Values {
 func (r *Request) SetMethod(method string) pkg.Request {
 	method = strings.ToUpper(method)
 	ok := false
-	for _, v := range []string{"OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE"} {
+	for _, v := range []string{
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodPatch,
+		http.MethodDelete,
+		//http.MethodConnect,
+		http.MethodOptions,
+		http.MethodTrace,
+	} {
 		if v == method {
 			ok = true
 			break
@@ -707,5 +717,45 @@ func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 func NewRequest() pkg.Request {
 	request := new(Request)
 	request.Request = new(http.Request)
+	return request
+}
+func Get() pkg.Request {
+	request := NewRequest()
+	request.SetMethod(http.MethodGet)
+	return request
+}
+func Post() pkg.Request {
+	request := NewRequest()
+	request.SetMethod(http.MethodPost)
+	return request
+}
+func Head() pkg.Request {
+	request := NewRequest()
+	request.SetMethod(http.MethodHead)
+	return request
+}
+func Delete() pkg.Request {
+	request := NewRequest()
+	request.SetMethod(http.MethodDelete)
+	return request
+}
+func Put() pkg.Request {
+	request := NewRequest()
+	request.SetMethod(http.MethodPut)
+	return request
+}
+func Patch() pkg.Request {
+	request := NewRequest()
+	request.SetMethod(http.MethodPatch)
+	return request
+}
+func Options() pkg.Request {
+	request := NewRequest()
+	request.SetMethod(http.MethodOptions)
+	return request
+}
+func Trace() pkg.Request {
+	request := NewRequest()
+	request.SetMethod(http.MethodTrace)
 	return request
 }
