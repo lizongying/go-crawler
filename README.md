@@ -121,7 +121,7 @@ app.NewApp(NewExample1Spider, NewExample2Spider).Run()
 make
 ```
 
-Currently, the framework is updated frequently. Recommended to stay attentive and update. It's advisable to use the
+Currently, the framework is updated frequently. Recommended to stay attentive. It's advisable to use the
 latest version.
 
 ```shell

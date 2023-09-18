@@ -66,19 +66,6 @@ func (s *Spider) ParseCookie(ctx pkg.Context, response pkg.Response) (err error)
 	return
 }
 
-func (s *Spider) ParseGzip(_ pkg.Context, response pkg.Response) (err error) {
-	s.logger.Info("response", response.BodyStr())
-
-	return
-}
-
-func (s *Spider) ParseDeflate(_ pkg.Context, response pkg.Response) (err error) {
-	s.logger.Info("header", response.Headers())
-	s.logger.Info("body", response.BodyStr())
-
-	return
-}
-
 func (s *Spider) ParseRedirect(_ pkg.Context, response pkg.Response) (err error) {
 	s.logger.Info("header", response.Headers())
 	s.logger.Info("body", response.BodyStr())
@@ -153,34 +140,6 @@ func (s *Spider) TestCookie(ctx pkg.Context, _ string) (err error) {
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlCookie)).
 		SetExtra(&ExtraCookie{}).
 		SetCallBack(s.ParseCookie)); err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	return
-}
-
-// TestGzip go run cmd/testSpider/*.go -c dev.yml -n test -f TestGzip -m once
-func (s *Spider) TestGzip(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteGzip(s.logger))
-
-	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlGzip)).
-		SetCallBack(s.ParseGzip)); err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	return
-}
-
-// TestDeflate go run cmd/testSpider/*.go -c dev.yml -n test -f TestDeflate -m once
-func (s *Spider) TestDeflate(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteDeflate(s.logger))
-
-	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlDeflate)).
-		SetCallBack(s.ParseDeflate)); err != nil {
 		s.logger.Error(err)
 		return
 	}
