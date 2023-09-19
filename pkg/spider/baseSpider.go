@@ -157,15 +157,33 @@ func (s *BaseSpider) SetSpider(spider pkg.Spider) pkg.Spider {
 	s.registerParser()
 	return s
 }
-func (s *BaseSpider) GetCallBacks() map[string]pkg.CallBack {
+func (s *BaseSpider) CallBacks() map[string]pkg.CallBack {
 	return s.callBacks
+}
+func (s *BaseSpider) CallBack(name string) (callback pkg.CallBack) {
+	if name != "" {
+		callback = s.callBacks[name]
+	}
+	if callback == nil {
+		callback = s.Parse
+	}
+	return
 }
 func (s *BaseSpider) SetCallBacks(callBacks map[string]pkg.CallBack) pkg.Spider {
 	s.callBacks = callBacks
 	return s
 }
-func (s *BaseSpider) GetErrBacks() map[string]pkg.ErrBack {
+func (s *BaseSpider) ErrBacks() map[string]pkg.ErrBack {
 	return s.errBacks
+}
+func (s *BaseSpider) ErrBack(name string) (errBack pkg.ErrBack) {
+	if name != "" {
+		errBack = s.errBacks[name]
+	}
+	if errBack == nil {
+		errBack = s.Error
+	}
+	return
 }
 func (s *BaseSpider) SetErrBacks(errBacks map[string]pkg.ErrBack) pkg.Spider {
 	s.errBacks = errBacks
@@ -347,6 +365,17 @@ func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string,
 		s.logger.Error(err)
 		return
 	}
+}
+func (s *BaseSpider) Parse(_ pkg.Context, response pkg.Response) (err error) {
+	s.logger.Info("header", response.Headers())
+	s.logger.Info("body", response.BodyStr())
+	return
+}
+func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
+	s.logger.Info("header", response.Headers())
+	s.logger.Info("body", response.BodyStr())
+	s.logger.Info("error", err)
+	return
 }
 func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	s.logger.Debug("BaseSpider wait for stop")

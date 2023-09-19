@@ -34,7 +34,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 		}
 
 		s.logger.Error(err)
-		s.handleError(ctx, response, err, request.GetErrBack())
+		s.handleError(ctx, response, err, request.ErrBack())
 		return
 	}
 
@@ -43,13 +43,9 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 	return
 }
 
-func (s *Scheduler) handleError(ctx pkg.Context, response pkg.Response, err error, fn pkg.ErrBack) {
+func (s *Scheduler) handleError(ctx pkg.Context, response pkg.Response, err error, errBackName string) {
 	spider := s.Spider()
-	if fn != nil {
-		fn(ctx, response, err)
-	} else {
-		s.logger.Warn("nil ErrBack")
-	}
+	spider.ErrBack(errBackName)(ctx, response, err)
 	spider.IncRequestError()
 }
 
@@ -118,8 +114,6 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			continue
 		}
 
-		requestJson.SetCallBacks(s.Spider().GetCallBacks())
-		requestJson.SetErrBacks(s.Spider().GetErrBacks())
 		request, err := requestJson.ToRequest()
 		s.logger.Debugf("request: %+v", request)
 		if err != nil {
@@ -164,15 +158,6 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				return
 			}
 
-			if request.GetCallBack() == nil {
-				err = errors.New("nil CallBack")
-				s.logger.Error(err)
-
-				s.handleError(c, response, err, request.GetErrBack())
-				s.Spider().StateRequest().Out()
-				return
-			}
-
 			go func(ctx pkg.Context, response pkg.Response) {
 				defer func() {
 					if r := recover(); r != nil {
@@ -180,17 +165,17 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
 						s.logger.Error(err)
-						s.handleError(ctx, response, err, request.GetErrBack())
+						s.handleError(ctx, response, err, request.ErrBack())
 					}
 				}()
 
 				s.Spider().StateMethod().In()
-				err = request.GetCallBack()(ctx, response)
+				err = s.Spider().CallBack(request.CallBack())(ctx, response)
 				s.Spider().StateMethod().Out()
 				s.Spider().StateRequest().Out()
 				if e != nil {
 					s.logger.Error(err)
-					s.handleError(ctx, response, err, request.GetErrBack())
+					s.handleError(ctx, response, err, request.ErrBack())
 					return
 				}
 			}(c, response)

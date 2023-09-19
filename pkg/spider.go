@@ -22,9 +22,11 @@ type Spider interface {
 	SetBrowsers(...Browser) Spider
 	GetSpider() Spider
 	SetSpider(spider Spider) Spider
-	GetCallBacks() map[string]CallBack
+	CallBacks() map[string]CallBack
+	CallBack(name string) (callback CallBack)
 	SetCallBacks(map[string]CallBack) Spider
-	GetErrBacks() map[string]ErrBack
+	ErrBacks() map[string]ErrBack
+	ErrBack(name string) (errBack ErrBack)
 	SetErrBacks(map[string]ErrBack) Spider
 	GetAllowedDomains() []string
 	ReplaceAllowedDomains([]string) error

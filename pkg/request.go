@@ -53,9 +53,9 @@ type Request interface {
 	UniqueKey() string
 	SetUniqueKey(string) Request
 	SetCallBack(CallBack) Request
-	GetCallBack() CallBack
+	CallBack() string
 	SetErrBack(ErrBack) Request
-	GetErrBack() ErrBack
+	ErrBack() string
 	Referrer() string
 	SetReferrer(string) Request
 	Username() string
@@ -153,8 +153,6 @@ type Request interface {
 	AddCookie(c *http.Cookie) Request
 }
 type RequestJson interface {
-	SetCallBacks(map[string]CallBack)
-	SetErrBacks(map[string]ErrBack)
 	ToRequest() (Request, error)
 }
 

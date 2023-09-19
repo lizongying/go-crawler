@@ -20,10 +20,8 @@ type Request struct {
 	*http.Request
 	bodyStr            string
 	uniqueKey          string
-	callBack           pkg.CallBack
-	callBackName       string
-	errBack            pkg.ErrBack
-	errBackName        string
+	callBack           string
+	errBack            string
 	referrer           string
 	username           string
 	password           string
@@ -65,22 +63,20 @@ func (r *Request) SetUniqueKey(uniqueKey string) pkg.Request {
 	r.uniqueKey = uniqueKey
 	return r
 }
-func (r *Request) SetCallBack(callback pkg.CallBack) pkg.Request {
-	r.callBack = callback
-	name := runtime.FuncForPC(reflect.ValueOf(r.GetCallBack()).Pointer()).Name()
-	r.callBackName = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
+func (r *Request) SetCallBack(callBack pkg.CallBack) pkg.Request {
+	name := runtime.FuncForPC(reflect.ValueOf(callBack).Pointer()).Name()
+	r.callBack = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
 	return r
 }
-func (r *Request) GetCallBack() pkg.CallBack {
+func (r *Request) CallBack() string {
 	return r.callBack
 }
-func (r *Request) SetErrBack(errback pkg.ErrBack) pkg.Request {
-	r.errBack = errback
-	name := runtime.FuncForPC(reflect.ValueOf(r.GetErrBack()).Pointer()).Name()
-	r.errBackName = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
+func (r *Request) SetErrBack(errBack pkg.ErrBack) pkg.Request {
+	name := runtime.FuncForPC(reflect.ValueOf(errBack).Pointer()).Name()
+	r.errBack = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
 	return r
 }
-func (r *Request) GetErrBack() pkg.ErrBack {
+func (r *Request) ErrBack() string {
 	return r.errBack
 }
 func (r *Request) Referrer() string {
@@ -554,8 +550,8 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 		BodyStr:          r.bodyStr,
 		Header:           r.Header,
 		UniqueKey:        r.uniqueKey,
-		CallBack:         r.callBackName,
-		ErrBack:          r.errBackName,
+		CallBack:         r.callBack,
+		ErrBack:          r.errBack,
 		Referrer:         r.referrer,
 		Username:         r.username,
 		Password:         r.password,
@@ -599,8 +595,6 @@ func (r *Request) Marshal() ([]byte, error) {
 }
 
 type RequestJson struct {
-	callBacks          map[string]pkg.CallBack
-	errBacks           map[string]pkg.ErrBack
 	Method             string              `json:"method,omitempty"`
 	Url                string              `json:"url,omitempty"`
 	BodyStr            string              `json:"body,omitempty"`
@@ -641,12 +635,6 @@ type RequestJson struct {
 	Ajax               bool                `json:"ajax,omitempty"`
 }
 
-func (r *RequestJson) SetCallBacks(callBacks map[string]pkg.CallBack) {
-	r.callBacks = callBacks
-}
-func (r *RequestJson) SetErrBacks(errBacks map[string]pkg.ErrBack) {
-	r.errBacks = errBacks
-}
 func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 	req, err := http.NewRequest(r.Method, r.Url, strings.NewReader(r.BodyStr))
 	if err != nil {
@@ -676,8 +664,8 @@ func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 		Request:            req,
 		bodyStr:            r.BodyStr,
 		uniqueKey:          r.UniqueKey,
-		callBack:           r.callBacks[r.CallBack],
-		errBack:            r.errBacks[r.ErrBack],
+		callBack:           r.CallBack,
+		errBack:            r.ErrBack,
 		referrer:           r.Referrer,
 		username:           r.Username,
 		password:           r.Password,
