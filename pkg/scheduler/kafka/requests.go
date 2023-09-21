@@ -31,23 +31,17 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 	if err != nil {
 		if errors.Is(err, pkg.ErrIgnoreRequest) {
 			s.logger.Info(err)
+			err = nil
 			return
 		}
 
 		s.logger.Error(err)
-		s.handleError(ctx, response, err, request.ErrBack())
+		s.HandleError(ctx, response, err, request.ErrBack())
 		return
 	}
 
 	s.logger.Debugf("request %+v", request)
-
 	return
-}
-
-func (s *Scheduler) handleError(ctx pkg.Context, response pkg.Response, err error, errBackName string) {
-	spider := s.Spider()
-	spider.ErrBack(errBackName)(ctx, response, err)
-	spider.IncRequestError()
 }
 
 func (s *Scheduler) handleRequest(ctx context.Context) {
@@ -110,14 +104,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		go func(request pkg.Request) {
 			c := pkg.Context{}
 			response, e := s.Request(c, request)
-			if errors.Is(e, pkg.ErrIgnoreRequest) {
-				s.logger.Info(err)
-				return
-			}
-
 			if e != nil {
-				err = e
-				s.logger.Error(err)
 				s.Spider().StateRequest().Out()
 				return
 			}
@@ -129,19 +116,17 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
 						s.logger.Error(err)
-						s.handleError(ctx, response, err, request.ErrBack())
+						s.HandleError(ctx, response, err, request.ErrBack())
 					}
 				}()
 
 				s.Spider().StateMethod().In()
-				err = s.Spider().CallBack(request.CallBack())(ctx, response)
+				if err = s.Spider().CallBack(request.CallBack())(ctx, response); err != nil {
+					s.logger.Error(err)
+					s.HandleError(ctx, response, err, request.ErrBack())
+				}
 				s.Spider().StateMethod().Out()
 				s.Spider().StateRequest().Out()
-				if e != nil {
-					s.logger.Error(err)
-					s.handleError(ctx, response, err, request.ErrBack())
-					return
-				}
 			}(c, response)
 		}(request)
 	}

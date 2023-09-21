@@ -45,3 +45,8 @@ func TestOk(t *testing.T) {
 func TestHtml(t *testing.T) {
 	Run(NewRouteHtml)
 }
+
+// go test -v ./pkg/mockServer/*.go -run TestHello
+func TestHello(t *testing.T) {
+	Run(NewRouteHello)
+}

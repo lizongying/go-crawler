@@ -30,6 +30,11 @@ func (m *CustomMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response)
 	return nil
 }
 
+func (m *CustomMiddleware) ProcessError(_ pkg.Context, response pkg.Response, err error) bool {
+	m.logger.Debug("response", response, "error", err)
+	return true
+}
+
 func (m *CustomMiddleware) Stop(_ context.Context) error {
 	m.logger.Debug("stop")
 	return nil

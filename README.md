@@ -52,46 +52,27 @@ distributed deployment.
 * Parsing supports CSS, XPath, Regex, and JSON.
 * Output supports JSON, CSV, MongoDB, MySQL, and Kafka.
 * Supports Chinese decoding for gb2312, gb18030, gbk, big5 character encodings.
+* Supports gzip, deflate, and brotli decompression.
 * Supports distributed processing.
 * Supports Redis and Kafka as message queues.
 * Supports automatic handling of cookies and redirects.
+* Supports BaseAuth authentication.
+* Supports request retry.
+* Supports request filtering.
+* Supports image file downloads.
+* Supports image processing.
+* Supports object storage.
+* Supports SSL fingerprint modification.
+* Supports HTTP/2.
+* Supports random request headers.
 * Browser simulation is supported.
+* Supports browser AJAX requests.
 * Mock server is supported.
 * Priority queue is supported.
 * Supports scheduled tasks, recurring tasks, and one-time tasks.
-
-
-1. Parsing:
-    - CSS: Supported
-    - XPath: Supported
-    - Regex: Supported
-    - JSON: Supported
-
-2. Output:
-    - JSON: Supported
-    - CSV: Supported
-    - MongoDB: Supported
-    - MySQL: Supported
-    - Kafka: Supported
-
-3. Chinese Decoding:
-    - gb2312: Supported
-    - gb18030: Supported
-    - gbk: Supported
-    - big5: Supported
-
-4. Distributed Processing: Supported
-
-5. Message Queues:
-    - Redis: Supported
-    - Kafka: Supported
-
-6. Automatic Handling:
-    - Cookies: Supported
-    - Redirects: Supported
-
-7. Mock Server:
-8. DNS Cache
+* Supports parsing based on field labels.
+* Supports DNS Cache.
+* Supports MITM
 
 ## Install
 
@@ -131,7 +112,7 @@ go get -u github.com/lizongying/go-crawler
 go get -u github.com/lizongying/go-crawler@latest
 
 # Latest Submission (Recommended).
-go get -u github.com/lizongying/go-crawler@4461a32
+go get -u github.com/lizongying/go-crawler@9729123
 
 ```
 
@@ -757,6 +738,7 @@ spider by calling `AddMockServerRoutes(...pkg.Route)`.
 
     * BadGatewayRoute: Simulates returning a 502 status code.
     * Big5Route: Simulates using the big5 encoding.
+    * BrotliRoute: Simulates using brotli compression.
     * CookieRoute: Simulates returning cookies.
     * DeflateRoute: Simulates using Deflate compression.
     * FileRoute: Simulates outputting files.

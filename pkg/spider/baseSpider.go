@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/filters"
+	"github.com/lizongying/go-crawler/pkg/middlewares"
 	kafka2 "github.com/lizongying/go-crawler/pkg/scheduler/kafka"
 	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
 	redis2 "github.com/lizongying/go-crawler/pkg/scheduler/redis"
@@ -34,7 +35,8 @@ type BaseSpider struct {
 	pkg.Stats
 	pkg.Signal
 	pkg.Scheduler
-	filter pkg.Filter
+	filter      pkg.Filter
+	middlewares pkg.Middlewares
 
 	name                  string
 	host                  string
@@ -221,6 +223,13 @@ func (s *BaseSpider) SetScheduler(scheduler pkg.Scheduler) pkg.Spider {
 	s.Scheduler = scheduler
 	return s
 }
+func (s *BaseSpider) GetMiddlewares() pkg.Middlewares {
+	return s.middlewares
+}
+func (s *BaseSpider) SetMiddlewares(middlewares pkg.Middlewares) pkg.Spider {
+	s.middlewares = middlewares
+	return s
+}
 func (s *BaseSpider) GetLogger() pkg.Logger {
 	return s.logger
 }
@@ -296,7 +305,7 @@ func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string,
 
 		states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
 		states.RegisterSetAndZeroFn(func() {
-			for _, v := range s.Middlewares() {
+			for _, v := range s.middlewares.Middlewares() {
 				e := v.Stop(ctx)
 				if errors.Is(e, pkg.BreakErr) {
 					s.logger.Debug("middlewares break", v.Name())
@@ -416,6 +425,8 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 		s.SetFilter(new(filters.RedisFilter).FromSpider(s))
 	default:
 	}
+
+	s.middlewares = new(middlewares.Middlewares).FromSpider(s)
 
 	switch config.GetScheduler() {
 	case pkg.SchedulerMemory:

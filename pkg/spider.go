@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"time"
 )
@@ -46,6 +45,8 @@ type Spider interface {
 	SetFilter(Filter) Spider
 	GetScheduler() Scheduler
 	SetScheduler(Scheduler) Spider
+	GetMiddlewares() Middlewares
+	SetMiddlewares(Middlewares) Spider
 	Start(ctx context.Context, taskId string, startFunc string, args string) error
 	Stop(ctx context.Context) error
 	FromCrawler(Crawler) Spider
@@ -139,102 +140,102 @@ func WithExporter(exporter Exporter) SpiderOption {
 }
 func WithMiddleware(middleware Middleware, order uint8) SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().SetMiddleware(middleware, order)
+		spider.GetMiddlewares().SetMiddleware(middleware, order)
 	}
 }
 func WithStatsMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithStatsMiddleware()
+		spider.GetMiddlewares().WithStatsMiddleware()
 	}
 }
 func WithDumpMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithDumpMiddleware()
+		spider.GetMiddlewares().WithDumpMiddleware()
 	}
 }
 func WithProxyMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithProxyMiddleware()
+		spider.GetMiddlewares().WithProxyMiddleware()
 	}
 }
 func WithRobotsTxtMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithRobotsTxtMiddleware()
+		spider.GetMiddlewares().WithRobotsTxtMiddleware()
 	}
 }
 func WithFilterMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithFilterMiddleware()
+		spider.GetMiddlewares().WithFilterMiddleware()
 	}
 }
 func WithFileMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithFileMiddleware()
+		spider.GetMiddlewares().WithFileMiddleware()
 	}
 }
 func WithImageMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithImageMiddleware()
+		spider.GetMiddlewares().WithImageMiddleware()
 	}
 }
 func WithHttpMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithHttpMiddleware()
+		spider.GetMiddlewares().WithHttpMiddleware()
 	}
 }
 func WithRetryMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithRetryMiddleware()
+		spider.GetMiddlewares().WithRetryMiddleware()
 	}
 }
 func WithUrlMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithUrlMiddleware()
+		spider.GetMiddlewares().WithUrlMiddleware()
 	}
 }
 func WithReferrerMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithReferrerMiddleware()
+		spider.GetMiddlewares().WithReferrerMiddleware()
 	}
 }
 func WithCookieMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithCookieMiddleware()
+		spider.GetMiddlewares().WithCookieMiddleware()
 	}
 }
 func WithRedirectMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithRedirectMiddleware()
+		spider.GetMiddlewares().WithRedirectMiddleware()
 	}
 }
 func WithChromeMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithChromeMiddleware()
+		spider.GetMiddlewares().WithChromeMiddleware()
 	}
 }
 func WithHttpAuthMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithHttpAuthMiddleware()
+		spider.GetMiddlewares().WithHttpAuthMiddleware()
 	}
 }
 func WithCompressMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithCompressMiddleware()
+		spider.GetMiddlewares().WithCompressMiddleware()
 	}
 }
 func WithDecodeMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithDecodeMiddleware()
+		spider.GetMiddlewares().WithDecodeMiddleware()
 	}
 }
 func WithDeviceMiddleware() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithDeviceMiddleware()
+		spider.GetMiddlewares().WithDeviceMiddleware()
 	}
 }
 func WithCustomMiddleware(middleware Middleware) SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetDownloader().WithCustomMiddleware(middleware)
+		spider.GetMiddlewares().WithCustomMiddleware(middleware)
 	}
 }
 func WithPipeline(pipeline Pipeline, order uint8) SpiderOption {
@@ -269,7 +270,6 @@ func WithCsvPipeline() SpiderOption {
 }
 func WithJsonLinesPipeline() SpiderOption {
 	return func(spider Spider) {
-		fmt.Println(11111111, spider.GetScheduler())
 		spider.GetScheduler().GetExporter().WithJsonLinesPipeline()
 	}
 }

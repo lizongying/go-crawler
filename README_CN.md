@@ -50,14 +50,27 @@
 * 解析支持CSS、XPath、Regex、Json
 * 支持Json、Csv、Mongo、Mysql、Kafka输出
 * 支持gb2312、gb18030、gbk、big5中文解码
+* 支持gzip、deflate、brotli解压缩
 * 支持分布式
 * 支持Redis、Kafka作为消息队列
 * 支持自动Cookie、重定向
+* 支持BaseAuth认证
+* 支持请求重试
+* 支持请求过滤
+* 支持图片文件下载
+* 支持图片处理
+* 支持对象存储
+* 支持ssl指纹修改
+* 支持http2
+* 支持随机请求头
 * 支持模拟浏览器
+* 支持浏览器ajax请求
 * 支持模拟服务
 * 支持优先级队列
 * 支持定时任务、循环任务、单次任务
+* 支持基于字段标签的解析
 * 支持dns缓存
+* 支持中间人代理
 
 ## 安装
 
@@ -95,7 +108,7 @@ go get -u github.com/lizongying/go-crawler
 go get -u github.com/lizongying/go-crawler@latest
 
 # 最新提交（推荐）
-go get -u github.com/lizongying/go-crawler@4461a32
+go get -u github.com/lizongying/go-crawler@9729123
 
 ```
 
@@ -572,6 +585,7 @@ _ = request.Trace()
   您可以根据需要选择合适的route，并将其配置到mockServer中，以模拟特定的网络响应和行为。
     * BadGatewayRoute 模拟返回502状态码
     * Big5Route 模拟使用big5编码
+    * BrotliRoute 模拟使用brotli压缩
     * CookieRoute 模拟返回cookie
     * DeflateRoute 模拟使用Deflate压缩
     * FileRoute 模拟输出文件

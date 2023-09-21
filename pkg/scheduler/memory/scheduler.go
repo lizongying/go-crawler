@@ -41,7 +41,6 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 		ctx = context.Background()
 	}
 
-	s.logger.Info("middlewares", s.MiddlewareNames())
 	s.logger.Info("pipelines", s.PipelineNames())
 
 	for _, v := range s.Pipelines() {
@@ -51,12 +50,12 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 			break
 		}
 	}
-	for _, v := range s.Middlewares() {
-		e := v.Start(ctx, s.Spider())
-		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("middlewares break", v.Name())
-			break
+	for _, v := range s.GetMiddlewares() {
+		if err = v.Start(ctx, s.Spider()); err != nil {
+			s.logger.Error(err)
+			return
 		}
+		s.logger.Info("middleware", v.Name(), "started")
 	}
 
 	s.itemTimer = time.NewTimer(s.GetItemDelay())
@@ -106,6 +105,7 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 
 	s.SetDownloader(new(downloader.Downloader).FromSpider(spider))
 	s.SetExporter(new(exporter.Exporter).FromSpider(spider))
+	s.SetMiddlewares(spider.GetMiddlewares().Middlewares())
 	s.crawler = crawler
 	s.logger = crawler.GetLogger()
 
