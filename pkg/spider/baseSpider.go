@@ -381,6 +381,10 @@ func (s *BaseSpider) Parse(_ pkg.Context, response pkg.Response) (err error) {
 	return
 }
 func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
+	if response.GetResponse() == nil {
+		s.logger.Error("response nil")
+		return
+	}
 	s.logger.Info("header", response.Headers())
 	s.logger.Info("body", response.BodyStr())
 	s.logger.Info("error", err)

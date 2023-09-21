@@ -54,11 +54,11 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 		}
 	}
 	for _, v := range s.GetMiddlewares() {
-		e := v.Start(ctx, s.Spider())
-		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("middlewares break", v.Name())
-			break
+		if err = v.Start(ctx, s.Spider()); err != nil {
+			s.logger.Error(err)
+			return
 		}
+		s.logger.Info(v.Name(), "started")
 	}
 
 	s.itemTimer = time.NewTimer(s.GetItemDelay())

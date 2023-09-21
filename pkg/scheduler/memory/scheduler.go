@@ -55,7 +55,7 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 			s.logger.Error(err)
 			return
 		}
-		s.logger.Info("middleware", v.Name(), "started")
+		s.logger.Info(v.Name(), "started")
 	}
 
 	s.itemTimer = time.NewTimer(s.GetItemDelay())
