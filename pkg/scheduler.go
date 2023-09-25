@@ -58,7 +58,6 @@ type UnimplementedScheduler struct {
 
 	Downloader
 	Exporter
-	middlewares []Middleware
 
 	spider Spider
 }
@@ -80,12 +79,6 @@ func (s *UnimplementedScheduler) GetExporter() Exporter {
 }
 func (s *UnimplementedScheduler) SetExporter(exporter Exporter) {
 	s.Exporter = exporter
-}
-func (s *UnimplementedScheduler) GetMiddlewares() []Middleware {
-	return s.middlewares
-}
-func (s *UnimplementedScheduler) SetMiddlewares(middlewares []Middleware) {
-	s.middlewares = middlewares
 }
 func (s *UnimplementedScheduler) GetItemDelay() time.Duration {
 	return s.itemDelay
@@ -180,13 +173,14 @@ func (s *UnimplementedScheduler) HandleError(ctx Context, response Response, err
 	spider := s.Spider()
 
 	processed := false
-	for _, v := range s.middlewares {
+	for _, v := range s.Spider().GetMiddlewares().Middlewares() {
 		next := v.ProcessError(ctx, response, err)
 		if !next {
 			break
 		}
 		processed = true
 	}
+
 	if processed {
 		s.logger.Debug("error processed")
 	}

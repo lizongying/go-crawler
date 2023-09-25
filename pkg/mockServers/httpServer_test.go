@@ -31,22 +31,29 @@ func Run(routeFn func(pkg.Logger) pkg.Route) {
 	).Run()
 }
 
-// go test -v ./pkg/mockServer/*.go -run TestNewRouteRobotsTxt
+// go test -v ./pkg/mockServers/*.go -run TestNewRouteRobotsTxt
 func TestNewRouteRobotsTxt(t *testing.T) {
 	Run(NewRouteRobotsTxt)
 }
 
-// go test -v ./pkg/mockServer/*.go -run TestOk
+// go test -v ./pkg/mockServers/*.go -run TestOk
 func TestOk(t *testing.T) {
 	Run(NewRouteOk)
 }
 
-// go test -v ./pkg/mockServer/*.go -run TestHtml
+// go test -v ./pkg/mockServers/*.go -run TestHtml
 func TestHtml(t *testing.T) {
 	Run(NewRouteHtml)
 }
 
-// go test -v ./pkg/mockServer/*.go -run TestHello
+// go test -v ./pkg/mockServers/*.go -run TestHello
 func TestHello(t *testing.T) {
 	Run(NewRouteHello)
+}
+
+// go test -v ./pkg/mockServers/*.go -run TestBadGateway
+// curl https://localhost:8081/bad-gateway -k
+// curl https://localhost:8081/bad-gateway --cacert static/tls/ca.crt
+func TestBadGateway(t *testing.T) {
+	Run(NewRouteBadGateway)
 }

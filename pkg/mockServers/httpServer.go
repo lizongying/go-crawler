@@ -3,6 +3,7 @@ package mockServers
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
@@ -108,7 +109,7 @@ func (h *HttpServer) Run() (err error) {
 	}
 	go func() {
 		if h.url.Scheme == "https" {
-			cer, e := tls.X509KeyPair(static.Cert, static.Key)
+			cer, e := tls.X509KeyPair(static.ServerCert, static.ServerKey)
 			if e != nil {
 				err = e
 				h.logger.Error(err)
@@ -127,9 +128,15 @@ func (h *HttpServer) Run() (err error) {
 					return nil
 				},
 			}
+
+			caCertPool := x509.NewCertPool()
+			caCertPool.AppendCertsFromPEM(static.CaCert)
+			conf.ClientCAs = caCertPool
+			//conf.ClientAuth = tls.RequireAndVerifyClientCert
 			if h.clientAuth != 0 {
 				conf.ClientAuth = tls.ClientAuthType(h.clientAuth)
 			}
+
 			tlsListener := tls.NewListener(listener, conf)
 			err = h.srv.Serve(tlsListener)
 		} else {

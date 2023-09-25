@@ -36,6 +36,7 @@ type Config interface {
 	GetEnableCompressMiddleware() bool
 	GetEnableDecodeMiddleware() bool
 	GetEnableDeviceMiddleware() bool
+	GetEnableRecordErrorMiddleware() bool
 
 	GetEnableDumpPipeline() bool
 	GetEnableFilePipeline() bool

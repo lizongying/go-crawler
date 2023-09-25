@@ -127,6 +127,9 @@ func (m *Middlewares) WithHttpMiddleware() {
 func (m *Middlewares) WithStatsMiddleware() {
 	m.SetMiddleware(new(StatsMiddleware), 210)
 }
+func (m *Middlewares) WithRecordErrorMiddleware() {
+	m.SetMiddleware(new(RecordErrorMiddleware), 220)
+}
 func (m *Middlewares) FromSpider(spider pkg.Spider) pkg.Middlewares {
 	if m == nil {
 		return new(Middlewares).FromSpider(spider)
@@ -191,6 +194,9 @@ func (m *Middlewares) FromSpider(spider pkg.Spider) pkg.Middlewares {
 	}
 	if config.GetEnableStatsMiddleware() {
 		m.WithStatsMiddleware()
+	}
+	if config.GetEnableRecordErrorMiddleware() {
+		m.WithRecordErrorMiddleware()
 	}
 	return m
 }

@@ -65,7 +65,7 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 			break
 		}
 	}
-	for _, v := range s.GetMiddlewares() {
+	for _, v := range s.Spider().GetMiddlewares().Middlewares() {
 		if err = v.Start(ctx, s.Spider()); err != nil {
 			s.logger.Error(err)
 			return
@@ -158,7 +158,6 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 
 	s.SetDownloader(new(downloader.Downloader).FromSpider(spider))
 	s.SetExporter(new(exporter.Exporter).FromSpider(spider))
-	s.SetMiddlewares(spider.GetMiddlewares().Middlewares())
 	s.crawler = crawler
 	s.logger = crawler.GetLogger()
 	s.redis = crawler.GetRedis()

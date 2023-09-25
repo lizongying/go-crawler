@@ -103,7 +103,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	if err != nil {
 		defaultCAs = x509.NewCertPool()
 	}
-	defaultCAs.AppendCertsFromPEM(static.Cert)
+	defaultCAs.AppendCertsFromPEM(static.CaCert)
 
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,

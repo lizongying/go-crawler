@@ -71,6 +71,7 @@
 * 支持基于字段标签的解析
 * 支持dns缓存
 * 支持中间人代理
+* 支持错误记录
 
 ## 安装
 
@@ -108,7 +109,7 @@ go get -u github.com/lizongying/go-crawler
 go get -u github.com/lizongying/go-crawler@latest
 
 # 最新提交（推荐）
-go get -u github.com/lizongying/go-crawler@9729123
+go get -u github.com/lizongying/go-crawler@be9b722
 
 ```
 
@@ -195,6 +196,7 @@ Spider选项
 * `WithDecodeMiddleware` 设置解码中间件，用于处理请求和响应的解码操作。该中间件可以处理请求或响应中的编码内容。
 * `WithDeviceMiddleware` 设置开启设备模拟中间件。
 * `WithCustomMiddleware` 设置自定义中间件，允许用户定义自己的中间件组件。
+* `WithRecordErrorMiddleware` 设置错误记录中间件，请求和解析如果出错会被记录。
 * `WithPipeline` 设置Pipeline，用于处理爬取的数据并进行后续操作。
 * `WithDumpPipeline` 设置打印管道，用于打印待保存的数据。
 * `WithFilePipeline` 设置文件管道，用于处理爬取的文件数据，将文件保存到指定位置。
@@ -213,7 +215,7 @@ Spider选项
 
 crawler选项
 
-* WithMockServerRoute 设置模拟服务Route，包括内置或自定义的。需要配置`mock_server.enable: true`
+* WithMockServerRoutes 设置模拟服务Route，包括内置或自定义的。不需要配置`mock_server.enable: true`
 
 ### 存储
 
@@ -292,146 +294,150 @@ middleware/pipeline包括框架内置、公共自定义（internal/middlewares�
 当您自定义中间件时，请选择避开内置中间件的order值。
 根据中间件的功能和需求，按照预期的执行顺序进行配置。确保较低order值的中间件先执行，然后依次执行较高order值的中间件。
 内置的中间件和自定义中间件使用默认的order值即可。
-如果需要改变默认的order值，需要在NewApp中加入crawler选项`pkg.WithMiddleware(new(middleware), order)`启用该中间件并应用该order值。
+如果需要改变默认的order值，需要`spider.WithOptions(pkg.WithMiddleware(new(middleware), order)`启用该中间件并应用该order值。
 
 * custom: 10
-* 自定义中间件
-* 在NewApp中加入crawler选项`pkg.WithCustomMiddleware(new(CustomMiddleware))`启用该中间件。
+    * 自定义中间件
+    * `spider.WithOptions(pkg.WithCustomMiddleware(new(CustomMiddleware))`
 * dump: 20
-* 控制台打印item.data中间件，用于打印请求和响应的详细信息。
-* 可以通过配置项enable_dump_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithDumpMiddleware()`
+    * 控制台打印item.data中间件，用于打印请求和响应的详细信息。
+    * 可以通过配置项enable_dump_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithDumpMiddleware()`
 * proxy: 30
-* 用于切换请求使用的代理。
-* 可以通过配置项enable_proxy_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithProxyMiddleware()`
+    * 用于切换请求使用的代理。
+    * 可以通过配置项enable_proxy_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithProxyMiddleware()`
 * robotsTxt: 40
-* robots.txt支持中间件，用于支持爬取网站的robots.txt文件。
-* 可以通过配置项enable_robots_txt_middleware来启用或禁用，默认禁用。
-* 在NewApp中加入crawler选项`pkg.WithRobotsTxtMiddleware()`
+    * robots.txt支持中间件，用于支持爬取网站的robots.txt文件。
+    * 可以通过配置项enable_robots_txt_middleware来启用或禁用，默认禁用。
+    * `spider.WithOptions(pkg.WithRobotsTxtMiddleware()`
 * filter: 50
-* 过滤重复请求中间件，用于过滤重复的请求。默认只有在Item保存成功后才会进入去重队列。
-* 可以通过配置项enable_filter_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithFilterMiddleware()`
+    * 过滤重复请求中间件，用于过滤重复的请求。默认只有在Item保存成功后才会进入去重队列。
+    * 可以通过配置项enable_filter_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithFilterMiddleware()`
 * file: 60
-* 自动添加文件信息中间件，用于自动添加文件信息到请求中。
-* 可以通过配置项enable_file_middleware来启用或禁用，默认禁用。
-* 在NewApp中加入crawler选项`pkg.WithFileMiddleware()`
+    * 自动添加文件信息中间件，用于自动添加文件信息到请求中。
+    * 可以通过配置项enable_file_middleware来启用或禁用，默认禁用。
+    * `spider.WithOptions(pkg.WithFileMiddleware()`
 * image: 70
-* 自动添加图片的宽高等信息中间件
-* 用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。
-* 在NewApp中加入crawler选项`pkg.WithImageMiddleware()`
+    * 自动添加图片的宽高等信息中间件
+    * 用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。
+    * `spider.WithOptions(pkg.WithImageMiddleware()`
 * retry: 80
-* 请求重试中间件，用于在请求失败时进行重试。
-* 默认最大重试次数为10。可以通过配置项enable_retry_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithRetryMiddleware()`
+    * 请求重试中间件，用于在请求失败时进行重试。
+    * 默认最大重试次数为10。可以通过配置项enable_retry_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithRetryMiddleware()`
 * url: 90
-* 限制URL长度中间件，用于限制请求的URL长度。
-* 可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。
-* 在NewApp中加入crawler选项`pkg.WithUrlMiddleware()`
+    * 限制URL长度中间件，用于限制请求的URL长度。
+    * 可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。
+    * `spider.WithOptions(pkg.WithUrlMiddleware()`
 * referrer: 100
-* 自动添加Referrer中间件，用于自动添加Referrer到请求中。
-* 可以根据referrer_policy配置项选择不同的Referrer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源
-* 配置 enable_referrer_middleware: true 是否开启自动添加referrer，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithReferrerMiddleware()`
+    * 自动添加Referrer中间件，用于自动添加Referrer到请求中。
+    * 可以根据referrer_policy配置项选择不同的Referrer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源
+    * 配置 enable_referrer_middleware: true 是否开启自动添加referrer，默认启用。
+    * `spider.WithOptions(pkg.WithReferrerMiddleware()`
 * cookie: 110
-* 自动添加Cookie中间件，用于自动添加之前请求返回的Cookie到后续请求中。
-* 可以通过配置项enable_cookie_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithCookieMiddleware()`
+    * 自动添加Cookie中间件，用于自动添加之前请求返回的Cookie到后续请求中。
+    * 可以通过配置项enable_cookie_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithCookieMiddleware()`
 * redirect: 120
-* 网址重定向中间件，用于处理网址重定向，默认支持301和302重定向。
-* 可以通过配置项enable_redirect_middleware和redirect_max_times来启用和设置最大重定向次数，默认启用和最大次数为1。
-* 在NewApp中加入crawler选项`pkg.WithRedirectMiddleware()`
+    * 网址重定向中间件，用于处理网址重定向，默认支持301和302重定向。
+    * 可以通过配置项enable_redirect_middleware和redirect_max_times来启用和设置最大重定向次数，默认启用和最大次数为1。
+    * `spider.WithOptions(pkg.WithRedirectMiddleware()`
 * chrome: 130
-* 模拟Chrome中间件，用于模拟Chrome浏览器。
-* 可以通过配置项enable_chrome_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithChromeMiddleware()`
+    * 模拟Chrome中间件，用于模拟Chrome浏览器。
+    * 可以通过配置项enable_chrome_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithChromeMiddleware()`
 * httpAuth: 140
-* HTTP认证中间件，通过提供用户名（username）和密码（password）进行HTTP认证。
-* 需要在具体的请求中设置用户名和密码。可以通过配置项enable_http_auth_middleware来启用或禁用，默认禁用。
-* 在NewApp中加入crawler选项`pkg.WithHttpAuthMiddleware()`
+    * HTTP认证中间件，通过提供用户名（username）和密码（password）进行HTTP认证。
+    * 需要在具体的请求中设置用户名和密码。可以通过配置项enable_http_auth_middleware来启用或禁用，默认禁用。
+    * `spider.WithOptions(pkg.WithHttpAuthMiddleware()`
 * compress: 150
-* 支持gzip/deflate解压缩中间件，用于处理响应的压缩编码。
-* 可以通过配置项enable_compress_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithCompressMiddleware()`
+    * 支持gzip/deflate/br解压缩中间件，用于处理响应的压缩编码。
+    * 可以通过配置项enable_compress_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithCompressMiddleware()`
 * decode: 160
-* 中文解码中间件，支持对响应中的GBK、GB2312和Big5编码进行解码。
-* 可以通过配置项enable_decode_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithDecodeMiddleware()`
+    * 中文解码中间件，支持对响应中的GBK、GB2312、GB18030和Big5编码进行解码。
+    * 可以通过配置项enable_decode_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithDecodeMiddleware()`
 * device: 170
-* 修改请求设备信息中间件，用于修改请求的设备信息，包括请求头（header）和TLS信息。目前只支持User-Agent随机切换。
-* 需要设置设备范围（Platforms）和浏览器范围（Browsers）。
-* Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
-* Browsers: Chrome/Edge/Safari/FireFox
-* 可以通过配置项enable_device_middleware来启用或禁用，默认禁用。
-* 在NewApp中加入crawler选项`pkg.WithDeviceMiddleware()`启用该中间件。
+    * 修改请求设备信息中间件，用于修改请求的设备信息，包括请求头（header）和TLS信息。目前只支持User-Agent随机切换。
+    * 需要设置设备范围（Platforms）和浏览器范围（Browsers）。
+    * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
+    * Browsers: Chrome/Edge/Safari/FireFox
+    * 可以通过配置项enable_device_middleware来启用或禁用，默认禁用。
+    * `spider.WithOptions(pkg.WithDeviceMiddleware()`
 * http: 200
-* 创建请求中间件，用于创建HTTP请求。
-* 可以通过配置项enable_http_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithHttpMiddleware()`
+    * 创建请求中间件，用于创建HTTP请求。
+    * 可以通过配置项enable_http_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithHttpMiddleware()`
 * stats: 210
-* 数据统计中间件，用于统计爬虫的请求、响应和处理情况。
-* 可以通过配置项enable_stats_middleware来启用或禁用，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithStatsMiddleware()`
+    * 数据统计中间件，用于统计爬虫的请求、响应和处理情况。
+    * 可以通过配置项enable_stats_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithStatsMiddleware()`
+* recordError: 220
+    * 错误记录中间件，用于记录请求，以及请求和解析中出现的错误。
+    * 可以通过配置项enable_record_error_middleware来启用或禁用，默认禁用。
+    * `spider.WithOptions(pkg.WithRecordErrorMiddleware())`
 
 ### 数据管道
 
 用于流式处理Item，如数据过滤、数据存储等。
 通过配置不同的Pipeline，您可以方便地处理Item并将结果保存到不同的目标，如控制台、文件、数据库或消息队列中。
 内置的Pipeline和自定义Pipeline使用默认的order值即可。
-如果需要改变默认的order值，需要在NewApp中加入crawler选项`pkg.WithPipeline(new(pipeline), order)`启用该Pipeline并应用该order值。
+如果需要改变默认的order值，需要`spider.WithOptions(pkg.WithPipeline(new(pipeline), order)`启用该Pipeline并应用该order值。
 
 * dump: 10
-* 用于在控制台打印Item的详细信息。
-* 您可以通过配置enable_dump_pipeline来控制是否启用该Pipeline，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithDumpPipeline()`启用该Pipeline。
+    * 用于在控制台打印Item的详细信息。
+    * 您可以通过配置enable_dump_pipeline来控制是否启用该Pipeline，默认启用。
+    * `spider.WithOptions(pkg.WithDumpPipeline()`
 * file: 20
-* 用于下载文件并保存到Item中。
-* 您可以通过配置enable_file_pipeline来控制是否启用该Pipeline，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithFilePipeline()`启用该Pipeline。
+    * 用于下载文件并保存到Item中。
+    * 您可以通过配置enable_file_pipeline来控制是否启用该Pipeline，默认启用。
+    * `spider.WithOptions(pkg.WithFilePipeline()`
 * image: 30
-* 用于下载图片并保存到Item中。
-* 您可以通过配置enable_image_pipeline来控制是否启用该Pipeline，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithImagePipeline()`启用该Pipeline。
+    * 用于下载图片并保存到Item中。
+    * 您可以通过配置enable_image_pipeline来控制是否启用该Pipeline，默认启用。
+    * `spider.WithOptions(pkg.WithImagePipeline()`
 * filter: 200
-* 用于对Item进行过滤。
-* 它可用于去重请求，需要在中间件同时启用filter。
-* 默认情况下，Item只有在成功保存后才会进入去重队列。
-* 您可以通过配置enable_filter_pipeline来控制是否启用该Pipeline，默认启用。
-* 在NewApp中加入crawler选项`pkg.WithFilterPipeline()`启用该Pipeline。
+    * 用于对Item进行过滤。
+    * 它可用于去重请求，需要在中间件同时启用filter。
+    * 默认情况下，Item只有在成功保存后才会进入去重队列。
+    * 您可以通过配置enable_filter_pipeline来控制是否启用该Pipeline，默认启用。
+    * `spider.WithOptions(pkg.WithFilterPipeline()`
 * csv: 101
-* 用于将结果保存到CSV文件中。
-* 需要在ItemCsv中设置`FileName`，指定保存的文件名称（不包含.csv扩展名）。
-* 您可以使用tag `column:""`来定义CSV文件的列名。
-* 您可以通过配置enable_csv_pipeline来控制是否启用该Pipeline，默认关闭。
-* 在NewApp中加入crawler选项`pkg.WithCsvPipeline()`启用该Pipeline。
+    * 用于将结果保存到CSV文件中。
+    * 需要在ItemCsv中设置`FileName`，指定保存的文件名称（不包含.csv扩展名）。
+    * 您可以使用tag `column:""`来定义CSV文件的列名。
+    * 您可以通过配置enable_csv_pipeline来控制是否启用该Pipeline，默认关闭。
+    * `spider.WithOptions(pkg.WithCsvPipeline()`
 * jsonLines: 102
-* 用于将结果保存到JSON Lines文件中。
-* 需要在ItemJsonl中设置`FileName`，指定保存的文件名称（不包含.jsonl扩展名）。
-* 您可以使用tag `json:""`来定义JSON Lines文件的字段。
-* 您可以通过配置enable_json_lines_pipeline来控制是否启用该Pipeline，默认关闭。
-* 在NewApp中加入crawler选项`pkg.WithJsonLinesPipeline()`启用该Pipeline。
+    * 用于将结果保存到JSON Lines文件中。
+    * 需要在ItemJsonl中设置`FileName`，指定保存的文件名称（不包含.jsonl扩展名）。
+    * 您可以使用tag `json:""`来定义JSON Lines文件的字段。
+    * 您可以通过配置enable_json_lines_pipeline来控制是否启用该Pipeline，默认关闭。
+    * `spider.WithOptions(pkg.WithJsonLinesPipeline()`
 * mongo: 103
-* 用于将结果保存到MongoDB中。
-* 需要在ItemMongo中设置`Collection`，指定保存的collection名称。
-* 您可以使用tag `bson:""`来定义MongoDB文档的字段。
-* 您可以通过配置enable_mongo_pipeline来控制是否启用该Pipeline，默认关闭。
-* 在NewApp中加入crawler选项`pkg.WithMongoPipeline()`启用该Pipeline。
+    * 用于将结果保存到MongoDB中。
+    * 需要在ItemMongo中设置`Collection`，指定保存的collection名称。
+    * 您可以使用tag `bson:""`来定义MongoDB文档的字段。
+    * 您可以通过配置enable_mongo_pipeline来控制是否启用该Pipeline，默认关闭。
+    * `spider.WithOptions(pkg.WithMongoPipeline()`
 * mysql: 104
-* 用于将结果保存到MySQL中。
-* 需要在ItemMysql中设置`Table`，指定保存的表名。
-* 您可以使用tag `column:""`来定义MySQL表的列名。
-* 您可以通过配置enable_mysql_pipeline来控制是否启用该Pipeline，默认关闭。
-* 在NewApp中加入crawler选项`pkg.WithMysqlPipeline()`启用该Pipeline。
+    * 用于将结果保存到MySQL中。
+    * 需要在ItemMysql中设置`Table`，指定保存的表名。
+    * 您可以使用tag `column:""`来定义MySQL表的列名。
+    * 您可以通过配置enable_mysql_pipeline来控制是否启用该Pipeline，默认关闭。
+    * `spider.WithOptions(pkg.WithMysqlPipeline()`
 * kafka: 105
-* 用于将结果保存到Kafka中。
-* 需要在ItemKafka中设置`Topic`，指定保存的主题名。
-* 您可以使用tag `json:""`来定义Kafka消息的字段。
-* 您可以通过配置enable_kafka_pipeline来控制是否启用该Pipeline，默认关闭。
-* 在NewApp中加入crawler选项`pkg.WithKafkaPipeline()`启用该Pipeline。
+    * 用于将结果保存到Kafka中。
+    * 需要在ItemKafka中设置`Topic`，指定保存的主题名。
+    * 您可以使用tag `json:""`来定义Kafka消息的字段。
+    * 您可以通过配置enable_kafka_pipeline来控制是否启用该Pipeline，默认关闭。
+    * `spider.WithOptions(pkg.WithKafkaPipeline()`
 * custom: 110
-* 自定义pipeline
-* 在NewApp中加入crawler选项`pkg.WithCustomPipeline(new(CustomPipeline))`启用该Pipeline。
+    * 自定义pipeline
+    * `spider.WithOptions(pkg.WithCustomPipeline(new(CustomPipeline))`
 
 ### 请求
 
@@ -697,6 +703,7 @@ spider -c example.yml -n example -f TestOk -m once
 * `enable_device_middleware:` 是否开启设备模拟中间件，默认关闭。
 * `enable_proxy_middleware:` 是否开启代理中间件，默认启用。
 * `enable_robots_txt_middleware:` 是否开启robots.txt支持中间件，默认关闭。
+* `enable_record_error_middleware:` 是否开启record_error支持中间件，默认关闭。
 * `enable_dump_pipeline:` 是否开启打印Item Pipeline，默认启用。
 * `enable_file_pipeline:` 是否开启文件下载Pipeline，默认启用。
 * `enable_image_pipeline:` 是否开启图片下载Pipeline，默认启用。
@@ -925,7 +932,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mockServer.NewRouteOk))
 }
 
 ```
@@ -1001,7 +1008,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mockServer.NewRouteOk))
 }
 
 ```
@@ -1054,6 +1061,7 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * panic stop
 * extra速率限制
 * 没请求完，ctx退出
+* request with ctx
 
 ```shell
 go get -u github.com/lizongying/go-css@latest

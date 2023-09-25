@@ -24,5 +24,6 @@ type Middlewares interface {
 	WithCompressMiddleware()
 	WithDecodeMiddleware()
 	WithDeviceMiddleware()
+	WithRecordErrorMiddleware()
 	WithCustomMiddleware(Middleware)
 }

@@ -73,6 +73,7 @@ distributed deployment.
 * Supports parsing based on field labels.
 * Supports DNS Cache.
 * Supports MITM
+* Supports error logging
 
 ## Install
 
@@ -112,7 +113,7 @@ go get -u github.com/lizongying/go-crawler
 go get -u github.com/lizongying/go-crawler@latest
 
 # Latest Submission (Recommended).
-go get -u github.com/lizongying/go-crawler@9729123
+go get -u github.com/lizongying/go-crawler@be9b722
 
 ```
 
@@ -208,6 +209,7 @@ Spider Options
   middleware can handle encoding content in requests or responses.
 * `WithDeviceMiddleware`: Enable the device simulation middleware.
 * `WithCustomMiddleware`: Set the custom middleware, allowing users to define their own middleware components.
+* `WithRecordErrorMiddleware` Set up error logging middleware, request and parsing will be logged if there is an error
 * `WithPipeline`: Set the Pipeline to process the crawled data and perform subsequent operations.
 * `WithDumpPipeline`: Set the dump pipeline to print data to be saved.
 * `WithFilePipeline`: Set the file pipeline to handle crawled file data and save files to a specified location.
@@ -226,7 +228,7 @@ Spider Options
 
 Crawler Options
 
-* `WithMockServerRoute` Configure development service routes, including built-in or custom ones. You need to
+* `WithMockServerRoutes` Configure development service routes, including built-in or custom ones. You don't need to
   set `mock_server.enable: true` to enable the mock Server.
 
 ### Item
@@ -314,166 +316,133 @@ requirements.Make sure that middleware with lower `order` values is executed fir
 higher `order` values.
 
 Built-in middleware and custom middleware can use the default `order` values.If you need to change the
-default `order` value, include the `pkg.WithMiddleware(new(middleware), order)` option in the `NewApp` function to
+default `order` value, `spider.WithOptions(pkg.WithMiddleware(new(middleware), order)` to
 enable the middleware with the specified `order` value.
 
 The following are the built-in middleware with their respective `order` values:
 
 * custom: 10
-
-- Custom middleware.
-- To enable this middleware, include the `pkg.WithCustomMiddleware(new(CustomMiddleware))` option in
-  the `NewApp` function.
-
+    * Custom middleware.
+    * `spider.WithOptions(pkg.WithCustomMiddleware(new(CustomMiddleware))`
 * dump: 20
-
-- Console dump middleware used for printing detailed information of item.data, including request and response
-  details.
-- You can control whether to enable this middleware by configuring the `enable_dump_middleware` option, which is
-  enabled by default.
-- To enable this middleware, include the `pkg.WithDumpMiddleware()` option in the `NewApp` function.
-
+    * Console dump middleware used for printing detailed information of item.data, including request and response
+      details.
+    * You can control whether to enable this middleware by configuring the `enable_dump_middleware` option, which is
+      enabled by default.
+    * `spider.WithOptions(pkg.WithDumpMiddleware()`
 * proxy: 30
-
-- Proxy switch middleware used for switching proxies for requests.
-- You can control whether to enable this middleware by configuring the `enable_proxy_middleware` option, which
-  is enabled by default.
-- To enable this middleware, include the `pkg.WithProxyMiddleware()` option in the `NewApp` function.
-
+    * Proxy switch middleware used for switching proxies for requests.
+    * You can control whether to enable this middleware by configuring the `enable_proxy_middleware` option, which
+      is enabled by default.
+    * `spider.WithOptions(pkg.WithProxyMiddleware()`
 * robotsTxt: 40
-
-- Robots.txt support middleware for handling robots.txt files of websites.
-- You can control whether to enable this middleware by configuring the `enable_robots_txt_middleware` option,
-  which is disabled by default.
-- To enable this middleware, include the `pkg.WithRobotsTxtMiddleware()` option in the `NewApp` function.
-
+    * Robots.txt support middleware for handling robots.txt files of websites.
+    * You can control whether to enable this middleware by configuring the `enable_robots_txt_middleware` option,
+      which is disabled by default.
+    * `spider.WithOptions(pkg.WithRobotsTxtMiddleware()`
 * filter: 50
-
-- Request deduplication middleware used for filtering duplicate requests.By default, items are added to the
-  deduplication queue only after being successfully saved.
-- You can control whether to enable this middleware by configuring the `enable_filter_middleware` option, which
-  is enabled by default.
-- To enable this middleware, include the `pkg.WithFilterMiddleware()` option in the `NewApp` function.
-
+    * Request deduplication middleware used for filtering duplicate requests.By default, items are added to the
+      deduplication queue only after being successfully saved.
+    * You can control whether to enable this middleware by configuring the `enable_filter_middleware` option, which
+      is enabled by default.
+    * `spider.WithOptions(pkg.WithFilterMiddleware()`
 * file: 60
-
-- Automatic file information addition middleware used for automatically adding file information to requests.
-- You can control whether to enable this middleware by configuring the `enable_file_middleware` option, which is
-  disabled by default.
-- To enable this middleware, include the `pkg.WithFileMiddleware()` option in the `NewApp` function.
-
+    * Automatic file information addition middleware used for automatically adding file information to requests.
+    * You can control whether to enable this middleware by configuring the `enable_file_middleware` option, which is
+      disabled by default.
+    * `spider.WithOptions(pkg.WithFileMiddleware()`
 * image: 70
-
-- Automatic image information addition middleware used for automatically adding image information to requests.
-- You can control whether to enable this middleware by configuring the `enable_image_middleware` option, which
-  is disabled by default.
-- To enable this middleware, include the `pkg.WithImageMiddleware()` option in the `NewApp` function.
-
+    * Automatic image information addition middleware used for automatically adding image information to requests.
+    * You can control whether to enable this middleware by configuring the `enable_image_middleware` option, which
+      is disabled by default.
+    * `spider.WithOptions(pkg.WithImageMiddleware()`
 * retry: 80
-
-- Request retry middleware used for retrying requests when they fail.
-- The default maximum number of retries is 10. You can control whether to enable this middleware by configuring
-  the `enable_retry_middleware` option, which is enabled by default.
-- To enable this middleware, include the `pkg.WithRetryMiddleware()` option in the `NewApp` function.
-
+    * Request retry middleware used for retrying requests when they fail.
+    * The default maximum number of retries is 10. You can control whether to enable this middleware by configuring
+      the `enable_retry_middleware` option, which is enabled by default.
+    * `spider.WithOptions(pkg.WithRetryMiddleware()`
 * url: 90
-
-- URL length limiting middleware used for limiting the length of requests' URLs.
-- You can control whether to enable this middleware and set the maximum URL length by configuring
-  the `enable_url_middleware` and `url_length_limit` options, respectively.Both options are enabled and set to
-  2083 by default.
-- To enable this middleware, include the `pkg.WithUrlMiddleware()` option in the `NewApp` function.
-
+    * URL length limiting middleware used for limiting the length of requests' URLs.
+    * You can control whether to enable this middleware and set the maximum URL length by configuring
+      the `enable_url_middleware` and `url_length_limit` options, respectively.Both options are enabled and set to
+      2083 by default.
+    * `spider.WithOptions(pkg.WithUrlMiddleware()`
 * referrer: 100
-
-- Automatic referrer addition middleware used for automatically adding the referrer to requests.
-- You can choose different referrer policies based on the `referrer_policy` configuration
-  option.`DefaultReferrerPolicy` includes the request source, while `NoReferrerPolicy` does not include the
-  request source.
-- You can control whether to enable this middleware by configuring the `enable_referrer_middleware` option,
-  which is enabled by default.
-- To enable this middleware, include the `pkg.WithReferrerMiddleware()` option in the `NewApp` function.
-
+    * Automatic referrer addition middleware used for automatically adding the referrer to requests.
+    * You can choose different referrer policies based on the `referrer_policy` configuration
+      option.`DefaultReferrerPolicy` includes the request source, while `NoReferrerPolicy` does not include the
+      request source.
+    * You can control whether to enable this middleware by configuring the `enable_referrer_middleware` option,
+      which is enabled by default.
+    * `spider.WithOptions(pkg.WithReferrerMiddleware()`
 * cookie: 110
-
-- Automatic cookie addition middleware used for automatically adding cookies returned from previous requests to
-  subsequent requests.
-- You can control whether to enable this middleware by configuring the `enable_cookie_middleware` option, which
-  is enabled by default.
-- To enable this middleware, include the `pkg.WithCookieMiddleware()` option in the `NewApp` function.
-
+    * Automatic cookie addition middleware used for automatically adding cookies returned from previous requests to
+      subsequent requests.
+    * You can control whether to enable this middleware by configuring the `enable_cookie_middleware` option, which
+      is enabled by default.
+    * `spider.WithOptions(pkg.WithCookieMiddleware()`
 * redirect: 120
-
-- Website redirection middleware used for handling URL redirection.By default, it supports 301 and 302
-  redirects.
-- You can control whether to enable this middleware and set the maximum number of redirections by
-  configuring
-  the `enable_redirect_middleware` and `redirect_max_times` options, respectively.Both options are enabled
-  and set
-  to 1 by default.
-- To enable this middleware, include the `pkg.WithRedirectMiddleware()` option in the `NewApp` function.
-
+    * Website redirection middleware used for handling URL redirection.By default, it supports 301 and 302
+      redirects.
+    * You can control whether to enable this middleware and set the maximum number of redirections by
+      configuring
+      the `enable_redirect_middleware` and `redirect_max_times` options, respectively.Both options are enabled
+      and set
+      to 1 by default.
+    * `spider.WithOptions(pkg.WithRedirectMiddleware()`
 * chrome: 130
-
-- Chrome simulation middleware used for simulating a Chrome browser.
-- You can control whether to enable this middleware by configuring the `enable_chrome_middleware` option,
-  which is
-  enabled by default.
-- To enable this middleware, include the `pkg.WithChromeMiddleware()` option in the `NewApp` function.
-
+    * Chrome simulation middleware used for simulating a Chrome browser.
+    * You can control whether to enable this middleware by configuring the `enable_chrome_middleware` option,
+      which is
+      enabled by default.
+    * `spider.WithOptions(pkg.WithChromeMiddleware()`
 * httpAuth: 140
-
-- HTTP authentication middleware used for performing HTTP authentication by providing a username and
-  password.
-- You need to set the username and password in the specific request.You can control whether to enable this
-  middleware by configuring the `enable_http_auth_middleware` option, which is disabled by default.
-- To enable this middleware, include the `pkg.WithHttpAuthMiddleware()` option in the `NewApp` function.
-
+    * HTTP authentication middleware used for performing HTTP authentication by providing a username and
+      password.
+    * You need to set the username and password in the specific request.You can control whether to enable this
+      middleware by configuring the `enable_http_auth_middleware` option, which is disabled by default.
+    * `spider.WithOptions(pkg.WithHttpAuthMiddleware()`
 * compress: 150
-
-- Gzip/deflate decompression middleware used for handling response compression encoding.
-- You can control whether to enable this middleware by configuring the `enable_compress_middleware` option,
-  which is
-  enabled by default.
-- To enable this middleware, include the `pkg.WithCompressMiddleware()` option in the `NewApp` function.
-
+    * Gzip/deflate/br decompression middleware used for handling response compression encoding.
+    * You can control whether to enable this middleware by configuring the `enable_compress_middleware` option,
+      which is
+      enabled by default.
+    * `spider.WithOptions(pkg.WithCompressMiddleware()`
 * decode: 160
-
-- Chinese decoding middleware used for decoding responses with GBK, GB2312, and Big5 encodings.
-- You can control whether to enable this middleware by configuring the `enable_decode_middleware` option,
-  which is
-  enabled by default.
-- To enable this middleware, include the `pkg.WithDecodeMiddleware()` option in the `NewApp` function.
-
+    * Chinese decoding middleware used for decoding responses with GBK, GB2312, GB18030,and Big5 encodings.
+    * You can control whether to enable this middleware by configuring the `enable_decode_middleware` option,
+      which is
+      enabled by default.
+    * `spider.WithOptions(pkg.WithDecodeMiddleware()`
 * device: 170
-
-- Modify request device information middleware used for modifying the device information of requests,
-  including
-  request headers and TLS information.Currently, only User-Agent random switching is supported.
-- You need to set the device range (Platforms) and browser range (Browsers).
-- Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
-- Browsers: Chrome/Edge/Safari/FireFox
-- You can control whether to enable this middleware by configuring the `enable_device_middleware` option,
-  which is
-  disabled by default.
-- To enable this middleware, include the `pkg.WithDeviceMiddleware()` option in the `NewApp` function.
-
+    * Modify request device information middleware used for modifying the device information of requests,
+      including
+      request headers and TLS information.Currently, only User-Agent random switching is supported.
+    * You need to set the device range (Platforms) and browser range (Browsers).
+    * Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
+    * Browsers: Chrome/Edge/Safari/FireFox
+    * You can control whether to enable this middleware by configuring the `enable_device_middleware` option,
+      which is
+      disabled by default.
+    * `spider.WithOptions(pkg.WithDeviceMiddleware()`
 * http: 200
-
-- Create request middleware used for creating HTTP requests.
-- You can control whether to enable this middleware by configuring the `enable_http_middleware` option,
-  which is
-  enabled by default.
-- To enable this middleware, include the `pkg.WithHttpMiddleware()` option in the `NewApp` function.
-
+    * Create request middleware used for creating HTTP requests.
+    * You can control whether to enable this middleware by configuring the `enable_http_middleware` option,
+      which is
+      enabled by default.
+    * `spider.WithOptions(pkg.WithHttpMiddleware()`
 * stats: 210
-
-- Data statistics middleware used for collecting statistics on requests, responses, and processing in the
-  spider.
-- You can control whether to enable this middleware by configuring the `enable_stats_middleware` option,
-  which is
-  enabled by default.
-- To enable this middleware, include the `pkg.WithStatsMiddleware()` option in the `NewApp` function.
+    * Data statistics middleware used for collecting statistics on requests, responses, and processing in the
+      spider.
+    * You can control whether to enable this middleware by configuring the `enable_stats_middleware` option,
+      which is
+      enabled by default.
+    * `spider.WithOptions(pkg.WithStatsMiddleware()`
+* recordError: 220
+    * Error recording middleware used to log requests and errors occurring during request processing.
+    * It can be enabled or disabled using the configuration option `enable_record_error_middleware`, disabled by
+      default.
+    * `spider.WithOptions(pkg.WithRecordErrorMiddleware()`
 
 ### Pipeline
 
@@ -482,93 +451,73 @@ pipelines, you can conveniently process items and save the results to different 
 databases, or message queues.
 
 Built-in pipelines and custom pipelines use the default `order` value.If you need to change the default `order`
-value, you can include the `pkg.WithPipeline(new(pipeline), order)` option in the `NewApp` function to enable the
+value, `spider.WithOptions(pkg.WithPipeline(new(pipeline), order)` to enable the
 pipeline with the specified `order` value.
 
 The following are the built-in pipelines with their respective `order` values:
 
 * dump: 10
-
-- Used to print detailed information of items to the console.
-- You can control whether to enable this pipeline by configuring `enable_dump_pipeline`, which is enabled by
-  default.
-- To enable this pipeline, include the `pkg.WithDumpPipeline()` option in the `NewApp` function.
-
+    * Used to print detailed information of items to the console.
+    * You can control whether to enable this pipeline by configuring `enable_dump_pipeline`, which is enabled by
+      default.
+    * `spider.WithOptions(pkg.WithDumpPipeline()`
 * file: 20
-
-- Used to download files and save them to items.
-- You can control whether to enable this pipeline by configuring `enable_file_pipeline`, which is enabled by
-  default.
-- To enable this pipeline, include the `pkg.WithFilePipeline()` option in the `NewApp` function.
-
+    * Used to download files and save them to items.
+    * You can control whether to enable this pipeline by configuring `enable_file_pipeline`, which is enabled by
+      default.
+    * `spider.WithOptions(pkg.WithFilePipeline()`
 * image: 30
-
-- Used to download images and save them to items.
-- You can control whether to enable this pipeline by configuring `enable_image_pipeline`, which is enabled by
-  default.
-- To enable this pipeline, include the `pkg.WithImagePipeline()` option in the `NewApp` function.
-
+    * Used to download images and save them to items.
+    * You can control whether to enable this pipeline by configuring `enable_image_pipeline`, which is enabled by
+      default.
+    * `spider.WithOptions(pkg.WithImagePipeline()`
 * filter: 200
-
-- Used for item filtering.
-- It can be used for deduplicating requests when filter middleware is enabled.
-- By default, items are only added to the deduplication queue after they are successfully saved.
-- You can control whether to enable this pipeline by configuring `enable_filter_pipeline`, which is enabled by
-  default.
-- To enable this pipeline, include the `pkg.WithFilterPipeline()` option in the `NewApp` function.
-
+    * Used for item filtering.
+    * It can be used for deduplicating requests when filter middleware is enabled.
+    * By default, items are only added to the deduplication queue after they are successfully saved.
+    * You can control whether to enable this pipeline by configuring `enable_filter_pipeline`, which is enabled by
+      default.
+    * `spider.WithOptions(pkg.WithFilterPipeline()`
 * csv: 101
-
-- Used to save results to CSV files.
-- You need to set the `FileName` in the `ItemCsv`, which specifies the name of the file to be saved (without the
-  .csv extension).
-- You can use the tag `column:""` to define the column names of the CSV file.
-- You can control whether to enable this pipeline by configuring `enable_csv_pipeline`, which is disabled by
-  default.
-- To enable this pipeline, include the `pkg.WithCsvPipeline()` option in the `NewApp` function.
-
+    * Used to save results to CSV files.
+    * You need to set the `FileName` in the `ItemCsv`, which specifies the name of the file to be saved (without the
+      .csv extension).
+    * You can use the tag `column:""` to define the column names of the CSV file.
+    * You can control whether to enable this pipeline by configuring `enable_csv_pipeline`, which is disabled by
+      default.
+    * `spider.WithOptions(pkg.WithCsvPipeline()`
 * jsonLines: 102
-
-- Used to save results to JSON Lines files.
-- You need to set the `FileName` in the `ItemJsonl`, which specifies the name of the file to be saved (without
-  the.jsonl extension).
-- You can use the tag `json:""` to define the fields of the JSON Lines file.
-- You can control whether to enable this pipeline by configuring `enable_json_lines_pipeline`, which is disabled
-  by default.
-- To enable this pipeline, include the `pkg.WithJsonLinesPipeline()` option in the `NewApp` function.
-
+    * Used to save results to JSON Lines files.
+    * You need to set the `FileName` in the `ItemJsonl`, which specifies the name of the file to be saved (without
+      the.jsonl extension).
+    * You can use the tag `json:""` to define the fields of the JSON Lines file.
+    * You can control whether to enable this pipeline by configuring `enable_json_lines_pipeline`, which is disabled
+      by default.
+    * `spider.WithOptions(pkg.WithJsonLinesPipeline()`
 * mongo: 103
-
-- Used to save results to MongoDB.
-- You need to set the `Collection` in the `ItemMongo`, which specifies the name of the collection to be saved.
-- You can use the tag `bson:""` to define the fields of the MongoDB document.
-- You can control whether to enable this pipeline by configuring `enable_mongo_pipeline`, which is disabled by
-  default.
-- To enable this pipeline, include the `pkg.WithMongoPipeline()` option in the `NewApp` function.
-
+    * Used to save results to MongoDB.
+    * You need to set the `Collection` in the `ItemMongo`, which specifies the name of the collection to be saved.
+    * You can use the tag `bson:""` to define the fields of the MongoDB document.
+    * You can control whether to enable this pipeline by configuring `enable_mongo_pipeline`, which is disabled by
+      default.
+    * `spider.WithOptions(pkg.WithMongoPipeline()`
 * mysql: 104
-
-- Used to save results to MySQL.
-- You need to set the `Table` in the `ItemMysql`, which specifies the name of the table to be saved.
-- You can use the tag `column:""` to define the column names of the MySQL table.
-- You can control whether to enable this pipeline by configuring `enable_mysql_pipeline`, which is disabled by
-  default.
-- To enable this pipeline, include the `pkg.WithMysqlPipeline()` option in the `NewApp` function.
-
+    * Used to save results to MySQL.
+    * You need to set the `Table` in the `ItemMysql`, which specifies the name of the table to be saved.
+    * You can use the tag `column:""` to define the column names of the MySQL table.
+    * You can control whether to enable this pipeline by configuring `enable_mysql_pipeline`, which is disabled by
+      default.
+    * `spider.WithOptions(pkg.WithMysqlPipeline()`
 * kafka: 105
-
-- Used to save results to Kafka.
-- You need to set the `Topic` in the `ItemKafka`, which specifies the name of the topic to be saved.
-- You can use the tag `json:""` to define the fields of the Kafka message.
-- You can control whether to enable this pipeline by configuring `enable_kafka_pipeline`, which is disabled by
-  default.
-- To enable this pipeline, include the `pkg.WithKafkaPipeline()` option in the `NewApp` function.
-
+    * Used to save results to Kafka.
+    * You need to set the `Topic` in the `ItemKafka`, which specifies the name of the topic to be saved.
+    * You can use the tag `json:""` to define the fields of the Kafka message.
+    * You can control whether to enable this pipeline by configuring `enable_kafka_pipeline`, which is disabled by
+      default.
+    * `spider.WithOptions(pkg.WithKafkaPipeline()`
 * custom: 110
-
-- Custom pipeline.
-- To enable this pipeline, include the `pkg.WithCustomPipeline(new(CustomPipeline))` option in the `NewApp`
-  function.
+    * Custom pipeline.
+    * `spider.WithOptions(pkg.WithCustomPipeline(new(CustomPipeline))`
 
 ### Request
 
@@ -610,12 +559,12 @@ SetBodyStr(``).
 SetExtra(&Extra{}).
 SetCallBack(s.Parse))
 
-  ```
+ ```
 
-    * Create a request using a simple method.
+Create a request using a simple method.
 
-  ```go
-  _ = request.Get()
+```go
+_ = request.Get()
 _ = request.Post()
 _ = request.Head()
 _ = request.Options()
@@ -623,23 +572,28 @@ _ = request.Delete()
 _ = request.Put()
 _ = request.Patch()
 _ = request.Trace()
-  ```
+```
 
-    * `SetFingerprint(string) Request` Many websites nowadays implement security measures based on SSL fingerprints. By
-      setting this parameter, you can perform disguising. If the fingerprint is `pkg.Browser`, the framework will
-      automatically select a suitable fingerprint for this browser. If the fingerprint is in the ja3 format, the
-      framework will apply this SSL fingerprint. If the fingerprint is empty, the framework will choose based on the
-      user-agent. Note that the framework will only make modifications when `enable_ja3 = true`, and it uses the default
-      SSL configuration of the Go programming language.
-    * `SetClient(Client) Request`
+* `SetFingerprint(string) Request`
 
-      Some websites may detect browser fingerprints. In such cases, it is recommended to use browser simulation.
+  Many websites nowadays implement security measures based on SSL fingerprints. By
+  setting this parameter, you can perform disguising. If the fingerprint is `pkg.Browser`, the framework will
+  automatically select a suitable fingerprint for this browser. If the fingerprint is in the ja3 format, the
+  framework will apply this SSL fingerprint. If the fingerprint is empty, the framework will choose based on the
+  user-agent. Note that the framework will only make modifications when `enable_ja3 = true`, and it uses the default
+  SSL configuration of the Go programming language.
 
-      After setting the client to `pkg.Browser`, the framework will automatically enable browser simulation.
+* `SetClient(Client) Request`
 
-    * `SetAjax(bool) Request` If you need to use a headless browser and the request is an AJAX request, please set
-      this option to true. The framework will handle the request as an XHR (XMLHttpRequest) request. You may also
-      need to set the referrer.
+  Some websites may detect browser fingerprints. In such cases, it is recommended to use browser simulation.
+
+  After setting the client to `pkg.Browser`, the framework will automatically enable browser simulation.
+
+* `SetAjax(bool) Request`
+
+  If you need to use a headless browser and the request is an AJAX request, please set
+  this option to true. The framework will handle the request as an XHR (XMLHttpRequest) request. You may also
+  need to set the referrer.
 
 ### Response
 
@@ -862,6 +816,7 @@ Middleware and Pipeline Configuration:
 * `enable_device_middleware:` Whether to enable the device simulation middleware, disabled by default.
 * `enable_proxy_middleware:` Whether to enable the proxy middleware, enabled by default.
 * `enable_robots_txt_middleware:` Whether to enable the robots.txt support middleware, disabled by default.
+* `enable_record_error_middleware:` Whether to enable the record error support middleware, disabled by default.
 * `enable_dump_pipeline:` Whether to enable the print item pipeline, enabled by default.
 * `enable_file_pipeline:` Whether to enable the file download pipeline, enabled by default.
 * `enable_image_pipeline:` Whether to enable the image download pipeline, enabled by default.
@@ -1106,7 +1061,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mockServer.NewRouteOk))
 }
 
 ```
@@ -1182,7 +1137,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoute(mockServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mockServer.NewRouteOk))
 }
 
 ```

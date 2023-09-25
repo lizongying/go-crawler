@@ -34,14 +34,16 @@ type Crawler interface {
 
 type CrawlOption func(Crawler)
 
-func WithMockServerRoute(route func(logger Logger) Route) CrawlOption {
+func WithMockServerRoutes(routes ...func(logger Logger) Route) CrawlOption {
 	return func(crawler Crawler) {
 		if !crawler.GetConfig().MockServerEnable() {
 			crawler.GetConfig().SetMockServerEnable(true)
 			_ = crawler.RunMockServer()
 		}
 
-		crawler.AddMockServerRoutes(route(crawler.GetLogger()))
+		for _, v := range routes {
+			crawler.AddMockServerRoutes(v(crawler.GetLogger()))
+		}
 	}
 }
 func WithMode(mode string) CrawlOption {

@@ -6,6 +6,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/mockServers"
 	"github.com/lizongying/go-crawler/pkg/request"
+	"strconv"
 )
 
 type Spider struct {
@@ -28,15 +29,16 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	}
 
 	s.MustYieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl("https://localhost:8081"+mockServers.UrlBadGateway).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
+		SetUniqueKey(strconv.Itoa(extra.Count+1)).
 		SetCallBack(s.ParseOk))
 	return
 }
 
-// TestOk go run cmd/testMustOkSpider/*.go -c example.yml -n test-must-ok -f TestOk -m once
+// TestOk go run cmd/testErrorSpider/*.go -c example.yml -n test-error -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.MustYieldRequest(ctx, request.NewRequest().
 		SetUrl("https://localhost:8081"+mockServers.UrlOk).
@@ -51,13 +53,14 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		logger: baseSpider.GetLogger(),
 	}
 	spider.WithOptions(
-		pkg.WithName("test-must-ok"),
+		pkg.WithName("test-error"),
+		pkg.WithRecordErrorMiddleware(),
 	)
 	return
 }
 
 func main() {
 	app.NewApp(NewSpider).Run(
-		pkg.WithMockServerRoutes(mockServers.NewRouteOk),
+		pkg.WithMockServerRoutes(mockServers.NewRouteOk, mockServers.NewRouteBadGateway),
 	)
 }

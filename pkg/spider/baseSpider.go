@@ -265,7 +265,7 @@ func (s *BaseSpider) registerParser() {
 		if ok {
 			callBacks[name] = callBack
 		}
-		errBack, ok := rv.Method(i).Interface().(func(pkg.Context, pkg.Response, error))
+		errBack, ok := rv.Method(i).Interface().(func(pkg.Context, pkg.Response, error) bool)
 		if ok {
 			errBacks[name] = errBack
 		}
@@ -380,15 +380,15 @@ func (s *BaseSpider) Parse(_ pkg.Context, response pkg.Response) (err error) {
 	s.logger.Info("body", response.BodyStr())
 	return
 }
-func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
+func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) bool {
 	if response.GetResponse() == nil {
 		s.logger.Error("response nil")
-		return
+		return true
 	}
 	s.logger.Info("header", response.Headers())
 	s.logger.Info("body", response.BodyStr())
 	s.logger.Info("error", err)
-	return
+	return true
 }
 func (s *BaseSpider) Stop(ctx context.Context) (err error) {
 	s.logger.Debug("BaseSpider wait for stop")

@@ -42,6 +42,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 
 func main() {
 	app.NewApp(NewSpider).Run(
-		pkg.WithMockServerRoute(mockServers.NewRouteHtml),
+		pkg.WithMockServerRoutes(mockServers.NewRouteHtml),
 	)
 }

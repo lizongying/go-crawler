@@ -233,6 +233,11 @@ func WithDeviceMiddleware() SpiderOption {
 		spider.GetMiddlewares().WithDeviceMiddleware()
 	}
 }
+func WithRecordErrorMiddleware() SpiderOption {
+	return func(spider Spider) {
+		spider.GetMiddlewares().WithRecordErrorMiddleware()
+	}
+}
 func WithCustomMiddleware(middleware Middleware) SpiderOption {
 	return func(spider Spider) {
 		spider.GetMiddlewares().WithCustomMiddleware(middleware)

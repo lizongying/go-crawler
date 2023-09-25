@@ -45,6 +45,7 @@ const defaultEnableImageMiddleware = true
 const defaultEnableHttpMiddleware = true
 const defaultEnableProxyMiddleware = true
 const defaultEnableRobotsTxtMiddleware = false
+const defaultEnableRecordErrorMiddleware = false
 const defaultEnableDumpPipeline = true
 const defaultEnableFilePipeline = true
 const defaultEnableImagePipeline = true
@@ -130,40 +131,41 @@ type Config struct {
 	CloseReason struct {
 		QueueTimeout *uint8 `yaml:"client_auth,omitempty" json:"client_auth"`
 	} `yaml:"close_reason" json:"close_reason"`
-	EnableJa3                 *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
-	EnablePriorityQueue       *bool   `yaml:"enable_priority_queue,omitempty" json:"enable_priority_queue"`
-	EnableReferrerMiddleware  *bool   `yaml:"enable_referrer_middleware,omitempty" json:"enable_referrer_middleware"`
-	ReferrerPolicy            *string `yaml:"referrer_policy_middleware,omitempty" json:"referrer_policy_middleware"`
-	EnableHttpAuthMiddleware  *bool   `yaml:"enable_http_auth_middleware,omitempty" json:"enable_http_auth_middleware"`
-	EnableCookieMiddleware    *bool   `yaml:"enable_cookie_middleware,omitempty" json:"enable_cookie_middleware"`
-	EnableStatsMiddleware     *bool   `yaml:"enable_stats_middleware,omitempty" json:"enable_stats_middleware"`
-	EnableDumpMiddleware      *bool   `yaml:"enable_dump_middleware,omitempty" json:"enable_dump_middleware"`
-	Scheduler                 *string `yaml:"scheduler,omitempty" json:"scheduler"`
-	Filter                    *string `yaml:"filter,omitempty" json:"filter"`
-	EnableFilterMiddleware    *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
-	EnableFileMiddleware      *bool   `yaml:"enable_file_middleware,omitempty" json:"enable_file_middleware"`
-	EnableImageMiddleware     *bool   `yaml:"enable_image_middleware,omitempty" json:"enable_image_middleware"`
-	EnableHttpMiddleware      *bool   `yaml:"enable_http_middleware,omitempty" json:"enable_http_middleware"`
-	EnableRetryMiddleware     *bool   `yaml:"enable_retry_middleware,omitempty" json:"enable_retry_middleware"`
-	EnableUrlMiddleware       *bool   `yaml:"enable_url_middleware,omitempty" json:"enable_url_middleware"`
-	UrlLengthLimit            *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
-	EnableCompressMiddleware  *bool   `yaml:"enable_compress_middleware,omitempty" json:"enable_compress_middleware"`
-	EnableDecodeMiddleware    *bool   `yaml:"enable_decode_middleware,omitempty" json:"enable_decode_middleware"`
-	EnableRedirectMiddleware  *bool   `yaml:"enable_redirect_middleware,omitempty" json:"enable_redirect_middleware"`
-	RedirectMaxTimes          *uint8  `yaml:"redirect_max_times,omitempty" json:"redirect_max_times"`
-	EnableChromeMiddleware    *bool   `yaml:"enable_chrome_middleware,omitempty" json:"enable_chrome_middleware"`
-	EnableDeviceMiddleware    *bool   `yaml:"enable_device_middleware,omitempty" json:"enable_device_middleware"`
-	EnableProxyMiddleware     *bool   `yaml:"enable_proxy_middleware,omitempty" json:"enable_proxy_middleware"`
-	EnableRobotsTxtMiddleware *bool   `yaml:"enable_robots_txt_middleware,omitempty" json:"enable_robots_txt_middleware"`
-	EnableDumpPipeline        *bool   `yaml:"enable_dump_pipeline,omitempty" json:"enable_dump_pipeline"`
-	EnableFilePipeline        *bool   `yaml:"enable_file_pipeline,omitempty" json:"enable_file_pipeline"`
-	EnableImagePipeline       *bool   `yaml:"enable_image_pipeline,omitempty" json:"enable_image_pipeline"`
-	EnableFilterPipeline      *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
-	EnableCsvPipeline         *bool   `yaml:"enable_csv_pipeline,omitempty" json:"enable_csv_pipeline"`
-	EnableJsonLinesPipeline   *bool   `yaml:"enable_json_lines_pipeline,omitempty" json:"enable_json_lines_pipeline"`
-	EnableMongoPipeline       *bool   `yaml:"enable_mongo_pipeline,omitempty" json:"enable_mongo_pipeline"`
-	EnableMysqlPipeline       *bool   `yaml:"enable_mysql_pipeline,omitempty" json:"enable_mysql_pipeline"`
-	EnableKafkaPipeline       *bool   `yaml:"enable_kafka_pipeline,omitempty" json:"enable_kafka_pipeline"`
+	EnableJa3                   *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
+	EnablePriorityQueue         *bool   `yaml:"enable_priority_queue,omitempty" json:"enable_priority_queue"`
+	EnableReferrerMiddleware    *bool   `yaml:"enable_referrer_middleware,omitempty" json:"enable_referrer_middleware"`
+	ReferrerPolicy              *string `yaml:"referrer_policy_middleware,omitempty" json:"referrer_policy_middleware"`
+	EnableHttpAuthMiddleware    *bool   `yaml:"enable_http_auth_middleware,omitempty" json:"enable_http_auth_middleware"`
+	EnableCookieMiddleware      *bool   `yaml:"enable_cookie_middleware,omitempty" json:"enable_cookie_middleware"`
+	EnableStatsMiddleware       *bool   `yaml:"enable_stats_middleware,omitempty" json:"enable_stats_middleware"`
+	EnableDumpMiddleware        *bool   `yaml:"enable_dump_middleware,omitempty" json:"enable_dump_middleware"`
+	Scheduler                   *string `yaml:"scheduler,omitempty" json:"scheduler"`
+	Filter                      *string `yaml:"filter,omitempty" json:"filter"`
+	EnableFilterMiddleware      *bool   `yaml:"enable_filter_middleware,omitempty" json:"enable_filter_middleware"`
+	EnableFileMiddleware        *bool   `yaml:"enable_file_middleware,omitempty" json:"enable_file_middleware"`
+	EnableImageMiddleware       *bool   `yaml:"enable_image_middleware,omitempty" json:"enable_image_middleware"`
+	EnableHttpMiddleware        *bool   `yaml:"enable_http_middleware,omitempty" json:"enable_http_middleware"`
+	EnableRetryMiddleware       *bool   `yaml:"enable_retry_middleware,omitempty" json:"enable_retry_middleware"`
+	EnableUrlMiddleware         *bool   `yaml:"enable_url_middleware,omitempty" json:"enable_url_middleware"`
+	UrlLengthLimit              *int    `yaml:"url_length_limit,omitempty" json:"url_length_limit"`
+	EnableCompressMiddleware    *bool   `yaml:"enable_compress_middleware,omitempty" json:"enable_compress_middleware"`
+	EnableDecodeMiddleware      *bool   `yaml:"enable_decode_middleware,omitempty" json:"enable_decode_middleware"`
+	EnableRedirectMiddleware    *bool   `yaml:"enable_redirect_middleware,omitempty" json:"enable_redirect_middleware"`
+	RedirectMaxTimes            *uint8  `yaml:"redirect_max_times,omitempty" json:"redirect_max_times"`
+	EnableChromeMiddleware      *bool   `yaml:"enable_chrome_middleware,omitempty" json:"enable_chrome_middleware"`
+	EnableDeviceMiddleware      *bool   `yaml:"enable_device_middleware,omitempty" json:"enable_device_middleware"`
+	EnableProxyMiddleware       *bool   `yaml:"enable_proxy_middleware,omitempty" json:"enable_proxy_middleware"`
+	EnableRobotsTxtMiddleware   *bool   `yaml:"enable_robots_txt_middleware,omitempty" json:"enable_robots_txt_middleware"`
+	EnableRecordErrorMiddleware *bool   `yaml:"enable_record_error_middleware,omitempty" json:"enable_record_error_middleware"`
+	EnableDumpPipeline          *bool   `yaml:"enable_dump_pipeline,omitempty" json:"enable_dump_pipeline"`
+	EnableFilePipeline          *bool   `yaml:"enable_file_pipeline,omitempty" json:"enable_file_pipeline"`
+	EnableImagePipeline         *bool   `yaml:"enable_image_pipeline,omitempty" json:"enable_image_pipeline"`
+	EnableFilterPipeline        *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
+	EnableCsvPipeline           *bool   `yaml:"enable_csv_pipeline,omitempty" json:"enable_csv_pipeline"`
+	EnableJsonLinesPipeline     *bool   `yaml:"enable_json_lines_pipeline,omitempty" json:"enable_json_lines_pipeline"`
+	EnableMongoPipeline         *bool   `yaml:"enable_mongo_pipeline,omitempty" json:"enable_mongo_pipeline"`
+	EnableMysqlPipeline         *bool   `yaml:"enable_mysql_pipeline,omitempty" json:"enable_mysql_pipeline"`
+	EnableKafkaPipeline         *bool   `yaml:"enable_kafka_pipeline,omitempty" json:"enable_kafka_pipeline"`
 }
 
 func (c *Config) KafkaUri() string {
@@ -528,6 +530,14 @@ func (c *Config) GetEnableRobotsTxtMiddleware() bool {
 	}
 
 	return *c.EnableRobotsTxtMiddleware
+}
+func (c *Config) GetEnableRecordErrorMiddleware() bool {
+	if c.EnableRecordErrorMiddleware == nil {
+		enableRecordErrorMiddleware := defaultEnableRecordErrorMiddleware
+		c.EnableRecordErrorMiddleware = &enableRecordErrorMiddleware
+	}
+
+	return *c.EnableRecordErrorMiddleware
 }
 func (c *Config) GetRedirectMaxTimes() uint8 {
 	if c.RedirectMaxTimes == nil {

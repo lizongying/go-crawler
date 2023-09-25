@@ -16,9 +16,9 @@ func (h *RouteBadGateway) Pattern() string {
 }
 
 func (h *RouteBadGateway) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
-	h.logger.Info("into HandlerBadGateway")
+	h.logger.Debug("into HandlerBadGateway")
 	defer func() {
-		h.logger.Info("exit HandlerBadGateway")
+		h.logger.Debug("exit HandlerBadGateway")
 	}()
 
 	w.WriteHeader(http.StatusBadGateway)
