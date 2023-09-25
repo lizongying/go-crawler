@@ -3,7 +3,6 @@ package middlewares
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/lizongying/go-crawler/pkg"
@@ -26,8 +25,7 @@ type ImageMiddleware struct {
 func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
 	spider := m.GetSpider()
 	if len(response.BodyBytes()) == 0 {
-		err = errors.New("BodyBytes empty")
-		m.logger.Error(err)
+		m.logger.Debug("BodyBytes empty")
 		return
 	}
 

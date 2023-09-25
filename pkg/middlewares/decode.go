@@ -14,6 +14,11 @@ type DecodeMiddleware struct {
 }
 
 func (m *DecodeMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
+	if response.GetResponse() == nil {
+		m.logger.Debug("response nil")
+		return
+	}
+
 	contentType := strings.ToUpper(response.GetHeader("Content-Type"))
 
 	var decoder *encoding.Decoder

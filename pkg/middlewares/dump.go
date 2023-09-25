@@ -17,6 +17,11 @@ func (m *DumpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err
 }
 
 func (m *DumpMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
+	if response.GetResponse() == nil {
+		m.logger.Debug("response nil")
+		return
+	}
+
 	b, _ := httputil.DumpResponse(response.GetResponse(), false)
 	m.logger.Debugf("response: \n%s", string(b))
 	return

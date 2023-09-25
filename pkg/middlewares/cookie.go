@@ -10,6 +10,11 @@ type CookieMiddleware struct {
 }
 
 func (m *CookieMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
+	if response.GetResponse() == nil {
+		m.logger.Debug("response nil")
+		return
+	}
+
 	// add cookies to context
 	cookies := response.Cookies()
 	if len(cookies) > 0 {

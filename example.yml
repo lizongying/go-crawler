@@ -1,6 +1,6 @@
 env: example
 bot_name: crawler
-mongo_enable: false
+mongo_enable: true
 mongo:
   example:
     uri: mongodb://127.0.0.1:27017

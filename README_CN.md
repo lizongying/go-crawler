@@ -299,34 +299,34 @@ middleware/pipeline包括框架内置、公共自定义（internal/middlewares�
 * custom: 10
     * 自定义中间件
     * `spider.WithOptions(pkg.WithCustomMiddleware(new(CustomMiddleware))`
-* dump: 20
-    * 控制台打印item.data中间件，用于打印请求和响应的详细信息。
-    * 可以通过配置项enable_dump_middleware来启用或禁用，默认启用。
-    * `spider.WithOptions(pkg.WithDumpMiddleware()`
-* proxy: 30
-    * 用于切换请求使用的代理。
-    * 可以通过配置项enable_proxy_middleware来启用或禁用，默认启用。
-    * `spider.WithOptions(pkg.WithProxyMiddleware()`
-* robotsTxt: 40
-    * robots.txt支持中间件，用于支持爬取网站的robots.txt文件。
-    * 可以通过配置项enable_robots_txt_middleware来启用或禁用，默认禁用。
-    * `spider.WithOptions(pkg.WithRobotsTxtMiddleware()`
-* filter: 50
-    * 过滤重复请求中间件，用于过滤重复的请求。默认只有在Item保存成功后才会进入去重队列。
-    * 可以通过配置项enable_filter_middleware来启用或禁用，默认启用。
-    * `spider.WithOptions(pkg.WithFilterMiddleware()`
-* file: 60
-    * 自动添加文件信息中间件，用于自动添加文件信息到请求中。
-    * 可以通过配置项enable_file_middleware来启用或禁用，默认禁用。
-    * `spider.WithOptions(pkg.WithFileMiddleware()`
-* image: 70
-    * 自动添加图片的宽高等信息中间件
-    * 用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。
-    * `spider.WithOptions(pkg.WithImageMiddleware()`
-* retry: 80
+* retry: 20
     * 请求重试中间件，用于在请求失败时进行重试。
     * 默认最大重试次数为10。可以通过配置项enable_retry_middleware来启用或禁用，默认启用。
     * `spider.WithOptions(pkg.WithRetryMiddleware()`
+* dump: 30
+    * 控制台打印item.data中间件，用于打印请求和响应的详细信息。
+    * 可以通过配置项enable_dump_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithDumpMiddleware()`
+* proxy: 40
+    * 用于切换请求使用的代理。
+    * 可以通过配置项enable_proxy_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithProxyMiddleware()`
+* robotsTxt: 50
+    * robots.txt支持中间件，用于支持爬取网站的robots.txt文件。
+    * 可以通过配置项enable_robots_txt_middleware来启用或禁用，默认禁用。
+    * `spider.WithOptions(pkg.WithRobotsTxtMiddleware()`
+* filter: 60
+    * 过滤重复请求中间件，用于过滤重复的请求。默认只有在Item保存成功后才会进入去重队列。
+    * 可以通过配置项enable_filter_middleware来启用或禁用，默认启用。
+    * `spider.WithOptions(pkg.WithFilterMiddleware()`
+* file: 70
+    * 自动添加文件信息中间件，用于自动添加文件信息到请求中。
+    * 可以通过配置项enable_file_middleware来启用或禁用，默认禁用。
+    * `spider.WithOptions(pkg.WithFileMiddleware()`
+* image: 80
+    * 自动添加图片的宽高等信息中间件
+    * 用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。
+    * `spider.WithOptions(pkg.WithImageMiddleware()`
 * url: 90
     * 限制URL长度中间件，用于限制请求的URL长度。
     * 可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。

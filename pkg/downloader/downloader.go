@@ -6,6 +6,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/httpClient"
 	"github.com/lizongying/go-crawler/pkg/httpClient/browser"
+	response2 "github.com/lizongying/go-crawler/pkg/response"
 )
 
 type Downloader struct {
@@ -49,12 +50,11 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 		d.logger.Error(err)
 		return
 	}
+
 	if response == nil {
-		err = errors.New("response nil")
-		d.logger.Error(err)
-		return
+		response = new(response2.Response)
+		response.SetRequest(request)
 	}
-	d.logger.Debug("StatusCode", response.StatusCode())
 
 	err = d.processResponse(ctx, response)
 	if err != nil {

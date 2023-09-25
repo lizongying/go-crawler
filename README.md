@@ -324,43 +324,43 @@ The following are the built-in middleware with their respective `order` values:
 * custom: 10
     * Custom middleware.
     * `spider.WithOptions(pkg.WithCustomMiddleware(new(CustomMiddleware))`
-* dump: 20
+* retry: 20
+    * Request retry middleware used for retrying requests when they fail.
+    * The default maximum number of retries is 10. You can control whether to enable this middleware by configuring
+      the `enable_retry_middleware` option, which is enabled by default.
+    * `spider.WithOptions(pkg.WithRetryMiddleware()`
+* dump: 30
     * Console dump middleware used for printing detailed information of item.data, including request and response
       details.
     * You can control whether to enable this middleware by configuring the `enable_dump_middleware` option, which is
       enabled by default.
     * `spider.WithOptions(pkg.WithDumpMiddleware()`
-* proxy: 30
+* proxy: 40
     * Proxy switch middleware used for switching proxies for requests.
     * You can control whether to enable this middleware by configuring the `enable_proxy_middleware` option, which
       is enabled by default.
     * `spider.WithOptions(pkg.WithProxyMiddleware()`
-* robotsTxt: 40
+* robotsTxt: 50
     * Robots.txt support middleware for handling robots.txt files of websites.
     * You can control whether to enable this middleware by configuring the `enable_robots_txt_middleware` option,
       which is disabled by default.
     * `spider.WithOptions(pkg.WithRobotsTxtMiddleware()`
-* filter: 50
+* filter: 60
     * Request deduplication middleware used for filtering duplicate requests.By default, items are added to the
       deduplication queue only after being successfully saved.
     * You can control whether to enable this middleware by configuring the `enable_filter_middleware` option, which
       is enabled by default.
     * `spider.WithOptions(pkg.WithFilterMiddleware()`
-* file: 60
+* file: 70
     * Automatic file information addition middleware used for automatically adding file information to requests.
     * You can control whether to enable this middleware by configuring the `enable_file_middleware` option, which is
       disabled by default.
     * `spider.WithOptions(pkg.WithFileMiddleware()`
-* image: 70
+* image: 80
     * Automatic image information addition middleware used for automatically adding image information to requests.
     * You can control whether to enable this middleware by configuring the `enable_image_middleware` option, which
       is disabled by default.
     * `spider.WithOptions(pkg.WithImageMiddleware()`
-* retry: 80
-    * Request retry middleware used for retrying requests when they fail.
-    * The default maximum number of retries is 10. You can control whether to enable this middleware by configuring
-      the `enable_retry_middleware` option, which is enabled by default.
-    * `spider.WithOptions(pkg.WithRetryMiddleware()`
 * url: 90
     * URL length limiting middleware used for limiting the length of requests' URLs.
     * You can control whether to enable this middleware and set the maximum URL length by configuring

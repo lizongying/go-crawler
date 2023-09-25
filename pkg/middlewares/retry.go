@@ -2,7 +2,7 @@ package middlewares
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/http"
@@ -34,7 +34,19 @@ func (m *RetryMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) 
 	if len(request.OkHttpCodes()) > 0 {
 		okHttpCodes = request.OkHttpCodes()
 	}
-	if retryMaxTimes > 0 && (response.GetResponse() == nil || !utils.InSlice(response.StatusCode(), okHttpCodes)) {
+	if retryMaxTimes > 0 && response.GetResponse() == nil {
+		if request.RetryTimes() < retryMaxTimes {
+			request.SetRetryTimes(request.RetryTimes() + 1)
+			m.logger.Info(request.UniqueKey(), "retry times:", request.RetryTimes(), "SpendTime:", request.SpendTime())
+			err = pkg.ErrNeedRetry
+			return
+		}
+		err = fmt.Errorf("response nil")
+		m.logger.Error(request.UniqueKey(), err, request.RetryTimes(), retryMaxTimes)
+		return
+	}
+
+	if retryMaxTimes > 0 && !utils.InSlice(response.StatusCode(), okHttpCodes) {
 		if request.RetryTimes() < retryMaxTimes {
 			request.SetRetryTimes(request.RetryTimes() + 1)
 			m.logger.Info(request.UniqueKey(), "retry times:", request.RetryTimes(), "SpendTime:", request.SpendTime())
@@ -42,7 +54,7 @@ func (m *RetryMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) 
 			return
 		}
 
-		err = errors.New("retry max times")
+		err = fmt.Errorf("status code error: %d", response.StatusCode())
 		m.logger.Error(request.UniqueKey(), err, request.RetryTimes(), retryMaxTimes)
 		return
 	}

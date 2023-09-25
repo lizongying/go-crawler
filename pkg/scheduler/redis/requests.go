@@ -34,7 +34,6 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 			return
 		}
 
-		s.logger.Error(err)
 		s.HandleError(ctx, response, err, request.ErrBack())
 		return
 	}

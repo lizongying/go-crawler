@@ -73,26 +73,26 @@ func (m *Middlewares) CleanMiddlewares() {
 func (m *Middlewares) WithCustomMiddleware(middleware pkg.Middleware) {
 	m.SetMiddleware(middleware, 10)
 }
+func (m *Middlewares) WithRetryMiddleware() {
+	m.SetMiddleware(new(RetryMiddleware), 20)
+}
 func (m *Middlewares) WithDumpMiddleware() {
-	m.SetMiddleware(new(DumpMiddleware), 20)
+	m.SetMiddleware(new(DumpMiddleware), 30)
 }
 func (m *Middlewares) WithProxyMiddleware() {
-	m.SetMiddleware(new(ProxyMiddleware), 30)
+	m.SetMiddleware(new(ProxyMiddleware), 40)
 }
 func (m *Middlewares) WithRobotsTxtMiddleware() {
-	m.SetMiddleware(new(RobotsTxtMiddleware), 40)
+	m.SetMiddleware(new(RobotsTxtMiddleware), 50)
 }
 func (m *Middlewares) WithFilterMiddleware() {
-	m.SetMiddleware(new(FilterMiddleware), 50)
+	m.SetMiddleware(new(FilterMiddleware), 60)
 }
 func (m *Middlewares) WithFileMiddleware() {
-	m.SetMiddleware(new(FileMiddleware), 60)
+	m.SetMiddleware(new(FileMiddleware), 70)
 }
 func (m *Middlewares) WithImageMiddleware() {
-	m.SetMiddleware(new(ImageMiddleware), 70)
-}
-func (m *Middlewares) WithRetryMiddleware() {
-	m.SetMiddleware(new(RetryMiddleware), 80)
+	m.SetMiddleware(new(ImageMiddleware), 80)
 }
 func (m *Middlewares) WithUrlMiddleware() {
 	m.SetMiddleware(new(UrlMiddleware), 90)

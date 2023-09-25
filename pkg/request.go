@@ -157,7 +157,7 @@ type RequestJson interface {
 }
 
 type CallBack func(Context, Response) error
-type ErrBack func(Context, Response, error) bool
+type ErrBack func(Context, Response, error)
 
 type Client string
 
