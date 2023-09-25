@@ -48,7 +48,6 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 	response, err = client.DoRequest(request.Context(), request)
 	if err != nil {
 		d.logger.Error(err)
-		return
 	}
 
 	if response == nil {
