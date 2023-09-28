@@ -142,15 +142,19 @@ func (r *Request) SetCanonicalHeaderKey(canonicalHeaderKey *bool) pkg.Request {
 func (r *Request) CanonicalHeaderKey() *bool {
 	return r.canonicalHeaderKey
 }
-func (r *Request) SetProxyEnable(proxyEnable *bool) pkg.Request {
-	r.proxyEnable = proxyEnable
+func (r *Request) SetProxyEnable(proxyEnable bool) pkg.Request {
+	r.proxyEnable = &proxyEnable
 	return r
 }
 func (r *Request) ProxyEnable() *bool {
 	return r.proxyEnable
 }
-func (r *Request) SetProxy(proxy *url.URL) pkg.Request {
-	r.proxy = proxy
+func (r *Request) SetProxy(proxy string) pkg.Request {
+	var err error
+	r.proxy, err = url.Parse(proxy)
+	if err == nil {
+		r.SetProxyEnable(true)
+	}
 	return r
 }
 func (r *Request) Proxy() *url.URL {
@@ -304,25 +308,29 @@ func (r *Request) GetUrl() string {
 func (r *Request) GetURL() *url.URL {
 	return r.URL
 }
+func (r *Request) Query(key string) string {
+	return r.URL.Query().Get(key)
+}
 func (r *Request) AddQuery(key string, value string) pkg.Request {
-	r.URL.Query().Add(key, value)
+	query := r.URL.Query()
+	query.Add(key, value)
+	r.URL.RawQuery = query.Encode()
 	return r
 }
 func (r *Request) SetQuery(key string, value string) pkg.Request {
-	r.URL.Query().Set(key, value)
-	return r
-}
-func (r *Request) GetQuery(key string) pkg.Request {
-	r.URL.Query().Get(key)
+	query := r.URL.Query()
+	query.Set(key, value)
+	r.URL.RawQuery = query.Encode()
 	return r
 }
 func (r *Request) DelQuery(key string) pkg.Request {
-	r.URL.Query().Del(key)
+	query := r.URL.Query()
+	query.Del(key)
+	r.URL.RawQuery = query.Encode()
 	return r
 }
-func (r *Request) HasQuery(key string) pkg.Request {
-	r.URL.Query().Has(key)
-	return r
+func (r *Request) HasQuery(key string) bool {
+	return r.URL.Query().Has(key)
 }
 func (r *Request) SetForm(key string, value string) pkg.Request {
 	if r.Form == nil {

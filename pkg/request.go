@@ -75,9 +75,9 @@ type Request interface {
 	CanonicalHeaderKey() *bool
 	SetCanonicalHeaderKey(*bool) Request
 	ProxyEnable() *bool
-	SetProxyEnable(*bool) Request
+	SetProxyEnable(bool) Request
 	Proxy() *url.URL
-	SetProxy(*url.URL) Request
+	SetProxy(string) Request
 	RetryMaxTimes() *uint8
 	SetRetryMaxTimes(*uint8) Request
 	RetryTimes() uint8
@@ -115,11 +115,11 @@ type Request interface {
 	SetUrl(string) Request
 	GetUrl() string
 	GetURL() *url.URL
+	Query(string) string
 	AddQuery(string, string) Request
 	SetQuery(string, string) Request
-	GetQuery(string) Request
 	DelQuery(string) Request
-	HasQuery(string) Request
+	HasQuery(string) bool
 	SetForm(string, string) Request
 	GetForm() url.Values
 	SetPostForm(string, string) Request

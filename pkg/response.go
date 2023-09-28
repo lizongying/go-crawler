@@ -34,13 +34,29 @@ type Response interface {
 	SetCookies(...*http.Cookie) Response
 	UnmarshalBody(any) error
 	MustXpath() *xpath.Selector
+	MustXpathOne(string) *xpath.Result
+	MustXpathMany(string) []*xpath.Result
 	Xpath() (*xpath.Selector, error)
+	XpathOne(string) (*xpath.Result, error)
+	XpathMany(string) ([]*xpath.Result, error)
 	MustCss() *css.Selector
+	MustCssOne(string) *css.Result
+	MustCssMany(string) []*css.Result
 	Css() (*css.Selector, error)
+	CssOne(string) (*css.Result, error)
+	CssMany(string) ([]*css.Result, error)
 	MustJson() *gjson.Selector
+	MustJsonOne(string) *gjson.Result
+	MustJsonMany(string) []*gjson.Result
 	Json() (*gjson.Selector, error)
+	JsonOne(string) (*gjson.Result, error)
+	JsonMany(string) ([]*gjson.Result, error)
 	MustRe() *re.Selector
+	MustReOne(string) *re.Result
+	MustReMany(string) []*re.Result
 	Re() (*re.Selector, error)
+	ReOne(string) (*re.Result, error)
+	ReMany(string) ([]*re.Result, error)
 
 	UniqueKey() string
 	UnmarshalExtra(any) error

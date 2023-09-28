@@ -154,6 +154,14 @@ func (r *Response) MustXpath() (selector *xpath.Selector) {
 	selector, _ = r.Xpath()
 	return
 }
+func (r *Response) MustXpathOne(path string) (result *xpath.Result) {
+	result, _ = r.XpathOne(path)
+	return
+}
+func (r *Response) MustXpathMany(path string) (results []*xpath.Result) {
+	results, _ = r.XpathMany(path)
+	return
+}
 
 // Xpath returns a xpath selector
 func (r *Response) Xpath() (selector *xpath.Selector, err error) {
@@ -170,9 +178,35 @@ func (r *Response) Xpath() (selector *xpath.Selector, err error) {
 	selector, err = xpath.NewSelectorFromBytes(r.bodyBytes)
 	return
 }
+func (r *Response) XpathOne(path string) (result *xpath.Result, err error) {
+	var selector *xpath.Selector
+	selector, err = r.Xpath()
+	if err != nil {
+		return
+	}
+	result = selector.One(path)
+	return
+}
+func (r *Response) XpathMany(path string) (results []*xpath.Result, err error) {
+	var selector *xpath.Selector
+	selector, err = r.Xpath()
+	if err != nil {
+		return
+	}
+	results = selector.Many(path)
+	return
+}
 
 func (r *Response) MustCss() (selector *css.Selector) {
 	selector, _ = r.Css()
+	return
+}
+func (r *Response) MustCssOne(path string) (result *css.Result) {
+	result, _ = r.CssOne(path)
+	return
+}
+func (r *Response) MustCssMany(path string) (results []*css.Result) {
+	results, _ = r.CssMany(path)
 	return
 }
 
@@ -191,9 +225,35 @@ func (r *Response) Css() (selector *css.Selector, err error) {
 	selector, err = css.NewSelectorFromBytes(r.bodyBytes)
 	return
 }
+func (r *Response) CssOne(path string) (result *css.Result, err error) {
+	var selector *css.Selector
+	selector, err = r.Css()
+	if err != nil {
+		return
+	}
+	result = selector.One(path)
+	return
+}
+func (r *Response) CssMany(path string) (results []*css.Result, err error) {
+	var selector *css.Selector
+	selector, err = r.Css()
+	if err != nil {
+		return
+	}
+	results = selector.Many(path)
+	return
+}
 
 func (r *Response) MustJson() (selector *gjson.Selector) {
 	selector, _ = r.Json()
+	return
+}
+func (r *Response) MustJsonOne(path string) (result *gjson.Result) {
+	result, _ = r.JsonOne(path)
+	return
+}
+func (r *Response) MustJsonMany(path string) (results []*gjson.Result) {
+	results, _ = r.JsonMany(path)
 	return
 }
 
@@ -212,9 +272,35 @@ func (r *Response) Json() (selector *gjson.Selector, err error) {
 	selector, err = gjson.NewSelectorFromBytes(r.bodyBytes)
 	return
 }
+func (r *Response) JsonOne(path string) (result *gjson.Result, err error) {
+	var selector *gjson.Selector
+	selector, err = r.Json()
+	if err != nil {
+		return
+	}
+	result = selector.One(path)
+	return
+}
+func (r *Response) JsonMany(path string) (results []*gjson.Result, err error) {
+	var selector *gjson.Selector
+	selector, err = r.Json()
+	if err != nil {
+		return
+	}
+	results = selector.Many(path)
+	return
+}
 
 func (r *Response) MustRe() (selector *re.Selector) {
 	selector, _ = r.Re()
+	return
+}
+func (r *Response) MustReOne(path string) (result *re.Result) {
+	result, _ = r.ReOne(path)
+	return
+}
+func (r *Response) MustReMany(path string) (results []*re.Result) {
+	results, _ = r.ReMany(path)
 	return
 }
 
@@ -231,6 +317,24 @@ func (r *Response) Re() (selector *re.Selector, err error) {
 	}
 
 	selector, err = re.NewSelectorFromBytes(r.bodyBytes)
+	return
+}
+func (r *Response) ReOne(path string) (result *re.Result, err error) {
+	var selector *re.Selector
+	selector, err = r.Re()
+	if err != nil {
+		return
+	}
+	result = selector.One(path)
+	return
+}
+func (r *Response) ReMany(path string) (results []*re.Result, err error) {
+	var selector *re.Selector
+	selector, err = r.Re()
+	if err != nil {
+		return
+	}
+	results = selector.Many(path)
 	return
 }
 func areSameDomain(url1, url2 *url.URL) bool {
