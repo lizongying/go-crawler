@@ -435,6 +435,7 @@ func (r *Request) SetBodyJson(bodyJson any) pkg.Request {
 	}
 	r.bodyStr = string(bodyBytes)
 	r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+	r.SetHeader("content-type", "application/json")
 	return r
 }
 func (r *Request) GetHeader(key string) string {

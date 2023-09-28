@@ -51,6 +51,8 @@ func (m *HttpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err
 		return
 	}
 
+	m.logger.Debugf("request %+v\n", request.GetRequest())
+
 	return
 }
 
