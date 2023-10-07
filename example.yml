@@ -16,22 +16,25 @@ redis:
     addr: 127.0.0.1:6379
     password:
     db: 0
-s3_enable: false
-s3:
-  example:
-    endpoint:
-    region:
-    id:
-    key:
-    bucket: crawler
+store:
+  #  - name: minio
+  #    type:  # s3/oss/cos/minio/file
+  #    endpoint: http://127.0.0.1:9000 # http://127.0.0.1:9000 file://tmp/
+  #    region:
+  #    id:
+  #    key:
+  #    bucket: crawler
+  - name: file
+    type: file # s3/oss/cos/minio/file
+    endpoint:  # http://127.0.0.1:9000 file://tmp/
 kafka_enable: false
 kafka:
   example:
     uri: localhost:9092
 log:
   filename: /tmp/spider_{name}.log
-  long_file: true
-  level: info
+  long_file: false # true/false
+  level: info # debug/info/warn/error
 proxy:
   example:
 request:
@@ -42,12 +45,14 @@ request:
     - 200
   retry_max_times: 10
   http_proto: 2.0
+  header:
+    accept_encoding: gzip, deflate, br
 api:
   enable: true
   host: http://localhost:8080
   key:
 mock_server:
-  enable: false
+  enable: true
   host: https://localhost:8081
   client_auth: 0
 close_reason:
@@ -56,8 +61,8 @@ enable_ja3: false
 enable_priority_queue: true
 enable_stats_middleware: true
 enable_dump_middleware: true
-scheduler: memory
-filter: memory
+scheduler: memory # memory/redis/kafka
+filter: memory # memory/redis
 enable_filter_middleware: true
 enable_file_middleware: true
 enable_image_middleware: true
@@ -77,6 +82,7 @@ enable_chrome_middleware: true
 enable_device_middleware: false
 enable_proxy_middleware: true
 enable_robots_txt_middleware: false
+enable_record_error_middleware: false
 enable_dump_pipeline: true
 enable_file_pipeline: true
 enable_image_pipeline: true

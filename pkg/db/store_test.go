@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
@@ -12,23 +11,26 @@ import (
 	"testing"
 )
 
-// go test -v ./pkg/db/*.go -run TestNewS3
-func TestNewS3(t *testing.T) {
+// go test -v ./pkg/db/*.go -run TestNewStore
+func TestNewStore(t *testing.T) {
 	_ = os.Setenv("CRAWLER_CONFIG_FILE", "/Users/lizongying/IdeaProjects/go-crawler/dev.yml")
 	fx.New(
 		fx.Provide(
 			cli.NewCli,
-			NewS3,
 			fx.Annotate(
 				loggers.NewLogger,
 				fx.As(new(pkg.Logger)),
 			),
+			fx.Annotate(
+				NewStore,
+				fx.As(new(pkg.Store)),
+			),
 			config.NewConfig,
 		),
-		fx.Invoke(func(logger pkg.Logger, s3 *s3.Client, shutdowner fx.Shutdowner) {
+		fx.Invoke(func(logger pkg.Logger, store pkg.Store, shutdowner fx.Shutdowner) {
 			var err error
 			ctx := context.Background()
-			buckets, err := s3.ListBuckets(ctx, nil)
+			buckets, err := store.S3Client().ListBuckets(ctx, nil)
 			for _, v := range buckets.Buckets {
 				logger.Info(*v.Name, *v.CreationDate)
 			}

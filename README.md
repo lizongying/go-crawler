@@ -113,7 +113,7 @@ go get -u github.com/lizongying/go-crawler
 go get -u github.com/lizongying/go-crawler@latest
 
 # Latest Submission (Recommended).
-go get -u github.com/lizongying/go-crawler@be9b722
+go get -u github.com/lizongying/go-crawler@11a7d41
 
 ```
 
@@ -770,12 +770,13 @@ Database Configuration:
 * `redis.example.addr:` Redis address.
 * `redis.example.password:` Redis password.
 * `redis.example.db:` Redis database number.
-* `s3_enable:` Whether to enable S3 object storage (e.g., COS, OSS, MinIO, etc.).
-* `s3.example.endpoint:` S3 endpoint.
-* `s3.example.region:` S3 region.
-* `s3.example.id:` S3 access ID.
-* `s3.example.key:` S3 access key.
-* `s3.example.bucket:` S3 bucket name.
+* `store.0.name:` storage name.
+* `store.0.type:` storage type (e.g., s3, cos, oss, minio, file, etc.).
+* `store.0.endpoint:` S3 endpoint or file path like "file://tmp/".
+* `store.0.region:` S3 region.
+* `store.0.id:` S3 access ID.
+* `store.0.key:` S3 access key.
+* `store.0.bucket:` S3 bucket name.
 * `kafka_enable:` Whether to enable Kafka.
 * `kafka.example.uri:` Kafka URI.
 

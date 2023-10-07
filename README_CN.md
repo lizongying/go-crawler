@@ -109,7 +109,7 @@ go get -u github.com/lizongying/go-crawler
 go get -u github.com/lizongying/go-crawler@latest
 
 # 最新提交（推荐）
-go get -u github.com/lizongying/go-crawler@be9b722
+go get -u github.com/lizongying/go-crawler@11a7d41
 
 ```
 
@@ -660,12 +660,13 @@ spider -c example.yml -n example -f TestOk -m once
 * `redis.example.addr:` Redis的地址。
 * `redis.example.password:` Redis的密码。
 * `redis.example.db:` Redis的数据库。
-* `s3_enable:` 是否启用S3对象存储（如COS、OSS、MinIO等）
-* `s3.example.endpoint:` S3的地址
-* `s3.example.region:` S3的区域。
-* `s3.example.id:` S3的ID。
-* `s3.example.key:` S3的密钥。
-* `s3.example.bucket:` S3的桶名称。
+* `store.0.name:` 存储名称，自定义
+* `store.0.type:` 存储方式（如s3、cos、oss、minio、file等）
+* `store.0.endpoint:` 对象存储的地址或者本地文件存储地址如“file://tmp/”
+* `store.0.region:` 对象存储的区域。
+* `store.0.id:` 对象存储的ID。
+* `store.0.key:` 对象存储的密钥。
+* `store.0.bucket:` 对象存储的桶名称。
 * `kafka_enable:` 是否启用Kafka。
 * `kafka.example.uri:` Kafka的URI。
 

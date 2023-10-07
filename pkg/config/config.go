@@ -62,6 +62,16 @@ const defaultFilterType = pkg.FilterMemory
 const defaultSchedulerType = pkg.SchedulerMemory
 const defaultLogLongFile = true
 
+type Store struct {
+	Name     string `yaml:"name" json:"-"`
+	Type     string `yaml:"type" json:"-"`
+	Endpoint string `yaml:"endpoint" json:"-"`
+	Region   string `yaml:"region" json:"-"`
+	Id       string `yaml:"id" json:"-"`
+	Key      string `yaml:"key" json:"-"`
+	Bucket   string `yaml:"bucket" json:"-"`
+}
+
 type Config struct {
 	Env         string `yaml:"env" json:"-"`
 	BotName     string `yaml:"bot_name" json:"-"`
@@ -87,16 +97,8 @@ type Config struct {
 			Db       int    `yaml:"db" json:"-"`
 		} `yaml:"example" json:"-"`
 	} `yaml:"redis" json:"-"`
-	S3Enable bool `yaml:"s3_enable" json:"-"`
-	S3       struct {
-		Example struct {
-			Endpoint string `yaml:"endpoint" json:"-"`
-			Region   string `yaml:"region" json:"-"`
-			Id       string `yaml:"id" json:"-"`
-			Key      string `yaml:"key" json:"-"`
-		} `yaml:"example" json:"-"`
-	} `yaml:"s3" json:"-"`
-	KafkaEnable bool `yaml:"kafka_enable" json:"-"`
+	Store       []*Store `yaml:"store" json:"-"`
+	KafkaEnable bool     `yaml:"kafka_enable" json:"-"`
 	Kafka       struct {
 		Example struct {
 			Uri string `yaml:"uri" json:"-"`
@@ -674,6 +676,10 @@ func (c *Config) GetFilter() pkg.FilterType {
 	}
 
 	return pkg.FilterUnknown
+}
+
+func (c *Config) GetStore() []*Store {
+	return c.Store
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

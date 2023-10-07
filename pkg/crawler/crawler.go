@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 	"github.com/lizongying/cron"
 	"github.com/lizongying/go-crawler/pkg"
@@ -30,7 +29,7 @@ type Crawler struct {
 	Redis       *redis.Client
 	Kafka       *kafka.Writer
 	KafkaReader *kafka.Reader
-	S3          *s3.Client
+	Store       pkg.Store
 	mockServer  pkg.MockServer
 	api         *api.Api
 }
@@ -86,8 +85,8 @@ func (c *Crawler) GetMysql() *sql.DB {
 func (c *Crawler) GetRedis() *redis.Client {
 	return c.Redis
 }
-func (c *Crawler) GetS3() *s3.Client {
-	return c.S3
+func (c *Crawler) GetStore() pkg.Store {
+	return c.Store
 }
 func (c *Crawler) SpiderStart(ctx context.Context, req pkg.ReqSpiderStart) (err error) {
 	taskId := req.TaskId
@@ -198,7 +197,7 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, s3 *s3.Client, mockServer pkg.MockServer, httpApi *api.Api) (crawler pkg.Crawler, err error) {
+func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, store pkg.Store, mockServer pkg.MockServer, httpApi *api.Api) (crawler pkg.Crawler, err error) {
 	crawler = &Crawler{
 		spiderName:  cli.SpiderName,
 		startFunc:   cli.StartFunc,
@@ -212,7 +211,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		Redis:       redis,
 		Kafka:       kafka,
 		KafkaReader: kafkaReader,
-		S3:          s3,
+		Store:       store,
 		mockServer:  mockServer,
 		api:         httpApi,
 	}

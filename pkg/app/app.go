@@ -32,10 +32,14 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 		db.NewKafka,
 		db.NewKafkaReader,
 		db.NewRedis,
-		db.NewS3,
+		//db.NewStore,
 		fx.Annotate(
 			loggers.NewLogger,
 			fx.As(new(pkg.Logger)),
+		),
+		fx.Annotate(
+			db.NewStore,
+			fx.As(new(pkg.Store)),
 		),
 		config.NewConfig,
 		//fx.Annotate(

@@ -2,9 +2,7 @@ package middlewares
 
 import (
 	"bytes"
-	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/media"
 	"github.com/lizongying/go-crawler/pkg/utils"
@@ -16,10 +14,8 @@ import (
 
 type ImageMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger     pkg.Logger
-	s3         *s3.Client
-	bucketName string
-	key        string
+	logger pkg.Logger
+	store  pkg.Store
 }
 
 func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
@@ -31,7 +27,7 @@ func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response
 
 	isImage := response.Image()
 	if isImage {
-		img, name, e := image.Decode(bytes.NewReader(response.BodyBytes()))
+		img, ext, e := image.Decode(bytes.NewReader(response.BodyBytes()))
 		if e != nil {
 			err = e
 			m.logger.Error(err)
@@ -41,30 +37,20 @@ func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response
 		rect := img.Bounds()
 
 		i := new(media.Image)
-		i.SetName(utils.StrMd5(response.GetUrl()))
-		i.SetExtension(name)
+		name := utils.StrMd5(response.GetUrl())
+		i.SetName(name)
+		i.SetExtension(ext)
 		i.SetWidth(rect.Dx())
 		i.SetHeight(rect.Dy())
 
-		if m.s3 != nil {
-			key := fmt.Sprintf("%s.%s", utils.StrMd5(response.GetUrl()), name)
-			storePath := fmt.Sprintf("s3://%s/%s", m.bucketName, key)
-			uploadParams := &s3.PutObjectInput{
-				Bucket: &m.bucketName,
-				Key:    &key,
-				Body:   bytes.NewReader(response.BodyBytes()),
-			}
-
-			// Upload the file
-			_, e = m.s3.PutObject(context.TODO(), uploadParams)
-			if e != nil {
-				err = e
-				m.logger.Error(err)
-				return
-			}
-
-			i.SetStorePath(storePath)
+		key := fmt.Sprintf("%s.%s", name, ext)
+		storePath := ""
+		storePath, err = m.store.Save("", key, response.BodyBytes())
+		if err != nil {
+			m.logger.Error(err)
+			return
 		}
+		i.SetStorePath(storePath)
 
 		response.SetImages(append(response.Images(), i))
 		stats, ok := spider.GetStats().(pkg.StatsWithImage)
@@ -84,7 +70,7 @@ func (m *ImageMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	m.UnimplementedMiddleware.FromSpider(spider)
 	crawler := spider.GetCrawler()
 	m.logger = spider.GetLogger()
-	m.s3 = crawler.GetS3()
-	m.bucketName = crawler.GetConfig().GetBotName()
+	m.store = crawler.GetStore()
+
 	return m
 }

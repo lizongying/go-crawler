@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
@@ -9,8 +8,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/mockServers"
 	"github.com/lizongying/go-crawler/pkg/request"
-	"github.com/lizongying/go-crawler/pkg/utils"
-	"strconv"
 )
 
 type Spider struct {
@@ -18,80 +15,28 @@ type Spider struct {
 	logger pkg.Logger
 }
 
-func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
-	var extra ExtraOk
-	err = response.UnmarshalExtra(&extra)
-	if err != nil {
-		s.logger.Error(err)
-		return
-	}
-	s.logger.Info("ExtraOk", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
-
-	if extra.Count > 0 {
-		return
-	}
-
-	err = s.YieldItem(ctx, items.NewItemJsonl("image").
-		SetUniqueKey(response.UniqueKey()).
-		SetData(&DataImage{
-			DataOk: DataOk{
-				Count: extra.Count,
-			},
-		}).
-		SetImagesRequest([]pkg.Request{
+func (s *Spider) ParseOk(ctx pkg.Context, _ pkg.Response) (err error) {
+	s.MustYieldItem(ctx, items.NewItemJsonl("image"). // build a jsonl item
+								SetImagesRequest([]pkg.Request{ // with request list
 			request.NewRequest().SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetHost(), mockServers.UrlFile)),
 		}))
-	if err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	//if extra.Count%1000 == 0 {
-	//	s.logger.Info("extra", utils.JsonStr(extra))
-	//}
-	count := extra.Count + 1
-	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
-		SetExtra(&ExtraOk{
-			Count: count,
-		}).
-		SetCallBack(s.ParseOk).
-		SetUniqueKey(strconv.Itoa(count)))
-	if err != nil {
-		s.logger.Error(err)
-		return
-	}
 
 	return
 }
 
-// TestOk go run cmd/testFileSpider/*.go -c dev.yml -n test-file -f TestOk -m once
+// TestOk go run cmd/testFileSpider/*.go -c example.yml -n test-file -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
+
+	// mock a page
 	s.AddMockServerRoutes(mockServers.NewRouteOk(s.logger))
+
+	// mock a image
 	s.AddMockServerRoutes(mockServers.NewRouteFile(s.logger))
 
-	err = s.YieldRequest(ctx, request.NewRequest().
+	// request the page
+	s.MustYieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
-		SetExtra(&ExtraOk{}).
-		SetUniqueKey("0").
 		SetCallBack(s.ParseOk))
-	if err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	return
-}
-
-func (s *Spider) Stop(ctx context.Context) (err error) {
-	err = s.Spider.Stop(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	//err = pkg.DontStopErr
 	return
 }
 

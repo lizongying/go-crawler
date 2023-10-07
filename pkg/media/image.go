@@ -2,8 +2,8 @@ package media
 
 type Image struct {
 	File
-	Width  int
-	Height int
+	Width  int `json:"width"`
+	Height int `json:"height"`
 }
 
 func (i *Image) GetWidth() int {
