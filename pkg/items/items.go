@@ -113,3 +113,26 @@ func NewItemJsonl(fileName string) pkg.Item {
 	item.SetItem(item)
 	return item
 }
+
+type ItemSqlite struct {
+	pkg.ItemUnimplemented
+	table  string
+	update bool
+}
+
+func (i *ItemSqlite) GetTable() string {
+	return i.table
+}
+func (i *ItemSqlite) GetUpdate() bool {
+	return i.update
+}
+
+func NewItemSqlite(table string, update bool) pkg.Item {
+	item := &ItemSqlite{
+		table:  table,
+		update: update,
+	}
+	item.SetName(pkg.ItemSqlite)
+	item.SetItem(item)
+	return item
+}

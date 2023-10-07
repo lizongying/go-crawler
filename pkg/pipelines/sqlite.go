@@ -13,15 +13,15 @@ import (
 	"time"
 )
 
-type MysqlPipeline struct {
+type SqlitePipeline struct {
 	pkg.UnimplementedPipeline
 	env     string
 	logger  pkg.Logger
-	mysql   *sql.DB
+	sqlite  *sql.DB
 	timeout time.Duration
 }
 
-func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+func (m *SqlitePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
 	spider := m.GetSpider()
 	if item == nil {
 		err = errors.New("nil item")
@@ -29,17 +29,17 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		spider.IncItemError()
 		return
 	}
-	if item.Name() != pkg.ItemMysql {
-		m.logger.Warn("item not support", pkg.ItemMysql)
+	if item.Name() != pkg.ItemSqlite {
+		m.logger.Warn("item not support", pkg.ItemSqlite)
 		return
 	}
-	itemMysql, ok := item.Item().(*items.ItemMysql)
+	itemSqlite, ok := item.Item().(*items.ItemSqlite)
 	if !ok {
-		m.logger.Warn("item parsing failed with", pkg.ItemMysql)
+		m.logger.Warn("item parsing failed with", pkg.ItemSqlite)
 		return
 	}
 
-	if itemMysql.GetTable() == "" {
+	if itemSqlite.GetTable() == "" {
 		err = errors.New("table is empty")
 		m.logger.Error(err)
 		spider.IncItemError()
@@ -64,9 +64,11 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	refType := reflect.TypeOf(itemMysql.Data()).Elem()
-	refValue := reflect.ValueOf(itemMysql.Data()).Elem()
+	refType := reflect.TypeOf(itemSqlite.Data()).Elem()
+	refValue := reflect.ValueOf(itemSqlite.Data()).Elem()
 	var columns []string
+	var columns1 []string
+	var columns2 []string
 	var values []any
 	for i := 0; i < refType.NumField(); i++ {
 		column := refType.Field(i).Tag.Get("column")
@@ -74,12 +76,14 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 			column = refType.Field(i).Name
 		}
 		columns = append(columns, fmt.Sprintf("%s=?", column))
+		columns1 = append(columns1, fmt.Sprintf("`%s`", column))
+		columns2 = append(columns2, "?")
 		value := refValue.Field(i).Interface()
 		values = append(values, value)
 	}
 
-	s := fmt.Sprintf(`INSERT %s SET %s`, itemMysql.GetTable(), strings.Join(columns, ","))
-	stmt, err := m.mysql.PrepareContext(ctx, s)
+	s := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, itemSqlite.GetTable(), strings.Join(columns1, ","), strings.Join(columns2, ","))
+	stmt, err := m.sqlite.PrepareContext(ctx, s)
 	if err != nil {
 		m.logger.Error(err)
 		spider.IncItemError()
@@ -95,10 +99,10 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 			return
 		}
 
-		if itemMysql.GetUpdate() && !reflect.ValueOf(itemMysql.Id()).IsZero() && e.Number == 1062 {
-			s = fmt.Sprintf(`UPDATE %s SET %s WHERE id=?`, itemMysql.GetTable(), strings.Join(columns, ","))
-			values = append(values, itemMysql.Id())
-			stmt, err = m.mysql.PrepareContext(ctx, s)
+		if itemSqlite.GetUpdate() && !reflect.ValueOf(itemSqlite.Id()).IsZero() && e.Number == 1062 {
+			s = fmt.Sprintf(`UPDATE %s SET %s WHERE id=?`, itemSqlite.GetTable(), strings.Join(columns, ","))
+			values = append(values, itemSqlite.Id())
+			stmt, err = m.sqlite.PrepareContext(ctx, s)
 			if err != nil {
 				m.logger.Error(err)
 				spider.IncItemError()
@@ -119,7 +123,7 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 				return
 			}
 
-			m.logger.Info(itemMysql.GetTable(), "update success", itemMysql.Id())
+			m.logger.Info(itemSqlite.GetTable(), "update success", itemSqlite.Id())
 		} else {
 			m.logger.Error(err)
 			spider.IncItemError()
@@ -133,23 +137,23 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 			return
 		}
 
-		m.logger.Info(itemMysql.GetTable(), "insert success", id)
+		m.logger.Info(itemSqlite.GetTable(), "insert success", id)
 	}
 
 	spider.IncItemSuccess()
 	return
 }
 
-func (m *MysqlPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *SqlitePipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
 	if m == nil {
-		return new(MysqlPipeline).FromSpider(spider)
+		return new(SqlitePipeline).FromSpider(spider)
 	}
 
 	m.UnimplementedPipeline.FromSpider(spider)
 	crawler := spider.GetCrawler()
 	m.env = spider.GetConfig().GetEnv()
 	m.logger = spider.GetLogger()
-	m.mysql = crawler.GetMysql()
+	m.sqlite = crawler.GetSqlite().Client()
 	m.timeout = time.Minute
 	return m
 }

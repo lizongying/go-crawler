@@ -72,6 +72,11 @@ type Store struct {
 	Bucket   string `yaml:"bucket" json:"-"`
 }
 
+type Sqlite struct {
+	Name string `yaml:"name" json:"-"`
+	Path string `yaml:"path" json:"-"`
+}
+
 type Config struct {
 	Env         string `yaml:"env" json:"-"`
 	BotName     string `yaml:"bot_name" json:"-"`
@@ -97,8 +102,9 @@ type Config struct {
 			Db       int    `yaml:"db" json:"-"`
 		} `yaml:"example" json:"-"`
 	} `yaml:"redis" json:"-"`
-	Store       []*Store `yaml:"store" json:"-"`
-	KafkaEnable bool     `yaml:"kafka_enable" json:"-"`
+	Sqlite      []*Sqlite `yaml:"sqlite" json:"-"`
+	Store       []*Store  `yaml:"store" json:"-"`
+	KafkaEnable bool      `yaml:"kafka_enable" json:"-"`
 	Kafka       struct {
 		Example struct {
 			Uri string `yaml:"uri" json:"-"`
@@ -677,7 +683,9 @@ func (c *Config) GetFilter() pkg.FilterType {
 
 	return pkg.FilterUnknown
 }
-
+func (c *Config) GetSqlite() []*Sqlite {
+	return c.Sqlite
+}
 func (c *Config) GetStore() []*Store {
 	return c.Store
 }

@@ -16,6 +16,10 @@ redis:
     addr: 127.0.0.1:6379
     password:
     db: 0
+sqlite:
+  - name: sqlite
+    path: static/crawler.db
+    database: crawler
 store:
   #  - name: minio
   #    type:  # s3/oss/cos/minio/file

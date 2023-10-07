@@ -38,6 +38,10 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 			fx.As(new(pkg.Logger)),
 		),
 		fx.Annotate(
+			db.NewSqlite,
+			fx.As(new(pkg.Sqlite)),
+		),
+		fx.Annotate(
 			db.NewStore,
 			fx.As(new(pkg.Store)),
 		),

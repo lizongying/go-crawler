@@ -50,7 +50,7 @@ distributed deployment.
 ### Support Summary
 
 * Parsing supports CSS, XPath, Regex, and JSON.
-* Output supports JSON, CSV, MongoDB, MySQL, and Kafka.
+* Output supports JSON, CSV, MongoDB, MySQL, Sqlite, and Kafka.
 * Supports Chinese decoding for gb2312, gb18030, gbk, big5 character encodings.
 * Supports gzip, deflate, and brotli decompression.
 * Supports distributed processing.
@@ -218,6 +218,7 @@ Spider Options
 * `WithCsvPipeline`: Set the CSV data processing pipeline to save crawled data in CSV format.
 * `WithJsonLinesPipeline`: Set the JSON Lines data processing pipeline to save crawled data in JSON Lines format.
 * `WithMongoPipeline`: Set the MongoDB data processing pipeline to save crawled data to a MongoDB database.
+* `WithSqlitePipeline`: Set the Sqlite data processing pipeline to save crawled data to a Sqlite database.
 * `WithMysqlPipeline`: Set the MySQL data processing pipeline to save crawled data to a MySQL database.
 * `WithKafkaPipeline`: Set the Kafka data processing pipeline to send crawled data to a Kafka message queue.
 * `WithCustomPipeline`: Set the custom data processing pipeline.
@@ -247,7 +248,8 @@ pkg.ItemUnimplemented
 Item has some common methods:
 
 * `Name() pkg.ItemName`: Get the specific type of the Item, such
-  as `pkg.ItemNone`, `pkg.ItemCsv`, `pkg.ItemJsonl`, `pkg.ItemMongo`, `pkg.ItemMysql`, `pkg.ItemKafka`, etc.,
+  as `pkg.ItemNone`, `pkg.ItemCsv`, `pkg.ItemJsonl`, `pkg.ItemMongo`, `pkg.ItemMysql`, `pkg.ItemSqlite`, `pkg.ItemKafka`,
+  etc.,
   which is used for deserializing the Item to the specific Item implementation.
 * `SetReferrer(string)`: Set the referrer, which can be used to record the source of the request. Generally,
   there is no need to set it manually as it is automatically set by the `ReferrerMiddleware`.
@@ -271,7 +273,8 @@ Item has some common methods:
 * `SetImages([]pkg.Image)`: Set the downloaded images using this method.
 * `Images() []pkg.Image`: Get the downloaded images.
 * Built-in Item Implementations: The framework provides some built-in Item implementations, such
-  as `pkg.ItemNone`, `pkg.ItemCsv`, `pkg.ItemJsonl`, `pkg.ItemMongo`, `pkg.ItemMysql`, `pkg.ItemKafka`, etc.
+  as `pkg.ItemNone`, `pkg.ItemCsv`, `pkg.ItemJsonl`, `pkg.ItemMongo`, `pkg.ItemMysql`, `pkg.ItemSqlite`, `pkg.ItemKafka`,
+  etc.
   You can return an Item as needed and enable the corresponding Pipeline. For example:
 
     ```go
@@ -285,20 +288,28 @@ Item has some common methods:
     ```
 
     * pkg.ItemNone: This Item does not implement any other methods and is mainly used for debugging.
-    * `items.NewItemNone()`
+        * `items.NewItemNone()`
     * pkg.ItemCsv: Saves data to a CSV file.
-    * `items.NewItemCsv(filename string)`: filename is the name of the file to be saved, without the extension.
+        * `items.NewItemCsv(filename string)`
+        * filename is the name of the file to be saved, without the extension.
     * pkg.ItemJsonl: Saves data to a JSONL file.
-    * `items.NewItemJsonl(filename string)`: filename is the name of the file to be saved, without the
-      extension.
+        * `items.NewItemJsonl(filename string)`
+        * filename is the name of the file to be saved, without the extension.
     * pkg.ItemMongo: Saves data to MongoDB.
-    * `items.NewItemMongo(collection string, update bool)`: collection is the MongoDB collection, and update
-      indicates whether to update the data if it already exists in MongoDB.
+        * `items.NewItemMongo(collection string, update bool)`
+        * collection is the MongoDB collection
+        * update: whether to update the data if it already exists in MongoDB.
+    * pkg.ItemSqlite: Saves data to Sqlite.
+        * `items.NewItemSqlite(table string, update bool)`
+        * table: the Sqlite table
+        * update: whether to update the data if it already exists in Sqlite.
     * pkg.ItemMysql: Saves data to MySQL.
-    * `items.NewItemMysql(table string, update bool)`: table is the MySQL table, and update indicates whether to
-      update the data if it already exists in MySQL.
+        * `items.NewItemMysql(table string, update bool)`
+        * table: the MySQL table
+        * update: whether to update the data if it already exists in MySQL.
     * pkg.ItemKafka: Sends data to Kafka.
-    * `items.NewItemKafka(topic string)`: topic is the Kafka topic.
+        * `items.NewItemKafka(topic string)`
+        * topic: the Kafka topic.
 
 ### Middleware
 
@@ -501,14 +512,21 @@ The following are the built-in pipelines with their respective `order` values:
     * You can control whether to enable this pipeline by configuring `enable_mongo_pipeline`, which is disabled by
       default.
     * `spider.WithOptions(pkg.WithMongoPipeline()`
-* mysql: 104
+* sqlite: 104
+    * Used to save results to Sqlite.
+    * You need to set the `Table` in the `ItemSqlite`, which specifies the name of the table to be saved.
+    * You can use the tag `column:""` to define the column names of the Sqlite table.
+    * You can control whether to enable this pipeline by configuring `enable_sqlite_pipeline`, which is disabled by
+      default.
+    * `spider.WithOptions(pkg.WithSqlitePipeline()`
+* mysql: 105
     * Used to save results to MySQL.
     * You need to set the `Table` in the `ItemMysql`, which specifies the name of the table to be saved.
     * You can use the tag `column:""` to define the column names of the MySQL table.
     * You can control whether to enable this pipeline by configuring `enable_mysql_pipeline`, which is disabled by
       default.
     * `spider.WithOptions(pkg.WithMysqlPipeline()`
-* kafka: 105
+* kafka: 106
     * Used to save results to Kafka.
     * You need to set the `Topic` in the `ItemKafka`, which specifies the name of the topic to be saved.
     * You can use the tag `json:""` to define the fields of the Kafka message.
@@ -770,6 +788,8 @@ Database Configuration:
 * `redis.example.addr:` Redis address.
 * `redis.example.password:` Redis password.
 * `redis.example.db:` Redis database number.
+* `sqlite.0.name:` sqlite name.
+* `sqlite.0.path` sqlite file path.
 * `store.0.name:` storage name.
 * `store.0.type:` storage type (e.g., s3, cos, oss, minio, file, etc.).
 * `store.0.endpoint:` S3 endpoint or file path like "file://tmp/".
@@ -825,6 +845,7 @@ Middleware and Pipeline Configuration:
 * `enable_csv_pipeline:` Whether to enable the CSV pipeline, disabled by default.
 * `enable_json_lines_pipeline:` Whether to enable the JSON Lines pipeline, disabled by default.
 * `enable_mongo_pipeline:` Whether to enable the MongoDB pipeline, disabled by default.
+* `enable_sqlite_pipeline:` Whether to enable the Sqlite pipeline, disabled by default.
 * `enable_mysql_pipeline:` Whether to enable the MySQL pipeline, disabled by default.
 * `enable_kafka_pipeline:` Whether to enable the Kafka pipeline, disabled by default.
 * `enable_priority_queue:` Whether to enable the priority queue, enabled by default, currently only supports Redis.

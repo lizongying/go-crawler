@@ -16,6 +16,7 @@ type Exporter interface {
 	WithCsvPipeline()
 	WithJsonLinesPipeline()
 	WithMongoPipeline()
+	WithSqlitePipeline()
 	WithMysqlPipeline()
 	WithKafkaPipeline()
 	WithCustomPipeline(Pipeline)

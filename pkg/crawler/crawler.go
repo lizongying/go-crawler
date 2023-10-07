@@ -29,6 +29,7 @@ type Crawler struct {
 	Redis       *redis.Client
 	Kafka       *kafka.Writer
 	KafkaReader *kafka.Reader
+	Sqlite      pkg.Sqlite
 	Store       pkg.Store
 	mockServer  pkg.MockServer
 	api         *api.Api
@@ -84,6 +85,9 @@ func (c *Crawler) GetMysql() *sql.DB {
 }
 func (c *Crawler) GetRedis() *redis.Client {
 	return c.Redis
+}
+func (c *Crawler) GetSqlite() pkg.Sqlite {
+	return c.Sqlite
 }
 func (c *Crawler) GetStore() pkg.Store {
 	return c.Store
@@ -197,7 +201,7 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	return
 }
 
-func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, store pkg.Store, mockServer pkg.MockServer, httpApi *api.Api) (crawler pkg.Crawler, err error) {
+func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, sqlite pkg.Sqlite, store pkg.Store, mockServer pkg.MockServer, httpApi *api.Api) (crawler pkg.Crawler, err error) {
 	crawler = &Crawler{
 		spiderName:  cli.SpiderName,
 		startFunc:   cli.StartFunc,
@@ -211,6 +215,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		Redis:       redis,
 		Kafka:       kafka,
 		KafkaReader: kafkaReader,
+		Sqlite:      sqlite,
 		Store:       store,
 		mockServer:  mockServer,
 		api:         httpApi,

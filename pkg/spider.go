@@ -283,6 +283,11 @@ func WithMongoPipeline() SpiderOption {
 		spider.GetScheduler().GetExporter().WithMongoPipeline()
 	}
 }
+func WithSqlitePipeline() SpiderOption {
+	return func(spider Spider) {
+		spider.GetScheduler().GetExporter().WithSqlitePipeline()
+	}
+}
 func WithMysqlPipeline() SpiderOption {
 	return func(spider Spider) {
 		spider.GetScheduler().GetExporter().WithMysqlPipeline()

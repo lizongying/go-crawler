@@ -48,7 +48,7 @@
 ### 支持情况
 
 * 解析支持CSS、XPath、Regex、Json
-* 支持Json、Csv、Mongo、Mysql、Kafka输出
+* 支持Json、Csv、Mongo、Mysql、Sqlite、Kafka输出
 * 支持gb2312、gb18030、gbk、big5中文解码
 * 支持gzip、deflate、brotli解压缩
 * 支持分布式
@@ -205,6 +205,7 @@ Spider选项
 * `WithCsvPipeline` 设置 CSV 数据处理管道，将爬取的数据保存为 CSV 格式。
 * `WithJsonLinesPipeline` 设置 JSON Lines 数据处理管道，将爬取的数据保存为 JSON Lines 格式。
 * `WithMongoPipeline` 设置 MongoDB 数据处理管道，将爬取的数据保存到 MongoDB 数据库。
+* `WithSqlitePipeline` 设置 Sqlite 数据处理管道，将爬取的数据保存到 Sqlite 数据库。
 * `WithMysqlPipeline` 设置 MySQL 数据处理管道，将爬取的数据保存到 MySQL 数据库。
 * `WithKafkaPipeline` 设置 Kafka 数据处理管道，将爬取的数据发送到 Kafka 消息队列。
 * `WithCustomPipeline` 设置自定义数据处理管道。
@@ -234,7 +235,7 @@ pkg.ItemUnimplemented
 Item有一些通用方法：
 
 * `Name() pkg.ItemName`
-  获取Item的具体类型，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemMysql、pkg.ItemKafka等，用于Item反序列化到具体Item实现。
+  获取Item的具体类型，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、pkg.ItemMysql、pkg.ItemKafka等，用于Item反序列化到具体Item实现。
 * `SetReferrer(string)` 设置referrer，可以用于记录请求的来源，一般不需要自己设置，由ReferrerMiddleware自动设置。
 * `Referrer() string` 获取referrer。
 * `SetUniqueKey(string)` 设置uniqueKey，可以用于过滤和其他唯一用途。
@@ -252,37 +253,42 @@ Item有一些通用方法：
 * `SetImages([]pkg.Image)` 设置图片。下载后的图片通过这个方法设置到Item中。
 * `Images() []pkg.Image` 获取图片。
 
-* 内置Item实现：框架提供了一些内置的Item实现，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemMysql、pkg.ItemKafka等。
-  您可以根据需要，返回Item，并开启相应的Pipeline。如：
-  ```go
-  err = s.YieldItem(ctx, items.NewItemMongo(s.collection, true).
-  SetUniqueKey(extra.Keyword).
-  SetId(extra.Keyword).
-  SetData(&data))
-    
-  ```
-  ```go
-  spider.WithOptions(pkg.WithMongoPipeline())
-  ```
-    * pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
-        * `items.NewItemNone()`
-    * pkg.ItemCsv 保存到csv中。
-        * `items.NewItemCsv(filename string)`
-        * filename：存储的文件名，不包括拓展名
-    * pkg.ItemJsonl 保存到jsonl中。
-        * `items.NewItemJsonl(filename string)`
-        * filename：存储的文件名，不包括拓展名
-    * pkg.ItemMongo 保存到mongo中。
-        * `items.NewItemMongo(collection string, update bool)`
-        * collection：mongo collection
-        * update：如果数据已存在mongo中，是否更新
-    * pkg.ItemMysql 保存到mysql中。
-        * `items.NewItemMysql(table string, update bool)`
-        * table：mysql table
-        * update：如果数据已存在mongo中，是否更新
-    * pkg.ItemKafka 保存到kafka中。
-        * `items.NewItemKafka(topic string)`
-        * topic：kafka topic
+*
+内置Item实现：框架提供了一些内置的Item实现，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、pkg.ItemMysql、pkg.ItemKafka等。
+您可以根据需要，返回Item，并开启相应的Pipeline。如：
+```go
+err = s.YieldItem(ctx, items.NewItemMongo(s.collection, true).
+SetUniqueKey(extra.Keyword).
+SetId(extra.Keyword).
+SetData(&data))
+  
+```
+```go
+spider.WithOptions(pkg.WithMongoPipeline())
+```
+  * pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
+      * `items.NewItemNone()`
+  * pkg.ItemCsv 保存到csv中。
+      * `items.NewItemCsv(filename string)`
+      * filename：存储的文件名，不包括拓展名
+  * pkg.ItemJsonl 保存到jsonl中。
+      * `items.NewItemJsonl(filename string)`
+      * filename：存储的文件名，不包括拓展名
+  * pkg.ItemMongo 保存到mongo中。
+      * `items.NewItemMongo(collection string, update bool)`
+      * collection：mongo collection
+      * update：如果数据已存在mongo中，是否更新
+  * pkg.ItemSqlite 保存到Sqlite中。
+      * `items.NewItemSqlite(table string, update bool)`
+      * table：sqlite table
+      * update：如果数据已存在mongo中，是否更新
+  * pkg.ItemMysql 保存到mysql中。
+      * `items.NewItemMysql(table string, update bool)`
+      * table：mysql table
+      * update：如果数据已存在mongo中，是否更新
+  * pkg.ItemKafka 保存到kafka中。
+      * `items.NewItemKafka(topic string)`
+      * topic：kafka topic
 
 ### 中间件
 
@@ -423,13 +429,19 @@ middleware/pipeline包括框架内置、公共自定义（internal/middlewares�
     * 您可以使用tag `bson:""`来定义MongoDB文档的字段。
     * 您可以通过配置enable_mongo_pipeline来控制是否启用该Pipeline，默认关闭。
     * `spider.WithOptions(pkg.WithMongoPipeline()`
-* mysql: 104
+* sqlite: 104
+    * 用于将结果保存到Sqlite中。
+    * 需要在ItemSqlite中设置`Table`，指定保存的表名。
+    * 您可以使用tag `column:""`来定义Sqlite表的列名。
+    * 您可以通过配置enable_sqlite_pipeline来控制是否启用该Pipeline，默认关闭。
+    * `spider.WithOptions(pkg.WithSqlitePipeline()`
+* mysql: 105
     * 用于将结果保存到MySQL中。
     * 需要在ItemMysql中设置`Table`，指定保存的表名。
     * 您可以使用tag `column:""`来定义MySQL表的列名。
     * 您可以通过配置enable_mysql_pipeline来控制是否启用该Pipeline，默认关闭。
     * `spider.WithOptions(pkg.WithMysqlPipeline()`
-* kafka: 105
+* kafka: 106
     * 用于将结果保存到Kafka中。
     * 需要在ItemKafka中设置`Topic`，指定保存的主题名。
     * 您可以使用tag `json:""`来定义Kafka消息的字段。
@@ -660,6 +672,8 @@ spider -c example.yml -n example -f TestOk -m once
 * `redis.example.addr:` Redis的地址。
 * `redis.example.password:` Redis的密码。
 * `redis.example.db:` Redis的数据库。
+* `sqlite.0.name:` sqlite名称，自定义
+* `sqlite.0.path:` sqlite文件地址
 * `store.0.name:` 存储名称，自定义
 * `store.0.type:` 存储方式（如s3、cos、oss、minio、file等）
 * `store.0.endpoint:` 对象存储的地址或者本地文件存储地址如“file://tmp/”
@@ -712,6 +726,7 @@ spider -c example.yml -n example -f TestOk -m once
 * `enable_csv_pipeline:` 是否开启csv Pipeline，默认关闭。
 * `enable_json_lines_pipeline:` 是否开启json lines Pipeline，默认关闭。
 * `enable_mongo_pipeline:` 是否开启mongo Pipeline，默认关闭。
+* `enable_sqlite_pipeline:` 是否开启sqlite Pipeline，默认关闭。
 * `enable_mysql_pipeline:` 是否开启mysql Pipeline，默认关闭。
 * `enable_kafka_pipeline:` 是否开启kafka Pipeline，默认关闭。
 * `enable_priority_queue:` 是否开启优先级队列，默认开启，目前只支持redis。

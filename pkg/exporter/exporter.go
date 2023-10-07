@@ -20,11 +20,13 @@ type Exporter struct {
 
 func (e *Exporter) Export(ctx context.Context, item pkg.Item) (err error) {
 	for _, v := range e.pipelines {
-		er := v.ProcessItem(ctx, item)
-		if er != nil {
-			e.logger.Error(err)
-			err = errors.Join(err, er)
+		e := v.ProcessItem(ctx, item)
+		if e != nil {
+			err = errors.Join(err, e)
 		}
+	}
+	if err != nil {
+		e.logger.Error(err)
 	}
 	return
 }
@@ -116,11 +118,14 @@ func (e *Exporter) WithJsonLinesPipeline() {
 func (e *Exporter) WithMongoPipeline() {
 	e.SetPipeline(new(pipelines.MongoPipeline), 103)
 }
+func (e *Exporter) WithSqlitePipeline() {
+	e.SetPipeline(new(pipelines.SqlitePipeline), 104)
+}
 func (e *Exporter) WithMysqlPipeline() {
-	e.SetPipeline(new(pipelines.MysqlPipeline), 104)
+	e.SetPipeline(new(pipelines.MysqlPipeline), 105)
 }
 func (e *Exporter) WithKafkaPipeline() {
-	e.SetPipeline(new(pipelines.KafkaPipeline), 105)
+	e.SetPipeline(new(pipelines.KafkaPipeline), 106)
 }
 func (e *Exporter) WithCustomPipeline(pipeline pkg.Pipeline) {
 	e.SetPipeline(pipeline, 110)

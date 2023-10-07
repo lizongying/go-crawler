@@ -93,6 +93,8 @@ github.com/lizongying/go-xpath v0.0.0-20230906104639-f46eb0e080c4 h1:yGFXQ29+P2W
 github.com/lizongying/go-xpath v0.0.0-20230906104639-f46eb0e080c4/go.mod h1:wlEtOc9+EcNKVB9TNsSeNPcYo6DNqmgQeT51h8BmmD0=
 github.com/lizongying/gooptimizer v1.0.2 h1:y3Wj5loP1RivhMV84Jc90lj1iO8MKQrWVq611g46JRY=
 github.com/lizongying/gooptimizer v1.0.2/go.mod h1:BnXnAp+c+rxShQqzSHlH05KInoCp290fVOPomRjIbFQ=
+github.com/mattn/go-sqlite3 v1.14.17 h1:mCRHCLDUBXgpKAqIKsaAaAsrAlbkeomtRFKXh2L6YIM=
+github.com/mattn/go-sqlite3 v1.14.17/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe h1:iruDEfMl2E6fbMZ9s0scYfZQ84/6SPL6zC8ACM2oIL0=
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=
 github.com/pierrec/lz4/v4 v4.1.15 h1:MO0/ucJhngq7299dKLwIMtgTfbkoSPF6AoMYDd8Q4q0=

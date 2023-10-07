@@ -17,6 +17,7 @@ require (
 	github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f
 	github.com/lizongying/go-re v0.0.0-20230906094757-1b48356fa6db
 	github.com/lizongying/go-xpath v0.0.0-20230906104639-f46eb0e080c4
+	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/refraction-networking/utls v1.3.2

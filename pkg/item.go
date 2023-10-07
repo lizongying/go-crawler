@@ -7,12 +7,13 @@ import (
 type ItemName string
 
 const (
-	ItemNone  ItemName = ""
-	ItemMongo ItemName = "mongo"
-	ItemKafka ItemName = "kafka"
-	ItemMysql ItemName = "mysql"
-	ItemCsv   ItemName = "csv"
-	ItemJsonl ItemName = "jsonl"
+	ItemNone   ItemName = ""
+	ItemMongo  ItemName = "mongo"
+	ItemKafka  ItemName = "kafka"
+	ItemMysql  ItemName = "mysql"
+	ItemCsv    ItemName = "csv"
+	ItemJsonl  ItemName = "jsonl"
+	ItemSqlite ItemName = "sqlite"
 )
 
 type Item interface {

@@ -6,7 +6,7 @@ type ExtraOk struct {
 
 type DataOk struct {
 	Id    string `column:"id"  bson:"_id" json:"id"`
-	Count int    `column:"Count"  bson:"count" json:"count"`
+	Count int    `column:"count"  bson:"count" json:"count"`
 	A     uint   `column:"a"`
 	B     uint32 `column:"b"`
 	C     string `column:"c"`

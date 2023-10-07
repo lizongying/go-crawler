@@ -8,6 +8,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/mockServers"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"strconv"
 )
 
 type Spider struct {
@@ -210,6 +211,46 @@ func (s *Spider) ParseJsonl(ctx pkg.Context, response pkg.Response) (err error) 
 	return
 }
 
+func (s *Spider) ParseSqlite(ctx pkg.Context, response pkg.Response) (err error) {
+	var extra ExtraOk
+	if err = response.UnmarshalExtra(&extra); err != nil {
+		s.logger.Error(err)
+		return
+	}
+	s.logger.Info("extra", utils.JsonStr(extra))
+	s.logger.Info("response", response.BodyStr())
+
+	if extra.Count > 2 {
+		return
+	}
+
+	if err = s.YieldItem(ctx, items.NewItemSqlite(s.tableTest, true).
+		SetUniqueKey(strconv.Itoa(extra.Count)).
+		SetId(strconv.Itoa(extra.Count)).
+		SetData(&DataOk{
+			Id: strconv.Itoa(extra.Count),
+			A:  0,
+			B:  2,
+			C:  "",
+			D:  "2",
+		})); err != nil {
+		s.logger.Error(err)
+		return
+	}
+
+	if err = s.YieldRequest(ctx, request.NewRequest().
+		SetUrl(response.GetUrl()).
+		SetExtra(&ExtraOk{
+			Count: extra.Count + 1,
+		}).
+		SetCallBack(s.ParseSqlite)); err != nil {
+		s.logger.Error(err)
+		return
+	}
+
+	return
+}
+
 // TestMongo go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestMongo -m once
 func (s *Spider) TestMongo(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
@@ -275,6 +316,27 @@ func (s *Spider) TestJsonl(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
+// TestSqlite go run cmd/testItemSpider/*.go -c example.yml -n test-item -f TestSqlite -m once
+// CREATE TABLE IF NOT EXISTS test (
+//
+//	id INTEGER PRIMARY KEY AUTOINCREMENT,
+//	count INTEGER NOT NULL,
+//	a INTEGER NOT NULL,
+//	b INTEGER NOT NULL,
+//	c TEXT NOT NULL,
+//	d TEXT NOT NULL)
+func (s *Spider) TestSqlite(ctx pkg.Context, _ string) (err error) {
+	if err = s.YieldRequest(ctx, request.NewRequest().
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetExtra(&ExtraOk{}).
+		SetCallBack(s.ParseSqlite)); err != nil {
+		s.logger.Error(err)
+		return
+	}
+
+	return
+}
+
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	spider = &Spider{
 		Spider:         baseSpider,
@@ -288,11 +350,12 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 		pkg.WithName("test-item"),
 		pkg.WithHost("https://localhost:8081"),
 
-		pkg.WithMongoPipeline(),
+		//pkg.WithMongoPipeline(),
 		//pkg.WithCsvPipeline(),
 		//pkg.WithJsonLinesPipeline(),
 		//pkg.WithMysqlPipeline(),
 		//pkg.WithKafkaPipeline(),
+		pkg.WithSqlitePipeline(),
 	)
 
 	return

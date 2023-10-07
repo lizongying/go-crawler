@@ -25,6 +25,7 @@ type Crawler interface {
 	GetRedis() *redis.Client
 	GetMongoDb() *mongo.Database
 	GetMysql() *sql.DB
+	GetSqlite() Sqlite
 	GetStore() Store
 
 	SpiderStart(context.Context, ReqSpiderStart) error
