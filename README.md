@@ -113,7 +113,7 @@ go get -u github.com/lizongying/go-crawler
 go get -u github.com/lizongying/go-crawler@latest
 
 # Latest Submission (Recommended).
-go get -u github.com/lizongying/go-crawler@11a7d41
+go get -u github.com/lizongying/go-crawler@6f52307
 
 ```
 
@@ -676,6 +676,8 @@ By using signals, it's possible to capture crawler events and perform certain ac
       requests.
     * Item.data: Your Item.data field needs to implement a slice of `pkg.File` to store the downloaded file results.
       The name of this field must be "Files," for example: `type DataFile struct { Files []*media.File }`.
+
+      `SetData(&DataFile{})`
 * Image Download
     * Set Images Requests in Item: In the Item, you need to set Images requests, which include a list of requests
       for downloading images. You can use the `item.SetImagesRequest([]pkg.Request{...})` method to set the list of
@@ -683,6 +685,8 @@ By using signals, it's possible to capture crawler events and perform certain ac
     * Item.data: Your Item.data field needs to implement a slice of `pkg.Image` to store the downloaded image
       results. The name of this field must be "Images," for
       example: `type DataImage struct { Images []*media.Image }`.
+
+      `SetData(&DataImage{})`
 
 ### MockServer
 
@@ -1050,7 +1054,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	}
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -1130,7 +1134,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	}
 
 	s.MustYieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).

@@ -55,7 +55,7 @@ func (s *Spider) ParseCookie(ctx pkg.Context, response pkg.Response) (err error)
 	}
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraCookie{
 			Count: extra.Count + 1,
 		}).

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
@@ -17,6 +16,7 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx pkg.Context, _ pkg.Response) (err error) {
 	s.MustYieldItem(ctx, items.NewItemJsonl("image"). // build a jsonl item
+								SetData(&DataImage{}).
 								SetImagesRequest([]pkg.Request{ // with request list
 			request.NewRequest().SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetHost(), mockServers.UrlFile)),
 		}))
@@ -41,11 +41,6 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 }
 
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
-	if baseSpider == nil {
-		err = errors.New("nil baseSpider")
-		return
-	}
-
 	spider = &Spider{
 		Spider: baseSpider,
 		logger: baseSpider.GetLogger(),

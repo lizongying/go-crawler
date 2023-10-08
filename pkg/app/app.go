@@ -32,7 +32,6 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 		db.NewKafka,
 		db.NewKafkaReader,
 		db.NewRedis,
-		//db.NewStore,
 		fx.Annotate(
 			loggers.NewLogger,
 			fx.As(new(pkg.Logger)),

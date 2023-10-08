@@ -97,14 +97,14 @@ func (e *Exporter) CleanPipelines() {
 
 	e.pipelines = make([]pkg.Pipeline, 0)
 }
-func (e *Exporter) WithDumpPipeline() {
-	e.SetPipeline(new(pipelines.DumpPipeline), 10)
-}
 func (e *Exporter) WithFilePipeline() {
-	e.SetPipeline(new(pipelines.FilePipeline), 20)
+	e.SetPipeline(new(pipelines.FilePipeline), 10)
 }
 func (e *Exporter) WithImagePipeline() {
-	e.SetPipeline(new(pipelines.ImagePipeline), 30)
+	e.SetPipeline(new(pipelines.ImagePipeline), 20)
+}
+func (e *Exporter) WithDumpPipeline() {
+	e.SetPipeline(new(pipelines.DumpPipeline), 30)
 }
 func (e *Exporter) WithFilterPipeline() {
 	e.SetPipeline(new(pipelines.FilterPipeline), 200)

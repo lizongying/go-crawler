@@ -48,7 +48,7 @@ func (s *Spider) ParseMysql(ctx pkg.Context, response pkg.Response) (err error) 
 	}
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -88,7 +88,7 @@ func (s *Spider) ParseKafka(ctx pkg.Context, response pkg.Response) (err error) 
 	}
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -125,7 +125,7 @@ func (s *Spider) ParseMongo(ctx pkg.Context, response pkg.Response) (err error) 
 	}
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -162,7 +162,7 @@ func (s *Spider) ParseCsv(ctx pkg.Context, response pkg.Response) (err error) {
 	}
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -199,7 +199,7 @@ func (s *Spider) ParseJsonl(ctx pkg.Context, response pkg.Response) (err error) 
 	}
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -239,7 +239,7 @@ func (s *Spider) ParseSqlite(ctx pkg.Context, response pkg.Response) (err error)
 	}
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).

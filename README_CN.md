@@ -109,7 +109,7 @@ go get -u github.com/lizongying/go-crawler
 go get -u github.com/lizongying/go-crawler@latest
 
 # 最新提交（推荐）
-go get -u github.com/lizongying/go-crawler@11a7d41
+go get -u github.com/lizongying/go-crawler@6f52307
 
 ```
 
@@ -254,41 +254,45 @@ Item有一些通用方法：
 * `Images() []pkg.Image` 获取图片。
 
 *
+
 内置Item实现：框架提供了一些内置的Item实现，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、pkg.ItemMysql、pkg.ItemKafka等。
 您可以根据需要，返回Item，并开启相应的Pipeline。如：
+
 ```go
 err = s.YieldItem(ctx, items.NewItemMongo(s.collection, true).
 SetUniqueKey(extra.Keyword).
 SetId(extra.Keyword).
 SetData(&data))
-  
+
 ```
+
 ```go
 spider.WithOptions(pkg.WithMongoPipeline())
 ```
-  * pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
-      * `items.NewItemNone()`
-  * pkg.ItemCsv 保存到csv中。
-      * `items.NewItemCsv(filename string)`
-      * filename：存储的文件名，不包括拓展名
-  * pkg.ItemJsonl 保存到jsonl中。
-      * `items.NewItemJsonl(filename string)`
-      * filename：存储的文件名，不包括拓展名
-  * pkg.ItemMongo 保存到mongo中。
-      * `items.NewItemMongo(collection string, update bool)`
-      * collection：mongo collection
-      * update：如果数据已存在mongo中，是否更新
-  * pkg.ItemSqlite 保存到Sqlite中。
-      * `items.NewItemSqlite(table string, update bool)`
-      * table：sqlite table
-      * update：如果数据已存在mongo中，是否更新
-  * pkg.ItemMysql 保存到mysql中。
-      * `items.NewItemMysql(table string, update bool)`
-      * table：mysql table
-      * update：如果数据已存在mongo中，是否更新
-  * pkg.ItemKafka 保存到kafka中。
-      * `items.NewItemKafka(topic string)`
-      * topic：kafka topic
+
+* pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
+    * `items.NewItemNone()`
+* pkg.ItemCsv 保存到csv中。
+    * `items.NewItemCsv(filename string)`
+    * filename：存储的文件名，不包括拓展名
+* pkg.ItemJsonl 保存到jsonl中。
+    * `items.NewItemJsonl(filename string)`
+    * filename：存储的文件名，不包括拓展名
+* pkg.ItemMongo 保存到mongo中。
+    * `items.NewItemMongo(collection string, update bool)`
+    * collection：mongo collection
+    * update：如果数据已存在mongo中，是否更新
+* pkg.ItemSqlite 保存到Sqlite中。
+    * `items.NewItemSqlite(table string, update bool)`
+    * table：sqlite table
+    * update：如果数据已存在mongo中，是否更新
+* pkg.ItemMysql 保存到mysql中。
+    * `items.NewItemMysql(table string, update bool)`
+    * table：mysql table
+    * update：如果数据已存在mongo中，是否更新
+* pkg.ItemKafka 保存到kafka中。
+    * `items.NewItemKafka(topic string)`
+    * topic：kafka topic
 
 ### 中间件
 
@@ -581,11 +585,15 @@ _ = request.Trace()
       方法设置请求列表。
     * Item.data：您的Item.data字段需要实现pkg.File的切片，用于保存下载文件的结果。
       该字段的名称必须是Files，如`type DataFile struct {Files []*media.File}`。
+
+      `SetData(&DataFile{})`
 * 图片下载
     * 在Item中设置Images请求：在Item中，您需要设置Images请求，即包含要下载的图片的请求列表。
       可以使用item.SetImagesRequest([]pkg.Request{...})方法设置请求列表。
     * Item.data：您的Item.data字段需要实现pkg.Image的切片，用于保存下载图片的结果。
       该字段的名称必须是Images，如`type DataImage struct {Images []*media.Image}`。
+
+      `SetData(&DataImage{})`
 
 ### 模拟服务
 
@@ -915,7 +923,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	}
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).
@@ -995,7 +1003,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	}
 
 	s.MustYieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
 		}).

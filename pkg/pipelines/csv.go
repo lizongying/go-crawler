@@ -130,6 +130,7 @@ func (m *CsvPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) 
 		return err
 	}
 
+	m.logger.Info("item saved:", filename)
 	spider.IncItemSuccess()
 	return
 }

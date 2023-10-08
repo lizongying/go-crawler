@@ -126,10 +126,10 @@ func (r *Response) UnmarshalExtra(v any) error {
 func (r *Response) MustUnmarshalExtra(v any) {
 	r.request.MustUnmarshalExtra(v)
 }
-func (r *Response) GetUrl() string {
+func (r *Response) Url() string {
 	return r.request.GetUrl()
 }
-func (r *Response) GetURL() *url.URL {
+func (r *Response) URL() *url.URL {
 	return r.request.GetURL()
 }
 func (r *Response) Context() context.Context {

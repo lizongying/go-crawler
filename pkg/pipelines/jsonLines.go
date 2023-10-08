@@ -90,6 +90,7 @@ func (m *JsonLinesPipeline) ProcessItem(_ context.Context, item pkg.Item) (err e
 		return err
 	}
 
+	m.logger.Info("item saved:", filename)
 	spider.IncItemSuccess()
 	return
 }

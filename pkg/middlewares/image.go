@@ -37,9 +37,10 @@ func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response
 		rect := img.Bounds()
 
 		i := new(media.Image)
-		name := utils.StrMd5(response.GetUrl())
+		i.SetUrl(response.Url())
+		name := utils.StrMd5(response.Url())
 		i.SetName(name)
-		i.SetExtension(ext)
+		i.SetExt(ext)
 		i.SetWidth(rect.Dx())
 		i.SetHeight(rect.Dy())
 

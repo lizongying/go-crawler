@@ -44,14 +44,14 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	//}
 	count := extra.Count + 1
 	//err = s.YieldRequest(ctx, request.NewRequest().
-	//	SetUrl(response.GetUrl()).
+	//	SetUrl(response.Url()).
 	//	SetExtra(&ExtraOk{
 	//		Count: count,
 	//	}).
 	//	SetCallBack(s.ParseOk).
 	//	SetUniqueKey(strconv.Itoa(count)))
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.GetUrl()).
+		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: count,
 		}).

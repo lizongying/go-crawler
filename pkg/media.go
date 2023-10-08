@@ -3,10 +3,12 @@ package pkg
 type File interface {
 	GetStorePath() string
 	SetStorePath(string)
+	GetUrl() string
+	SetUrl(string)
 	GetName() string
 	SetName(string)
-	GetExtension() string
-	SetExtension(string)
+	GetExt() string
+	SetExt(string)
 }
 
 type Image interface {

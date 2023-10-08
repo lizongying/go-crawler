@@ -24,11 +24,13 @@ func (m *FileMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response)
 	isFile := response.File()
 	if isFile {
 		i := new(media.File)
-		name := utils.StrMd5(response.GetUrl())
+		i.SetUrl(response.Url())
+		name := utils.StrMd5(response.Url())
 		i.SetName(name)
 		ext := ""
 		if e, ok := m.contentTypeMap[response.GetHeader("Content-Type")]; ok {
 			ext = e[0]
+			i.SetExt(ext)
 		}
 
 		key := name

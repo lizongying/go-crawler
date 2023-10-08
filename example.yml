@@ -19,7 +19,6 @@ redis:
 sqlite:
   - name: sqlite
     path: static/crawler.db
-    database: crawler
 store:
   #  - name: minio
   #    type:  # s3/oss/cos/minio/file
