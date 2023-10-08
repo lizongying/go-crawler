@@ -1,10 +1,10 @@
 package media
 
 type File struct {
-	StorePath string `json:"store_path"`
-	Url       string `json:"url"`
-	Name      string `json:"name"`
-	Ext       string `json:"ext"`
+	StorePath string `json:"store_path,omitempty"`
+	Url       string `json:"url,omitempty"`
+	Name      string `json:"name,omitempty"`
+	Ext       string `json:"ext,omitempty"`
 }
 
 func (i *File) GetStorePath() string {

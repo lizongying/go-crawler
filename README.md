@@ -678,6 +678,7 @@ By using signals, it's possible to capture crawler events and perform certain ac
       The name of this field must be "Files," for example: `type DataFile struct { Files []*media.File }`.
 
       `SetData(&DataFile{})`
+    * You can set the fields that are returned. Files []*media.File `json:"files" field:"url,name,ext"`
 * Image Download
     * Set Images Requests in Item: In the Item, you need to set Images requests, which include a list of requests
       for downloading images. You can use the `item.SetImagesRequest([]pkg.Request{...})` method to set the list of
@@ -687,6 +688,7 @@ By using signals, it's possible to capture crawler events and perform certain ac
       example: `type DataImage struct { Images []*media.Image }`.
 
       `SetData(&DataImage{})`
+    * You can set the fields that are returned. Images []*media.Image `json:"images" field:"url,name,ext,width,height"`
 
 ### MockServer
 

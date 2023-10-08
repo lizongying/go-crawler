@@ -45,8 +45,10 @@ type Request struct {
 	httpProto          string
 	platforms          []pkg.Platform
 	browsers           []pkg.Browser
-	file               bool
-	image              bool
+	isFile             bool
+	fileOptions        *pkg.FileOptions
+	isImage            bool
+	imageOptions       *pkg.ImageOptions
 	extra              string
 	extraName          string
 	errors             map[string]error
@@ -460,19 +462,33 @@ func (r *Request) SetHeaders(headers map[string]string) pkg.Request {
 	}
 	return r
 }
-func (r *Request) SetFile(file bool) pkg.Request {
-	r.file = file
+func (r *Request) IsFile() bool {
+	return r.isFile
+}
+func (r *Request) AsFile(isFile bool) pkg.Request {
+	r.isFile = isFile
 	return r
 }
-func (r *Request) File() bool {
-	return r.file
-}
-func (r *Request) Image() bool {
-	return r.image
-}
-func (r *Request) SetImage(image bool) pkg.Request {
-	r.image = image
+func (r *Request) SetFileOptions(options pkg.FileOptions) pkg.Request {
+	r.fileOptions = &options
 	return r
+}
+func (r *Request) FileOptions() *pkg.FileOptions {
+	return r.fileOptions
+}
+func (r *Request) IsImage() bool {
+	return r.isImage
+}
+func (r *Request) AsImage(isImage bool) pkg.Request {
+	r.isImage = isImage
+	return r
+}
+func (r *Request) SetImageOptions(options pkg.ImageOptions) pkg.Request {
+	r.imageOptions = &options
+	return r
+}
+func (r *Request) ImageOptions() *pkg.ImageOptions {
+	return r.imageOptions
 }
 func (r *Request) SetBasicAuth(username string, password string) pkg.Request {
 	r.Request.SetBasicAuth(username, password)
@@ -583,8 +599,10 @@ func (r *Request) ToRequestJson() (request pkg.RequestJson, err error) {
 		HttpProto:        r.httpProto,
 		Platform:         platform,
 		Browser:          browser,
-		Image:            r.image,
-		File:             r.file,
+		IsImage:          r.isImage,
+		ImageOptions:     r.imageOptions,
+		IsFile:           r.isFile,
+		FileOptions:      r.fileOptions,
 		Extra:            r.extra,
 		ExtraName:        r.extraName,
 		Priority:         r.priority,
@@ -634,8 +652,10 @@ type RequestJson struct {
 	HttpProto          string              `json:"http_proto,omitempty"` // e.g. 1.0/1.1/2.0
 	Platform           []string            `json:"platform,omitempty"`
 	Browser            []string            `json:"browser,omitempty"`
-	File               bool                `json:"file,omitempty"`
-	Image              bool                `json:"image,omitempty"`
+	IsFile             bool                `json:"is_file,omitempty"`
+	FileOptions        *pkg.FileOptions    `json:"file_options,omitempty"`
+	IsImage            bool                `json:"is_image,omitempty"`
+	ImageOptions       *pkg.ImageOptions   `json:"image_options,omitempty"`
 	Extra              string              `json:"extra,omitempty"`
 	ExtraName          string              `json:"extra_name,omitempty"`
 	Priority           uint8               `json:"priority,omitempty"`
@@ -698,8 +718,10 @@ func (r *RequestJson) ToRequest() (request pkg.Request, err error) {
 		httpProto:          r.HttpProto,
 		platforms:          platforms,
 		browsers:           browsers,
-		file:               r.File,
-		image:              r.Image,
+		isFile:             r.IsFile,
+		fileOptions:        r.FileOptions,
+		isImage:            r.IsImage,
+		imageOptions:       r.ImageOptions,
 		extra:              r.Extra,
 		extraName:          r.ExtraName,
 		priority:           r.Priority,

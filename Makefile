@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: tidy tls mitm testSpider testFileSpider
+all: tidy tls mitm testSpider testFileSpider testItemSpider
 
 module := $(shell head -n 1 go.mod)
 module := $(subst module ,,${module})
@@ -26,3 +26,7 @@ testSpider:
 testFileSpider:
 	go vet ./cmd/testFileSpider
 	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-file" -o ./releases/testFileSpider ./cmd/testFileSpider
+
+testItemSpider:
+	go vet ./cmd/testItemSpider
+	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-item" -o ./releases/testItemSpider ./cmd/testItemSpider

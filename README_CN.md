@@ -587,6 +587,7 @@ _ = request.Trace()
       该字段的名称必须是Files，如`type DataFile struct {Files []*media.File}`。
 
       `SetData(&DataFile{})`
+    * 可以设定返回的字段 Files []*media.File `json:"files" field:"url,name,ext"`
 * 图片下载
     * 在Item中设置Images请求：在Item中，您需要设置Images请求，即包含要下载的图片的请求列表。
       可以使用item.SetImagesRequest([]pkg.Request{...})方法设置请求列表。
@@ -594,6 +595,7 @@ _ = request.Trace()
       该字段的名称必须是Images，如`type DataImage struct {Images []*media.Image}`。
 
       `SetData(&DataImage{})`
+    * 可以设定返回的字段 Images []*media.Image `json:"images" field:"url,name,ext,width,height"`
 
 ### 模拟服务
 

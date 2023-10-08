@@ -96,7 +96,7 @@ func (i *ItemUnimplemented) Referrer() string {
 }
 func (i *ItemUnimplemented) SetFilesRequest(files []Request) Item {
 	for _, v := range files {
-		v.SetFile(true)
+		v.AsFile(true)
 		i.files = append(i.files, v)
 	}
 	return i
@@ -106,7 +106,7 @@ func (i *ItemUnimplemented) FilesRequest() []Request {
 }
 func (i *ItemUnimplemented) SetImagesRequest(images []Request) Item {
 	for _, v := range images {
-		v.SetImage(true)
+		v.AsImage(true)
 		i.images = append(i.images, v)
 	}
 	return i

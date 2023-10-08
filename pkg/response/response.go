@@ -138,11 +138,17 @@ func (r *Response) Context() context.Context {
 func (r *Response) WithContext(ctx context.Context) pkg.Request {
 	return r.request.WithContext(ctx)
 }
-func (r *Response) File() bool {
-	return r.request.File()
+func (r *Response) IsFile() bool {
+	return r.request.IsFile()
 }
-func (r *Response) Image() bool {
-	return r.request.Image()
+func (r *Response) FileOptions() *pkg.FileOptions {
+	return r.request.FileOptions()
+}
+func (r *Response) IsImage() bool {
+	return r.request.IsImage()
+}
+func (r *Response) ImageOptions() *pkg.ImageOptions {
+	return r.request.ImageOptions()
 }
 func (r *Response) SkipMiddleware() bool {
 	return r.request.SkipMiddleware()

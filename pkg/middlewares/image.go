@@ -18,15 +18,16 @@ type ImageMiddleware struct {
 	store  pkg.Store
 }
 
-func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
+func (m *ImageMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
 	spider := m.GetSpider()
 	if len(response.BodyBytes()) == 0 {
 		m.logger.Debug("BodyBytes empty")
 		return
 	}
 
-	isImage := response.Image()
+	isImage := response.IsImage()
 	if isImage {
+		options := response.ImageOptions()
 		img, ext, e := image.Decode(bytes.NewReader(response.BodyBytes()))
 		if e != nil {
 			err = e
@@ -37,12 +38,22 @@ func (m *ImageMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response
 		rect := img.Bounds()
 
 		i := new(media.Image)
-		i.SetUrl(response.Url())
+		if options.Url {
+			i.SetUrl(response.Url())
+		}
 		name := utils.StrMd5(response.Url())
-		i.SetName(name)
-		i.SetExt(ext)
-		i.SetWidth(rect.Dx())
-		i.SetHeight(rect.Dy())
+		if options.Name {
+			i.SetName(name)
+		}
+		if options.Ext {
+			i.SetExt(ext)
+		}
+		if options.Width {
+			i.SetWidth(rect.Dx())
+		}
+		if options.Height {
+			i.SetHeight(rect.Dy())
+		}
 
 		key := fmt.Sprintf("%s.%s", name, ext)
 		storePath := ""

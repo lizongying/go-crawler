@@ -65,8 +65,10 @@ type Response interface {
 	URL() *url.URL
 	Context() context.Context
 	WithContext(context.Context) Request
-	File() bool
-	Image() bool
+	IsFile() bool
+	FileOptions() *FileOptions
+	IsImage() bool
+	ImageOptions() *ImageOptions
 	SkipMiddleware() bool
 	SetSpendTime(time.Duration) Request
 

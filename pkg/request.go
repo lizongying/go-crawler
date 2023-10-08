@@ -49,6 +49,17 @@ func (h HTTPMethod) String() string {
 	}
 }
 
+type FileOptions struct {
+	Url  bool `json:"url,omitempty"`
+	Name bool `json:"name,omitempty"`
+	Ext  bool `json:"ext,omitempty"`
+}
+type ImageOptions struct {
+	FileOptions
+	Width  bool `json:"width,omitempty"`
+	Height bool `json:"height,omitempty"`
+}
+
 type Request interface {
 	UniqueKey() string
 	SetUniqueKey(string) Request
@@ -135,10 +146,14 @@ type Request interface {
 	SetHeader(string, string) Request
 	Headers() http.Header
 	SetHeaders(map[string]string) Request
-	File() bool
-	SetFile(bool) Request
-	Image() bool
-	SetImage(bool) Request
+	IsFile() bool
+	AsFile(bool) Request
+	SetFileOptions(options FileOptions) Request
+	FileOptions() *FileOptions
+	IsImage() bool
+	AsImage(bool) Request
+	SetImageOptions(options ImageOptions) Request
+	ImageOptions() *ImageOptions
 	Extra() string
 	SetExtra(any) Request
 	UnmarshalExtra(any) error

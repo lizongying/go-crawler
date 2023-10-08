@@ -14,23 +14,28 @@ type FileMiddleware struct {
 	contentTypeMap map[string][]string
 }
 
-func (m *FileMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
+func (m *FileMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
 	spider := m.GetSpider()
 	if len(response.BodyBytes()) == 0 {
 		m.logger.Debug("BodyBytes empty")
 		return
 	}
 
-	isFile := response.File()
+	isFile := response.IsFile()
 	if isFile {
+		options := response.FileOptions()
 		i := new(media.File)
 		i.SetUrl(response.Url())
 		name := utils.StrMd5(response.Url())
-		i.SetName(name)
+		if options.Name {
+			i.SetName(name)
+		}
 		ext := ""
 		if e, ok := m.contentTypeMap[response.GetHeader("Content-Type")]; ok {
 			ext = e[0]
-			i.SetExt(ext)
+			if options.Ext {
+				i.SetExt(ext)
+			}
 		}
 
 		key := name
