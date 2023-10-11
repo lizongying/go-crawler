@@ -133,7 +133,7 @@ func (r *Response) URL() *url.URL {
 	return r.request.GetURL()
 }
 func (r *Response) Context() context.Context {
-	return r.request.Context()
+	return r.request.RequestContext()
 }
 func (r *Response) WithContext(ctx context.Context) pkg.Request {
 	return r.request.WithContext(ctx)

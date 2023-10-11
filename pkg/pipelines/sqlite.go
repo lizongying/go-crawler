@@ -21,19 +21,19 @@ type SqlitePipeline struct {
 	timeout time.Duration
 }
 
-func (m *SqlitePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+func (m *SqlitePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
 	spider := m.GetSpider()
-	if item == nil {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
 		return
 	}
-	if item.Name() != pkg.ItemSqlite {
+	if itemWithContext.Name() != pkg.ItemSqlite {
 		m.logger.Warn("item not support", pkg.ItemSqlite)
 		return
 	}
-	itemSqlite, ok := item.Item().(*items.ItemSqlite)
+	itemSqlite, ok := itemWithContext.GetItem().(*items.ItemSqlite)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemSqlite)
 		return
@@ -46,7 +46,7 @@ func (m *SqlitePipeline) ProcessItem(_ context.Context, item pkg.Item) (err erro
 		return
 	}
 
-	data := item.Data()
+	data := itemWithContext.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)

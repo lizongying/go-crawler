@@ -30,7 +30,7 @@ func (f *RedisFilter) SpiderOpened() {
 }
 
 func (f *RedisFilter) IsExist(c pkg.Context, uniqueKey any) (ok bool, err error) {
-	ctx := c.Context()
+	ctx := c.GlobalContext()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -40,7 +40,7 @@ func (f *RedisFilter) IsExist(c pkg.Context, uniqueKey any) (ok bool, err error)
 }
 
 func (f *RedisFilter) Store(c pkg.Context, uniqueKey any) (err error) {
-	ctx := c.Context()
+	ctx := c.GlobalContext()
 	if ctx == nil {
 		ctx = context.Background()
 	}

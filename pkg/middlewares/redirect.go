@@ -17,7 +17,7 @@ func (m *RedirectMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) 
 		redirectMaxTimes = *request.RedirectMaxTimes()
 	}
 	if redirectMaxTimes > 0 {
-		ctx := context.WithValue(request.Context(), "redirect_max_times", redirectMaxTimes)
+		ctx := context.WithValue(request.RequestContext(), "redirect_max_times", redirectMaxTimes)
 		request.WithContext(ctx)
 	}
 	return

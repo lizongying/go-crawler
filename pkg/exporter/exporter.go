@@ -1,7 +1,6 @@
 package exporter
 
 import (
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/pipelines"
@@ -12,15 +11,15 @@ import (
 
 type Exporter struct {
 	pipelines      []pkg.Pipeline
-	processItemFns []func(context.Context, pkg.Item) error
+	processItemFns []func(ctx pkg.ItemWithContext) error
 	spider         pkg.Spider
 	logger         pkg.Logger
 	locker         sync.Mutex
 }
 
-func (e *Exporter) Export(ctx context.Context, item pkg.Item) (err error) {
+func (e *Exporter) Export(itemWithContext pkg.ItemWithContext) (err error) {
 	for _, v := range e.pipelines {
-		e := v.ProcessItem(ctx, item)
+		e := v.ProcessItem(itemWithContext)
 		if e != nil {
 			err = errors.Join(err, e)
 		}
@@ -69,7 +68,7 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 		return e.pipelines[i].Order() < e.pipelines[j].Order()
 	})
 
-	var processItemFns []func(context.Context, pkg.Item) error
+	var processItemFns []func(pkg.ItemWithContext) error
 	for _, v := range e.pipelines {
 		processItemFns = append(processItemFns, v.ProcessItem)
 	}

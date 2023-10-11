@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/httpClient"
-	"github.com/lizongying/go-crawler/pkg/httpClient/browser"
+	"github.com/lizongying/go-crawler/pkg/http_client"
+	"github.com/lizongying/go-crawler/pkg/http_client/browser"
 	response2 "github.com/lizongying/go-crawler/pkg/response"
 )
 
@@ -45,7 +45,7 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 		client = b
 		defer d.browserManager.Put(b)
 	}
-	response, err = client.DoRequest(request.Context(), request)
+	response, err = client.DoRequest(request.RequestContext(), request)
 	if err != nil {
 		d.logger.Error(err)
 	}
@@ -117,7 +117,7 @@ func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 	}
 
 	d.spider = spider
-	d.httpClient = new(httpClient.HttpClient).FromSpider(spider)
+	d.httpClient = new(http_client.HttpClient).FromSpider(spider)
 	d.browserManager = new(browser.Manager).FromSpider(spider)
 	d.logger = spider.GetLogger()
 	d.middlewares = spider.GetMiddlewares().Middlewares()

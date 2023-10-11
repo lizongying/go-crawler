@@ -4,6 +4,11 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 )
 
+type ItemWithContext struct {
+	pkg.Context
+	pkg.Item
+}
+
 type ItemNone struct {
 	pkg.ItemUnimplemented
 }

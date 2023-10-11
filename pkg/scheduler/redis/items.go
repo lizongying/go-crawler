@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"reflect"
 )
 
 func (s *Scheduler) handleItem(ctx context.Context) {
 	itemConcurrencyChanLen := 0
-	for item := range s.itemChan {
+	for itemWithContext := range s.itemWithContextChan {
 		itemDelay := s.GetItemDelay()
 		if itemDelay > 0 {
 			s.itemTimer.Reset(itemDelay)
@@ -25,8 +26,8 @@ func (s *Scheduler) handleItem(ctx context.Context) {
 		}
 
 		<-s.itemConcurrencyChan
-		s.logger.Debug(cap(s.itemConcurrencyChan), len(s.itemConcurrencyChan), "id:", item.Id())
-		go func(itemConcurrencyChan chan struct{}, item pkg.Item) {
+		s.logger.Debug(cap(s.itemConcurrencyChan), len(s.itemConcurrencyChan), "id:", itemWithContext.Id())
+		go func(itemConcurrencyChan chan struct{}, itemWithContext pkg.ItemWithContext) {
 			defer func() {
 				if itemConcurrencyChan != s.itemConcurrencyChan && itemConcurrencyChanLen < 0 {
 					itemConcurrencyChanLen++
@@ -36,11 +37,11 @@ func (s *Scheduler) handleItem(ctx context.Context) {
 				s.Spider().StateItem().Out()
 			}()
 
-			err := s.Export(ctx, item)
+			err := s.Export(itemWithContext)
 			if err != nil {
 				s.logger.Error(err)
 			}
-		}(s.itemConcurrencyChan, item)
+		}(s.itemConcurrencyChan, itemWithContext)
 
 		if itemDelay > 0 {
 			<-s.itemTimer.C
@@ -65,20 +66,23 @@ func (s *Scheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err error) {
 		return
 	}
 
-	if len(s.itemChan) == cap(s.itemChan) {
+	if len(s.itemWithContextChan) == cap(s.itemWithContextChan) {
 		err = errors.New("itemChan max limit")
 		s.logger.Error(err)
 		return
 	}
 
 	// add referrer to item
-	referrer := ctx.Meta.Referrer
+	referrer := ctx.Meta().Referrer
 	if referrer != nil {
 		item.SetReferrer(referrer.String())
 	}
 
 	s.Spider().StateItem().In()
-	s.itemChan <- item
+	s.itemWithContextChan <- &items.ItemWithContext{
+		Context: ctx,
+		Item:    item,
+	}
 
 	return
 }

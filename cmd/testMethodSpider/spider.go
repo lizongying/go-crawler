@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mockServers"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"net/http"
 	"net/http/httputil"
@@ -52,10 +52,10 @@ func (s *Spider) ParseGet(_ pkg.Context, response pkg.Response) (err error) {
 
 // TestPost go run cmd/testMethodSpider/*.go -c dev.yml -n test-method -f TestPost -m once
 func (s *Spider) TestPost(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRoutePost(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRoutePost(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlPost)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlPost)).
 		SetMethod(http.MethodPost).
 		SetBodyStr("a=0").
 		SetPostForm("a", "1").
@@ -70,10 +70,10 @@ func (s *Spider) TestPost(ctx pkg.Context, _ string) (err error) {
 
 // TestGet go run cmd/testMethodSpider/*.go -c dev.yml -n test-method -f TestGet -m once
 func (s *Spider) TestGet(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteGet(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteGet(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s?a=0&c=3", s.GetHost(), mockServers.UrlGet)).
+		SetUrl(fmt.Sprintf("%s%s?a=0&c=3", s.GetHost(), mock_servers.UrlGet)).
 		SetForm("a", "1").
 		SetForm("b", "2").
 		SetCallBack(s.ParseGet)); err != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"reflect"
 	"strings"
 )
@@ -20,19 +21,19 @@ func (m *ImagePipeline) Start(ctx context.Context, spider pkg.Spider) (err error
 	return nil
 }
 
-func (m *ImagePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
-	if item == nil {
+func (m *ImagePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		return
 	}
 
-	images := item.ImagesRequest()
+	images := itemWithContext.ImagesRequest()
 	if len(images) == 0 {
 		return
 	}
 
-	field, ok := reflect.TypeOf(item.Data()).Elem().FieldByName("Images")
+	field, ok := reflect.TypeOf(itemWithContext.Data()).Elem().FieldByName("Images")
 	isUrl := false
 	isName := false
 	isExt := false
@@ -56,13 +57,13 @@ func (m *ImagePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		Height: isHeight,
 	}
 	for _, i := range images {
-		ctx := pkg.Context{}
+		ctx := &crawlerContext.Context{}
 		r, e := m.scheduler.Request(ctx, i.SetImageOptions(imageOptions))
 		if e != nil {
 			m.logger.Error(e)
 			continue
 		}
-		item.SetImages(r.Images())
+		itemWithContext.SetImages(r.Images())
 	}
 
 	return

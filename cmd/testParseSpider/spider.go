@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mockServers"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
@@ -23,7 +23,7 @@ func (s *Spider) Parse(_ pkg.Context, response pkg.Response) (err error) {
 // TestOk go run cmd/testParseSpider/*.go -c example.yml -n test-parse -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.MustYieldRequest(ctx, request.NewRequest().
-		SetUrl("https://localhost:8081"+mockServers.UrlHtml+"index.html").
+		SetUrl("https://localhost:8081"+mock_servers.UrlHtml+"index.html").
 		SetCallBack(s.Parse))
 	return
 }
@@ -42,6 +42,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 
 func main() {
 	app.NewApp(NewSpider).Run(
-		pkg.WithMockServerRoutes(mockServers.NewRouteHtml),
+		pkg.WithMockServerRoutes(mock_servers.NewRouteHtml),
 	)
 }

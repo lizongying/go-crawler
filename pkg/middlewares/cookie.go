@@ -18,7 +18,9 @@ func (m *CookieMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Respons
 	// add cookies to context
 	cookies := response.Cookies()
 	if len(cookies) > 0 {
-		ctx.Meta.Cookies = cookies
+		meta := ctx.Meta()
+		meta.Cookies = cookies
+		ctx.WithMeta(meta)
 	}
 
 	return

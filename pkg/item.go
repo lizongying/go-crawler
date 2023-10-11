@@ -17,7 +17,7 @@ const (
 )
 
 type Item interface {
-	Item() any
+	GetItem() any
 	Name() ItemName
 	SetUniqueKey(string) Item
 	UniqueKey() string
@@ -37,6 +37,11 @@ type Item interface {
 	Images() []Image
 }
 
+type ItemWithContext interface {
+	Context
+	Item
+}
+
 type ItemUnimplemented struct {
 	item      any
 	name      ItemName
@@ -52,7 +57,7 @@ func (i *ItemUnimplemented) SetItem(item any) Item {
 	i.item = item
 	return i
 }
-func (i *ItemUnimplemented) Item() any {
+func (i *ItemUnimplemented) GetItem() any {
 	return i.item
 }
 func (i *ItemUnimplemented) SetName(name ItemName) Item {

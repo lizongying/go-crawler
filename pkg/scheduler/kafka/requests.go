@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	context2 "github.com/lizongying/go-crawler/pkg/context"
 	request2 "github.com/lizongying/go-crawler/pkg/request"
 	"github.com/segmentio/kafka-go"
 	"golang.org/x/time/rate"
@@ -63,15 +64,19 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			s.logger.Warn(err)
 			continue
 		}
-		//s.logger.Debugf("request: %s", req)
-		var requestJson request2.RequestJson
-		err = json.Unmarshal(req.Value, &requestJson)
+
+		s.logger.Debugf("request: %s", req)
+		var requestJsonWithContext request2.JsonWithContext
+		requestJsonWithContext.ContextJson = new(context2.Json)
+		requestJsonWithContext.RequestJson = new(request2.Json)
+		err = json.Unmarshal(req.Value, &requestJsonWithContext)
 		if err != nil {
 			s.logger.Warn(err)
 			continue
 		}
 
-		request, err := requestJson.ToRequest()
+		request, err := requestJsonWithContext.ToRequest()
+		c := requestJsonWithContext.ToContext()
 		s.logger.Debugf("request: %+v", request)
 		if err != nil {
 			s.logger.Warn(err)
@@ -100,8 +105,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		if err != nil {
 			s.logger.Error(err)
 		}
-		go func(request pkg.Request) {
-			c := pkg.Context{}
+		go func(c pkg.Context, request pkg.Request) {
 			response, e := s.Request(c, request)
 			if e != nil {
 				s.Spider().StateRequest().Out()
@@ -127,7 +131,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				s.Spider().StateMethod().Out()
 				s.Spider().StateRequest().Out()
 			}(c, response)
-		}(request)
+		}(c, request)
 	}
 
 	return
@@ -138,7 +142,7 @@ func (s *Scheduler) YieldRequest(c pkg.Context, request pkg.Request) (err error)
 		s.Spider().StateRequest().Set()
 	}()
 
-	meta := c.Meta
+	meta := c.Meta()
 
 	// add referrer to request
 	if meta.Referrer != nil {
@@ -153,8 +157,11 @@ func (s *Scheduler) YieldRequest(c pkg.Context, request pkg.Request) (err error)
 	}
 
 	s.Spider().StateRequest().In()
-	bs, err := request.Marshal()
-	s.logger.Info("request:", string(bs))
+	bs, err := (&request2.WithContext{
+		Context: c,
+		Request: request,
+	}).MarshalWithContext()
+	s.logger.Info("request with context:", string(bs))
 	if err != nil {
 		s.logger.Error(err)
 		return

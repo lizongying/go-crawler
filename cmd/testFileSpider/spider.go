@@ -5,7 +5,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/mockServers"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
 
@@ -18,9 +18,8 @@ func (s *Spider) ParseOk(ctx pkg.Context, _ pkg.Response) (err error) {
 	s.MustYieldItem(ctx, items.NewItemJsonl("image"). // build a jsonl item
 								SetData(&DataImage{}).
 								SetImagesRequest([]pkg.Request{ // with request list
-			request.NewRequest().SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetHost(), mockServers.UrlFile)),
+			request.NewRequest().SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetHost(), mock_servers.UrlFile)),
 		}))
-
 	return
 }
 
@@ -28,14 +27,14 @@ func (s *Spider) ParseOk(ctx pkg.Context, _ pkg.Response) (err error) {
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 
 	// mock a page
-	s.AddMockServerRoutes(mockServers.NewRouteOk(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteOk(s.logger))
 
 	// mock a image
-	s.AddMockServerRoutes(mockServers.NewRouteFile(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteFile(s.logger))
 
 	// request the page
 	s.MustYieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetCallBack(s.ParseOk))
 	return
 }

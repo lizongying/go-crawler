@@ -2,17 +2,17 @@ package pkg
 
 import "context"
 
-type Context struct {
-	context context.Context
-	Spider  Spider
-	Meta    Meta
-	TaskId  string
+type Context interface {
+	Global() Context
+	GlobalContext() context.Context
+	WithGlobalContext(ctx context.Context) Context
+	Meta() Meta
+	WithMeta(meta Meta) Context
+	GetTaskId() string
+	WithTaskId(taskId string) Context
+	ToContextJson() ContextJson
 }
 
-func (c *Context) Context() context.Context {
-	return c.context
-}
-func (c *Context) WithContext(ctx context.Context) *Context {
-	c.context = ctx
-	return c
+type ContextJson interface {
+	ToContext() Context
 }

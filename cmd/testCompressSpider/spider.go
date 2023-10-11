@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mockServers"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
 
@@ -21,10 +21,10 @@ func (s *Spider) ParseCompress(_ pkg.Context, response pkg.Response) (err error)
 
 // TestGzip go run cmd/testCompressSpider/*.go -c dev.yml -n test-compress -f TestGzip -m once
 func (s *Spider) TestGzip(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteGzip(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteGzip(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlGzip)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlGzip)).
 		SetCallBack(s.ParseCompress)); err != nil {
 		s.logger.Error(err)
 		return
@@ -35,10 +35,10 @@ func (s *Spider) TestGzip(ctx pkg.Context, _ string) (err error) {
 
 // TestDeflate go run cmd/testCompressSpider/*.go -c dev.yml -n test-compress -f TestDeflate -m once
 func (s *Spider) TestDeflate(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteDeflate(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteDeflate(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlDeflate)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlDeflate)).
 		SetCallBack(s.ParseCompress)); err != nil {
 		s.logger.Error(err)
 		return
@@ -49,10 +49,10 @@ func (s *Spider) TestDeflate(ctx pkg.Context, _ string) (err error) {
 
 // TestBrotli go run cmd/testCompressSpider/*.go -c dev.yml -n test-compress -f TestBrotli -m once
 func (s *Spider) TestBrotli(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteBrotli(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteBrotli(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlBrotli)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlBrotli)).
 		SetCallBack(s.ParseCompress)); err != nil {
 		s.logger.Error(err)
 		return

@@ -1,9 +1,7 @@
 package pkg
 
-import "context"
-
 type Exporter interface {
-	Export(context.Context, Item) error
+	Export(ItemWithContext) error
 	PipelineNames() map[uint8]string
 	Pipelines() []Pipeline
 	SetPipeline(Pipeline, uint8)

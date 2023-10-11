@@ -20,19 +20,19 @@ type CsvPipeline struct {
 	logger pkg.Logger
 }
 
-func (m *CsvPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
 	spider := m.GetSpider()
-	if item == nil {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
 		return
 	}
-	if item.Name() != pkg.ItemCsv {
+	if itemWithContext.Name() != pkg.ItemCsv {
 		m.logger.Warn("item not support", pkg.ItemCsv)
 		return
 	}
-	itemCsv, ok := item.Item().(*items.ItemCsv)
+	itemCsv, ok := itemWithContext.GetItem().(*items.ItemCsv)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemCsv)
 		return
@@ -45,7 +45,7 @@ func (m *CsvPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) 
 		return
 	}
 
-	data := item.Data()
+	data := itemWithContext.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)

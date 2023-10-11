@@ -18,22 +18,21 @@ func (m *FilterPipeline) Start(ctx context.Context, spider pkg.Spider) (err erro
 	return nil
 }
 
-func (m *FilterPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
-	if item == nil {
+func (m *FilterPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		return
 	}
 
-	uniqueKey := item.UniqueKey()
+	uniqueKey := itemWithContext.UniqueKey()
 	if uniqueKey == "" {
 		m.logger.Debug("uniqueKey is empty")
 		return
 	}
 	m.logger.Info("uniqueKey", uniqueKey)
 
-	ctx := pkg.Context{}
-	err = m.filter.Store(ctx, uniqueKey)
+	err = m.filter.Store(itemWithContext.Global(), uniqueKey)
 	return
 }
 

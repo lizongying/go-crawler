@@ -20,25 +20,25 @@ type MongoPipeline struct {
 	timeout time.Duration
 }
 
-func (m *MongoPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+func (m *MongoPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
 	spider := m.GetSpider()
-	if item == nil {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
 		return
 	}
-	if item.Name() != pkg.ItemMongo {
+	if itemWithContext.Name() != pkg.ItemMongo {
 		m.logger.Warn("item not support", pkg.ItemMongo)
 		return
 	}
-	itemMongo, ok := item.Item().(*items.ItemMongo)
+	itemMongo, ok := itemWithContext.GetItem().(*items.ItemMongo)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemMongo)
 		return
 	}
 
-	if item == nil {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
@@ -52,7 +52,7 @@ func (m *MongoPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	data := item.Data()
+	data := itemWithContext.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)

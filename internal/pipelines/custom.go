@@ -22,17 +22,17 @@ func (m *CustomPipeline) Start(ctx context.Context, spider pkg.Spider) (err erro
 	return nil
 }
 
-func (m *CustomPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
-	if item == nil {
+func (m *CustomPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		return
 	}
-	if item.Name() != items2.Custom {
+	if itemWithContext.Name() != items2.Custom {
 		m.logger.Warn("item not support", items2.Custom)
 		return
 	}
-	itemCustom, ok := item.Item().(*items2.ItemCustom)
+	itemCustom, ok := itemWithContext.GetItem().(*items2.ItemCustom)
 	if !ok {
 		m.logger.Warn("item parsing failed with", items2.Custom)
 		return

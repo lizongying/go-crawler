@@ -21,19 +21,19 @@ type MysqlPipeline struct {
 	timeout time.Duration
 }
 
-func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+func (m *MysqlPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
 	spider := m.GetSpider()
-	if item == nil {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
 		return
 	}
-	if item.Name() != pkg.ItemMysql {
+	if itemWithContext.Name() != pkg.ItemMysql {
 		m.logger.Warn("item not support", pkg.ItemMysql)
 		return
 	}
-	itemMysql, ok := item.Item().(*items.ItemMysql)
+	itemMysql, ok := itemWithContext.GetItem().(*items.ItemMysql)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemMysql)
 		return
@@ -46,7 +46,7 @@ func (m *MysqlPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	data := item.Data()
+	data := itemWithContext.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)

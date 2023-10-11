@@ -5,7 +5,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/mockServers"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strconv"
@@ -254,7 +254,7 @@ func (s *Spider) ParseSqlite(ctx pkg.Context, response pkg.Response) (err error)
 // TestMongo go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestMongo -m once
 func (s *Spider) TestMongo(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseMongo)); err != nil {
 		s.logger.Error(err)
@@ -267,7 +267,7 @@ func (s *Spider) TestMongo(ctx pkg.Context, _ string) (err error) {
 // TestMysql go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestMysql -m once
 func (s *Spider) TestMysql(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseMysql)); err != nil {
 		s.logger.Error(err)
@@ -280,7 +280,7 @@ func (s *Spider) TestMysql(ctx pkg.Context, _ string) (err error) {
 // TestKafka go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestKafka -m once
 func (s *Spider) TestKafka(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseKafka)); err != nil {
 		s.logger.Error(err)
@@ -293,7 +293,7 @@ func (s *Spider) TestKafka(ctx pkg.Context, _ string) (err error) {
 // TestCsv go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestCsv -m once
 func (s *Spider) TestCsv(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseCsv)); err != nil {
 		s.logger.Error(err)
@@ -306,7 +306,7 @@ func (s *Spider) TestCsv(ctx pkg.Context, _ string) (err error) {
 // TestJsonl go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestJsonl -m once
 func (s *Spider) TestJsonl(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseJsonl)); err != nil {
 		s.logger.Error(err)
@@ -327,7 +327,7 @@ func (s *Spider) TestJsonl(ctx pkg.Context, _ string) (err error) {
 //	d TEXT NOT NULL)
 func (s *Spider) TestSqlite(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseSqlite)); err != nil {
 		s.logger.Error(err)
@@ -362,5 +362,5 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mockServers.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mock_servers.NewRouteOk))
 }

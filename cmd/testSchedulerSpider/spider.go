@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mockServers"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 )
@@ -66,10 +66,10 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 // TestOk go run cmd/testSchedulerSpider/*.go -c dev.yml -n test-scheduler -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteOk(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteOk(s.logger))
 
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		//SetUniqueKey("0").
 		SetPriority(0).

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mockServers"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"net/http"
 )
@@ -35,7 +35,7 @@ func (s *Spider) TestSohu(ctx pkg.Context, _ string) (err error) {
 // TestOk go run cmd/testBrowserSpider/*.go -c example.yml -n test-browser -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetClient(pkg.ClientBrowser).
 		SetCallBack(s.ParseOk))
 	if err != nil {
@@ -83,6 +83,6 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 
 func main() {
 	app.NewApp(NewSpider).Run(
-		pkg.WithMockServerRoutes(mockServers.NewRouteOk),
+		pkg.WithMockServerRoutes(mock_servers.NewRouteOk),
 	)
 }

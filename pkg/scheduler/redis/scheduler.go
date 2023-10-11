@@ -19,7 +19,7 @@ type Scheduler struct {
 	pkg.UnimplementedScheduler
 	itemConcurrencyChan chan struct{}
 	itemTimer           *time.Timer
-	itemChan            chan pkg.Item
+	itemWithContextChan chan pkg.ItemWithContext
 	requestKey          string
 	requestKeySha       string
 
@@ -154,7 +154,7 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	s.enablePriorityQueue = config.GetEnablePriorityQueue()
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
-	s.itemChan = make(chan pkg.Item, defaultChanItemMax)
+	s.itemWithContextChan = make(chan pkg.ItemWithContext, defaultChanItemMax)
 
 	s.SetDownloader(new(downloader.Downloader).FromSpider(spider))
 	s.SetExporter(new(exporter.Exporter).FromSpider(spider))

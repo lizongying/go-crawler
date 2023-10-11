@@ -20,25 +20,25 @@ type KafkaPipeline struct {
 	timeout     time.Duration
 }
 
-func (m *KafkaPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
+func (m *KafkaPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
 	spider := m.GetSpider()
-	if item == nil {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
 		return
 	}
-	if item.Name() != pkg.ItemKafka {
+	if itemWithContext.Name() != pkg.ItemKafka {
 		m.logger.Warn("item not support", pkg.ItemKafka)
 		return
 	}
-	itemKafka, ok := item.Item().(*items.ItemKafka)
+	itemKafka, ok := itemWithContext.GetItem().(*items.ItemKafka)
 	if !ok {
 		m.logger.Warn("item not parsing failed with", pkg.ItemKafka)
 		return
 	}
 
-	if item == nil {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
@@ -52,7 +52,7 @@ func (m *KafkaPipeline) ProcessItem(_ context.Context, item pkg.Item) (err error
 		return
 	}
 
-	data := item.Data()
+	data := itemWithContext.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)

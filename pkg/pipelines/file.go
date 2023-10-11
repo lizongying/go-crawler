@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 )
 
 type FilePipeline struct {
@@ -18,26 +19,26 @@ func (m *FilePipeline) Start(ctx context.Context, spider pkg.Spider) (err error)
 	return nil
 }
 
-func (m *FilePipeline) ProcessItem(_ context.Context, item pkg.Item) (err error) {
-	if item == nil {
+func (m *FilePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		return
 	}
 
-	files := item.FilesRequest()
+	files := itemWithContext.FilesRequest()
 	if len(files) == 0 {
 		return
 	}
 
 	for _, i := range files {
-		ctx := pkg.Context{}
+		ctx := &crawlerContext.Context{}
 		r, e := m.scheduler.Request(ctx, i)
 		if e != nil {
 			m.logger.Error(e)
 			continue
 		}
-		item.SetFiles(r.Files())
+		itemWithContext.SetFiles(r.Files())
 	}
 
 	return

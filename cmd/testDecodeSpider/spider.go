@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mockServers"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
 
@@ -21,10 +21,10 @@ func (s *Spider) ParseDecode(_ pkg.Context, response pkg.Response) (err error) {
 
 // TestGbk go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGbk -m once
 func (s *Spider) TestGbk(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteGbk(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteGbk(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlGbk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlGbk)).
 		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
@@ -36,10 +36,10 @@ func (s *Spider) TestGbk(ctx pkg.Context, _ string) (err error) {
 
 // TestGb2312 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGb2312 -m once
 func (s *Spider) TestGb2312(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteGb2312(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteGb2312(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlGb2312)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlGb2312)).
 		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
@@ -51,10 +51,10 @@ func (s *Spider) TestGb2312(ctx pkg.Context, _ string) (err error) {
 
 // TestGb18030 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGb18030 -m once
 func (s *Spider) TestGb18030(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteGb18030(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteGb18030(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlGb18030)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlGb18030)).
 		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)
@@ -66,10 +66,10 @@ func (s *Spider) TestGb18030(ctx pkg.Context, _ string) (err error) {
 
 // TestBig5 go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestBig5 -m once
 func (s *Spider) TestBig5(ctx pkg.Context, _ string) (err error) {
-	s.AddMockServerRoutes(mockServers.NewRouteBig5(s.logger))
+	s.AddMockServerRoutes(mock_servers.NewRouteBig5(s.logger))
 
 	err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServers.UrlBig5)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlBig5)).
 		SetCallBack(s.ParseDecode))
 	if err != nil {
 		s.logger.Error(err)

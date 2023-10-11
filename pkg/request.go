@@ -49,17 +49,6 @@ func (h HTTPMethod) String() string {
 	}
 }
 
-type FileOptions struct {
-	Url  bool `json:"url,omitempty"`
-	Name bool `json:"name,omitempty"`
-	Ext  bool `json:"ext,omitempty"`
-}
-type ImageOptions struct {
-	FileOptions
-	Width  bool `json:"width,omitempty"`
-	Height bool `json:"height,omitempty"`
-}
-
 type Request interface {
 	UniqueKey() string
 	SetUniqueKey(string) Request
@@ -154,30 +143,30 @@ type Request interface {
 	AsImage(bool) Request
 	SetImageOptions(options ImageOptions) Request
 	ImageOptions() *ImageOptions
+	SetTask(task Task) Request
+	Task() *Task
 	Extra() string
 	SetExtra(any) Request
 	UnmarshalExtra(any) error
 	MustUnmarshalExtra(any)
-	ToRequestJson() (RequestJson, error)
+	ToRequestJson() RequestJson
 	Marshal() ([]byte, error)
 	SetBasicAuth(string, string) Request
-	Context() context.Context
+	RequestContext() context.Context
 	WithContext(context.Context) Request
 	GetRequest() *http.Request
 	Cookies() []*http.Cookie
 	AddCookie(c *http.Cookie) Request
 }
+
+type RequestWithContext interface {
+	Context
+	Request
+}
+
 type RequestJson interface {
 	ToRequest() (Request, error)
 }
 
 type CallBack func(Context, Response) error
 type ErrBack func(Context, Response, error)
-
-type Client string
-
-const (
-	ClientDefault Client = ""
-	ClientGo      Client = "go"
-	ClientBrowser Client = "browser"
-)

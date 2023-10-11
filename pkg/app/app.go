@@ -10,7 +10,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/crawler"
 	"github.com/lizongying/go-crawler/pkg/db"
 	"github.com/lizongying/go-crawler/pkg/loggers"
-	"github.com/lizongying/go-crawler/pkg/mockServers"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/spider"
 	"go.uber.org/fx"
 )
@@ -45,15 +45,15 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 			fx.As(new(pkg.Store)),
 		),
 		config.NewConfig,
-		//fx.Annotate(
-		//	config.NewConfig,
-		//	fx.As(new(pkg.Config)),
-		//),
 		fx.Annotate(
 			spider.NewBaseSpider,
 			fx.ResultTags(`name:"baseSpider"`),
 		),
-		mockServers.NewHttpServer,
+		//fx.Annotate(
+		//	config.NewConfig,
+		//	fx.As(new(pkg.Config)),
+		//),
+		mock_servers.NewHttpServer,
 		fx.Annotate(
 			crawler.NewCrawler,
 			fx.ParamTags(`group:"spiders"`),
