@@ -1,7 +1,5 @@
 package pkg
 
-import "context"
-
 type FilterType string
 
 const (
@@ -13,5 +11,5 @@ const (
 type Filter interface {
 	IsExist(Context, any) (bool, error)
 	Store(Context, any) error
-	Clean(context.Context) error
+	Clean(Context) error
 }

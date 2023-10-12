@@ -173,18 +173,18 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		httpProto = request.HttpProto()
 	}
 	if httpProto != "2.0" {
-		request.GetRequest().Proto = "HTTP/1.1"
-		request.GetRequest().ProtoMajor = 1
-		request.GetRequest().ProtoMinor = 1
+		request.GetHttpRequest().Proto = "HTTP/1.1"
+		request.GetHttpRequest().ProtoMajor = 1
+		request.GetHttpRequest().ProtoMinor = 1
 		transport.ForceAttemptHTTP2 = false
 	} else {
-		request.GetRequest().Proto = "HTTP/2.0"
-		request.GetRequest().ProtoMajor = 2
-		request.GetRequest().ProtoMinor = 0
+		request.GetHttpRequest().Proto = "HTTP/2.0"
+		request.GetHttpRequest().ProtoMajor = 2
+		request.GetHttpRequest().ProtoMinor = 0
 		transport.ForceAttemptHTTP2 = true
 	}
 
-	if requiresHTTP1(request.GetRequest()) {
+	if requiresHTTP1(request.GetHttpRequest()) {
 		transport.TLSClientConfig.NextProtos = nil
 	}
 
@@ -285,7 +285,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	}
 	response = new(response2.Response).SetRequest(request)
 	begin := time.Now()
-	resp, err = client.Do(request.GetRequest())
+	resp, err = client.Do(request.GetHttpRequest())
 	if err != nil {
 		h.logger.Error(err)
 		return

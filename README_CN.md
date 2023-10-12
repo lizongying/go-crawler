@@ -27,12 +27,13 @@
     12. [启动](#启动)
     13. [配置](#配置)
     14. [基于字段标签的网页解析](#基于字段标签的网页解析)
-4. [问答](#问答)
-5. [示例](#示例)
-6. [工具](#工具)
+4. [api](#api)
+5. [问答](#问答)
+6. [示例](#示例)
+7. [工具](#工具)
     1. [证书签名](#证书签名)
     2. [中间人代理](#中间人代理)
-7. [待做](#待做)
+8. [待做](#待做)
 
 ## 功能
 
@@ -786,6 +787,26 @@ data可以设置根解析`_json:"data"`， 也就是里面的字段都是在根�
 * `_css:""` css 格式
 * `_re:""` re 格式
 
+## Api
+
+```shell
+go run cmd/multi_spider/*.go -c example.yml
+```
+
+```shell
+# index
+curl "http://127.0.0.1:8080" -H "Content-Type: application/json"
+
+# spider run
+curl "http://127.0.0.1:8080/spider/run" -X POST -d '{"timeout": 1000, "name": "test-must-ok", "func":"TestOk", "args":"", "mode":"once"}' -H "Content-Type: application/json"
+# {"code":0,"msg":"","data":{"name":"test-must-ok"}}
+
+# spider stop
+curl "http://127.0.0.1:8080/spider/stop" -X POST -d '{"task_id":""}' -H "Content-Type: application/json"
+# {"code":0,"msg":"","data":{"name":"test-must-ok"}}
+
+```
+
 ## 问答
 
 * 一些框架里都有start_urls，此框架中怎么设置？
@@ -886,7 +907,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mockServer"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
@@ -937,7 +958,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
@@ -958,7 +979,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mockServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mock_servers.NewRouteOk))
 }
 
 ```
@@ -973,7 +994,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/mockServer"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
 
@@ -1015,7 +1036,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.MustYieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk))
 	return
@@ -1034,7 +1055,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mockServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mock_servers.NewRouteOk))
 }
 
 ```

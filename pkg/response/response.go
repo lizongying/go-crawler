@@ -371,7 +371,7 @@ func (r *Response) AllLink() (links []*url.URL) {
 		return
 	}
 
-	base := r.request.GetRequest().URL
+	base := r.request.GetHttpRequest().URL
 	for _, v := range selector.FindStrMany("//a/@href") {
 		relative, e := url.Parse(v)
 		if e != nil {
@@ -407,7 +407,7 @@ func (r *Response) BodyText() (body string) {
 
 // AbsoluteURL Generating an absolute URL based on a relative URL.
 func (r *Response) AbsoluteURL(relativeUrl string) (absoluteURL *url.URL, err error) {
-	base := r.request.GetRequest().URL
+	base := r.request.GetHttpRequest().URL
 	var relativeURL *url.URL
 	relativeURL, err = url.Parse(relativeUrl)
 	if err != nil {

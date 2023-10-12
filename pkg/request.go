@@ -154,7 +154,8 @@ type Request interface {
 	SetBasicAuth(string, string) Request
 	RequestContext() context.Context
 	WithContext(context.Context) Request
-	GetRequest() *http.Request
+	GetRequest() Request
+	GetHttpRequest() *http.Request
 	Cookies() []*http.Cookie
 	AddCookie(c *http.Cookie) Request
 }

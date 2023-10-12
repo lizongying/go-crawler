@@ -49,7 +49,8 @@ func (f *RedisFilter) Store(c pkg.Context, uniqueKey any) (err error) {
 	return
 }
 
-func (f *RedisFilter) Clean(ctx context.Context) (err error) {
+func (f *RedisFilter) Clean(c pkg.Context) (err error) {
+	ctx := c.GlobalContext()
 	if ctx == nil {
 		ctx = context.Background()
 	}

@@ -25,13 +25,13 @@ func (m *StatsMiddleware) Start(ctx context.Context, spider pkg.Spider) (err err
 	return
 }
 
-func (m *StatsMiddleware) Stop(_ context.Context) (err error) {
+func (m *StatsMiddleware) Stop(c pkg.Context) (err error) {
 	spider := m.GetSpider()
 	m.timer.Stop()
 	m.chanStop <- struct{}{}
 
 	var sl []any
-	sl = append(sl, spider.Name())
+	sl = append(sl, spider.Name(), c.TaskId())
 	keys := make([]string, 0)
 	kv := spider.GetStats().GetMap()
 	for k := range kv {

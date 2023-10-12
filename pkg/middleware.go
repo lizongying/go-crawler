@@ -10,7 +10,7 @@ type Middleware interface {
 	// ProcessError
 	//	next: Whether the next middleware needs to be processed
 	ProcessError(Context, Response, error) (next bool)
-	Stop(context.Context) error
+	Stop(Context) error
 	SetName(string)
 	Name() string
 	SetOrder(uint8)
@@ -49,7 +49,7 @@ func (*UnimplementedMiddleware) ProcessResponse(Context, Response) error {
 func (*UnimplementedMiddleware) ProcessError(Context, Response, error) bool {
 	return true
 }
-func (*UnimplementedMiddleware) Stop(context.Context) error {
+func (*UnimplementedMiddleware) Stop(Context) error {
 	return nil
 }
 func (m *UnimplementedMiddleware) Name() string {

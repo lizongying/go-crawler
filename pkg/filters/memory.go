@@ -1,7 +1,6 @@
 package filters
 
 import (
-	"context"
 	"github.com/lizongying/go-crawler/pkg"
 	"sync"
 )
@@ -21,7 +20,7 @@ func (f *MemoryFilter) Store(_ pkg.Context, uniqueKey any) (err error) {
 	return
 }
 
-func (f *MemoryFilter) Clean(_ context.Context) (err error) {
+func (f *MemoryFilter) Clean(_ pkg.Context) (err error) {
 	f.ids.Range(func(key, _ any) bool {
 		f.ids.Delete(key)
 		return true

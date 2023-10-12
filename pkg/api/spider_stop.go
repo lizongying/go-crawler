@@ -1,12 +1,11 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/lizongying/go-crawler/pkg"
+	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"io"
 	"net/http"
-	"time"
 )
 
 const UrlSpiderStop = "/spider/run"
@@ -37,13 +36,8 @@ func (h *RouteSpiderStop) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := context.Background()
-	if req.Timeout != 0 {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(req.Timeout)*time.Second)
-		defer cancel()
-	}
-	err = h.crawler.SpiderStop(context.Background(), req)
+	ctx := new(crawlerContext.Context).WithTaskId(req.TaskId)
+	err = h.crawler.SpiderStop(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

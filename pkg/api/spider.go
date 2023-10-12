@@ -13,7 +13,7 @@ type Req struct {
 	Name string
 }
 type Spider struct {
-	Name string
+	Name string `json:"name"`
 }
 type RouteSpider struct {
 	crawler pkg.Crawler

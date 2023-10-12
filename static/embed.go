@@ -31,3 +31,6 @@ var Statics embed.FS
 
 //go:embed html
 var Html embed.FS
+
+//go:embed api
+var Api embed.FS

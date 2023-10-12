@@ -26,9 +26,7 @@ func (m *DumpPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err err
 	}
 
 	m.logger.Debug("referrer", itemWithContext.Referrer())
-	m.logger.Info("item.Data:", utils.JsonStr(data))
-
-	//m.stats.IncItemSuccess()
+	m.logger.Info(m.GetSpider().Name(), itemWithContext.TaskId(), "item.Data:", utils.JsonStr(data))
 	return
 }
 

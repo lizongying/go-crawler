@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"golang.org/x/time/rate"
 	"reflect"
@@ -73,9 +72,9 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		if err != nil {
 			s.logger.Error(err, time.Now(), ctx)
 		}
-		go func(request pkg.Request) {
-			c := &crawlerContext.Context{}
-			response, e := s.Request(c, request)
+		go func(requestWithContext pkg.RequestWithContext) {
+			c := requestWithContext.Global()
+			response, e := s.Request(c, requestWithContext.GetRequest())
 			if e != nil {
 				s.Spider().StateRequest().Out()
 				return
@@ -88,14 +87,14 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
 						//s.logger.Error(err)
-						s.HandleError(ctx, response, err, request.ErrBack())
+						s.HandleError(ctx, response, err, requestWithContext.ErrBack())
 					}
 				}()
 
 				s.Spider().StateMethod().In()
-				if err = s.Spider().CallBack(request.CallBack())(ctx, response); err != nil {
+				if err = s.Spider().CallBack(requestWithContext.CallBack())(ctx, response); err != nil {
 					s.logger.Error(err)
-					s.HandleError(ctx, response, err, request.ErrBack())
+					s.HandleError(ctx, response, err, requestWithContext.ErrBack())
 				}
 				s.Spider().StateMethod().Out()
 				s.Spider().StateRequest().Out()

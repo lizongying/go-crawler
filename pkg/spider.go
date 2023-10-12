@@ -47,7 +47,7 @@ type Spider interface {
 	SetScheduler(Scheduler) Spider
 	GetMiddlewares() Middlewares
 	SetMiddlewares(Middlewares) Spider
-	Start(ctx context.Context, taskId string, startFunc string, args string) error
+	Start(ctx Context) error
 	Stop(ctx context.Context) error
 	FromCrawler(Crawler) Spider
 

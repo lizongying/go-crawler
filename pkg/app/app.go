@@ -45,10 +45,6 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 			fx.As(new(pkg.Store)),
 		),
 		config.NewConfig,
-		fx.Annotate(
-			spider.NewBaseSpider,
-			fx.ResultTags(`name:"baseSpider"`),
-		),
 		//fx.Annotate(
 		//	config.NewConfig,
 		//	fx.As(new(pkg.Config)),
@@ -62,9 +58,12 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 	}
 
 	for _, v := range a.newSpiders {
+		v := v
 		constructors = append(constructors, fx.Annotate(
-			v,
-			fx.ParamTags(`name:"baseSpider"`),
+			func(logger pkg.Logger) (pkg.Spider, error) {
+				baseSpider, _ := spider.NewBaseSpider(logger)
+				return v(baseSpider)
+			},
 			fx.ResultTags(`group:"spiders"`),
 		))
 	}

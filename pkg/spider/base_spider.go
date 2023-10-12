@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"github.com/lizongying/go-crawler/pkg/filters"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
 	kafka2 "github.com/lizongying/go-crawler/pkg/scheduler/kafka"
@@ -274,12 +273,14 @@ func (s *BaseSpider) registerParser() {
 	s.SetCallBacks(callBacks)
 	s.SetErrBacks(errBacks)
 }
-func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string, args string) (err error) {
+func (s *BaseSpider) Start(c pkg.Context) (err error) {
+	s.logger.Info(s.spider.Name(), c.TaskId())
 	timeBegin := time.Now()
 	defer func() {
-		s.logger.Info("spend time", time.Now().Sub(timeBegin))
+		s.logger.Info(s.spider.Name(), c.TaskId(), "spend time:", time.Now().Sub(timeBegin))
 	}()
 
+	ctx := c.GlobalContext()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -307,14 +308,14 @@ func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string,
 		states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
 		states.RegisterSetAndZeroFn(func() {
 			for _, v := range s.middlewares.Middlewares() {
-				e := v.Stop(ctx)
+				e := v.Stop(c)
 				if errors.Is(e, pkg.BreakErr) {
 					s.logger.Debug("middlewares break", v.Name())
 					break
 				}
 			}
 			for _, v := range s.Pipelines() {
-				e := v.Stop(ctx)
+				e := v.Stop(c)
 				if errors.Is(e, pkg.BreakErr) {
 					s.logger.Debug("pipeline break", v.Name())
 					break
@@ -330,17 +331,14 @@ func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string,
 
 		s.Signal.SpiderOpened()
 
-		c := &crawlerContext.Context{
-			Spider: s.spider,
-		}
-		c.WithTaskId(taskId)
+		c.WithSpider(s.spider)
 		params := []reflect.Value{
 			reflect.ValueOf(c),
-			reflect.ValueOf(args),
+			reflect.ValueOf(c.Args()),
 		}
-		caller := reflect.ValueOf(s.spider).MethodByName(startFunc)
+		caller := reflect.ValueOf(s.spider).MethodByName(c.StartFunc())
 		if !caller.IsValid() {
-			err = errors.New("start func is invalid")
+			err = errors.New(fmt.Sprintf("start func is invalid: %s", c.StartFunc()))
 			s.logger.Error(err)
 			return
 		}
@@ -367,7 +365,7 @@ func (s *BaseSpider) Start(ctx context.Context, taskId string, startFunc string,
 
 	select {
 	case <-resultChan:
-		s.logger.Info("finished")
+		s.logger.Info(s.spider.Name(), c.TaskId(), "finished")
 		return
 	case <-ctx.Done():
 		close(resultChan)

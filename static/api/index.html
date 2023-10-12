@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Api</title>
+</head>
+<body>
+<ul>
+    <li>spider run</li>
+    <li>request:
+        <ul>
+            <li>url: /spider/run</li>
+            <li>method: POST</li>
+            <li>body:
+                <pre>{"timeout": 60, "name": "test-from-request", "func":"TestMustOk", "args":"", "mode":"once"}</pre>
+            </li>
+            <li>header:
+                <pre>Content-Type: application/json</pre>
+            </li>
+        </ul>
+    </li>
+    <li>response:
+        <pre>{"code":0,"msg":"","data":{"name":"test-from-request"}}</pre>
+    </li>
+</ul>
+<hr>
+<ul>
+    <li>spider stop(TODO)</li>
+    <li>request:
+        <ul>
+            <li>url: /spider/stop</li>
+            <li>method: POST</li>
+            <li>body:
+                <pre>{"task_id": ""}</pre>
+            </li>
+            <li>header:
+                <pre>Content-Type: application/json</pre>
+            </li>
+        </ul>
+    </li>
+    <li>response:
+        <pre>{"code":0,"msg":"","data":{"name":"test-from-request"}}</pre>
+    </li>
+</ul>
+<script></script>
+</body>
+</html>

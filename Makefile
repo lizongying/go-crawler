@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: tidy tls mitm testSpider testCompressSpider testDecodeSpider testFileSpider testItemSpider
+all: tidy tls mitm test_spider test_compress_spider test_decode_spider test_file_spider test_item_spider multi_spider
 
 module := $(shell head -n 1 go.mod)
 module := $(subst module ,,${module})
@@ -19,22 +19,26 @@ mitm:
 	go vet ./tools/mitm
 	go build -ldflags "-s -w" -o ./releases/mitm ./tools/mitm
 
-testSpider:
-	go vet ./cmd/testSpider
-	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test" -o ./releases/testSpider ./cmd/testSpider
+test_spider:
+	go vet ./cmd/test_spider
+	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test" -o ./releases/test_spider ./cmd/test_spider
 
-testCompressSpider:
-	go vet ./cmd/testCompressSpider
-	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-compress" -o ./releases/testCompressSpider ./cmd/testCompressSpider
+test_compress_spider:
+	go vet ./cmd/test_compress_spider
+	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-compress" -o ./releases/test_compress_spider ./cmd/test_compress_spider
 
-testDecodeSpider:
-	go vet ./cmd/testDecodeSpider
-	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-decode" -o ./releases/testDecodeSpider ./cmd/testDecodeSpider
+test_decode_spider:
+	go vet ./cmd/test_decode_spider
+	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-decode" -o ./releases/test_decode_spider ./cmd/test_decode_spider
 
-testFileSpider:
-	go vet ./cmd/testFileSpider
-	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-file" -o ./releases/testFileSpider ./cmd/testFileSpider
+test_file_spider:
+	go vet ./cmd/test_file_spider
+	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-file" -o ./releases/test_file_spider ./cmd/test_file_spider
 
-testItemSpider:
-	go vet ./cmd/testItemSpider
-	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-item" -o ./releases/testItemSpider ./cmd/testItemSpider
+test_item_spider:
+	go vet ./cmd/test_item_spider
+	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-item" -o ./releases/test_item_spider ./cmd/test_item_spider
+
+multi_spider:
+	go vet ./cmd/multi_spider
+	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-item" -o ./releases/multi_spider ./cmd/multi_spider

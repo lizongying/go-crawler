@@ -28,8 +28,8 @@ type Crawler interface {
 	GetSqlite() Sqlite
 	GetStore() Store
 
-	SpiderStart(context.Context, ReqSpiderStart) error
-	SpiderStop(context.Context, ReqSpiderStop) error
+	SpiderStart(Context) error
+	SpiderStop(Context) error
 }
 
 type CrawlOption func(Crawler)

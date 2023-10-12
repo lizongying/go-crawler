@@ -1,7 +1,6 @@
 package pipelines
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
@@ -135,7 +134,7 @@ func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err erro
 	return
 }
 
-func (m *CsvPipeline) Stop(_ context.Context) (err error) {
+func (m *CsvPipeline) Stop(_ pkg.Context) (err error) {
 	m.files.Range(func(key, value any) bool {
 		err = value.(*os.File).Close()
 		if err != nil {

@@ -10,6 +10,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
+	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -92,14 +93,10 @@ func (c *Crawler) GetSqlite() pkg.Sqlite {
 func (c *Crawler) GetStore() pkg.Store {
 	return c.Store
 }
-func (c *Crawler) SpiderStart(ctx context.Context, req pkg.ReqSpiderStart) (err error) {
-	taskId := req.TaskId
-	spiderName := req.Name
-	startFunc := req.Func
-	args := req.Args
+func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
-		if v.Name() == spiderName {
+		if v.Name() == ctx.SpiderName() {
 			spider = v
 			break
 		}
@@ -111,11 +108,10 @@ func (c *Crawler) SpiderStart(ctx context.Context, req pkg.ReqSpiderStart) (err 
 		return
 	}
 
-	c.logger.Info("taskId", taskId)
-	c.logger.Info("name", spiderName)
-	c.logger.Info("func", startFunc)
-	c.logger.Info("args", args)
-	c.logger.Info("mode", c.mode)
+	c.logger.Info("name", ctx.SpiderName())
+	c.logger.Info("func", ctx.StartFunc())
+	c.logger.Info("args", ctx.Args())
+	c.logger.Info("mode", ctx.Mode())
 	c.logger.Info("allowedDomains", spider.GetAllowedDomains())
 	c.logger.Info("okHttpCodes", spider.OkHttpCodes())
 	c.logger.Info("platforms", spider.GetPlatforms())
@@ -126,15 +122,44 @@ func (c *Crawler) SpiderStart(ctx context.Context, req pkg.ReqSpiderStart) (err 
 	c.logger.Info("retryMaxTimes", c.config.GetRetryMaxTimes())
 	c.logger.Info("filter", c.config.GetFilter())
 
-	if err = spider.Start(ctx, taskId, startFunc, args); err != nil {
-		c.logger.Error(err)
-		return
+	switch ctx.Mode() {
+	case "once":
+		if ctx.TaskId() == "" {
+			ctx.WithTaskId(uuid.New().String())
+		}
+		if err = spider.Start(ctx); err != nil {
+			c.logger.Error(err)
+			return
+		}
+	case "loop":
+		for {
+			ctx.WithTaskId(uuid.New().String())
+			if err = spider.Start(ctx); err != nil {
+				c.logger.Error(err)
+				return
+			}
+		}
+	case "cron":
+		cr := cron.New(cron.WithLogger(c.logger))
+		cr.MustStart()
+		job := new(cron.Job).
+			MustEverySpec(c.spec).
+			Callback(func() {
+				ctx.WithTaskId(uuid.New().String())
+				if err = spider.Start(ctx); err != nil {
+					c.logger.Error(err)
+					return
+				}
+			})
+		cr.MustAddJob(job)
+		select {}
+	default:
+		c.logger.Warn("mode", ctx.Mode())
 	}
-
 	return
 }
-func (c *Crawler) SpiderStop(ctx context.Context, req pkg.ReqSpiderStop) (err error) {
-	taskId := req.TaskId
+func (c *Crawler) SpiderStop(ctx pkg.Context) (err error) {
+	taskId := ctx.TaskId()
 	c.logger.Info(taskId)
 	return
 }
@@ -144,40 +169,19 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		return
 	}
 
-	req := pkg.ReqSpiderStart{
-		Name: c.spiderName,
-		Func: c.startFunc,
-		Args: c.args,
-	}
-	switch c.mode {
-	case "once":
-		req.TaskId = uuid.New().String()
-		return c.SpiderStart(ctx, req)
-	case "loop":
-		for {
-			req.TaskId = uuid.New().String()
-			if err = c.SpiderStart(ctx, req); err != nil {
-				c.logger.Error(err)
-			}
+	if c.spiderName != "" {
+		if err = c.SpiderStart(new(crawlerContext.Context).
+			WithSpiderName(c.spiderName).
+			WithStartFunc(c.startFunc).
+			WithArgs(c.args).
+			WithMode(c.mode)); err != nil {
+			c.logger.Error(err)
+			return
 		}
-	case "cron":
-		cr := cron.New(cron.WithLogger(c.logger))
-		cr.MustStart()
-		job := new(cron.Job).
-			MustEverySpec(c.spec).
-			Callback(func() {
-				req.TaskId = uuid.New().String()
-				c.logger.Info(req)
-				if err = c.SpiderStart(ctx, req); err != nil {
-					c.logger.Error(err)
-				}
-			})
-		cr.MustAddJob(job)
-
-		select {}
-	default:
+	} else {
 		select {}
 	}
+	return
 }
 
 func (c *Crawler) Stop(ctx context.Context) (err error) {
@@ -221,6 +225,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		api:         httpApi,
 	}
 
+	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteHello).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpider).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpiderRun).FromCrawler(crawler))
@@ -231,7 +236,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		for _, option := range v.Options() {
 			option(v)
 		}
-
+		logger.Info("spider", v.Name(), "loaded")
 		crawler.AddSpider(v)
 	}
 

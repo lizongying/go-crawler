@@ -509,7 +509,10 @@ func (r *Request) WithContext(ctx context.Context) pkg.Request {
 	r.Request = r.Request.WithContext(ctx)
 	return r
 }
-func (r *Request) GetRequest() *http.Request {
+func (r *Request) GetRequest() pkg.Request {
+	return r
+}
+func (r *Request) GetHttpRequest() *http.Request {
 	return r.Request
 }
 func (r *Request) Cookies() []*http.Cookie {

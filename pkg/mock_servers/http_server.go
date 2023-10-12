@@ -98,8 +98,7 @@ func convertToJA3(info *tls.ClientHelloInfo) string {
 }
 
 func (h *HttpServer) Run() (err error) {
-	h.logger.Info("Starting mock server at", h.url.String())
-	h.logger.Info("api routes", h.GetRoutes())
+	h.logger.Info("mock server at", h.url.String())
 	h.srv.Handler = h.mux
 	listener, e := net.Listen("tcp", h.url.Host)
 	if e != nil {
@@ -156,6 +155,7 @@ func (h *HttpServer) AddRoutes(routes ...pkg.Route) {
 	for _, route := range routes {
 		h.mux.Handle(route.Pattern(), route)
 		h.routes[route.Pattern()] = struct{}{}
+		h.logger.Info("mock route added:", route.Pattern())
 	}
 }
 

@@ -27,9 +27,7 @@ func (m *RobotsTxtMiddleware) SpiderOpened() {
 		return
 	}
 
-	ctx := &crawlerContext.Context{
-		Spider: m.spider,
-	}
+	ctx := new(crawlerContext.Context).WithSpider(m.spider)
 	r, e := m.spider.Request(ctx, request.NewRequest().SetUrl(fmt.Sprintf("%s/robots.txt", host)).SetSkipMiddleware(true))
 	if e != nil {
 		m.logger.Error(e)

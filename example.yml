@@ -52,7 +52,7 @@ request:
     accept_encoding: gzip, deflate, br
 api:
   enable: true
-  host: http://localhost:8080
+  host: http://localhost:8090
   key:
 mock_server:
   enable: true

@@ -5,7 +5,7 @@ import "context"
 type Pipeline interface {
 	Start(context.Context, Spider) error
 	ProcessItem(ItemWithContext) error
-	Stop(context.Context) error
+	Stop(Context) error
 	SetName(string)
 	Name() string
 	SetOrder(uint8)
@@ -36,7 +36,7 @@ func (p *UnimplementedPipeline) Start(ctx context.Context, spider Spider) error 
 func (*UnimplementedPipeline) ProcessItem(ItemWithContext) error {
 	return nil
 }
-func (*UnimplementedPipeline) Stop(context.Context) error {
+func (*UnimplementedPipeline) Stop(Context) error {
 	return nil
 }
 func (p *UnimplementedPipeline) Name() string {

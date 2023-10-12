@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/lizongying/go-crawler/pkg"
+	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"io"
 	"net/http"
 	"time"
@@ -13,6 +14,7 @@ import (
 const UrlSpiderRun = "/spider/run"
 
 type RouteSpiderRun struct {
+	Response
 	crawler pkg.Crawler
 	logger  pkg.Logger
 }
@@ -36,32 +38,31 @@ func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if req.TaskId == "" {
 		req.TaskId = uuid.New().String()
 	}
+	if req.Mode == "" {
+		req.Mode = "once"
+	}
 
-	ctx := context.Background()
-	if req.Timeout != 0 {
+	c := context.Background()
+	if req.Timeout > 0 {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(req.Timeout)*time.Second)
+		c, cancel = context.WithTimeout(c, time.Duration(req.Timeout)*time.Second)
 		defer cancel()
 	}
-	err = h.crawler.SpiderStart(ctx, req)
+	ctx := new(crawlerContext.Context).
+		WithGlobalContext(c).
+		WithTaskId(req.TaskId).
+		WithSpiderName(req.Name).
+		WithStartFunc(req.Func).
+		WithArgs(req.Args).
+		WithMode(req.Mode)
+	err = h.crawler.SpiderStart(ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.Json(w, 1, err.Error(), nil)
 		return
 	}
 
 	spider := Spider{Name: req.Name}
-	var resp []byte
-	resp, err = json.Marshal(spider)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(resp)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	h.Json(w, 0, "", spider)
 }
 
 func (h *RouteSpiderRun) FromCrawler(crawler pkg.Crawler) pkg.Route {

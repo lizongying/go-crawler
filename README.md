@@ -29,12 +29,13 @@ distributed deployment.
     12. [Startup](#Startup)
     13. [Configuration](#Configuration)
     14. [Web Page Parsing Based on Field Tags](#Web-Page-Parsing-Based-on-Field-Tags)
-4. [Q&A](#Question)
-5. [Example](#Example)
-6. [Tools](#Tools)
+4. [api](#api)
+5. [Q&A](#Question)
+6. [Example](#Example)
+7. [Tools](#Tools)
     1. [Certificate](#Certificate)
     2. [MITM](#MITM)
-7. [TODO](#TODO)
+8. [TODO](#TODO)
 
 ## Feature
 
@@ -907,6 +908,26 @@ You can use the following tags:
 * `_css:""` for CSS format
 * `_re:""` for regular expression (regex) format
 
+## Api
+
+```shell
+go run cmd/multi_spider/*.go -c example.yml
+```
+
+```shell
+# index
+curl "http://127.0.0.1:8080" -H "Content-Type: application/json"
+
+# spider run
+curl "http://127.0.0.1:8080/spider/run" -X POST -d '{"timeout": 1000, "name": "test-must-ok", "func":"TestOk", "args":"", "mode":"once"}' -H "Content-Type: application/json"
+# {"code":0,"msg":"","data":{"name":"test-must-ok"}}
+
+# spider stop
+curl "http://127.0.0.1:8080/spider/stop" -X POST -d '{"task_id":""}' -H "Content-Type: application/json"
+# {"code":0,"msg":"","data":{"name":"test-must-ok"}}
+
+```
+
 ## Question
 
 * In some frameworks, there is a presence of `start_urls`. How is it set up in this framework?
@@ -1017,7 +1038,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mockServer"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
@@ -1068,7 +1089,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk)); err != nil {
 		s.logger.Error(err)
@@ -1089,7 +1110,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mockServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mock_servers.NewRouteOk))
 }
 
 ```
@@ -1104,7 +1125,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/mockServer"
+	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
 )
 
@@ -1146,7 +1167,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.MustYieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mockServer.UrlOk)).
+		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk))
 	return
@@ -1165,7 +1186,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mockServer.NewRouteOk))
+	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mock_servers.NewRouteOk))
 }
 
 ```

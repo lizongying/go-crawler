@@ -49,7 +49,7 @@ func (m *FilterMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) 
 	return
 }
 
-func (m *FilterMiddleware) Stop(ctx context.Context) (err error) {
+func (m *FilterMiddleware) Stop(ctx pkg.Context) (err error) {
 	err = m.filter.Clean(ctx)
 	return
 }

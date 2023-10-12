@@ -37,7 +37,7 @@ func (m *RecordErrorMiddleware) ProcessError(ctx pkg.Context, response pkg.Respo
 		// TODO
 		//Id:      fmt.Sprintf("%s-%s", c.TaskId, response.UniqueKey()),
 		Id:      response.UniqueKey(),
-		TaskId:  ctx.GetTaskId(),
+		TaskId:  ctx.TaskId(),
 		Request: string(request),
 		Error:   err.Error(),
 	}
