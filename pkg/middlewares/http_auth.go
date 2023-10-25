@@ -12,12 +12,12 @@ type HttpAuthMiddleware struct {
 func (m *HttpAuthMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) (err error) {
 	spider := m.GetSpider()
 	username := spider.Username()
-	if request.Username() != "" {
-		username = request.Username()
+	if request.GetUsername() != "" {
+		username = request.GetUsername()
 	}
 	password := spider.Password()
-	if request.Password() != "" {
-		password = request.Password()
+	if request.GetPassword() != "" {
+		password = request.GetPassword()
 	}
 
 	if username != "" && password != "" {

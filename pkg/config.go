@@ -42,6 +42,7 @@ type Config interface {
 	GetEnableFilePipeline() bool
 	GetEnableImagePipeline() bool
 	GetEnableFilterPipeline() bool
+	GetEnableNonePipeline() bool
 	GetEnableCsvPipeline() bool
 	GetEnableJsonLinesPipeline() bool
 	GetEnableMongoPipeline() bool

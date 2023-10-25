@@ -50,66 +50,66 @@ func (h HTTPMethod) String() string {
 }
 
 type Request interface {
-	UniqueKey() string
+	GetUniqueKey() string
 	SetUniqueKey(string) Request
 	SetCallBack(CallBack) Request
-	CallBack() string
+	GetCallBack() string
 	SetErrBack(ErrBack) Request
-	ErrBack() string
-	Referrer() string
+	GetErrBack() string
+	GetReferrer() string
 	SetReferrer(string) Request
-	Username() string
+	GetUsername() string
 	SetUsername(string) Request
-	Password() string
+	GetPassword() string
 	SetPassword(string) Request
-	Checksum() string
+	GetChecksum() string
 	SetChecksum(string) Request
-	CreateTime() string
+	GetCreateTime() string
 	SetCreateTime(string) Request
-	SpendTime() time.Duration
+	GetSpendTime() time.Duration
 	SetSpendTime(time.Duration) Request
-	SkipMiddleware() bool
+	IsSkipMiddleware() bool
 	SetSkipMiddleware(bool) Request
-	SkipFilter() *bool
+	IsSkipFilter() *bool
 	SetSkipFilter(*bool) Request
-	CanonicalHeaderKey() *bool
+	IsCanonicalHeaderKey() *bool
 	SetCanonicalHeaderKey(*bool) Request
-	ProxyEnable() *bool
+	IsProxyEnable() *bool
 	SetProxyEnable(bool) Request
-	Proxy() *url.URL
+	GetProxy() *url.URL
 	SetProxy(string) Request
-	RetryMaxTimes() *uint8
+	GetRetryMaxTimes() *uint8
 	SetRetryMaxTimes(*uint8) Request
-	RetryTimes() uint8
+	GetRetryTimes() uint8
 	SetRetryTimes(uint8) Request
-	RedirectMaxTimes() *uint8
+	GetRedirectMaxTimes() *uint8
 	SetRedirectMaxTimes(*uint8) Request
-	RedirectTimes() uint8
+	GetRedirectTimes() uint8
 	SetRedirectTimes(uint8) Request
-	OkHttpCodes() []int
+	GetOkHttpCodes() []int
 	SetOkHttpCodes([]int) Request
-	Slot() string
+	GetSlot() string
 	SetSlot(string) Request
-	Concurrency() *uint8
+	GetConcurrency() *uint8
 	SetConcurrency(*uint8) Request
-	Interval() time.Duration
+	GetInterval() time.Duration
 	SetInterval(time.Duration) Request
-	Timeout() time.Duration
+	GetTimeout() time.Duration
 	SetTimeout(time.Duration) Request
-	HttpProto() string
+	GetHttpProto() string
 	SetHttpProto(string) Request
-	Platforms() []Platform
+	GetPlatforms() []Platform
 	SetPlatforms(...Platform) Request
-	Browsers() []Browser
+	GetBrowsers() []Browser
 	SetBrowsers(...Browser) Request
 	GetExtraName() string
-	Priority() uint8
+	GetPriority() uint8
 	SetPriority(uint8) Request
-	Fingerprint() string
+	GetFingerprint() string
 	SetFingerprint(string) Request
-	Client() Client
+	GetClient() Client
 	SetClient(Client) Request
-	Ajax() bool
+	IsAjax() bool
 	SetAjax(bool) Request
 	Err() map[string]error
 	SetUrl(string) Request
@@ -126,7 +126,7 @@ type Request interface {
 	GetPostForm() url.Values
 	SetMethod(string) Request
 	GetMethod() string
-	BodyStr() string
+	GetBodyStr() string
 	SetBodyStr(string) Request
 	BodyBytes() []byte
 	SetBodyBytes([]byte) Request
@@ -138,18 +138,17 @@ type Request interface {
 	IsFile() bool
 	AsFile(bool) Request
 	SetFileOptions(options FileOptions) Request
-	FileOptions() *FileOptions
+	GetFileOptions() *FileOptions
 	IsImage() bool
 	AsImage(bool) Request
 	SetImageOptions(options ImageOptions) Request
-	ImageOptions() *ImageOptions
-	SetTask(task Task) Request
-	Task() *Task
-	Extra() string
+	GetImageOptions() *ImageOptions
+	WithGlobal(Context) Request
+	GetGlobal() Context
+	GetExtra() string
 	SetExtra(any) Request
 	UnmarshalExtra(any) error
 	MustUnmarshalExtra(any)
-	ToRequestJson() RequestJson
 	Marshal() ([]byte, error)
 	SetBasicAuth(string, string) Request
 	RequestContext() context.Context
@@ -158,15 +157,6 @@ type Request interface {
 	GetHttpRequest() *http.Request
 	Cookies() []*http.Cookie
 	AddCookie(c *http.Cookie) Request
-}
-
-type RequestWithContext interface {
-	Context
-	Request
-}
-
-type RequestJson interface {
-	ToRequest() (Request, error)
 }
 
 type CallBack func(Context, Response) error

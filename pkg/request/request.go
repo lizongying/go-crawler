@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	context2 "github.com/lizongying/go-crawler/pkg/context"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"io"
 	"net/http"
 	"net/url"
@@ -17,281 +19,285 @@ import (
 )
 
 type Request struct {
-	*http.Request
-	bodyStr            string
-	uniqueKey          string
-	callBack           string
-	errBack            string
-	referrer           string
-	username           string
-	password           string
-	checksum           string
-	createTime         string
-	spendTime          time.Duration
-	skipMiddleware     bool
-	skipFilter         *bool
-	canonicalHeaderKey *bool
-	proxyEnable        *bool
-	proxy              *url.URL
-	retryMaxTimes      *uint8
-	retryTimes         uint8
-	redirectMaxTimes   *uint8
-	redirectTimes      uint8
-	okHttpCodes        []int
-	slot               string
-	concurrency        *uint8
-	interval           time.Duration
-	timeout            time.Duration
-	httpProto          string
-	platforms          []pkg.Platform
-	browsers           []pkg.Browser
-	isFile             bool
-	fileOptions        *pkg.FileOptions
-	isImage            bool
-	imageOptions       *pkg.ImageOptions
-	extra              string
-	extraName          string
-	errors             map[string]error
-	priority           uint8
-	fingerprint        string
-	client             pkg.Client
-	ajax               bool
-	task               *pkg.Task
+	Errors             map[string]error `json:"errors,omitempty"`
+	pkg.Context        `json:"context,omitempty"`
+	*http.Request      `json:"-"`
+	Method             string              `json:"method,omitempty"`
+	Url                string              `json:"url,omitempty"`
+	Header             map[string][]string `json:"header,omitempty"`
+	BodyStr            string              `json:"body_str,omitempty"`
+	UniqueKey          string              `json:"unique_key,omitempty"` // for filter
+	CallBack           string              `json:"call_back,omitempty"`
+	ErrBack            string              `json:"err_back,omitempty"`
+	Referrer           string              `json:"referrer,omitempty"`
+	Username           string              `json:"username,omitempty"`
+	Password           string              `json:"password,omitempty"`
+	Checksum           string              `json:"checksum,omitempty"`
+	CreateTime         string              `json:"create_time,omitempty"`
+	SpendTime          utils.DurationNano  `json:"spend_time,omitempty"`
+	SkipMiddleware     bool                `json:"skip_middleware,omitempty"`
+	SkipFilter         *bool               `json:"skip_filter,omitempty"`          // Allow duplicate requests if set "true"
+	CanonicalHeaderKey *bool               `json:"canonical_header_key,omitempty"` // canonical header key
+	ProxyEnable        *bool               `json:"proxy_enable,omitempty"`
+	Proxy              utils.Url           `json:"proxy,omitempty"`
+	RetryMaxTimes      *uint8              `json:"retry_max_times,omitempty"`
+	RetryTimes         uint8               `json:"retry_times,omitempty"`
+	RedirectMaxTimes   *uint8              `json:"redirect_max_times,omitempty"`
+	RedirectTimes      uint8               `json:"redirect_times,omitempty"`
+	OkHttpCodes        []int               `json:"ok_http_codes,omitempty"`
+	Slot               string              `json:"slot,omitempty"` // same slot same concurrency & delay
+	Concurrency        *uint8              `json:"concurrency,omitempty"`
+	Interval           utils.DurationNano  `json:"interval,omitempty"`
+	Timeout            utils.DurationNano  `json:"timeout,omitempty"`    // seconds
+	HttpProto          string              `json:"http_proto,omitempty"` // e.g. 1.0/1.1/2.0
+	Platforms          []pkg.Platform      `json:"platforms,omitempty"`
+	Browsers           []pkg.Browser       `json:"browsers,omitempty"`
+	File               bool                `json:"is_file,omitempty"`
+	FileOptions        *pkg.FileOptions    `json:"file_options,omitempty"`
+	Image              bool                `json:"is_image,omitempty"`
+	ImageOptions       *pkg.ImageOptions   `json:"image_options,omitempty"`
+	Extra              string              `json:"extra,omitempty"`
+	ExtraName          string              `json:"extra_name,omitempty"`
+	Priority           uint8               `json:"priority,omitempty"`
+	Fingerprint        string              `json:"fingerprint,omitempty"`
+	Client             pkg.Client          `json:"client,omitempty"`
+	Ajax               bool                `json:"ajax,omitempty"`
 }
 
-func (r *Request) UniqueKey() string {
-	return r.uniqueKey
+func (r *Request) GetUniqueKey() string {
+	return r.UniqueKey
 }
 func (r *Request) SetUniqueKey(uniqueKey string) pkg.Request {
-	r.uniqueKey = uniqueKey
+	r.UniqueKey = uniqueKey
 	return r
+}
+func (r *Request) GetCallBack() string {
+	return r.CallBack
 }
 func (r *Request) SetCallBack(callBack pkg.CallBack) pkg.Request {
 	name := runtime.FuncForPC(reflect.ValueOf(callBack).Pointer()).Name()
-	r.callBack = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
+	r.CallBack = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
 	return r
 }
-func (r *Request) CallBack() string {
-	return r.callBack
+func (r *Request) GetErrBack() string {
+	return r.ErrBack
 }
 func (r *Request) SetErrBack(errBack pkg.ErrBack) pkg.Request {
 	name := runtime.FuncForPC(reflect.ValueOf(errBack).Pointer()).Name()
-	r.errBack = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
+	r.ErrBack = name[strings.LastIndex(name, ".")+1 : strings.LastIndex(name, "-")]
 	return r
 }
-func (r *Request) ErrBack() string {
-	return r.errBack
-}
-func (r *Request) Referrer() string {
-	return r.referrer
+
+func (r *Request) GetReferrer() string {
+	return r.Referrer
 }
 func (r *Request) SetReferrer(referrer string) pkg.Request {
-	r.referrer = referrer
+	r.Referrer = referrer
 	return r
 }
 func (r *Request) SetUsername(username string) pkg.Request {
-	r.username = username
+	r.Username = username
 	return r
 }
-func (r *Request) Username() string {
-	return r.username
+func (r *Request) GetUsername() string {
+	return r.Username
+}
+func (r *Request) GetPassword() string {
+	return r.Password
 }
 func (r *Request) SetPassword(password string) pkg.Request {
-	r.password = password
+	r.Password = password
 	return r
 }
-func (r *Request) Password() string {
-	return r.password
-}
-func (r *Request) Checksum() string {
-	return r.checksum
+func (r *Request) GetChecksum() string {
+	return r.Checksum
 }
 func (r *Request) SetChecksum(checksum string) pkg.Request {
-	r.checksum = checksum
+	r.Checksum = checksum
 	return r
+}
+func (r *Request) GetCreateTime() string {
+	return r.CreateTime
 }
 func (r *Request) SetCreateTime(createTime string) pkg.Request {
-	r.createTime = createTime
+	r.CreateTime = createTime
 	return r
-}
-func (r *Request) CreateTime() string {
-	return r.createTime
 }
 func (r *Request) SetSpendTime(spendTime time.Duration) pkg.Request {
-	r.spendTime = spendTime
+	r.SpendTime = utils.DurationNano{Duration: spendTime}
 	return r
 }
-func (r *Request) SpendTime() time.Duration {
-	return r.spendTime
+func (r *Request) GetSpendTime() time.Duration {
+	return r.SpendTime.Duration
 }
-func (r *Request) SkipMiddleware() bool {
-	return r.skipMiddleware
+func (r *Request) IsSkipMiddleware() bool {
+	return r.SkipMiddleware
 }
 func (r *Request) SetSkipMiddleware(skipMiddleware bool) pkg.Request {
-	r.skipMiddleware = skipMiddleware
+	r.SkipMiddleware = skipMiddleware
 	return r
 }
-func (r *Request) SkipFilter() *bool {
-	return r.skipFilter
+func (r *Request) IsSkipFilter() *bool {
+	return r.SkipFilter
 }
 func (r *Request) SetSkipFilter(skipFilter *bool) pkg.Request {
-	r.skipFilter = skipFilter
+	r.SkipFilter = skipFilter
 	return r
 }
 func (r *Request) SetCanonicalHeaderKey(canonicalHeaderKey *bool) pkg.Request {
-	r.canonicalHeaderKey = canonicalHeaderKey
+	r.CanonicalHeaderKey = canonicalHeaderKey
 	return r
 }
-func (r *Request) CanonicalHeaderKey() *bool {
-	return r.canonicalHeaderKey
+func (r *Request) IsCanonicalHeaderKey() *bool {
+	return r.CanonicalHeaderKey
 }
 func (r *Request) SetProxyEnable(proxyEnable bool) pkg.Request {
-	r.proxyEnable = &proxyEnable
+	r.ProxyEnable = &proxyEnable
 	return r
 }
-func (r *Request) ProxyEnable() *bool {
-	return r.proxyEnable
+func (r *Request) IsProxyEnable() *bool {
+	return r.ProxyEnable
 }
 func (r *Request) SetProxy(proxy string) pkg.Request {
-	var err error
-	r.proxy, err = url.Parse(proxy)
+	u, err := url.Parse(proxy)
 	if err == nil {
 		r.SetProxyEnable(true)
 	}
+	r.Proxy = utils.Url{URL: u}
 	return r
 }
-func (r *Request) Proxy() *url.URL {
-	return r.proxy
+func (r *Request) GetProxy() *url.URL {
+	return r.Proxy.URL
 }
 func (r *Request) SetRetryMaxTimes(retryMaxTimes *uint8) pkg.Request {
-	r.retryMaxTimes = retryMaxTimes
+	r.RetryMaxTimes = retryMaxTimes
 	return r
 }
-func (r *Request) RetryMaxTimes() *uint8 {
-	return r.retryMaxTimes
+func (r *Request) GetRetryMaxTimes() *uint8 {
+	return r.RetryMaxTimes
 }
 func (r *Request) SetRetryTimes(retryTimes uint8) pkg.Request {
-	r.retryTimes = retryTimes
+	r.RetryTimes = retryTimes
 	return r
 }
-func (r *Request) RetryTimes() uint8 {
-	return r.retryTimes
+func (r *Request) GetRetryTimes() uint8 {
+	return r.RetryTimes
 }
 func (r *Request) SetRedirectMaxTimes(redirectMaxTimes *uint8) pkg.Request {
-	r.redirectMaxTimes = redirectMaxTimes
+	r.RedirectMaxTimes = redirectMaxTimes
 	return r
 }
-func (r *Request) RedirectMaxTimes() *uint8 {
-	return r.redirectMaxTimes
+func (r *Request) GetRedirectMaxTimes() *uint8 {
+	return r.RedirectMaxTimes
 }
 func (r *Request) SetRedirectTimes(redirectTimes uint8) pkg.Request {
-	r.redirectTimes = redirectTimes
+	r.RedirectTimes = redirectTimes
 	return r
 }
-func (r *Request) RedirectTimes() uint8 {
-	return r.redirectTimes
+func (r *Request) GetRedirectTimes() uint8 {
+	return r.RedirectTimes
 }
 func (r *Request) SetOkHttpCodes(okHttpCodes []int) pkg.Request {
-	r.okHttpCodes = okHttpCodes
+	r.OkHttpCodes = okHttpCodes
 	return r
 }
-func (r *Request) OkHttpCodes() []int {
-	return r.okHttpCodes
+func (r *Request) GetOkHttpCodes() []int {
+	return r.OkHttpCodes
 }
 func (r *Request) SetSlot(slot string) pkg.Request {
-	r.slot = slot
+	r.Slot = slot
 	return r
 }
-func (r *Request) Slot() string {
-	return r.slot
+func (r *Request) GetSlot() string {
+	return r.Slot
 }
 func (r *Request) SetConcurrency(concurrency *uint8) pkg.Request {
-	r.concurrency = concurrency
+	r.Concurrency = concurrency
 	return r
 }
-func (r *Request) Concurrency() *uint8 {
-	return r.concurrency
+func (r *Request) GetConcurrency() *uint8 {
+	return r.Concurrency
+}
+func (r *Request) GetInterval() time.Duration {
+	return r.Interval.Duration
 }
 func (r *Request) SetInterval(interval time.Duration) pkg.Request {
-	r.interval = interval
+	r.Interval = utils.DurationNano{Duration: interval}
 	return r
 }
-func (r *Request) Interval() time.Duration {
-	return r.interval
-}
-func (r *Request) Timeout() time.Duration {
-	return r.timeout
+func (r *Request) GetTimeout() time.Duration {
+	return r.Timeout.Duration
 }
 func (r *Request) SetTimeout(timeout time.Duration) pkg.Request {
-	r.timeout = timeout
+	r.Timeout = utils.DurationNano{Duration: timeout}
 	return r
 }
-func (r *Request) HttpProto() string {
-	return r.httpProto
+func (r *Request) GetHttpProto() string {
+	return r.HttpProto
 }
 func (r *Request) SetHttpProto(httpProto string) pkg.Request {
-	r.httpProto = httpProto
+	r.HttpProto = httpProto
 	return r
 }
-func (r *Request) Platforms() []pkg.Platform {
-	return r.platforms
+func (r *Request) GetPlatforms() []pkg.Platform {
+	return r.Platforms
 }
 func (r *Request) SetPlatforms(platforms ...pkg.Platform) pkg.Request {
-	r.platforms = platforms
+	r.Platforms = platforms
 	return r
 }
-func (r *Request) Browsers() []pkg.Browser {
-	return r.browsers
+func (r *Request) GetBrowsers() []pkg.Browser {
+	return r.Browsers
 }
 func (r *Request) SetBrowsers(browsers ...pkg.Browser) pkg.Request {
-	r.browsers = browsers
+	r.Browsers = browsers
 	return r
 }
 func (r *Request) setExtraName(name string) {
-	r.extraName = name
+	r.ExtraName = name
 }
 func (r *Request) GetExtraName() string {
-	return r.extraName
+	return r.ExtraName
 }
-func (r *Request) Priority() uint8 {
-	return r.priority
+func (r *Request) GetPriority() uint8 {
+	return r.Priority
 }
 func (r *Request) SetPriority(priority uint8) pkg.Request {
-	r.priority = priority
+	r.Priority = priority
 	return r
 }
-func (r *Request) Fingerprint() string {
-	return r.fingerprint
+func (r *Request) GetFingerprint() string {
+	return r.Fingerprint
 }
 func (r *Request) SetFingerprint(fingerprint string) pkg.Request {
-	r.fingerprint = fingerprint
+	r.Fingerprint = fingerprint
 	return r
 }
-func (r *Request) Client() pkg.Client {
-	return r.client
+func (r *Request) GetClient() pkg.Client {
+	return r.Client
 }
 func (r *Request) SetClient(client pkg.Client) pkg.Request {
-	r.client = client
+	r.Client = client
 	return r
 }
-func (r *Request) Ajax() bool {
-	return r.ajax
+func (r *Request) IsAjax() bool {
+	return r.Ajax
 }
 func (r *Request) SetAjax(ajax bool) pkg.Request {
-	r.ajax = ajax
+	r.Ajax = ajax
 	return r
 }
 func (r *Request) setErr(key string, value error) {
-	if r.errors == nil {
-		r.errors = make(map[string]error)
+	if r.Errors == nil {
+		r.Errors = make(map[string]error)
 	}
-	r.errors[key] = value
+	r.Errors[key] = value
 }
 func (r *Request) Err() map[string]error {
-	return r.errors
+	return r.Errors
 }
 func (r *Request) delErr(key string) {
-	delete(r.errors, key)
+	delete(r.Errors, key)
 }
 func (r *Request) SetUrl(Url string) pkg.Request {
 	URL, err := url.Parse(Url)
@@ -364,8 +370,8 @@ func (r *Request) SetPostForm(key string, value string) pkg.Request {
 	if r.PostForm == nil {
 		r.PostForm = make(url.Values)
 	}
-	if r.bodyStr != "" {
-		newValues, err := url.ParseQuery(r.bodyStr)
+	if r.BodyStr != "" {
+		newValues, err := url.ParseQuery(r.BodyStr)
 		if err != nil {
 			r.setErr("PostForm", err)
 			return r
@@ -406,6 +412,7 @@ func (r *Request) SetMethod(method string) pkg.Request {
 	}
 	if ok {
 		r.Method = method
+		r.Request.Method = method
 	} else {
 		r.setErr("Method", errors.New("method error"))
 	}
@@ -414,19 +421,19 @@ func (r *Request) SetMethod(method string) pkg.Request {
 func (r *Request) GetMethod() string {
 	return r.Method
 }
-func (r *Request) BodyStr() string {
-	return r.bodyStr
+func (r *Request) GetBodyStr() string {
+	return r.BodyStr
 }
 func (r *Request) SetBodyStr(bodyStr string) pkg.Request {
-	r.bodyStr = bodyStr
+	r.BodyStr = bodyStr
 	r.Body = io.NopCloser(strings.NewReader(bodyStr))
 	return r
 }
 func (r *Request) BodyBytes() []byte {
-	return []byte(r.bodyStr)
+	return []byte(r.BodyStr)
 }
 func (r *Request) SetBodyBytes(bodyBytes []byte) pkg.Request {
-	r.bodyStr = string(bodyBytes)
+	r.BodyStr = string(bodyBytes)
 	r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 	return r
 }
@@ -436,67 +443,67 @@ func (r *Request) SetBodyJson(bodyJson any) pkg.Request {
 		r.setErr("body", err)
 		return r
 	}
-	r.bodyStr = string(bodyBytes)
+	r.BodyStr = string(bodyBytes)
 	r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 	r.SetHeader("content-type", "application/json")
 	return r
 }
 func (r *Request) GetHeader(key string) string {
-	return r.Header.Get(key)
+	return r.Request.Header.Get(key)
 }
 func (r *Request) SetHeader(key string, value string) pkg.Request {
-	if r.Header == nil {
-		r.Header = make(http.Header)
+	if r.Request.Header == nil {
+		r.Request.Header = make(http.Header)
 	}
-	r.Header.Set(http.CanonicalHeaderKey(key), value)
+	r.Request.Header.Set(http.CanonicalHeaderKey(key), value)
 	return r
 }
 func (r *Request) Headers() http.Header {
-	return r.Header
+	return r.Request.Header
 }
 func (r *Request) SetHeaders(headers map[string]string) pkg.Request {
-	if r.Header == nil {
-		r.Header = make(http.Header)
+	if r.Request.Header == nil {
+		r.Request.Header = make(http.Header)
 	}
 	for key, value := range headers {
-		r.Header.Set(http.CanonicalHeaderKey(key), value)
+		r.Request.Header.Set(http.CanonicalHeaderKey(key), value)
 	}
 	return r
 }
 func (r *Request) IsFile() bool {
-	return r.isFile
+	return r.File
 }
-func (r *Request) AsFile(isFile bool) pkg.Request {
-	r.isFile = isFile
+func (r *Request) AsFile(file bool) pkg.Request {
+	r.File = file
 	return r
+}
+func (r *Request) GetFileOptions() *pkg.FileOptions {
+	return r.FileOptions
 }
 func (r *Request) SetFileOptions(options pkg.FileOptions) pkg.Request {
-	r.fileOptions = &options
+	r.FileOptions = &options
 	return r
-}
-func (r *Request) FileOptions() *pkg.FileOptions {
-	return r.fileOptions
 }
 func (r *Request) IsImage() bool {
-	return r.isImage
+	return r.Image
 }
-func (r *Request) AsImage(isImage bool) pkg.Request {
-	r.isImage = isImage
+func (r *Request) AsImage(image bool) pkg.Request {
+	r.Image = image
 	return r
+}
+func (r *Request) GetImageOptions() *pkg.ImageOptions {
+	return r.ImageOptions
 }
 func (r *Request) SetImageOptions(options pkg.ImageOptions) pkg.Request {
-	r.imageOptions = &options
+	r.ImageOptions = &options
 	return r
 }
-func (r *Request) ImageOptions() *pkg.ImageOptions {
-	return r.imageOptions
+func (r *Request) GetGlobal() pkg.Context {
+	return r.Context
 }
-func (r *Request) SetTask(task pkg.Task) pkg.Request {
-	r.task = &task
+func (r *Request) WithGlobal(ctx pkg.Context) pkg.Request {
+	r.Context = ctx
 	return r
-}
-func (r *Request) Task() *pkg.Task {
-	return r.task
 }
 func (r *Request) SetBasicAuth(username string, password string) pkg.Request {
 	r.Request.SetBasicAuth(username, password)
@@ -519,7 +526,22 @@ func (r *Request) Cookies() []*http.Cookie {
 	return r.Request.Cookies()
 }
 func (r *Request) AddCookie(c *http.Cookie) pkg.Request {
-	r.Request.AddCookie(c)
+	if r.Request.Header == nil {
+		r.Request.Header = make(http.Header)
+	}
+
+	cookiesMap := make(map[string]*http.Cookie)
+	for _, v := range r.Request.Cookies() {
+		cookiesMap[v.Name] = v
+	}
+
+	// TODO different domain?
+	cookiesMap[c.Name] = c
+
+	r.Request.Header.Set("Cookie", "")
+	for _, v := range cookiesMap {
+		r.Request.AddCookie(v)
+	}
 	return r
 }
 func (r *Request) SetExtra(extra any) pkg.Request {
@@ -534,11 +556,11 @@ func (r *Request) SetExtra(extra any) pkg.Request {
 		r.setErr("Extra", err)
 		return r
 	}
-	r.extra = string(bs)
+	r.Extra = string(bs)
 	return r
 }
-func (r *Request) Extra() string {
-	return r.extra
+func (r *Request) GetExtra() string {
+	return r.Extra
 }
 func (r *Request) UnmarshalExtra(v any) (err error) {
 	vValue := reflect.ValueOf(v)
@@ -546,11 +568,11 @@ func (r *Request) UnmarshalExtra(v any) (err error) {
 		return fmt.Errorf("v must be a non-null pointer")
 	}
 
-	if r.extra == "" {
+	if r.Extra == "" {
 		return
 	}
 
-	err = json.Unmarshal([]byte(r.extra), v)
+	err = json.Unmarshal([]byte(r.Extra), v)
 	return
 }
 func (r *Request) MustUnmarshalExtra(v any) {
@@ -558,75 +580,21 @@ func (r *Request) MustUnmarshalExtra(v any) {
 		panic(err)
 	}
 }
-func (r *Request) ToRequestJson() (requestJson pkg.RequestJson) {
-	var Url string
-	if r.URL != nil {
-		Url = r.URL.String()
-	}
-	var proxy string
-	if r.proxy != nil {
-		proxy = r.proxy.String()
-	}
-	var platform []string
-	if len(r.platforms) > 0 {
-		for _, v := range r.platforms {
-			platform = append(platform, string(v))
-		}
-	}
-	var browser []string
-	if len(r.browsers) > 0 {
-		for _, v := range r.browsers {
-			browser = append(browser, string(v))
-		}
-	}
-
-	requestJson = &Json{
-		Url:              Url,
-		Method:           r.Method,
-		BodyStr:          r.bodyStr,
-		Header:           r.Header,
-		UniqueKey:        r.uniqueKey,
-		CallBack:         r.callBack,
-		ErrBack:          r.errBack,
-		Referrer:         r.referrer,
-		Username:         r.username,
-		Password:         r.password,
-		Checksum:         r.checksum,
-		CreateTime:       r.createTime,
-		SpendTime:        uint(r.spendTime),
-		SkipMiddleware:   r.skipMiddleware,
-		SkipFilter:       r.skipFilter,
-		ProxyEnable:      r.proxyEnable,
-		Proxy:            proxy,
-		RetryMaxTimes:    r.retryMaxTimes,
-		RetryTimes:       r.retryTimes,
-		RedirectMaxTimes: r.redirectMaxTimes,
-		RedirectTimes:    r.redirectTimes,
-		OkHttpCodes:      r.okHttpCodes,
-		Slot:             r.slot,
-		Concurrency:      r.concurrency,
-		Interval:         int(r.interval),
-		Timeout:          int(r.timeout),
-		HttpProto:        r.httpProto,
-		Platform:         platform,
-		Browser:          browser,
-		IsImage:          r.isImage,
-		ImageOptions:     r.imageOptions,
-		IsFile:           r.isFile,
-		FileOptions:      r.fileOptions,
-		Extra:            r.extra,
-		ExtraName:        r.extraName,
-		Priority:         r.priority,
-		Fingerprint:      r.fingerprint,
-		Client:           string(r.client),
-		Ajax:             r.ajax,
-		Task:             r.task,
-	}
-	return
-}
-
 func (r *Request) Marshal() ([]byte, error) {
-	return json.Marshal(r.ToRequestJson())
+	r.Method = r.Request.Method
+	r.Url = r.URL.String()
+	r.Header = r.Request.Header
+	return json.Marshal(r)
+}
+func (r *Request) Unmarshal(bytes []byte) (err error) {
+	r.Context = new(context2.Context)
+	err = json.Unmarshal(bytes, r)
+	r.Request, err = http.NewRequest(r.Method, r.Url, strings.NewReader(r.BodyStr))
+	if err != nil {
+		return
+	}
+	r.Request.Header = r.Header
+	return err
 }
 
 func NewRequest() pkg.Request {

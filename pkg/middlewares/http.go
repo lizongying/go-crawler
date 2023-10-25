@@ -15,7 +15,7 @@ type HttpMiddleware struct {
 func (m *HttpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	spider := m.GetSpider()
 	if request.GetMethod() == "" {
-		if request.BodyStr() != "" {
+		if request.GetBodyStr() != "" {
 			request.SetMethod(http.MethodPost)
 		} else {
 			request.SetMethod(http.MethodGet)
@@ -28,11 +28,11 @@ func (m *HttpMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err
 		return
 	}
 	request.SetCreateTime(utils.NowStr())
-	request.SetChecksum(utils.StrMd5(request.GetMethod(), request.GetUrl(), request.BodyStr()))
+	request.SetChecksum(utils.StrMd5(request.GetMethod(), request.GetUrl(), request.GetBodyStr()))
 
 	canonicalHeaderKey := true
-	if request.CanonicalHeaderKey() != nil {
-		canonicalHeaderKey = *request.CanonicalHeaderKey()
+	if request.IsCanonicalHeaderKey() != nil {
+		canonicalHeaderKey = *request.IsCanonicalHeaderKey()
 	}
 	if canonicalHeaderKey {
 		for k, v := range request.Headers() {

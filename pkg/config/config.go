@@ -16,8 +16,9 @@ const defaultEnv = "dev"
 const defaultBotName = "crawler"
 const defaultHttpProto = "2.0"
 const defaultApiEnable = true
-const defaultApiHost = "http://localhost:8080"
-const defaultApiKey = ""
+const defaultApiHttps = true
+const defaultApiPort = 8090
+const defaultApiAccessKey = ""
 const defaultMockServerEnable = false
 const defaultMockServerHost = "https://localhost:8081"
 const defaultMockServerClientAuth = uint8(0)
@@ -50,6 +51,7 @@ const defaultEnableDumpPipeline = true
 const defaultEnableFilePipeline = true
 const defaultEnableImagePipeline = true
 const defaultEnableFilterPipeline = true
+const defaultEnableNonePipeline = false
 const defaultEnableCsvPipeline = false
 const defaultEnableJsonLinesPipeline = false
 const defaultEnableMongoPipeline = false
@@ -127,9 +129,10 @@ type Config struct {
 		HttpProto     string `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
 	Api struct {
-		Enable *bool  `yaml:"enable,omitempty" json:"enable"`
-		Host   string `yaml:"host,omitempty" json:"host"`
-		Key    string `yaml:"key,omitempty" json:"key"`
+		Enable    *bool  `yaml:"enable,omitempty" json:"enable"`
+		Https     *bool  `yaml:"https,omitempty" json:"https"`
+		Port      uint16 `yaml:"port,omitempty" json:"port"`
+		AccessKey string `yaml:"access_key,omitempty" json:"access_key"`
 	} `yaml:"api" json:"api"`
 	MockServer struct {
 		Enable     *bool  `yaml:"enable,omitempty" json:"enable"`
@@ -169,6 +172,7 @@ type Config struct {
 	EnableFilePipeline          *bool   `yaml:"enable_file_pipeline,omitempty" json:"enable_file_pipeline"`
 	EnableImagePipeline         *bool   `yaml:"enable_image_pipeline,omitempty" json:"enable_image_pipeline"`
 	EnableFilterPipeline        *bool   `yaml:"enable_filter_pipeline,omitempty" json:"enable_filter_pipeline"`
+	EnableNonePipeline          *bool   `yaml:"enable_none_pipeline,omitempty" json:"enable_none_pipeline"`
 	EnableCsvPipeline           *bool   `yaml:"enable_csv_pipeline,omitempty" json:"enable_csv_pipeline"`
 	EnableJsonLinesPipeline     *bool   `yaml:"enable_json_lines_pipeline,omitempty" json:"enable_json_lines_pipeline"`
 	EnableMongoPipeline         *bool   `yaml:"enable_mongo_pipeline,omitempty" json:"enable_mongo_pipeline"`
@@ -217,6 +221,9 @@ func (c *Config) GetHttpProto() string {
 
 	return defaultHttpProto
 }
+func (c *Config) SetApiEnable(enable bool) {
+	c.Api.Enable = &enable
+}
 func (c *Config) ApiEnable() bool {
 	if c.Api.Enable == nil {
 		apiEnable := defaultApiEnable
@@ -224,34 +231,30 @@ func (c *Config) ApiEnable() bool {
 	}
 	return *c.Api.Enable
 }
-func (c *Config) SetApiEnable(enable bool) {
-	c.Api.Enable = &enable
+func (c *Config) SetApiHttps(https bool) {
+	c.Api.Https = &https
 }
-func (c *Config) ApiHost() *url.URL {
-	var URL *url.URL
-	var err error
-	if c.Api.Host != "" {
-		URL, err = url.Parse(c.Api.Host)
-		if err != nil {
-			return nil
-		}
-		return URL
+func (c *Config) ApiHttps() bool {
+	if c.Api.Https == nil {
+		apiHttps := defaultApiHttps
+		c.Api.Https = &apiHttps
 	}
-
-	URL, err = url.Parse(defaultApiHost)
-	if err != nil {
-		return nil
-	}
-	return URL
+	return *c.Api.Https
 }
-func (c *Config) ApiKey() string {
-	if c.Api.Key == "" {
-		c.Api.Key = defaultApiKey
+func (c *Config) ApiPort() uint16 {
+	if c.Api.Port == 0 {
+		c.Api.Port = defaultApiPort
 	}
-	return c.Api.Key
+	return c.Api.Port
 }
-func (c *Config) SetApiKey(key string) {
-	c.Api.Key = key
+func (c *Config) ApiAccessKey() string {
+	if c.Api.AccessKey == "" {
+		c.Api.AccessKey = defaultApiAccessKey
+	}
+	return c.Api.AccessKey
+}
+func (c *Config) SetApiAccessKey(accessKey string) {
+	c.Api.AccessKey = accessKey
 }
 func (c *Config) MockServerEnable() bool {
 	if c.MockServer.Enable == nil {
@@ -420,6 +423,14 @@ func (c *Config) GetEnableFilterPipeline() bool {
 	}
 
 	return *c.EnableFilterPipeline
+}
+func (c *Config) GetEnableNonePipeline() bool {
+	if c.EnableCsvPipeline == nil {
+		enableNonePipeline := defaultEnableNonePipeline
+		c.EnableCsvPipeline = &enableNonePipeline
+	}
+
+	return *c.EnableCsvPipeline
 }
 func (c *Config) GetEnableCsvPipeline() bool {
 	if c.EnableCsvPipeline == nil {

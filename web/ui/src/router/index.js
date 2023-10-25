@@ -1,0 +1,50 @@
+import {createRouter, createWebHistory} from 'vue-router'
+import HomeView from '../views/HomeView.vue'
+
+const router = createRouter({
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes: [
+        {
+            path: '/',
+            name: 'home',
+            component: HomeView
+        },
+        {
+            path: '/nodes',
+            name: 'nodes',
+            component: () => import('../views/NodesView.vue')
+        },
+        {
+            path: '/spiders',
+            name: 'spiders',
+            component: () => import('../views/SpidersView.vue')
+        },
+        {
+            path: '/schedules',
+            name: 'schedules',
+            component: () => import('../views/SchedulesView.vue')
+        },
+        {
+            path: '/tasks',
+            name: 'tasks',
+            component: () => import('../views/TasksView.vue')
+        },
+        {
+            path: '/records',
+            name: 'records',
+            component: () => import('../views/RecordsView.vue')
+        },
+        {
+            path: '/login',
+            name: 'login',
+            component: () => import('../views/LoginView.vue')
+        },
+        {
+            path: '/:pathMatch(.*)*',
+            name: '404',
+            component: () => import('../views/404.vue')
+        }
+    ]
+})
+
+export default router

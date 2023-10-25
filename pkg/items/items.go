@@ -1,6 +1,7 @@
 package items
 
 import (
+	"encoding/json"
 	"github.com/lizongying/go-crawler/pkg"
 )
 
@@ -13,131 +14,200 @@ type ItemNone struct {
 	pkg.ItemUnimplemented
 }
 
+func (i *ItemNone) MetaJson() string {
+	return ""
+}
 func NewItemNone() pkg.Item {
 	item := &ItemNone{}
 	item.SetName(pkg.ItemNone)
 	return item
 }
 
+type ItemMongoMeta struct {
+	Collection string `json:"collection,omitempty"`
+	Update     bool   `json:"update,omitempty"`
+}
 type ItemMongo struct {
 	pkg.ItemUnimplemented
-	collection string
-	update     bool
+	ItemMongoMeta
 }
 
 func (i *ItemMongo) GetCollection() string {
-	return i.collection
+	return i.Collection
 }
 func (i *ItemMongo) GetUpdate() bool {
-	return i.update
+	return i.Update
 }
-
+func (i *ItemMongo) MetaJson() string {
+	bytes, err := json.Marshal(i.ItemMongoMeta)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
 func NewItemMongo(collection string, update bool) pkg.Item {
 	item := &ItemMongo{
-		collection: collection,
-		update:     update,
+		ItemMongoMeta: ItemMongoMeta{
+			Collection: collection,
+			Update:     update,
+		},
 	}
 	item.SetName(pkg.ItemMongo)
 	item.SetItem(item)
 	return item
 }
 
+type ItemMysqlMeta struct {
+	Table  string `json:"table,omitempty"`
+	Update bool   `json:"update,omitempty"`
+}
 type ItemMysql struct {
 	pkg.ItemUnimplemented
-	table  string
-	update bool
+	ItemMysqlMeta
 }
 
 func (i *ItemMysql) GetTable() string {
-	return i.table
+	return i.Table
 }
 func (i *ItemMysql) GetUpdate() bool {
-	return i.update
+	return i.Update
 }
-
+func (i *ItemMysql) MetaJson() string {
+	bytes, err := json.Marshal(i.ItemMysqlMeta)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
 func NewItemMysql(table string, update bool) pkg.Item {
 	item := &ItemMysql{
-		table:  table,
-		update: update,
+		ItemMysqlMeta: ItemMysqlMeta{
+			Table:  table,
+			Update: update,
+		},
 	}
 	item.SetName(pkg.ItemMysql)
 	item.SetItem(item)
 	return item
 }
 
+type ItemSqliteMeta struct {
+	Table  string `json:"table,omitempty"`
+	Update bool   `json:"update,omitempty"`
+}
+type ItemSqlite struct {
+	pkg.ItemUnimplemented
+	ItemSqliteMeta
+}
+
+func (i *ItemSqlite) GetTable() string {
+	return i.Table
+}
+func (i *ItemSqlite) GetUpdate() bool {
+	return i.Update
+}
+func (i *ItemSqlite) MetaJson() string {
+	bytes, err := json.Marshal(i.ItemSqliteMeta)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
+func NewItemSqlite(table string, update bool) pkg.Item {
+	item := &ItemSqlite{
+		ItemSqliteMeta: ItemSqliteMeta{
+			Table:  table,
+			Update: update,
+		},
+	}
+	item.SetName(pkg.ItemSqlite)
+	item.SetItem(item)
+	return item
+}
+
+type ItemKafkaMeta struct {
+	Topic string `json:"topic,omitempty"`
+}
 type ItemKafka struct {
 	pkg.ItemUnimplemented
-	topic string
+	ItemKafkaMeta
 }
 
 func (i *ItemKafka) GetTopic() string {
-	return i.topic
+	return i.Topic
 }
-
+func (i *ItemKafka) MetaJson() string {
+	bytes, err := json.Marshal(i.ItemKafkaMeta)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
 func NewItemKafka(topic string) pkg.Item {
 	item := &ItemKafka{
-		topic: topic,
+		ItemKafkaMeta: ItemKafkaMeta{
+			Topic: topic,
+		},
 	}
 	item.SetName(pkg.ItemKafka)
 	item.SetItem(item)
 	return item
 }
 
+type ItemCsvMeta struct {
+	FileName string `json:"file_name,omitempty"`
+}
 type ItemCsv struct {
 	pkg.ItemUnimplemented
-	fileName string
+	ItemCsvMeta
 }
 
 func (i *ItemCsv) GetFileName() string {
-	return i.fileName
+	return i.FileName
 }
-
+func (i *ItemCsv) MetaJson() string {
+	bytes, err := json.Marshal(i.ItemCsvMeta)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
 func NewItemCsv(fileName string) pkg.Item {
 	item := &ItemCsv{
-		fileName: fileName,
+		ItemCsvMeta: ItemCsvMeta{
+			FileName: fileName,
+		},
 	}
 	item.SetName(pkg.ItemCsv)
 	item.SetItem(item)
 	return item
 }
 
+type ItemJsonlMeta struct {
+	FileName string `json:"file_name,omitempty"`
+}
 type ItemJsonl struct {
 	pkg.ItemUnimplemented
-	fileName string
+	ItemJsonlMeta
 }
 
 func (i *ItemJsonl) GetFileName() string {
-	return i.fileName
+	return i.FileName
 }
-
+func (i *ItemJsonl) MetaJson() string {
+	bytes, err := json.Marshal(i.ItemJsonlMeta)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
 func NewItemJsonl(fileName string) pkg.Item {
 	item := &ItemJsonl{
-		fileName: fileName,
+		ItemJsonlMeta: ItemJsonlMeta{
+			FileName: fileName,
+		},
 	}
 	item.SetName(pkg.ItemJsonl)
-	item.SetItem(item)
-	return item
-}
-
-type ItemSqlite struct {
-	pkg.ItemUnimplemented
-	table  string
-	update bool
-}
-
-func (i *ItemSqlite) GetTable() string {
-	return i.table
-}
-func (i *ItemSqlite) GetUpdate() bool {
-	return i.update
-}
-
-func NewItemSqlite(table string, update bool) pkg.Item {
-	item := &ItemSqlite{
-		table:  table,
-		update: update,
-	}
-	item.SetName(pkg.ItemSqlite)
 	item.SetItem(item)
 	return item
 }

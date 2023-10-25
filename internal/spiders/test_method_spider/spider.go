@@ -21,7 +21,7 @@ func (s *Spider) ParsePost(_ pkg.Context, response pkg.Response) (err error) {
 		return
 	}
 	s.logger.Infof("request:\n%s", dumpRequest)
-	s.logger.Infof("body:\n%s", response.GetRequest().BodyStr())
+	s.logger.Infof("body:\n%s", response.GetRequest().GetBodyStr())
 
 	dumpResponse, err := httputil.DumpResponse(response.GetResponse(), false)
 	if err != nil {

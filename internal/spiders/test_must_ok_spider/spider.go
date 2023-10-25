@@ -44,6 +44,11 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
+func (s *Spider) Stop(_ pkg.Context) (err error) {
+	//err = pkg.DontStopErr
+	return
+}
+
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	spider = &Spider{
 		Spider: baseSpider,
@@ -51,6 +56,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	}
 	spider.WithOptions(
 		pkg.WithName("test-must-ok"),
+		pkg.WithNonePipeline(),
 	)
 	return
 }

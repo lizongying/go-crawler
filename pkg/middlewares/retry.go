@@ -26,36 +26,36 @@ func (m *RetryMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) 
 	request := response.GetRequest()
 
 	retryMaxTimes := m.retryMaxTimes
-	if request.RetryMaxTimes() != nil {
-		retryMaxTimes = *request.RetryMaxTimes()
+	if request.GetRetryMaxTimes() != nil {
+		retryMaxTimes = *request.GetRetryMaxTimes()
 	}
 
 	okHttpCodes := m.okHttpCodes
-	if len(request.OkHttpCodes()) > 0 {
-		okHttpCodes = request.OkHttpCodes()
+	if len(request.GetOkHttpCodes()) > 0 {
+		okHttpCodes = request.GetOkHttpCodes()
 	}
 	if retryMaxTimes > 0 && response.GetResponse() == nil {
-		if request.RetryTimes() < retryMaxTimes {
-			request.SetRetryTimes(request.RetryTimes() + 1)
-			m.logger.Info(request.UniqueKey(), "retry times:", request.RetryTimes(), "SpendTime:", request.SpendTime())
+		if request.GetRetryTimes() < retryMaxTimes {
+			request.SetRetryTimes(request.GetRetryTimes() + 1)
+			m.logger.Info(request.GetUniqueKey(), "retry times:", request.GetRetryTimes(), "SpendTime:", request.GetSpendTime())
 			err = pkg.ErrNeedRetry
 			return
 		}
 		err = fmt.Errorf("response nil")
-		m.logger.Error(request.UniqueKey(), err, request.RetryTimes(), retryMaxTimes)
+		m.logger.Error(request.GetUniqueKey(), err, request.GetRetryTimes(), retryMaxTimes)
 		return
 	}
 
 	if retryMaxTimes > 0 && !utils.InSlice(response.StatusCode(), okHttpCodes) {
-		if request.RetryTimes() < retryMaxTimes {
-			request.SetRetryTimes(request.RetryTimes() + 1)
-			m.logger.Info(request.UniqueKey(), "retry times:", request.RetryTimes(), "SpendTime:", request.SpendTime())
+		if request.GetRetryTimes() < retryMaxTimes {
+			request.SetRetryTimes(request.GetRetryTimes() + 1)
+			m.logger.Info(request.GetUniqueKey(), "retry times:", request.GetRetryTimes(), "SpendTime:", request.GetSpendTime())
 			err = pkg.ErrNeedRetry
 			return
 		}
 
 		err = fmt.Errorf("status code error: %d", response.StatusCode())
-		m.logger.Error(request.UniqueKey(), err, request.RetryTimes(), retryMaxTimes)
+		m.logger.Error(request.GetUniqueKey(), err, request.GetRetryTimes(), retryMaxTimes)
 		return
 	}
 

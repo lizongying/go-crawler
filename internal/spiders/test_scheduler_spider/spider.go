@@ -1,7 +1,6 @@
 package test_scheduler_spider
 
 import (
-	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/mock_servers"
@@ -80,12 +79,7 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-func (s *Spider) Stop(ctx context.Context) (err error) {
-	if err = s.Spider.Stop(ctx); err != nil {
-		s.logger.Error(err)
-		return
-	}
-
+func (s *Spider) Stop(_ pkg.Context) (err error) {
 	//err = pkg.DontStopErr
 	return
 }

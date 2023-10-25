@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: tidy tls mitm test_spider test_compress_spider test_decode_spider test_file_spider test_item_spider multi_spider
+all: web_ui web_server tidy tls mitm test_spider test_compress_spider test_decode_spider test_file_spider test_item_spider multi_spider
 
 module := $(shell head -n 1 go.mod)
 module := $(subst module ,,${module})
@@ -42,3 +42,11 @@ test_item_spider:
 multi_spider:
 	go vet ./cmd/multi_spider
 	go build -ldflags "-s -w -X $(module)/pkg/logger.name=test-item" -o ./releases/multi_spider ./cmd/multi_spider
+
+web_ui:
+	rm -rf ./static/dist
+	npm run build --prefix ./web/ui
+
+web_server:
+	go vet ./tools/web_server
+	go build -ldflags "-s -w" -o ./releases/web_server ./tools/web_server

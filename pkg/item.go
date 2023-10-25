@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"encoding/json"
 	"reflect"
 )
 
@@ -25,6 +26,8 @@ type Item interface {
 	Id() any
 	SetData(any) Item
 	Data() any
+	DataJson() string
+	MetaJson() string
 	SetReferrer(string) Item
 	Referrer() string
 	SetFilesRequest([]Request) Item
@@ -91,6 +94,16 @@ func (i *ItemUnimplemented) SetData(data any) Item {
 }
 func (i *ItemUnimplemented) Data() any {
 	return i.data
+}
+func (i *ItemUnimplemented) DataJson() string {
+	bytes, err := json.Marshal(i.data)
+	if err != nil {
+		return ""
+	}
+	return string(bytes)
+}
+func (i *ItemUnimplemented) MetaJson() string {
+	return ""
 }
 func (i *ItemUnimplemented) SetReferrer(referrer string) Item {
 	i.referrer = referrer

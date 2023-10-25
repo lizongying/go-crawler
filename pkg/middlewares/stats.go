@@ -31,7 +31,7 @@ func (m *StatsMiddleware) Stop(c pkg.Context) (err error) {
 	m.chanStop <- struct{}{}
 
 	var sl []any
-	sl = append(sl, spider.Name(), c.TaskId())
+	sl = append(sl, spider.Name(), c.GetTaskId())
 	keys := make([]string, 0)
 	kv := spider.GetStats().GetMap()
 	for k := range kv {

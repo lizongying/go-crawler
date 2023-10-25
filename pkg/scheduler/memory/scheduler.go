@@ -16,11 +16,11 @@ const defaultChanItemMax = 1000 * 1000
 
 type Scheduler struct {
 	pkg.UnimplementedScheduler
-	itemConcurrencyChan    chan struct{}
-	itemTimer              *time.Timer
-	itemWithContextChan    chan pkg.ItemWithContext
-	requestWithContextChan chan pkg.RequestWithContext
-	extraChanMap           sync.Map
+	itemConcurrencyChan chan struct{}
+	itemTimer           *time.Timer
+	itemWithContextChan chan pkg.ItemWithContext
+	requestChan         chan pkg.Request
+	extraChanMap        sync.Map
 
 	concurrency uint8
 	interval    time.Duration
@@ -81,12 +81,7 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	return
 }
 
-func (s *Scheduler) StopScheduler(ctx context.Context) (err error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	s.logger.Info("Scheduler Stopped")
+func (s *Scheduler) StopScheduler(_ pkg.Context) (err error) {
 	return
 }
 func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
@@ -104,7 +99,7 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	s.config = config
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
-	s.requestWithContextChan = make(chan pkg.RequestWithContext, defaultRequestMax)
+	s.requestChan = make(chan pkg.Request, defaultRequestMax)
 	s.itemWithContextChan = make(chan pkg.ItemWithContext, defaultChanItemMax)
 
 	s.SetDownloader(new(downloader.Downloader).FromSpider(spider))

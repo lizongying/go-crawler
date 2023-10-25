@@ -3,95 +3,107 @@ package context
 import (
 	"context"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"time"
 )
 
 type Context struct {
-	context    context.Context
-	spider     pkg.Spider
-	meta       pkg.Meta
-	taskId     string
-	deadline   time.Time
-	spiderName string
-	startFunc  string
-	args       string
-	mode       string
+	Context context.Context `json:"-"`
+
+	// request
+	Meta pkg.Meta `json:"meta,omitempty"`
+
+	// task
+	TaskId    string              `json:"task_id,omitempty"`
+	Deadline  utils.TimestampNano `json:"deadline,omitempty"`
+	StartFunc string              `json:"start_func,omitempty"`
+	Args      string              `json:"args,omitempty"`
+	Mode      string              `json:"mode,omitempty"`
+
+	// spider
+	SpiderName string           `json:"spider_name,omitempty"`
+	Status     pkg.SpiderStatus `json:"status,omitempty"`
+	StartTime  utils.Timestamp  `json:"start_time,omitempty"`
+	StopTime   utils.Timestamp  `json:"stop_time,omitempty"`
 }
 
 func (c *Context) Global() pkg.Context {
 	return c
 }
 func (c *Context) GlobalContext() context.Context {
-	return c.context
+	return c.Context
 }
 func (c *Context) WithGlobalContext(ctx context.Context) pkg.Context {
-	c.context = ctx
+	c.Context = ctx
 	return c
 }
-func (c *Context) Spider() pkg.Spider {
-	return c.spider
-}
-func (c *Context) WithSpider(spider pkg.Spider) pkg.Context {
-	c.spider = spider
-	return c
-}
-func (c *Context) Meta() pkg.Meta {
-	return c.meta
+func (c *Context) GetMeta() pkg.Meta {
+	return c.Meta
 }
 func (c *Context) WithMeta(meta pkg.Meta) pkg.Context {
-	c.meta = meta
+	c.Meta = meta
 	return c
 }
-func (c *Context) TaskId() string {
-	return c.taskId
+func (c *Context) GetTaskId() string {
+	return c.TaskId
 }
 func (c *Context) WithTaskId(taskId string) pkg.Context {
-	c.taskId = taskId
+	c.TaskId = taskId
 	return c
 }
-func (c *Context) Deadline() time.Time {
-	return c.deadline
+func (c *Context) GetDeadline() time.Time {
+	return c.Deadline.Time
 }
-func (c *Context) WithDeadline(deadline time.Time) pkg.Context {
-	c.deadline = deadline
+func (c *Context) WithDeadline(t time.Time) pkg.Context {
+	c.Deadline = utils.TimestampNano{Time: t}
 	return c
 }
-func (c *Context) SpiderName() string {
-	return c.spiderName
-}
-func (c *Context) WithSpiderName(spiderName string) pkg.Context {
-	c.spiderName = spiderName
-	return c
-}
-func (c *Context) StartFunc() string {
-	return c.startFunc
+func (c *Context) GetStartFunc() string {
+	return c.StartFunc
 }
 func (c *Context) WithStartFunc(startFunc string) pkg.Context {
-	c.startFunc = startFunc
+	c.StartFunc = startFunc
 	return c
 }
-func (c *Context) Args() string {
-	return c.args
+func (c *Context) GetArgs() string {
+	return c.Args
 }
 func (c *Context) WithArgs(args string) pkg.Context {
-	c.args = args
+	c.Args = args
 	return c
 }
-func (c *Context) Mode() string {
-	return c.mode
+func (c *Context) GetMode() string {
+	return c.Mode
 }
 func (c *Context) WithMode(mode string) pkg.Context {
-	c.mode = mode
+	c.Mode = mode
 	return c
 }
-func (c *Context) ToContextJson() (contextJson pkg.ContextJson) {
-	contextJson = &Json{
-		TaskId:     c.taskId,
-		Deadline:   c.deadline.UnixNano(),
-		SpiderName: c.spiderName,
-		StartFunc:  c.startFunc,
-		Args:       c.args,
-		Mode:       c.mode,
-	}
-	return
+func (c *Context) GetSpiderName() string {
+	return c.SpiderName
+}
+func (c *Context) WithSpiderName(spiderName string) pkg.Context {
+	c.SpiderName = spiderName
+	return c
+}
+func (c *Context) GetStatus() pkg.SpiderStatus {
+	return c.Status
+}
+func (c *Context) WithStatus(status pkg.SpiderStatus) pkg.Context {
+	c.Status = status
+	return c
+}
+func (c *Context) GetStartTime() time.Time {
+	return c.StartTime.Time
+}
+func (c *Context) WithStartTime(t time.Time) pkg.Context {
+	c.StartTime = utils.Timestamp{Time: t}
+	return c
+}
+func (c *Context) GetStopTime() time.Time {
+	return c.StopTime.Time
+}
+func (c *Context) WithStopTime(t time.Time) pkg.Context {
+	c.StopTime = utils.Timestamp{Time: t}
+	return c
 }

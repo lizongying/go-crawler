@@ -1,28 +1,31 @@
 package pkg
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type Context interface {
 	Global() Context
 	GlobalContext() context.Context
 	WithGlobalContext(ctx context.Context) Context
-	Spider() Spider
-	WithSpider(spider Spider) Context
-	Meta() Meta
+	GetMeta() Meta
 	WithMeta(meta Meta) Context
-	TaskId() string
+	GetTaskId() string
 	WithTaskId(taskId string) Context
-	SpiderName() string
+	GetSpiderName() string
 	WithSpiderName(spiderName string) Context
-	StartFunc() string
+	GetStartFunc() string
 	WithStartFunc(startFunc string) Context
-	Args() string
+	GetArgs() string
 	WithArgs(args string) Context
-	Mode() string
+	GetMode() string
 	WithMode(mode string) Context
-	ToContextJson() ContextJson
-}
 
-type ContextJson interface {
-	ToContext() Context
+	GetStatus() SpiderStatus
+	WithStatus(status SpiderStatus) Context
+	GetStartTime() time.Time
+	WithStartTime(t time.Time) Context
+	GetStopTime() time.Time
+	WithStopTime(t time.Time) Context
 }

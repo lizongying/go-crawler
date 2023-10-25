@@ -17,7 +17,7 @@ type RedisFilter struct {
 	logger pkg.Logger
 }
 
-func (f *RedisFilter) SpiderOpened() {
+func (f *RedisFilter) SpiderOpened(_ pkg.Spider) {
 	f.key = fmt.Sprintf("%s:%s:filter", f.config.GetBotName(), f.spider.Name())
 	f.logger.Debug("filter key", f.key)
 	ctx := context.Background()
@@ -64,7 +64,7 @@ func (f *RedisFilter) FromSpider(spider pkg.Spider) pkg.Filter {
 		return new(RedisFilter).FromSpider(spider)
 	}
 
-	spider.GetSignal().RegisterSpiderOpened(f.SpiderOpened)
+	spider.GetCrawler().GetSignal().RegisterSpiderStarted(spider.Name(), f.SpiderOpened)
 
 	f.config = spider.GetConfig()
 	f.spider = spider

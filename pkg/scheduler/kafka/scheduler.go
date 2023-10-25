@@ -84,12 +84,7 @@ func (s *Scheduler) StartScheduler(ctx context.Context) (err error) {
 	return
 }
 
-func (s *Scheduler) StopScheduler(ctx context.Context) (err error) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	s.logger.Info("Scheduler Stopped")
+func (s *Scheduler) StopScheduler(_ pkg.Context) (err error) {
 	return
 }
 func (s *Scheduler) initScheduler(_ context.Context) {

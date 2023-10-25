@@ -1,21 +1,21 @@
 package api
 
 import (
-	"encoding/json"
 	"github.com/lizongying/go-crawler/pkg"
-	"io"
 	"net/http"
 )
 
 const UrlSpider = "/spider"
 
 type Req struct {
-	Name string
+	Name string `json:"name"`
 }
 type Spider struct {
 	Name string `json:"name"`
 }
 type RouteSpider struct {
+	Request
+	Response
 	crawler pkg.Crawler
 	logger  pkg.Logger
 }
@@ -25,33 +25,22 @@ func (h *RouteSpider) Pattern() string {
 }
 
 func (h *RouteSpider) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	var req Req
-	if err = json.Unmarshal(body, &req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	h.BindJson(w, r, &req)
+
+	var spider Spider
+	if req.Name == "" {
+		for _, v := range h.crawler.GetSpiders() {
+			if v.Name() == req.Name {
+				spider = Spider{
+					Name: v.Name(),
+				}
+				break
+			}
+		}
 	}
 
-	spider := Spider{Name: "test1"}
-	var resp []byte
-	resp, err = json.Marshal(spider)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(resp)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
+	h.OutJson(w, 0, "", spider)
 }
 
 func (h *RouteSpider) FromCrawler(crawler pkg.Crawler) pkg.Route {

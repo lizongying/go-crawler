@@ -30,6 +30,12 @@ type Crawler interface {
 
 	SpiderStart(Context) error
 	SpiderStop(Context) error
+
+	GetSignal() Signal
+	SetSignal(Signal)
+
+	GetStatistics() Statistics
+	SetStatistics(statistics Statistics)
 }
 
 type CrawlOption func(Crawler)

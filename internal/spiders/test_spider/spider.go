@@ -1,7 +1,6 @@
 package test_spider
 
 import (
-	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/media"
@@ -190,13 +189,7 @@ func (s *Spider) TestImages(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-func (s *Spider) Stop(ctx context.Context) (err error) {
-	err = s.Spider.Stop(ctx)
-	if err != nil {
-		s.logger.Error(err)
-		return
-	}
-
+func (s *Spider) Stop(_ pkg.Context) (err error) {
 	//err = pkg.DontStopErr
 	return
 }

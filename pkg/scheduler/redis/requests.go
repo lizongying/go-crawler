@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	context2 "github.com/lizongying/go-crawler/pkg/context"
 	request2 "github.com/lizongying/go-crawler/pkg/request"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/time/rate"
+	"net/http"
 	"reflect"
 	"runtime"
 	"time"
@@ -35,7 +35,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 			return
 		}
 
-		s.HandleError(ctx, response, err, request.ErrBack())
+		s.HandleError(ctx, response, err, request.GetErrBack())
 		return
 	}
 
@@ -44,9 +44,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 }
 
 func (s *Scheduler) handleRequest(ctx context.Context) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	ctx = context.Background()
 
 	slot := "*"
 	value, _ := s.RequestSlotLoad(slot)
@@ -59,6 +57,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			r, e := s.redis.Do(ctx, "EVALSHA", s.requestKeySha, 1, s.requestKey, s.batch).Result()
 			if e != nil {
 				s.logger.Warn(e)
+				time.Sleep(1 * time.Second)
 				continue
 			}
 			rs, ok := r.([]interface{})
@@ -101,36 +100,32 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		}
 
 		s.logger.Debugf("request: %s", req)
-		var requestJsonWithContext request2.JsonWithContext
-		requestJsonWithContext.ContextJson = new(context2.Json)
-		requestJsonWithContext.RequestJson = new(request2.Json)
-		err = json.Unmarshal([]byte(req), &requestJsonWithContext)
-		if err != nil {
+		request := new(request2.Request)
+		if err = request.Unmarshal([]byte(req)); err != nil {
 			s.logger.Warn(err)
 			continue
 		}
 
-		request, err := requestJsonWithContext.ToRequest()
-		c := requestJsonWithContext.ToContext()
+		c := request.Context
 		s.logger.Debugf("request: %+v", request)
 		if err != nil {
 			s.logger.Warn(err)
 			continue
 		}
-		slot = request.Slot()
+		slot = request.GetSlot()
 		if slot == "" {
 			slot = "*"
 		}
 		slotValue, ok := s.RequestSlotLoad(slot)
 		if !ok {
 			concurrency := uint8(1)
-			if request.Concurrency() != nil {
-				concurrency = *request.Concurrency()
+			if request.GetConcurrency() != nil {
+				concurrency = *request.GetConcurrency()
 			}
 			if concurrency < 1 {
 				concurrency = 1
 			}
-			requestSlot = rate.NewLimiter(rate.Every(request.Interval()/time.Duration(concurrency)), int(concurrency))
+			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
 			s.RequestSlotStore(slot, requestSlot)
 		}
 
@@ -150,18 +145,19 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			go func(ctx pkg.Context, response pkg.Response) {
 				defer func() {
 					if r := recover(); r != nil {
+						s.logger.Error(r)
 						buf := make([]byte, 1<<16)
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
-						s.logger.Error(err)
-						s.HandleError(ctx, response, err, request.ErrBack())
+						//s.logger.Error(err)
+						s.HandleError(ctx, response, err, request.GetErrBack())
 					}
 				}()
 
 				s.Spider().StateMethod().In()
-				if err = s.Spider().CallBack(request.CallBack())(ctx, response); err != nil {
+				if err = s.Spider().CallBack(request.GetCallBack())(ctx, response); err != nil {
 					s.logger.Error(err)
-					s.HandleError(ctx, response, err, request.ErrBack())
+					s.HandleError(ctx, response, err, request.GetErrBack())
 				}
 				s.Spider().StateMethod().Out()
 				s.Spider().StateRequest().Out()
@@ -198,29 +194,31 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		return
 	}
 
-	meta := ctx.Meta()
+	meta := ctx.GetMeta()
 
 	// add referrer to request
-	if meta.Referrer != nil {
-		request.SetReferrer(meta.Referrer.String())
+	if meta.Referrer != "" {
+		request.SetReferrer(meta.Referrer)
 	}
 
 	// add cookies to request
 	if len(meta.Cookies) > 0 {
-		for _, cookie := range meta.Cookies {
-			request.AddCookie(cookie)
+		for k, v := range meta.Cookies {
+			request.AddCookie(&http.Cookie{
+				Name:  k,
+				Value: v,
+			})
 		}
 	}
 
-	bs, err := (&request2.WithContext{
-		Context: ctx,
-		Request: request,
-	}).MarshalWithContext()
-	s.logger.Info("request with context:", string(bs))
+	request.WithGlobal(ctx)
+	bs, err := request.Marshal()
 	if err != nil {
 		s.logger.Error(err)
 		return
 	}
+
+	s.logger.Info("request:", string(bs))
 
 	c = context.Background()
 	c, cancel = context.WithTimeout(c, 10*time.Second)
@@ -228,7 +226,7 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 
 	if s.enablePriorityQueue {
 		z := redis.Z{
-			Score:  float64(request.Priority()),
+			Score:  float64(request.GetPriority()),
 			Member: bs,
 		}
 		var res int64

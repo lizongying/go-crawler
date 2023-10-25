@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"reflect"
@@ -22,26 +21,22 @@ type MongoPipeline struct {
 
 func (m *MongoPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
 	spider := m.GetSpider()
-	if itemWithContext == nil {
-		err = errors.New("nil item")
-		m.logger.Error(err)
-		spider.IncItemError()
-		return
-	}
-	if itemWithContext.Name() != pkg.ItemMongo {
-		m.logger.Warn("item not support", pkg.ItemMongo)
-		return
-	}
-	itemMongo, ok := itemWithContext.GetItem().(*items.ItemMongo)
-	if !ok {
-		m.logger.Warn("item parsing failed with", pkg.ItemMongo)
-		return
-	}
 
 	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
+		return
+	}
+
+	if itemWithContext.Name() != pkg.ItemMongo {
+		m.logger.Warn("item not support", pkg.ItemMongo)
+		return
+	}
+
+	itemMongo, ok := itemWithContext.GetItem().(*items.ItemMongo)
+	if !ok {
+		m.logger.Warn("item parsing failed with", pkg.ItemMongo)
 		return
 	}
 
@@ -60,7 +55,6 @@ func (m *MongoPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 		return
 	}
 
-	m.logger.Debug("Data", utils.JsonStr(data))
 	bs, err := bson.Marshal(data)
 	if err != nil {
 		m.logger.Error(err)
@@ -95,6 +89,7 @@ func (m *MongoPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 		return
 	}
 
+	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
 	spider.IncItemSuccess()
 	return
 }

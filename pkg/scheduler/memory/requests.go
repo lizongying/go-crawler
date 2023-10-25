@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/request"
 	"golang.org/x/time/rate"
+	"net/http"
 	"reflect"
 	"runtime"
 	"time"
@@ -31,7 +31,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 			return
 		}
 
-		s.HandleError(ctx, response, err, request.ErrBack())
+		s.HandleError(ctx, response, err, request.GetErrBack())
 		return
 	}
 
@@ -48,21 +48,21 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 	value, _ := s.RequestSlotLoad(slot)
 	requestSlot := value.(*rate.Limiter)
 
-	for requestWithContext := range s.requestWithContextChan {
-		slot = requestWithContext.Slot()
+	for request := range s.requestChan {
+		slot = request.GetSlot()
 		if slot == "" {
 			slot = "*"
 		}
 		slotValue, ok := s.RequestSlotLoad(slot)
 		if !ok {
 			concurrency := uint8(1)
-			if requestWithContext.Concurrency() != nil {
-				concurrency = *requestWithContext.Concurrency()
+			if request.GetConcurrency() != nil {
+				concurrency = *request.GetConcurrency()
 			}
 			if concurrency < 1 {
 				concurrency = 1
 			}
-			requestSlot = rate.NewLimiter(rate.Every(requestWithContext.Interval()/time.Duration(concurrency)), int(concurrency))
+			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
 			s.RequestSlotStore(slot, requestSlot)
 		}
 
@@ -72,9 +72,9 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		if err != nil {
 			s.logger.Error(err, time.Now(), ctx)
 		}
-		go func(requestWithContext pkg.RequestWithContext) {
-			c := requestWithContext.Global()
-			response, e := s.Request(c, requestWithContext.GetRequest())
+		go func(request pkg.Request) {
+			c := request.GetGlobal()
+			response, e := s.Request(c, request.GetRequest())
 			if e != nil {
 				s.Spider().StateRequest().Out()
 				return
@@ -87,19 +87,19 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
 						//s.logger.Error(err)
-						s.HandleError(ctx, response, err, requestWithContext.ErrBack())
+						s.HandleError(ctx, response, err, request.GetErrBack())
 					}
 				}()
 
 				s.Spider().StateMethod().In()
-				if err = s.Spider().CallBack(requestWithContext.CallBack())(ctx, response); err != nil {
+				if err = s.Spider().CallBack(request.GetCallBack())(ctx, response); err != nil {
 					s.logger.Error(err)
-					s.HandleError(ctx, response, err, requestWithContext.ErrBack())
+					s.HandleError(ctx, response, err, request.GetErrBack())
 				}
 				s.Spider().StateMethod().Out()
 				s.Spider().StateRequest().Out()
 			}(c, response)
-		}(requestWithContext)
+		}(request)
 	}
 
 	return
@@ -110,32 +110,33 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, req pkg.Request) (err error) {
 		s.Spider().StateRequest().Set()
 	}()
 
-	if len(s.requestWithContextChan) >= defaultRequestMax {
+	if len(s.requestChan) >= defaultRequestMax {
 		err = errors.New("exceeded the maximum number of requests")
 		s.logger.Error(err)
 		return
 	}
 
-	meta := ctx.Meta()
+	meta := ctx.GetMeta()
 
 	// add referrer to request
-	if meta.Referrer != nil {
-		req.SetReferrer(meta.Referrer.String())
+	if meta.Referrer != "" {
+		req.SetReferrer(meta.Referrer)
 	}
 
 	// add cookies to request
 	if len(meta.Cookies) > 0 {
-		for _, cookie := range meta.Cookies {
-			req.AddCookie(cookie)
+		for k, v := range meta.Cookies {
+			req.AddCookie(&http.Cookie{
+				Name:  k,
+				Value: v,
+			})
 		}
 	}
 
 	s.Spider().StateRequest().In()
 
-	s.requestWithContextChan <- request.WithContext{
-		Context: ctx,
-		Request: req,
-	}
+	req.WithGlobal(ctx)
+	s.requestChan <- req
 
 	return
 }

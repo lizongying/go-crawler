@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	uuid2 "github.com/google/uuid"
 	"github.com/lizongying/go-crawler/pkg"
 	"io"
 	"net/http"
@@ -143,8 +142,8 @@ func Request2Curl(r pkg.Request) string {
 	for k := range r.Headers() {
 		args = append(args, fmt.Sprintf(`-H '%s: %s'`, k, r.GetHeader(k)))
 	}
-	if r.BodyStr() != "" {
-		args = append(args, fmt.Sprintf(`--data-raw '%s'`, r.BodyStr()))
+	if r.GetBodyStr() != "" {
+		args = append(args, fmt.Sprintf(`--data-raw '%s'`, r.GetBodyStr()))
 	}
 
 	return fmt.Sprint(strings.Join(args, " "))
@@ -289,8 +288,4 @@ func MapToStruct(data map[string]interface{}, obj interface{}) error {
 	}
 
 	return nil
-}
-
-func uuid() string {
-	return uuid2.New().String()
 }

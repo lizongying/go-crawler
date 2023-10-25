@@ -31,12 +31,12 @@ func (m *DeviceMiddleware) Start(ctx context.Context, spider pkg.Spider) (err er
 
 func (m *DeviceMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	platforms := m.platforms
-	if len(request.Platforms()) > 0 {
-		platforms = request.Platforms()
+	if len(request.GetPlatforms()) > 0 {
+		platforms = request.GetPlatforms()
 	}
 	browsers := m.browsers
-	if len(request.Browsers()) > 0 {
-		browsers = request.Browsers()
+	if len(request.GetBrowsers()) > 0 {
+		browsers = request.GetBrowsers()
 	}
 
 	var ua []device.Device
@@ -77,7 +77,7 @@ func (m *DeviceMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	m.logger = spider.GetLogger()
 	devices, _ := device.NewDevicesFromBytes(static.Devices)
 	m.uaAll = devices.Devices
-	m.platforms = []pkg.Platform{pkg.Windows, pkg.Mac, pkg.Android, pkg.Iphone, pkg.Ipad, pkg.Linux}
-	m.browsers = []pkg.Browser{pkg.Chrome, pkg.Edge, pkg.Safari, pkg.FireFox}
+	m.platforms = []pkg.Platform{pkg.PlatformWindows, pkg.PlatformMac, pkg.PlatformAndroid, pkg.PlatformIphone, pkg.PlatformIpad, pkg.PlatformLinux}
+	m.browsers = []pkg.Browser{pkg.BrowserChrome, pkg.BrowserEdge, pkg.BrowserSafari, pkg.BrowserFireFox}
 	return m
 }

@@ -73,9 +73,9 @@ func (s *Scheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err error) {
 	}
 
 	// add referrer to item
-	referrer := ctx.Meta().Referrer
-	if referrer != nil {
-		item.SetReferrer(referrer.String())
+	referrer := ctx.GetMeta().Referrer
+	if referrer != "" {
+		item.SetReferrer(referrer)
 	}
 
 	s.Spider().StateItem().In()

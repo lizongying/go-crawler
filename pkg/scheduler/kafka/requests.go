@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
-	context2 "github.com/lizongying/go-crawler/pkg/context"
 	request2 "github.com/lizongying/go-crawler/pkg/request"
 	"github.com/segmentio/kafka-go"
 	"golang.org/x/time/rate"
+	"net/http"
 	"reflect"
 	"runtime"
 	"strings"
@@ -36,7 +36,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 			return
 		}
 
-		s.HandleError(ctx, response, err, request.ErrBack())
+		s.HandleError(ctx, response, err, request.GetErrBack())
 		return
 	}
 
@@ -66,36 +66,32 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		}
 
 		s.logger.Debugf("request: %s", req)
-		var requestJsonWithContext request2.JsonWithContext
-		requestJsonWithContext.ContextJson = new(context2.Json)
-		requestJsonWithContext.RequestJson = new(request2.Json)
-		err = json.Unmarshal(req.Value, &requestJsonWithContext)
-		if err != nil {
+		request := new(request2.Request)
+		if err = request.Unmarshal(req.Value); err != nil {
 			s.logger.Warn(err)
 			continue
 		}
 
-		request, err := requestJsonWithContext.ToRequest()
-		c := requestJsonWithContext.ToContext()
+		c := request.Context
 		s.logger.Debugf("request: %+v", request)
 		if err != nil {
 			s.logger.Warn(err)
 			continue
 		}
-		slot = request.Slot()
+		slot = request.GetSlot()
 		if slot == "" {
 			slot = "*"
 		}
 		slotValue, ok := s.RequestSlotLoad(slot)
 		if !ok {
 			concurrency := uint8(1)
-			if request.Concurrency() != nil {
-				concurrency = *request.Concurrency()
+			if request.GetConcurrency() != nil {
+				concurrency = *request.GetConcurrency()
 			}
 			if concurrency < 1 {
 				concurrency = 1
 			}
-			requestSlot = rate.NewLimiter(rate.Every(request.Interval()/time.Duration(concurrency)), int(concurrency))
+			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
 			s.RequestSlotStore(slot, requestSlot)
 		}
 
@@ -119,14 +115,14 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 						runtime.Stack(buf, true)
 						err = errors.New(string(buf))
 						s.logger.Error(err)
-						s.HandleError(ctx, response, err, request.ErrBack())
+						s.HandleError(ctx, response, err, request.GetErrBack())
 					}
 				}()
 
 				s.Spider().StateMethod().In()
-				if err = s.Spider().CallBack(request.CallBack())(ctx, response); err != nil {
+				if err = s.Spider().CallBack(request.GetCallBack())(ctx, response); err != nil {
 					s.logger.Error(err)
-					s.HandleError(ctx, response, err, request.ErrBack())
+					s.HandleError(ctx, response, err, request.GetErrBack())
 				}
 				s.Spider().StateMethod().Out()
 				s.Spider().StateRequest().Out()
@@ -142,25 +138,26 @@ func (s *Scheduler) YieldRequest(c pkg.Context, request pkg.Request) (err error)
 		s.Spider().StateRequest().Set()
 	}()
 
-	meta := c.Meta()
+	meta := c.GetMeta()
 
 	// add referrer to request
-	if meta.Referrer != nil {
-		request.SetReferrer(meta.Referrer.String())
+	if meta.Referrer != "" {
+		request.SetReferrer(meta.Referrer)
 	}
 
 	// add cookies to request
 	if len(meta.Cookies) > 0 {
-		for _, cookie := range meta.Cookies {
-			request.AddCookie(cookie)
+		for k, v := range meta.Cookies {
+			request.AddCookie(&http.Cookie{
+				Name:  k,
+				Value: v,
+			})
 		}
 	}
 
 	s.Spider().StateRequest().In()
-	bs, err := (&request2.WithContext{
-		Context: c,
-		Request: request,
-	}).MarshalWithContext()
+	request.WithGlobal(c)
+	bs, err := request.Marshal()
 	s.logger.Info("request with context:", string(bs))
 	if err != nil {
 		s.logger.Error(err)

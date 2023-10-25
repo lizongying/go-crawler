@@ -40,6 +40,7 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	spider.WithOptions(
 		pkg.WithName("test-from-request"),
 		pkg.WithHost("https://localhost:8081"),
+		pkg.WithNonePipeline(),
 	)
 	return
 }

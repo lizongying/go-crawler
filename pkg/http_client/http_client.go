@@ -84,8 +84,8 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	}
 
 	timeout := h.timeout
-	if request.Timeout() > 0 {
-		timeout = request.Timeout()
+	if request.GetTimeout() > 0 {
+		timeout = request.GetTimeout()
 	}
 
 	if timeout > 0 {
@@ -153,13 +153,13 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		},
 	}
 	proxyEnable := false
-	if request.ProxyEnable() != nil {
-		proxyEnable = *request.ProxyEnable()
+	if request.IsProxyEnable() != nil {
+		proxyEnable = *request.IsProxyEnable()
 	}
 	if proxyEnable {
 		proxy := h.proxy
-		if request.Proxy() != nil {
-			proxy = request.Proxy()
+		if request.GetProxy() != nil {
+			proxy = request.GetProxy()
 		}
 		if proxy == nil {
 			err = errors.New("nil proxy")
@@ -169,8 +169,8 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	}
 
 	httpProto := h.httpProto
-	if request.HttpProto() != "" {
-		httpProto = request.HttpProto()
+	if request.GetHttpProto() != "" {
+		httpProto = request.GetHttpProto()
 	}
 	if httpProto != "2.0" {
 		request.GetHttpRequest().Proto = "HTTP/1.1"
@@ -204,7 +204,7 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 				if cfg.ServerName == "" {
 					cfg.ServerName = firstTLSHost
 				}
-				if request.HttpProto() == "2.0" {
+				if request.GetHttpProto() == "2.0" {
 					cfg.NextProtos = []string{"h2", "http/1.1"}
 				} else {
 					cfg.NextProtos = []string{"http/1.1"}
@@ -233,18 +233,18 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 				var helloID *utls.ClientHelloID
 				var helloSpec *utls.ClientHelloSpec
 
-				switch pkg.Browser(request.Fingerprint()) {
-				case pkg.Chrome:
+				switch pkg.Browser(request.GetFingerprint()) {
+				case pkg.BrowserChrome:
 					helloID = &utls.HelloChrome_Auto
-				case pkg.Edge:
+				case pkg.BrowserEdge:
 					helloID = &utls.HelloEdge_Auto
-				case pkg.Safari:
+				case pkg.BrowserSafari:
 					helloID = &utls.HelloSafari_Auto
-				case pkg.FireFox:
+				case pkg.BrowserFireFox:
 					helloID = &utls.HelloFirefox_Auto
 				default:
-					if request.Fingerprint() != "" {
-						helloSpec, err = stringToSpec(request.Fingerprint())
+					if request.GetFingerprint() != "" {
+						helloSpec, err = stringToSpec(request.GetFingerprint())
 						if err != nil {
 							h.logger.Error(err)
 							helloID = &utls.HelloChrome_Auto
@@ -266,8 +266,8 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	client := h.client
 
 	redirectMaxTimes := h.redirectMaxTimes
-	if request.RedirectMaxTimes() != nil {
-		redirectMaxTimes = *request.RedirectMaxTimes()
+	if request.GetRedirectMaxTimes() != nil {
+		redirectMaxTimes = *request.GetRedirectMaxTimes()
 	}
 	client.CheckRedirect = func(redirectMaxTimes uint8) func(req *http.Request, via []*http.Request) error {
 		return func(req *http.Request, via []*http.Request) error {
@@ -296,13 +296,13 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 
 	if err != nil {
 		retryMaxTimes := h.retryMaxTimes
-		if request.RetryMaxTimes() != nil {
-			retryMaxTimes = *request.RetryMaxTimes()
+		if request.GetRetryMaxTimes() != nil {
+			retryMaxTimes = *request.GetRetryMaxTimes()
 		}
-		if request.RetryTimes() < retryMaxTimes {
+		if request.GetRetryTimes() < retryMaxTimes {
 			return
 		}
-		h.logger.Error(err, "RetryTimes:", request.RetryTimes())
+		h.logger.Error(err, "RetryTimes:", request.GetRetryTimes())
 		h.logger.Errorf("request: %+v", request)
 		h.logger.Debug(utils.Request2Curl(request))
 		return

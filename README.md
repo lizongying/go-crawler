@@ -263,6 +263,7 @@ Item has some common methods:
 * `SetData(any)`: Set the data, which is the complete data to be stored. For standardization, it is required to
   be a pointer type. When storing data in different destinations, the data needs to be set in different formats.
 * `Data() any`: Get the data.
+* `DataJson() string`: Get the data json.
 * `SetFilesRequest([]pkg.Request)`: Set the requests for downloading files. This is a slice and can be used to
   download multiple files.
 * `FilesRequest() []pkg.Request`: Get the requests for downloading files.
@@ -490,7 +491,12 @@ The following are the built-in pipelines with their respective `order` values:
     * You can control whether to enable this pipeline by configuring `enable_filter_pipeline`, which is enabled by
       default.
     * `spider.WithOptions(pkg.WithFilterPipeline()`
-* csv: 101
+* none: 101
+    * item is not processed in any way, but it is assumed that the result has been saved.
+    * You can control whether to enable this pipeline by configuring `enable_none_pipeline`, which is disabled by
+      default.
+    * `spider.WithOptions(pkg.WithNonePipeline()`
+* csv: 102
     * Used to save results to CSV files.
     * You need to set the `FileName` in the `ItemCsv`, which specifies the name of the file to be saved (without the
       .csv extension).
@@ -498,7 +504,7 @@ The following are the built-in pipelines with their respective `order` values:
     * You can control whether to enable this pipeline by configuring `enable_csv_pipeline`, which is disabled by
       default.
     * `spider.WithOptions(pkg.WithCsvPipeline()`
-* jsonLines: 102
+* jsonLines: 103
     * Used to save results to JSON Lines files.
     * You need to set the `FileName` in the `ItemJsonl`, which specifies the name of the file to be saved (without
       the.jsonl extension).
@@ -506,28 +512,28 @@ The following are the built-in pipelines with their respective `order` values:
     * You can control whether to enable this pipeline by configuring `enable_json_lines_pipeline`, which is disabled
       by default.
     * `spider.WithOptions(pkg.WithJsonLinesPipeline()`
-* mongo: 103
+* mongo: 104
     * Used to save results to MongoDB.
     * You need to set the `Collection` in the `ItemMongo`, which specifies the name of the collection to be saved.
     * You can use the tag `bson:""` to define the fields of the MongoDB document.
     * You can control whether to enable this pipeline by configuring `enable_mongo_pipeline`, which is disabled by
       default.
     * `spider.WithOptions(pkg.WithMongoPipeline()`
-* sqlite: 104
+* sqlite: 105
     * Used to save results to Sqlite.
     * You need to set the `Table` in the `ItemSqlite`, which specifies the name of the table to be saved.
     * You can use the tag `column:""` to define the column names of the Sqlite table.
     * You can control whether to enable this pipeline by configuring `enable_sqlite_pipeline`, which is disabled by
       default.
     * `spider.WithOptions(pkg.WithSqlitePipeline()`
-* mysql: 105
+* mysql: 106
     * Used to save results to MySQL.
     * You need to set the `Table` in the `ItemMysql`, which specifies the name of the table to be saved.
     * You can use the tag `column:""` to define the column names of the MySQL table.
     * You can control whether to enable this pipeline by configuring `enable_mysql_pipeline`, which is disabled by
       default.
     * `spider.WithOptions(pkg.WithMysqlPipeline()`
-* kafka: 106
+* kafka: 107
     * Used to save results to Kafka.
     * You need to set the `Topic` in the `ItemKafka`, which specifies the name of the topic to be saved.
     * You can use the tag `json:""` to define the fields of the Kafka message.
@@ -653,8 +659,14 @@ needs.
 
 By using signals, it's possible to capture crawler events and perform certain actions.
 
-    * `SpiderOpened`: Indicates the start of the spider. You can register it using `RegisterSpiderOpened(SignalFn)`.
-    * `SpiderClosed`: Indicates the end of the spider. You can register it using `RegisterSpiderClosed(SignalFn)`.
+* `SpiderStarting`: Indicates the starting of the spider. You can register it
+  using `RegisterSpiderStarting(FnSpiderStarting)`.
+* `SpiderStarted`: Indicates the started of the spider. You can register it
+  using `RegisterSpiderStarted(FnSpiderStarted)`.
+* `SpiderStopping`: Indicates the stopping of the spider.You can register it
+  using `RegisterSpiderStopping(FnSpiderStopping)`.
+* `SpiderStopped`: Indicates the stopped of the spider.You can register it
+  using `RegisterSpiderClosed(FnSpiderStopped)`.
 
 ### Proxy
 
@@ -846,6 +858,7 @@ Middleware and Pipeline Configuration:
 * `enable_robots_txt_middleware:` Whether to enable the robots.txt support middleware, disabled by default.
 * `enable_record_error_middleware:` Whether to enable the record error support middleware, disabled by default.
 * `enable_dump_pipeline:` Whether to enable the print item pipeline, enabled by default.
+* `enable_none_pipeline:` Whether to enable the None pipeline, disabled by default。
 * `enable_file_pipeline:` Whether to enable the file download pipeline, enabled by default.
 * `enable_image_pipeline:` Whether to enable the image download pipeline, enabled by default.
 * `enable_filter_pipeline:` Whether to enable the filter pipeline, enabled by default.

@@ -150,8 +150,8 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 	start := time.Now()
 	page = page.Context(ctx)
 	Url := request.GetUrl()
-	if request.Ajax() {
-		Url = request.Referrer()
+	if request.IsAjax() {
+		Url = request.GetReferrer()
 	} else {
 		for k := range request.Headers() {
 			page.MustSetExtraHeaders(k, request.GetHeader(k))
@@ -177,14 +177,14 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 	response.SetRequest(request)
 	response.SetResponse(new(http.Response))
 
-	if request.Ajax() {
+	if request.IsAjax() {
 		headers := make(map[string]string)
 		for k := range request.Headers() {
 			headers[k] = request.GetHeader(k)
 		}
 		timeout := b.timeout
-		if request.Timeout() > 0 {
-			timeout = request.Timeout()
+		if request.GetTimeout() > 0 {
+			timeout = request.GetTimeout()
 		}
 		res, e := page.Eval(`
 (url, method, headers, body, timeout) => {
@@ -213,7 +213,7 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
         };
 		xhr.send(body);
 	})
-}`, request.GetUrl(), request.GetMethod(), headers, request.BodyStr(), int(timeout/time.Millisecond))
+}`, request.GetUrl(), request.GetMethod(), headers, request.GetBodyStr(), int(timeout/time.Millisecond))
 		if e != nil {
 			err = e
 			return

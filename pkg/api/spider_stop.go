@@ -1,16 +1,16 @@
 package api
 
 import (
-	"encoding/json"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
-	"io"
 	"net/http"
 )
 
 const UrlSpiderStop = "/spider/run"
 
 type RouteSpiderStop struct {
+	Request
+	Response
 	crawler pkg.Crawler
 	logger  pkg.Logger
 }
@@ -20,44 +20,23 @@ func (h *RouteSpiderStop) Pattern() string {
 }
 
 func (h *RouteSpiderStop) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	var req pkg.ReqSpiderStop
-	if err = json.Unmarshal(body, &req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	h.BindJson(w, r, &req)
+
 	if req.TaskId == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		h.OutJson(w, 1, "TaskId empty", nil)
 		return
 	}
 
 	ctx := new(crawlerContext.Context).WithTaskId(req.TaskId)
-	err = h.crawler.SpiderStop(ctx)
+	err := h.crawler.SpiderStop(ctx)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		h.OutJson(w, 1, err.Error(), nil)
 		return
 	}
 
 	spider := Spider{Name: ""}
-	var resp []byte
-	resp, err = json.Marshal(spider)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(resp)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
+	h.OutJson(w, 0, "", spider)
 }
 
 func (h *RouteSpiderStop) FromCrawler(crawler pkg.Crawler) pkg.Route {

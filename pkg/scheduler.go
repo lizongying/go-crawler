@@ -35,7 +35,7 @@ type Scheduler interface {
 	GetExtra(any) error
 	MustGetExtra(any)
 	StartScheduler(context.Context) error
-	StopScheduler(context.Context) error
+	StopScheduler(Context) error
 	Spider() Spider
 	SetSpider(spider Spider)
 	Interval() time.Duration
@@ -173,7 +173,7 @@ func (s *UnimplementedScheduler) HandleError(ctx Context, response Response, err
 	spider := s.Spider()
 
 	processed := false
-	for _, v := range s.Spider().GetMiddlewares().Middlewares() {
+	for _, v := range spider.GetMiddlewares().Middlewares() {
 		next := v.ProcessError(ctx, response, err)
 		if !next {
 			break

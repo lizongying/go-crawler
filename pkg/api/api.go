@@ -2,15 +2,16 @@ package api
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"go.uber.org/fx"
 	"net/http"
 )
 
 type Api struct {
-	key         string
+	accessKey   string
 	srv         *http.Server
 	mux         *http.ServeMux
 	routes      map[string]struct{}
@@ -20,7 +21,8 @@ type Api struct {
 
 func (a *Api) Run() (err error) {
 	go func() {
-		a.logger.Infof("api at http://%s\n", a.srv.Addr)
+		a.logger.Infof("api at http://%s%s http://%s%s http://%s%s\n", "localhost", a.srv.Addr, utils.LanIp(), a.srv.Addr, utils.InternetIp(), a.srv.Addr)
+		a.logger.Info("access key", a.accessKey)
 		a.logger.Info("api routes", a.GetRoutes())
 		if err = a.srv.ListenAndServe(); err != nil {
 			if err.Error() == "http: Server closed" {
@@ -33,23 +35,6 @@ func (a *Api) Run() (err error) {
 	}()
 
 	return
-}
-
-func (a *Api) loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		a.logger.Info("api request:", r.Method, r.URL.Path)
-		next.ServeHTTP(w, r)
-	})
-}
-
-func (a *Api) keyAuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("X-API-Key") != a.key {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
 }
 
 func (a *Api) AddRoutes(routes ...pkg.Route) {
@@ -71,29 +56,26 @@ func (a *Api) GetRoutes() (routes []string) {
 }
 
 func NewApi(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (a *Api) {
-	host := config.ApiHost()
-	key := config.ApiKey()
-	if host == nil {
-		err := errors.New("nil host")
-		logger.Error(err)
-		return
-	}
-
 	mux := http.NewServeMux()
 	srv := &http.Server{
-		Addr:    host.Host,
+		Addr:    fmt.Sprintf(":%d", config.ApiPort()),
 		Handler: mux,
 	}
+	apiAccessKey := config.ApiAccessKey()
+	if apiAccessKey == "" {
+		apiAccessKey = utils.StrMd5(utils.NowStr())
+	}
 	a = &Api{
-		key:    key,
-		srv:    srv,
-		mux:    mux,
-		routes: make(map[string]struct{}),
-		logger: logger,
+		accessKey: apiAccessKey,
+		srv:       srv,
+		mux:       mux,
+		routes:    make(map[string]struct{}),
+		logger:    logger,
 	}
 	a.middlewares = []func(next http.Handler) http.Handler{
 		a.loggingMiddleware,
 		a.keyAuthMiddleware,
+		a.crossDomainMiddleware,
 	}
 
 	lc.Append(fx.Hook{

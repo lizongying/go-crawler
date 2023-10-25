@@ -108,23 +108,26 @@ func (e *Exporter) WithDumpPipeline() {
 func (e *Exporter) WithFilterPipeline() {
 	e.SetPipeline(new(pipelines.FilterPipeline), 200)
 }
+func (e *Exporter) WithNonePipeline() {
+	e.SetPipeline(new(pipelines.NonePipeline), 101)
+}
 func (e *Exporter) WithCsvPipeline() {
-	e.SetPipeline(new(pipelines.CsvPipeline), 101)
+	e.SetPipeline(new(pipelines.CsvPipeline), 102)
 }
 func (e *Exporter) WithJsonLinesPipeline() {
-	e.SetPipeline(new(pipelines.JsonLinesPipeline), 102)
+	e.SetPipeline(new(pipelines.JsonLinesPipeline), 103)
 }
 func (e *Exporter) WithMongoPipeline() {
-	e.SetPipeline(new(pipelines.MongoPipeline), 103)
+	e.SetPipeline(new(pipelines.MongoPipeline), 104)
 }
 func (e *Exporter) WithSqlitePipeline() {
-	e.SetPipeline(new(pipelines.SqlitePipeline), 104)
+	e.SetPipeline(new(pipelines.SqlitePipeline), 105)
 }
 func (e *Exporter) WithMysqlPipeline() {
-	e.SetPipeline(new(pipelines.MysqlPipeline), 105)
+	e.SetPipeline(new(pipelines.MysqlPipeline), 106)
 }
 func (e *Exporter) WithKafkaPipeline() {
-	e.SetPipeline(new(pipelines.KafkaPipeline), 106)
+	e.SetPipeline(new(pipelines.KafkaPipeline), 107)
 }
 func (e *Exporter) WithCustomPipeline(pipeline pkg.Pipeline) {
 	e.SetPipeline(pipeline, 110)
@@ -151,6 +154,9 @@ func (e *Exporter) FromSpider(spider pkg.Spider) pkg.Exporter {
 	}
 	if config.GetEnableFilterPipeline() {
 		e.WithFilterPipeline()
+	}
+	if config.GetEnableNonePipeline() {
+		e.WithNonePipeline()
 	}
 	if config.GetEnableCsvPipeline() {
 		e.WithCsvPipeline()

@@ -245,6 +245,7 @@ Item有一些通用方法：
 * `Id() any` 获取id。
 * `SetData(any)` 设置data，这是要存储的完整数据。为了规范化，强制要求指针类型。存储到不同的目标时，data需要设置不同的格式。
 * `Data() any` 获取data。
+* `DataJson() string` 获取data json字符串。
 * `SetFilesRequest([]pkg.Request)` 设置文件的请求。这是一个slice，可以下载多个文件。
 * `FilesRequest() []pkg.Request` 获取文件的请求。
 * `SetFiles([]pkg.File)` 设置文件。下载后的文件通过这个方法设置到Item中。
@@ -416,37 +417,41 @@ middleware/pipeline包括框架内置、公共自定义（internal/middlewares�
     * 默认情况下，Item只有在成功保存后才会进入去重队列。
     * 您可以通过配置enable_filter_pipeline来控制是否启用该Pipeline，默认启用。
     * `spider.WithOptions(pkg.WithFilterPipeline()`
-* csv: 101
+* none: 101
+    * item不做任何处理，但会认为结果已保存。
+    * 您可以通过配置enable_none_pipeline来控制是否启用该Pipeline，默认关闭。
+    * `spider.WithOptions(pkg.WithNonePipeline()`
+* csv: 102
     * 用于将结果保存到CSV文件中。
     * 需要在ItemCsv中设置`FileName`，指定保存的文件名称（不包含.csv扩展名）。
     * 您可以使用tag `column:""`来定义CSV文件的列名。
     * 您可以通过配置enable_csv_pipeline来控制是否启用该Pipeline，默认关闭。
     * `spider.WithOptions(pkg.WithCsvPipeline()`
-* jsonLines: 102
+* jsonLines: 103
     * 用于将结果保存到JSON Lines文件中。
     * 需要在ItemJsonl中设置`FileName`，指定保存的文件名称（不包含.jsonl扩展名）。
     * 您可以使用tag `json:""`来定义JSON Lines文件的字段。
     * 您可以通过配置enable_json_lines_pipeline来控制是否启用该Pipeline，默认关闭。
     * `spider.WithOptions(pkg.WithJsonLinesPipeline()`
-* mongo: 103
+* mongo: 104
     * 用于将结果保存到MongoDB中。
     * 需要在ItemMongo中设置`Collection`，指定保存的collection名称。
     * 您可以使用tag `bson:""`来定义MongoDB文档的字段。
     * 您可以通过配置enable_mongo_pipeline来控制是否启用该Pipeline，默认关闭。
     * `spider.WithOptions(pkg.WithMongoPipeline()`
-* sqlite: 104
+* sqlite: 105
     * 用于将结果保存到Sqlite中。
     * 需要在ItemSqlite中设置`Table`，指定保存的表名。
     * 您可以使用tag `column:""`来定义Sqlite表的列名。
     * 您可以通过配置enable_sqlite_pipeline来控制是否启用该Pipeline，默认关闭。
     * `spider.WithOptions(pkg.WithSqlitePipeline()`
-* mysql: 105
+* mysql: 106
     * 用于将结果保存到MySQL中。
     * 需要在ItemMysql中设置`Table`，指定保存的表名。
     * 您可以使用tag `column:""`来定义MySQL表的列名。
     * 您可以通过配置enable_mysql_pipeline来控制是否启用该Pipeline，默认关闭。
     * `spider.WithOptions(pkg.WithMysqlPipeline()`
-* kafka: 106
+* kafka: 107
     * 用于将结果保存到Kafka中。
     * 需要在ItemKafka中设置`Topic`，指定保存的主题名。
     * 您可以使用tag `json:""`来定义Kafka消息的字段。
@@ -566,8 +571,10 @@ _ = request.Trace()
 
 通过信号可以获取爬虫事件。
 
-* `SpiderOpened`: 爬虫开始。通过`RegisterSpiderOpened(SignalFn)`注册。
-* `SpiderClosed`: 爬虫结束。通过`RegisterSpiderClosed(SignalFn)`注册。
+* `SpiderStarting`: 爬虫启动中。通过`RegisterSpiderStarting(FnSpiderStarting)`注册。
+* `SpiderStarted`: 爬虫已启动。通过`RegisterSpiderStarted(FnSpiderStarted)`注册。
+* `SpiderStopping`: 爬虫停止中。通过`RegisterSpiderStopping(FnSpiderStopping)`注册。
+* `SpiderStopped`: 爬虫已停止。通过`RegisterSpiderClosed(FnSpiderStopped)`注册。
 
 ### 代理。
 
@@ -731,6 +738,7 @@ spider -c example.yml -n example -f TestOk -m once
 * `enable_robots_txt_middleware:` 是否开启robots.txt支持中间件，默认关闭。
 * `enable_record_error_middleware:` 是否开启record_error支持中间件，默认关闭。
 * `enable_dump_pipeline:` 是否开启打印Item Pipeline，默认启用。
+* `enable_none_pipeline:` 是否开启none Pipeline，默认关闭。
 * `enable_file_pipeline:` 是否开启文件下载Pipeline，默认启用。
 * `enable_image_pipeline:` 是否开启图片下载Pipeline，默认启用。
 * `enable_filter_pipeline:` 是否开启过滤Pipeline，默认启用。
@@ -795,16 +803,38 @@ go run cmd/multi_spider/*.go -c example.yml
 
 ```shell
 # index
-curl "http://127.0.0.1:8080" -H "Content-Type: application/json"
+curl "http://127.0.0.1:8090" -H "Content-Type: application/json"
+
+# spiders
+curl "http://127.0.0.1:8090/spiders" -X POST -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
 
 # spider run
-curl "http://127.0.0.1:8080/spider/run" -X POST -d '{"timeout": 1000, "name": "test-must-ok", "func":"TestOk", "args":"", "mode":"once"}' -H "Content-Type: application/json"
+curl "http://127.0.0.1:8090/spider/run" -X POST -d '{"timeout": 1000, "name": "test-must-ok", "func":"TestOk", "args":"", "mode":"once"}' -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
 # {"code":0,"msg":"","data":{"name":"test-must-ok"}}
 
 # spider stop
-curl "http://127.0.0.1:8080/spider/stop" -X POST -d '{"task_id":""}' -H "Content-Type: application/json"
+curl "http://127.0.0.1:8080/spider/stop" -X POST -d '{"task_id":""}' -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
 # {"code":0,"msg":"","data":{"name":"test-must-ok"}}
 
+```
+
+### 界面
+
+构建
+
+```shell
+# ui
+make web_ui
+
+# server
+make web_server
+
+```
+
+运行
+
+```shell
+./releases/web_server
 ```
 
 ## 问答
@@ -1104,11 +1134,12 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * AutoThrottle
 * monitor
 * statistics
-* new base-spider
 * panic stop
 * extra速率限制
 * 没请求完，ctx退出
 * request with ctx
+* record schedule
+* stat->crawler
 
 ```shell
 go get -u github.com/lizongying/go-css@latest

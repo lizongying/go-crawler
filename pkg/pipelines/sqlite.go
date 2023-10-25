@@ -23,16 +23,19 @@ type SqlitePipeline struct {
 
 func (m *SqlitePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
 	spider := m.GetSpider()
+
 	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
 		return
 	}
+
 	if itemWithContext.Name() != pkg.ItemSqlite {
 		m.logger.Warn("item not support", pkg.ItemSqlite)
 		return
 	}
+
 	itemSqlite, ok := itemWithContext.GetItem().(*items.ItemSqlite)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemSqlite)
@@ -140,6 +143,7 @@ func (m *SqlitePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err e
 		m.logger.Info(itemSqlite.GetTable(), "insert success", id)
 	}
 
+	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
 	spider.IncItemSuccess()
 	return
 }

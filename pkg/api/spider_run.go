@@ -2,11 +2,9 @@ package api
 
 import (
 	"context"
-	"encoding/json"
-	"github.com/google/uuid"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
-	"io"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/http"
 	"time"
 )
@@ -14,6 +12,7 @@ import (
 const UrlSpiderRun = "/spider/run"
 
 type RouteSpiderRun struct {
+	Request
 	Response
 	crawler pkg.Crawler
 	logger  pkg.Logger
@@ -24,19 +23,11 @@ func (h *RouteSpiderRun) Pattern() string {
 }
 
 func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
 	var req pkg.ReqSpiderStart
-	if err = json.Unmarshal(body, &req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+	h.BindJson(w, r, &req)
+
 	if req.TaskId == "" {
-		req.TaskId = uuid.New().String()
+		req.TaskId = utils.UUIDV1WithoutHyphens()
 	}
 	if req.Mode == "" {
 		req.Mode = "once"
@@ -55,14 +46,14 @@ func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		WithStartFunc(req.Func).
 		WithArgs(req.Args).
 		WithMode(req.Mode)
-	err = h.crawler.SpiderStart(ctx)
+	err := h.crawler.SpiderStart(ctx)
 	if err != nil {
-		h.Json(w, 1, err.Error(), nil)
+		h.OutJson(w, 1, err.Error(), nil)
 		return
 	}
 
 	spider := Spider{Name: req.Name}
-	h.Json(w, 0, "", spider)
+	h.OutJson(w, 0, "", spider)
 }
 
 func (h *RouteSpiderRun) FromCrawler(crawler pkg.Crawler) pkg.Route {

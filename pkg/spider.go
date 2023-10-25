@@ -1,12 +1,13 @@
 package pkg
 
 import (
-	"context"
 	"net/url"
 	"time"
 )
 
 type Spider interface {
+	GetContext() Context
+	WithContext(ctx Context) Spider
 	Name() string
 	SetName(string) Spider
 	GetHost() string
@@ -48,7 +49,7 @@ type Spider interface {
 	GetMiddlewares() Middlewares
 	SetMiddlewares(Middlewares) Spider
 	Start(ctx Context) error
-	Stop(ctx context.Context) error
+	Stop(ctx Context) error
 	FromCrawler(Crawler) Spider
 
 	GetLogger() Logger
@@ -69,12 +70,8 @@ type Spider interface {
 	SetLogger(Logger) Spider
 
 	Stats
-	//Signal
 
 	GetCrawler() Crawler
-
-	GetSignal() Signal
-	SetSignal(Signal)
 
 	Options() []SpiderOption
 	WithOptions(options ...SpiderOption) Spider
@@ -268,6 +265,11 @@ func WithFilterPipeline() SpiderOption {
 		spider.GetScheduler().GetExporter().WithFilterPipeline()
 	}
 }
+func WithNonePipeline() SpiderOption {
+	return func(spider Spider) {
+		spider.GetScheduler().GetExporter().WithNonePipeline()
+	}
+}
 func WithCsvPipeline() SpiderOption {
 	return func(spider Spider) {
 		spider.GetScheduler().GetExporter().WithCsvPipeline()
@@ -331,5 +333,30 @@ func WithRequestRate(slot string, interval time.Duration, concurrency int) Spide
 func WithStats(stats Stats) SpiderOption {
 	return func(spider Spider) {
 		spider.SetStats(stats)
+	}
+}
+
+type SpiderStatus uint8
+
+const (
+	SpiderStatusUnknown = iota
+	SpiderStatusStarting
+	SpiderStatusStarted
+	SpiderStatusStopping
+	SpiderStatusStopped
+)
+
+func (s *SpiderStatus) String() string {
+	switch *s {
+	case 1:
+		return "starting"
+	case 2:
+		return "started"
+	case 3:
+		return "stopping"
+	case 4:
+		return "stopped"
+	default:
+		return "unknown"
 	}
 }

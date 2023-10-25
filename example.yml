@@ -52,8 +52,9 @@ request:
     accept_encoding: gzip, deflate, br
 api:
   enable: true
-  host: http://localhost:8090
-  key:
+  https: false
+  port: 8090
+  access_key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
 mock_server:
   enable: true
   host: https://localhost:8081
@@ -90,6 +91,7 @@ enable_dump_pipeline: true
 enable_file_pipeline: true
 enable_image_pipeline: true
 enable_filter_pipeline: true
+enable_none_pipeline: false
 enable_csv_pipeline: false
 enable_json_lines_pipeline: false
 enable_mongo_pipeline: false

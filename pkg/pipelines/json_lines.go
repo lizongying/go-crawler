@@ -90,6 +90,7 @@ func (m *JsonLinesPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (er
 	}
 
 	m.logger.Info("item saved:", filename)
+	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
 	spider.IncItemSuccess()
 	return
 }

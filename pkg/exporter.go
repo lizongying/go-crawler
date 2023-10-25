@@ -11,6 +11,7 @@ type Exporter interface {
 	WithFilePipeline()
 	WithImagePipeline()
 	WithFilterPipeline()
+	WithNonePipeline()
 	WithCsvPipeline()
 	WithJsonLinesPipeline()
 	WithMongoPipeline()

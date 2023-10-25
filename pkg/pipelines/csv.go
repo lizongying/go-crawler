@@ -27,10 +27,12 @@ func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err erro
 		spider.IncItemError()
 		return
 	}
+
 	if itemWithContext.Name() != pkg.ItemCsv {
 		m.logger.Warn("item not support", pkg.ItemCsv)
 		return
 	}
+
 	itemCsv, ok := itemWithContext.GetItem().(*items.ItemCsv)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemCsv)
@@ -130,6 +132,7 @@ func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err erro
 	}
 
 	m.logger.Info("item saved:", filename)
+	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
 	spider.IncItemSuccess()
 	return
 }

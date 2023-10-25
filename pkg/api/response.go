@@ -11,7 +11,7 @@ type Response struct {
 	Data any    `json:"data,omitempty"`
 }
 
-func (r *Response) Json(w http.ResponseWriter, code int, msg string, data any) {
+func (r *Response) OutJson(w http.ResponseWriter, code int, msg string, data any) {
 	jsonData, err := json.Marshal(Response{
 		Code: code,
 		Msg:  msg,
@@ -21,6 +21,7 @@ func (r *Response) Json(w http.ResponseWriter, code int, msg string, data any) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(jsonData)
 }

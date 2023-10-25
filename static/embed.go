@@ -34,3 +34,6 @@ var Html embed.FS
 
 //go:embed api
 var Api embed.FS
+
+//go:embed dist
+var Dist embed.FS

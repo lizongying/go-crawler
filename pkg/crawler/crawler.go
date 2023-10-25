@@ -4,13 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/google/uuid"
 	"github.com/lizongying/cron"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
+	"github.com/lizongying/go-crawler/pkg/signals"
+	"github.com/lizongying/go-crawler/pkg/statistics"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -34,8 +36,16 @@ type Crawler struct {
 	Store       pkg.Store
 	mockServer  pkg.MockServer
 	api         *api.Api
+	statistics  pkg.Statistics
+	pkg.Signal
 }
 
+func (c *Crawler) GetStatistics() pkg.Statistics {
+	return c.statistics
+}
+func (c *Crawler) SetStatistics(statistics pkg.Statistics) {
+	c.statistics = statistics
+}
 func (c *Crawler) GetMode() string {
 	return c.mode
 }
@@ -93,10 +103,16 @@ func (c *Crawler) GetSqlite() pkg.Sqlite {
 func (c *Crawler) GetStore() pkg.Store {
 	return c.Store
 }
+func (c *Crawler) GetSignal() pkg.Signal {
+	return c.Signal
+}
+func (c *Crawler) SetSignal(signal pkg.Signal) {
+	c.Signal = signal
+}
 func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
-		if v.Name() == ctx.SpiderName() {
+		if v.Name() == ctx.GetSpiderName() {
 			spider = v
 			break
 		}
@@ -108,10 +124,10 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 		return
 	}
 
-	c.logger.Info("name", ctx.SpiderName())
-	c.logger.Info("func", ctx.StartFunc())
-	c.logger.Info("args", ctx.Args())
-	c.logger.Info("mode", ctx.Mode())
+	c.logger.Info("name", ctx.GetSpiderName())
+	c.logger.Info("func", ctx.GetStartFunc())
+	c.logger.Info("args", ctx.GetArgs())
+	c.logger.Info("mode", ctx.GetMode())
 	c.logger.Info("allowedDomains", spider.GetAllowedDomains())
 	c.logger.Info("okHttpCodes", spider.OkHttpCodes())
 	c.logger.Info("platforms", spider.GetPlatforms())
@@ -122,10 +138,10 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 	c.logger.Info("retryMaxTimes", c.config.GetRetryMaxTimes())
 	c.logger.Info("filter", c.config.GetFilter())
 
-	switch ctx.Mode() {
+	switch ctx.GetMode() {
 	case "once":
-		if ctx.TaskId() == "" {
-			ctx.WithTaskId(uuid.New().String())
+		if ctx.GetTaskId() == "" {
+			ctx.WithTaskId(utils.UUIDV1WithoutHyphens())
 		}
 		if err = spider.Start(ctx); err != nil {
 			c.logger.Error(err)
@@ -133,7 +149,7 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 		}
 	case "loop":
 		for {
-			ctx.WithTaskId(uuid.New().String())
+			ctx.WithTaskId(utils.UUIDV1WithoutHyphens())
 			if err = spider.Start(ctx); err != nil {
 				c.logger.Error(err)
 				return
@@ -145,7 +161,7 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 		job := new(cron.Job).
 			MustEverySpec(c.spec).
 			Callback(func() {
-				ctx.WithTaskId(uuid.New().String())
+				ctx.WithTaskId(utils.UUIDV1WithoutHyphens())
 				if err = spider.Start(ctx); err != nil {
 					c.logger.Error(err)
 					return
@@ -154,12 +170,12 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 		cr.MustAddJob(job)
 		select {}
 	default:
-		c.logger.Warn("mode", ctx.Mode())
+		c.logger.Warn("mode", ctx.GetMode())
 	}
 	return
 }
 func (c *Crawler) SpiderStop(ctx pkg.Context) (err error) {
-	taskId := ctx.TaskId()
+	taskId := ctx.GetTaskId()
 	c.logger.Info(taskId)
 	return
 }
@@ -168,6 +184,8 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		c.logger.Error(err)
 		return
 	}
+
+	c.Signal.CrawlerOpened()
 
 	if c.spiderName != "" {
 		if err = c.SpiderStart(new(crawlerContext.Context).
@@ -187,9 +205,8 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 func (c *Crawler) Stop(ctx context.Context) (err error) {
 	c.logger.Debug("Crawler wait for stop")
 	defer func() {
-		if err == nil {
-			c.logger.Info("Crawler Stopped")
-		}
+		c.logger.Info("Crawler Stopped")
+		c.Signal.CrawlerClosed()
 	}()
 
 	if ctx == nil {
@@ -197,7 +214,7 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	}
 
 	for _, v := range c.spiders {
-		if err = v.Stop(ctx); err != nil {
+		if err = v.Stop(v.GetContext()); err != nil {
 			c.logger.Error(err)
 		}
 	}
@@ -224,11 +241,19 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		mockServer:  mockServer,
 		api:         httpApi,
 	}
+	crawler.SetStatistics(new(statistics.Statistics).FromCrawler(crawler))
 
 	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteHello).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpider).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpiderRun).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteNodes).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteSpiders).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteSchedules).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteTasks).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteRecords).FromCrawler(crawler))
+
+	crawler.SetSignal(new(signals.Signal).FromCrawler(crawler))
 
 	for _, v := range spiders {
 		v.SetSpider(v)
@@ -238,6 +263,8 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		}
 		logger.Info("spider", v.Name(), "loaded")
 		crawler.AddSpider(v)
+
+		crawler.GetStatistics().AddSpiders(v)
 	}
 
 	if config.MockServerEnable() {

@@ -10,7 +10,6 @@ import (
 	kafka2 "github.com/lizongying/go-crawler/pkg/scheduler/kafka"
 	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
 	redis2 "github.com/lizongying/go-crawler/pkg/scheduler/redis"
-	"github.com/lizongying/go-crawler/pkg/signals"
 	"github.com/lizongying/go-crawler/pkg/stats"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"log"
@@ -31,9 +30,9 @@ func init() {
 }
 
 type BaseSpider struct {
+	context pkg.Context
 	pkg.Crawler
 	pkg.Stats
-	pkg.Signal
 	pkg.Scheduler
 	filter      pkg.Filter
 	middlewares pkg.Middlewares
@@ -62,6 +61,13 @@ type BaseSpider struct {
 	couldStop    chan struct{}
 }
 
+func (s *BaseSpider) GetContext() pkg.Context {
+	return s.context
+}
+func (s *BaseSpider) WithContext(ctx pkg.Context) pkg.Spider {
+	s.context = ctx
+	return s
+}
 func (s *BaseSpider) Name() string {
 	return s.name
 }
@@ -201,12 +207,6 @@ func (s *BaseSpider) SetStats(stats pkg.Stats) pkg.Spider {
 	s.Stats = stats
 	return s
 }
-func (s *BaseSpider) GetSignal() pkg.Signal {
-	return s.Signal
-}
-func (s *BaseSpider) SetSignal(signal pkg.Signal) {
-	s.Signal = signal
-}
 func (s *BaseSpider) GetFilter() pkg.Filter {
 	return s.filter
 }
@@ -273,12 +273,61 @@ func (s *BaseSpider) registerParser() {
 	s.SetCallBacks(callBacks)
 	s.SetErrBacks(errBacks)
 }
-func (s *BaseSpider) Start(c pkg.Context) (err error) {
-	s.logger.Info(s.spider.Name(), c.TaskId())
-	timeBegin := time.Now()
+func (s *BaseSpider) Run(c pkg.Context) (err error) {
 	defer func() {
-		s.logger.Info(s.spider.Name(), c.TaskId(), "spend time:", time.Now().Sub(timeBegin))
+		//if r := recover(); r != nil {
+		//	s.logger.Error(r)
+		//}
 	}()
+
+	s.logger.Info(s.spider.Name(), c.GetTaskId())
+
+	//c.WithStartTime(time.Now())
+	//c.WithStatus(pkg.SpiderStatusStarted)
+	//s.GetCrawler().GetSignal().SpiderStarted(s.spider)
+
+	params := []reflect.Value{
+		reflect.ValueOf(c),
+		reflect.ValueOf(c.GetArgs()),
+	}
+	caller := reflect.ValueOf(s.spider).MethodByName(c.GetStartFunc())
+	if !caller.IsValid() {
+		err = errors.New(fmt.Sprintf("start func is invalid: %s", c.GetStartFunc()))
+		s.logger.Error(err)
+		return
+	}
+
+	res := caller.Call(params)
+	if len(res) != 1 {
+		err = errors.New(fmt.Sprintf("%s has too many return values", c.GetStartFunc()))
+		s.logger.Error(err)
+		return
+	}
+
+	if res[0].Type().Name() != "error" {
+		err = errors.New(fmt.Sprintf("%s should return an error", c.GetStartFunc()))
+		s.logger.Error(err)
+		return
+	}
+
+	if !res[0].IsNil() {
+		err = res[0].Interface().(error)
+		s.logger.Error(err)
+		return
+	}
+
+	return
+}
+func (s *BaseSpider) Start(c pkg.Context) (err error) {
+	defer func() {
+		if err = s.Stop(c); err != nil {
+			s.logger.Error(err)
+		}
+	}()
+
+	c.WithStatus(pkg.SpiderStatusStarting)
+	s.WithContext(c)
+	s.GetCrawler().GetSignal().SpiderStarting(s.spider)
 
 	ctx := c.GlobalContext()
 	if ctx == nil {
@@ -290,18 +339,6 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 	resultChan := make(chan struct{})
 	go func() {
 		defer func() {
-			if r := recover(); r != nil {
-				if e, ok := r.(error); ok {
-					if errors.Is(e, pkg.ErrQueueTimeout) {
-						s.logger.Error(pkg.ErrQueueTimeout)
-						return
-					}
-				}
-				buf := make([]byte, 1<<16)
-				runtime.Stack(buf, true)
-				err = errors.New(string(buf))
-				s.logger.Error(err)
-			}
 			resultChan <- struct{}{}
 		}()
 
@@ -329,43 +366,18 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 			return
 		}
 
-		s.Signal.SpiderOpened()
+		c.WithStartTime(time.Now())
+		c.WithStatus(pkg.SpiderStatusStarted)
+		s.GetCrawler().GetSignal().SpiderStarted(s.spider)
 
-		c.WithSpider(s.spider)
-		params := []reflect.Value{
-			reflect.ValueOf(c),
-			reflect.ValueOf(c.Args()),
-		}
-		caller := reflect.ValueOf(s.spider).MethodByName(c.StartFunc())
-		if !caller.IsValid() {
-			err = errors.New(fmt.Sprintf("start func is invalid: %s", c.StartFunc()))
-			s.logger.Error(err)
-			return
-		}
-
-		res := caller.Call(params)
-		if len(res) < 1 {
-			return
-		}
-
-		if !res[0].IsNil() {
-			var ok bool
-			err, ok = res[0].Interface().(error)
-			if !ok {
-				err = errors.New("spider returns an unknown type")
-				s.logger.Error(err)
-				return
-			}
-
-			s.logger.Error(err)
-		}
+		_ = s.Run(c)
 
 		<-s.couldStop
 	}()
 
 	select {
 	case <-resultChan:
-		s.logger.Info(s.spider.Name(), c.TaskId(), "finished")
+		s.logger.Info(s.spider.Name(), c.GetTaskId(), "finished")
 		return
 	case <-ctx.Done():
 		close(resultChan)
@@ -389,20 +401,37 @@ func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
 	s.logger.Info("error", err)
 	return
 }
-func (s *BaseSpider) Stop(ctx context.Context) (err error) {
+func (s *BaseSpider) Stop(c pkg.Context) (err error) {
+	if c.GetStatus() == pkg.SpiderStatusStopping || c.GetStatus() == pkg.SpiderStatusStopped {
+		s.logger.Debug("stopped")
+		return
+	}
+
+	c.WithStatus(pkg.SpiderStatusStopping)
+	s.GetCrawler().GetSignal().SpiderStopping(s.spider)
+
 	s.logger.Debug("BaseSpider wait for stop")
 	defer func() {
-		if err == nil {
-			s.logger.Info("BaseSpider Stopped")
+		err = s.spider.Stop(c)
+		if errors.Is(err, pkg.DontStopErr) {
+			s.logger.Error(err)
+			select {}
 		}
+
+		stopTime := time.Now()
+		c.WithStopTime(stopTime)
+		c.WithStatus(pkg.SpiderStatusStopped)
+		s.Crawler.GetSignal().SpiderStopped(s.spider)
+
+		spendTime := stopTime.Sub(c.GetStartTime())
+		s.logger.Info(s.spider.Name(), c.GetTaskId(), "spider finished. spend time:", spendTime)
 	}()
 
-	if err = s.StopScheduler(ctx); err != nil {
+	if err = s.StopScheduler(c); err != nil {
 		s.logger.Error(err)
 		return
 	}
 
-	s.Signal.SpiderClosed()
 	return
 }
 func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
@@ -418,8 +447,6 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 	s.retryMaxTimes = config.GetRetryMaxTimes()
 	s.timeout = config.GetRequestTimeout()
 	s.okHttpCodes = config.GetOkHttpCodes()
-
-	s.SetSignal(new(signals.Signal).FromSpider(s))
 
 	switch config.GetFilter() {
 	case pkg.FilterMemory:

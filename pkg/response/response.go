@@ -118,7 +118,7 @@ func (r *Response) UnmarshalBody(v any) error {
 }
 
 func (r *Response) UniqueKey() string {
-	return r.request.UniqueKey()
+	return r.request.GetUniqueKey()
 }
 func (r *Response) UnmarshalExtra(v any) error {
 	return r.request.UnmarshalExtra(v)
@@ -142,16 +142,16 @@ func (r *Response) IsFile() bool {
 	return r.request.IsFile()
 }
 func (r *Response) FileOptions() *pkg.FileOptions {
-	return r.request.FileOptions()
+	return r.request.GetFileOptions()
 }
 func (r *Response) IsImage() bool {
 	return r.request.IsImage()
 }
 func (r *Response) ImageOptions() *pkg.ImageOptions {
-	return r.request.ImageOptions()
+	return r.request.GetImageOptions()
 }
 func (r *Response) SkipMiddleware() bool {
-	return r.request.SkipMiddleware()
+	return r.request.IsSkipMiddleware()
 }
 func (r *Response) SetSpendTime(spendTime time.Duration) pkg.Request {
 	return r.request.SetSpendTime(spendTime)

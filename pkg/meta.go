@@ -1,11 +1,6 @@
 package pkg
 
-import (
-	"net/http"
-	"net/url"
-)
-
 type Meta struct {
-	Cookies  []*http.Cookie
-	Referrer *url.URL
+	Cookies  map[string]string `json:"cookies,omitempty"`
+	Referrer string            `json:"referrer,omitempty"`
 }

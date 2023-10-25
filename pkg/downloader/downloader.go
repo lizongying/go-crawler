@@ -35,7 +35,7 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 	}
 
 	client := d.httpClient
-	if request.Client() == pkg.ClientBrowser {
+	if request.GetClient() == pkg.ClientBrowser {
 		var b *browser.Browser
 		b, err = d.browserManager.Pop(context.Background())
 		if err != nil {
@@ -77,7 +77,7 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 	return
 }
 func (d *Downloader) processRequest(ctx pkg.Context, request pkg.Request) (err error) {
-	if request.SkipMiddleware() {
+	if request.IsSkipMiddleware() {
 		return
 	}
 	for _, v := range d.middlewares {
@@ -108,7 +108,7 @@ func (d *Downloader) processResponse(ctx pkg.Context, response pkg.Response) (er
 	}
 	return
 }
-func (d *Downloader) Close() {
+func (d *Downloader) Close(_ pkg.Spider) {
 	d.browserManager.Close()
 }
 func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
@@ -122,6 +122,6 @@ func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 	d.logger = spider.GetLogger()
 	d.middlewares = spider.GetMiddlewares().Middlewares()
 
-	spider.GetSignal().RegisterSpiderClosed(d.Close)
+	spider.GetCrawler().GetSignal().RegisterSpiderStopped(spider.Name(), d.Close)
 	return d
 }

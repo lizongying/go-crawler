@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/segmentio/kafka-go"
 	"time"
 )
@@ -22,26 +21,22 @@ type KafkaPipeline struct {
 
 func (m *KafkaPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
 	spider := m.GetSpider()
-	if itemWithContext == nil {
-		err = errors.New("nil item")
-		m.logger.Error(err)
-		spider.IncItemError()
-		return
-	}
-	if itemWithContext.Name() != pkg.ItemKafka {
-		m.logger.Warn("item not support", pkg.ItemKafka)
-		return
-	}
-	itemKafka, ok := itemWithContext.GetItem().(*items.ItemKafka)
-	if !ok {
-		m.logger.Warn("item not parsing failed with", pkg.ItemKafka)
-		return
-	}
 
 	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
+		return
+	}
+
+	if itemWithContext.Name() != pkg.ItemKafka {
+		m.logger.Warn("item not support", pkg.ItemKafka)
+		return
+	}
+
+	itemKafka, ok := itemWithContext.GetItem().(*items.ItemKafka)
+	if !ok {
+		m.logger.Warn("item not parsing failed with", pkg.ItemKafka)
 		return
 	}
 
@@ -60,7 +55,6 @@ func (m *KafkaPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 		return
 	}
 
-	m.logger.Debug("Data", utils.JsonStr(data))
 	bs, err := json.Marshal(data)
 	if err != nil {
 		m.logger.Error(err)
@@ -94,6 +88,7 @@ func (m *KafkaPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 		return
 	}
 
+	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
 	spider.IncItemSuccess()
 	return
 }

@@ -23,16 +23,19 @@ type MysqlPipeline struct {
 
 func (m *MysqlPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
 	spider := m.GetSpider()
+
 	if itemWithContext == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		spider.IncItemError()
 		return
 	}
+
 	if itemWithContext.Name() != pkg.ItemMysql {
 		m.logger.Warn("item not support", pkg.ItemMysql)
 		return
 	}
+
 	itemMysql, ok := itemWithContext.GetItem().(*items.ItemMysql)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemMysql)
@@ -136,6 +139,7 @@ func (m *MysqlPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 		m.logger.Info(itemMysql.GetTable(), "insert success", id)
 	}
 
+	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
 	spider.IncItemSuccess()
 	return
 }
