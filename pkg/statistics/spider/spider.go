@@ -29,19 +29,19 @@ func (s *Spider) IncTask() {
 func (s *Spider) IncRecord() {
 	atomic.AddUint32(&s.Record, 1)
 }
-func (s *Spider) WithLastRunAt(t time.Time) *Spider {
+func (s *Spider) WithLastRunAt(t time.Time) pkg.StatisticsSpider {
 	s.LastRunAt = utils.Timestamp{
 		Time: t,
 	}
 	return s
 }
-func (s *Spider) WithLastFinishAt(t time.Time) *Spider {
+func (s *Spider) WithLastFinishAt(t time.Time) pkg.StatisticsSpider {
 	s.LastFinishAt = utils.Timestamp{
 		Time: t,
 	}
 	return s
 }
-func (s *Spider) WithStatus(status pkg.SpiderStatus) *Spider {
+func (s *Spider) WithStatus(status pkg.SpiderStatus) pkg.StatisticsSpider {
 	s.SpiderStatus = status
 	return s
 }

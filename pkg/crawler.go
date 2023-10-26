@@ -6,6 +6,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
+	"time"
 )
 
 type Crawler interface {
@@ -36,6 +37,14 @@ type Crawler interface {
 
 	GetStatistics() Statistics
 	SetStatistics(statistics Statistics)
+
+	GetId() string
+	GetStatus() CrawlerStatus
+	WithStatus(CrawlerStatus) Crawler
+	GetStartTime() time.Time
+	WithStartTime(t time.Time) Crawler
+	GetStopTime() time.Time
+	WithStopTime(t time.Time) Crawler
 }
 
 type CrawlOption func(Crawler)
@@ -55,5 +64,24 @@ func WithMockServerRoutes(routes ...func(logger Logger) Route) CrawlOption {
 func WithMode(mode string) CrawlOption {
 	return func(crawler Crawler) {
 		crawler.SetMode(mode)
+	}
+}
+
+type CrawlerStatus uint8
+
+const (
+	CrawlerStatusUnknown = iota
+	CrawlerStatusOnline
+	CrawlerStatusOffline
+)
+
+func (c *CrawlerStatus) String() string {
+	switch *c {
+	case 1:
+		return "online"
+	case 2:
+		return "offline"
+	default:
+		return "unknown"
 	}
 }

@@ -25,6 +25,9 @@ type Context struct {
 	Status     pkg.SpiderStatus `json:"status,omitempty"`
 	StartTime  utils.Timestamp  `json:"start_time,omitempty"`
 	StopTime   utils.Timestamp  `json:"stop_time,omitempty"`
+
+	// crawler
+	CrawlerId string `json:"crawler_id,omitempty"`
 }
 
 func (c *Context) Global() pkg.Context {
@@ -105,5 +108,12 @@ func (c *Context) GetStopTime() time.Time {
 }
 func (c *Context) WithStopTime(t time.Time) pkg.Context {
 	c.StopTime = utils.Timestamp{Time: t}
+	return c
+}
+func (c *Context) GetCrawlerId() string {
+	return c.CrawlerId
+}
+func (c *Context) WithCrawlerId(crawlerId string) pkg.Context {
+	c.CrawlerId = crawlerId
 	return c
 }

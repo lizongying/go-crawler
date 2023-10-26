@@ -837,6 +837,12 @@ make web_server
 ./releases/web_server
 ```
 
+开发
+
+```shell
+npm run dev --prefix ./web/ui
+```
+
 ## 问答
 
 * 一些框架里都有start_urls，此框架中怎么设置？

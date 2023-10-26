@@ -1,0 +1,1 @@
+import{Y as a,Z as d,E as s}from"./index-1ddded62.js";import{a as i}from"./9b87f773.js";const u=a("spiders",()=>{const t=d([]),o=()=>{i().then(e=>{console.log(e.data.data),t.splice(0,t.length,...e.data.data)})},r=s(()=>t.length),n=s(()=>t.length);return{spiders:t,GetSpiders:o,Count:r,CountActive:n}});export{u};

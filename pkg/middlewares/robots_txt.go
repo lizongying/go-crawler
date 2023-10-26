@@ -20,7 +20,10 @@ type RobotsTxtMiddleware struct {
 	ignoreUrl []string
 }
 
-func (m *RobotsTxtMiddleware) SpiderOpened(_ pkg.Spider) {
+func (m *RobotsTxtMiddleware) SpiderOpened(spider pkg.Spider) {
+	if spider.Name() != m.spider.Name() {
+		return
+	}
 	host := m.spider.GetHost()
 	if host == "" {
 		m.logger.Warn("host is emtpy")
@@ -42,7 +45,7 @@ func (m *RobotsTxtMiddleware) SpiderOpened(_ pkg.Spider) {
 
 func (m *RobotsTxtMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
 	err = m.UnimplementedMiddleware.Start(ctx, spider)
-	spider.GetCrawler().GetSignal().RegisterSpiderStopped(spider.Name(), m.SpiderOpened)
+	spider.GetCrawler().GetSignal().RegisterSpiderStopped(m.SpiderOpened)
 	return
 }
 

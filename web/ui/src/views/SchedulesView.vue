@@ -1,5 +1,5 @@
 <template>
-  <a-table :columns="columns" :data-source="data">
+  <a-table :columns="columns" :data-source="data" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="['spider', 'schedule'].includes(column.dataIndex)">
         <span style="font-weight: bold">

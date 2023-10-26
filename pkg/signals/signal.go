@@ -6,47 +6,45 @@ import (
 )
 
 type Signal struct {
-	logger               pkg.Logger
-	crawlerOpened        []pkg.FnCrawlerOpened
-	crawlerClosed        []pkg.FnCrawlerClosed
-	spiderStarting       map[string][]pkg.FnSpiderStarting
-	spiderStarted        map[string][]pkg.FnSpiderStarted
-	spiderStopping       map[string][]pkg.FnSpiderStopping
-	spiderStopped        map[string][]pkg.FnSpiderStopped
-	taskStarted          []pkg.FnTaskStarted
-	taskStopped          []pkg.FnTaskStopped
-	itemSaved            []pkg.FnItemSaved
+	logger pkg.Logger
+
+	crawlerStarted []pkg.FnCrawlerStarted
+	crawlerStopped []pkg.FnCrawlerStopped
+
+	spiderStarting []pkg.FnSpiderStarting
+	spiderStarted  []pkg.FnSpiderStarted
+	spiderStopping []pkg.FnSpiderStopping
+	spiderStopped  []pkg.FnSpiderStopped
+
+	taskStarted []pkg.FnTaskStarted
+	taskStopped []pkg.FnTaskStopped
+
+	itemSaved []pkg.FnItemSaved
+
 	spiderStartingLocker sync.RWMutex
 	spiderStartedLocker  sync.RWMutex
 	spiderStoppingLocker sync.RWMutex
 	spiderStoppedLocker  sync.RWMutex
+	itemSavedLocker      sync.RWMutex
 }
 
-func (s *Signal) RegisterCrawlerOpened(fn pkg.FnCrawlerOpened) {
-	s.crawlerOpened = append(s.crawlerOpened, fn)
+func (s *Signal) RegisterCrawlerStarted(fn pkg.FnCrawlerStarted) {
+	s.crawlerStarted = append(s.crawlerStarted, fn)
 }
-func (s *Signal) RegisterCrawlerClosed(fn pkg.FnCrawlerClosed) {
-	s.crawlerClosed = append(s.crawlerClosed, fn)
+func (s *Signal) RegisterCrawlerStopped(fn pkg.FnCrawlerStopped) {
+	s.crawlerStopped = append(s.crawlerStopped, fn)
 }
-func (s *Signal) RegisterSpiderStarting(spiderName string, fn pkg.FnSpiderStarting) {
-	defer s.spiderStartingLocker.Unlock()
-	s.spiderStartingLocker.Lock()
-	s.spiderStarting[spiderName] = append(s.spiderStarting[spiderName], fn)
+func (s *Signal) RegisterSpiderStarting(fn pkg.FnSpiderStarting) {
+	s.spiderStarting = append(s.spiderStarting, fn)
 }
-func (s *Signal) RegisterSpiderStarted(spiderName string, fn pkg.FnSpiderStarted) {
-	defer s.spiderStartedLocker.Unlock()
-	s.spiderStartedLocker.Lock()
-	s.spiderStarted[spiderName] = append(s.spiderStarted[spiderName], fn)
+func (s *Signal) RegisterSpiderStarted(fn pkg.FnSpiderStarted) {
+	s.spiderStarted = append(s.spiderStarted, fn)
 }
-func (s *Signal) RegisterSpiderStopping(spiderName string, fn pkg.FnSpiderStopping) {
-	defer s.spiderStoppingLocker.Unlock()
-	s.spiderStoppingLocker.Lock()
-	s.spiderStopping[spiderName] = append(s.spiderStopping[spiderName], fn)
+func (s *Signal) RegisterSpiderStopping(fn pkg.FnSpiderStopping) {
+	s.spiderStopping = append(s.spiderStopping, fn)
 }
-func (s *Signal) RegisterSpiderStopped(spiderName string, fn pkg.FnSpiderStopped) {
-	defer s.spiderStoppedLocker.Unlock()
-	s.spiderStoppedLocker.Lock()
-	s.spiderStopped[spiderName] = append(s.spiderStopped[spiderName], fn)
+func (s *Signal) RegisterSpiderStopped(fn pkg.FnSpiderStopped) {
+	s.spiderStopped = append(s.spiderStopped, fn)
 }
 func (s *Signal) RegisterTaskStarted(fn pkg.FnTaskStarted) {
 	s.taskStarted = append(s.taskStarted, fn)
@@ -57,45 +55,43 @@ func (s *Signal) RegisterTaskStopped(fn pkg.FnTaskStopped) {
 func (s *Signal) RegisterItemSaved(fn pkg.FnItemSaved) {
 	s.itemSaved = append(s.itemSaved, fn)
 }
-func (s *Signal) CrawlerOpened() {
-	for _, v := range s.crawlerOpened {
-		v()
+func (s *Signal) CrawlerStarted(crawler pkg.Crawler) {
+	for _, v := range s.crawlerStarted {
+		v(crawler)
 	}
 }
-func (s *Signal) CrawlerClosed() {
-	for _, v := range s.crawlerClosed {
-		v()
+func (s *Signal) CrawlerStopped(crawler pkg.Crawler) {
+	for _, v := range s.crawlerStopped {
+		v(crawler)
 	}
 }
 func (s *Signal) SpiderStarting(spider pkg.Spider) {
-	s.spiderStartingLocker.RLock()
-	spiderStarting := s.spiderStarting[spider.Name()]
-	s.spiderStartingLocker.RUnlock()
-	for _, v := range spiderStarting {
+	for _, v := range s.spiderStarting {
 		v(spider)
 	}
 }
 func (s *Signal) SpiderStarted(spider pkg.Spider) {
-	s.spiderStartedLocker.RLock()
-	spiderStarted := s.spiderStarted[spider.Name()]
-	s.spiderStartedLocker.RUnlock()
-	for _, v := range spiderStarted {
+	for _, v := range s.spiderStarted {
 		v(spider)
 	}
 }
 func (s *Signal) SpiderStopping(spider pkg.Spider) {
-	s.spiderStoppingLocker.RLock()
-	spiderStopping := s.spiderStopping[spider.Name()]
-	s.spiderStoppingLocker.RUnlock()
-	for _, v := range spiderStopping {
+	for _, v := range s.spiderStopping {
 		v(spider)
 	}
 }
 func (s *Signal) SpiderStopped(spider pkg.Spider) {
-	s.spiderStoppedLocker.RLock()
-	spiderStopped := s.spiderStopped[spider.Name()]
-	s.spiderStoppedLocker.RUnlock()
-	for _, v := range spiderStopped {
+	for _, v := range s.spiderStopped {
+		v(spider)
+	}
+}
+func (s *Signal) TaskStarted(spider pkg.Spider) {
+	for _, v := range s.taskStarted {
+		v(spider)
+	}
+}
+func (s *Signal) TaskStopped(spider pkg.Spider) {
+	for _, v := range s.taskStopped {
 		v(spider)
 	}
 }
@@ -110,10 +106,6 @@ func (s *Signal) FromCrawler(crawler pkg.Crawler) pkg.Signal {
 	}
 
 	s.logger = crawler.GetLogger()
-	s.spiderStarting = make(map[string][]pkg.FnSpiderStarting)
-	s.spiderStarted = make(map[string][]pkg.FnSpiderStarted)
-	s.spiderStopping = make(map[string][]pkg.FnSpiderStopping)
-	s.spiderStopped = make(map[string][]pkg.FnSpiderStopped)
 
 	return s
 }

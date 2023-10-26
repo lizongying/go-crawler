@@ -1,15 +1,24 @@
 import {defineStore} from 'pinia'
-import {reactive} from 'vue';
+import {computed, reactive} from 'vue';
 import {getSpiders} from "@/requests/api";
 
 export const useSpidersStore = defineStore('spiders', () => {
     const spiders = reactive([])
 
-    const GetSpiders = async () => {
-        if (spiders.length === 0) {
-            return getSpiders()
-        }
+    const GetSpiders = () => {
+        getSpiders().then(resp => {
+            console.log(resp.data.data)
+            spiders.splice(0, spiders.length, ...resp.data.data)
+        })
     }
 
-    return {spiders, GetSpiders}
+    const Count = computed(() => {
+        return spiders.length
+    })
+
+    const CountActive = computed(() => {
+        return spiders.length
+    })
+
+    return {spiders, GetSpiders, Count, CountActive}
 })

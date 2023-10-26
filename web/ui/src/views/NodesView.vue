@@ -1,7 +1,7 @@
 <template>
-  <a-table :columns="columns" :data-source="data">
+  <a-table :columns="columns" :data-source="nodesStore.nodes" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
-      <template v-if="['hostname', 'ip', 'enable', 'status', 'start_time'].includes(column.dataIndex)">
+      <template v-if="['hostname', 'ip', 'enable', 'status', 'start_time', 'finish_time'].includes(column.dataIndex)">
         <span style="font-weight: bold">
           {{ column.title }}
         </span>
@@ -24,8 +24,16 @@
           {{ record.task }}
         </RouterLink>
       </template>
+      <template v-else-if="column.dataIndex === 'record'">
+        <RouterLink :to="'/records?node_id='+record.id" @click="$emit('router—change','6')">
+          {{ record.record }}
+        </RouterLink>
+      </template>
       <template v-else-if="column.dataIndex === 'start_time'">
-          {{ formattedDate(record.start_time) }}
+        {{ formattedDate(record.start_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'finish_time'">
+        {{ formattedDate(record.finish_time) }}
       </template>
       <template v-else-if="column.dataIndex === 'status'">
         <span>
@@ -55,8 +63,7 @@
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {useNodesStore} from "@/stores/nodes";
-import {reactive} from "vue";
-import {formattedDate} from "../utils/time";
+import {formattedDate} from "@/utils/time";
 
 defineEmits(['router—change'])
 
@@ -79,8 +86,13 @@ const columns = [
     title: 'Start Time',
     dataIndex: 'start_time',
     width: 200,
-    ellipsis: true,
-    sorter: (a, b) => a.ip > b.ip,
+    sorter: (a, b) => a.start_time > b.start_time,
+  },
+  {
+    title: 'Finish Time',
+    dataIndex: 'finish_time',
+    width: 200,
+    sorter: (a, b) => a.finish_time > b.finish_time,
   },
   {
     title: 'Enable',
@@ -130,6 +142,11 @@ const columns = [
     width: 100,
   },
   {
+    title: 'Record',
+    dataIndex: 'record',
+    width: 100,
+  },
+  {
     title: 'Action',
     dataIndex: 'action',
     width: 200,
@@ -137,49 +154,42 @@ const columns = [
   },
 ];
 
-const data = reactive([
-  // {
-  //   id: '1',
-  //   hostname: 'localhost',
-  //   ip: '127.0.0.1:9999',
-  //   status: 1,
-  //   enable: true,
-  //   spider: 32,
-  //   schedule: 10,
-  //   task: 100,
-  // },
-  // {
-  //   id: '2',
-  //   hostname: 'localhost',
-  //   ip: '127.0.0.1:9999',
-  //   status: 1,
-  //   enable: true,
-  //   spider: 42,
-  //   schedule: 10,
-  //   task: 100,
-  // },
-  // {
-  //   id: '3',
-  //   hostname: 'localhost',
-  //   ip: '127.0.0.1:9999',
-  //   status: 2,
-  //   enable: false,
-  //   spider: 32,
-  //   schedule: 10,
-  //   task: 100,
-  // },
-])
+// const data = reactive([
+//   {
+//     id: '1',
+//     hostname: 'localhost',
+//     ip: '127.0.0.1:9999',
+//     status: 1,
+//     enable: true,
+//     spider: 32,
+//     schedule: 10,
+//     task: 100,
+//   },
+//   {
+//     id: '2',
+//     hostname: 'localhost',
+//     ip: '127.0.0.1:9999',
+//     status: 1,
+//     enable: true,
+//     spider: 42,
+//     schedule: 10,
+//     task: 100,
+//   },
+//   {
+//     id: '3',
+//     hostname: 'localhost',
+//     ip: '127.0.0.1:9999',
+//     status: 2,
+//     enable: false,
+//     spider: 32,
+//     schedule: 10,
+//     task: 100,
+//   },
+// ])
 
 const nodesStore = useNodesStore();
 
-nodesStore.GetNodes().then(resp => {
-  resp.data.data.forEach(
-      v => {
-        data.push(v)
-      }
-  )
-})
-
+nodesStore.GetNodes()
 </script>
 <style>
 </style>

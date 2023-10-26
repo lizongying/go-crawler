@@ -3,10 +3,17 @@ package pkg
 import "time"
 
 type StatisticsNode interface {
+	WithId(string) StatisticsNode
+	IncRecord()
+	IncSpider()
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsSpider interface {
 	GetSpider() string
+	IncRecord()
+	WithLastRunAt(time.Time) StatisticsSpider
+	WithLastFinishAt(time.Time) StatisticsSpider
+	WithStatus(SpiderStatus) StatisticsSpider
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsSchedule interface {
@@ -27,7 +34,6 @@ type Statistics interface {
 	GetSchedules() []StatisticsSchedule
 	GetTasks() []StatisticsTask
 	GetRecords() []StatisticsRecord
-	AddNodes(...StatisticsNode)
 	AddSpiders(...Spider)
 	AddSchedules(...StatisticsSchedule)
 	AddTasks(...StatisticsTask)

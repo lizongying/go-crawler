@@ -1,5 +1,5 @@
 <template>
-  <a-table :columns="columns" :data-source="data">
+  <a-table :columns="columns" :data-source="recordsStore.records" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="['spider'].includes(column.dataIndex)">
         <span style="font-weight: bold">
@@ -79,39 +79,33 @@ const columns = [
   },
 ];
 
-const data = reactive([
-  // {
-  //   id: '1',
-  //   spider: 'test1',
-  //   task_id: '1',
-  //   meta: '',
-  //   save_time: 0,
-  // },
-  // {
-  //   id: '2',
-  //   spider: 'test2',
-  //   task_id: '2',
-  //   meta: '',
-  //   save_time: 0,
-  // },
-  // {
-  //   id: '3',
-  //   spider: 'test3',
-  //   task_id: '3',
-  //   meta: '',
-  //   save_time: 0,
-  // },
-])
+// const data = reactive([
+// {
+//   id: '1',
+//   spider: 'test1',
+//   task_id: '1',
+//   meta: '',
+//   save_time: 0,
+// },
+// {
+//   id: '2',
+//   spider: 'test2',
+//   task_id: '2',
+//   meta: '',
+//   save_time: 0,
+// },
+// {
+//   id: '3',
+//   spider: 'test3',
+//   task_id: '3',
+//   meta: '',
+//   save_time: 0,
+// },
+// ])
 
 const recordsStore = useRecordsStore();
 
-recordsStore.GetRecords().then(resp => {
-  resp.data.data && resp.data.data.forEach(
-      v => {
-        data.push(v)
-      }
-  )
-})
+recordsStore.GetRecords()
 
 const open = ref(false);
 const more = reactive({})

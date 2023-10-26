@@ -23,9 +23,12 @@ type Context interface {
 	WithMode(mode string) Context
 
 	GetStatus() SpiderStatus
-	WithStatus(status SpiderStatus) Context
+	WithStatus(SpiderStatus) Context
 	GetStartTime() time.Time
 	WithStartTime(t time.Time) Context
 	GetStopTime() time.Time
 	WithStopTime(t time.Time) Context
+
+	GetCrawlerId() string
+	WithCrawlerId(crawlerId string) Context
 }

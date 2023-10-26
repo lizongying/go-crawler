@@ -1,5 +1,5 @@
 <template>
-  <a-table :columns="columns" :data-source="data">
+  <a-table :columns="columns" :data-source="spidersStore.spiders" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="['spider', 'last_status', 'last_run_at', 'last_finish_at'].includes(column.dataIndex)">
         <span style="font-weight: bold">
@@ -168,13 +168,7 @@ const data = reactive([
 
 const spidersStore = useSpidersStore();
 
-spidersStore.GetSpiders().then(resp => {
-  resp.data.data && resp.data.data.forEach(
-      v => {
-        data.push(v)
-      }
-  )
-})
+spidersStore.GetSpiders()
 
 const statusName = (status) => {
   switch (status) {

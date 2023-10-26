@@ -16,6 +16,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
+	"time"
 )
 
 type Crawler struct {
@@ -38,6 +39,11 @@ type Crawler struct {
 	api         *api.Api
 	statistics  pkg.Statistics
 	pkg.Signal
+
+	Id        string            `json:"id,omitempty"`
+	Status    pkg.CrawlerStatus `json:"status,omitempty"`
+	StartTime utils.Timestamp   `json:"start_time,omitempty"`
+	StopTime  utils.Timestamp   `json:"stop_time,omitempty"`
 }
 
 func (c *Crawler) GetStatistics() pkg.Statistics {
@@ -109,6 +115,30 @@ func (c *Crawler) GetSignal() pkg.Signal {
 func (c *Crawler) SetSignal(signal pkg.Signal) {
 	c.Signal = signal
 }
+func (c *Crawler) GetId() string {
+	return c.Id
+}
+func (c *Crawler) GetStatus() pkg.CrawlerStatus {
+	return c.Status
+}
+func (c *Crawler) WithStatus(status pkg.CrawlerStatus) pkg.Crawler {
+	c.Status = status
+	return c
+}
+func (c *Crawler) GetStartTime() time.Time {
+	return c.StartTime.Time
+}
+func (c *Crawler) WithStartTime(t time.Time) pkg.Crawler {
+	c.StartTime = utils.Timestamp{Time: t}
+	return c
+}
+func (c *Crawler) GetStopTime() time.Time {
+	return c.StopTime.Time
+}
+func (c *Crawler) WithStopTime(t time.Time) pkg.Crawler {
+	c.StopTime = utils.Timestamp{Time: t}
+	return c
+}
 func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
@@ -123,7 +153,7 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 		c.logger.Error(err)
 		return
 	}
-
+	c.logger.Info("crawlerId", ctx.GetCrawlerId())
 	c.logger.Info("name", ctx.GetSpiderName())
 	c.logger.Info("func", ctx.GetStartFunc())
 	c.logger.Info("args", ctx.GetArgs())
@@ -185,10 +215,13 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		return
 	}
 
-	c.Signal.CrawlerOpened()
+	c.WithStatus(pkg.CrawlerStatusOnline)
+	c.WithStartTime(time.Now())
+	c.Signal.CrawlerStarted(c)
 
 	if c.spiderName != "" {
 		if err = c.SpiderStart(new(crawlerContext.Context).
+			WithCrawlerId(c.Id).
 			WithSpiderName(c.spiderName).
 			WithStartFunc(c.startFunc).
 			WithArgs(c.args).
@@ -205,8 +238,10 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 func (c *Crawler) Stop(ctx context.Context) (err error) {
 	c.logger.Debug("Crawler wait for stop")
 	defer func() {
+		c.WithStatus(pkg.CrawlerStatusOffline)
+		c.WithStopTime(time.Now())
+		c.Signal.CrawlerStopped(c)
 		c.logger.Info("Crawler Stopped")
-		c.Signal.CrawlerClosed()
 	}()
 
 	if ctx == nil {
@@ -240,8 +275,8 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		Store:       store,
 		mockServer:  mockServer,
 		api:         httpApi,
+		Id:          utils.UUIDV1WithoutHyphens(),
 	}
-	crawler.SetStatistics(new(statistics.Statistics).FromCrawler(crawler))
 
 	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteHello).FromCrawler(crawler))
@@ -254,6 +289,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 	httpApi.AddRoutes(new(api.RouteRecords).FromCrawler(crawler))
 
 	crawler.SetSignal(new(signals.Signal).FromCrawler(crawler))
+	crawler.SetStatistics(new(statistics.Statistics).FromCrawler(crawler))
 
 	for _, v := range spiders {
 		v.SetSpider(v)

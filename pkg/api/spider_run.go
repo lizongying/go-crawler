@@ -39,9 +39,11 @@ func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c, cancel = context.WithTimeout(c, time.Duration(req.Timeout)*time.Second)
 		defer cancel()
 	}
+
 	ctx := new(crawlerContext.Context).
 		WithGlobalContext(c).
 		WithTaskId(req.TaskId).
+		WithCrawlerId(h.crawler.GetId()).
 		WithSpiderName(req.Name).
 		WithStartFunc(req.Func).
 		WithArgs(req.Args).

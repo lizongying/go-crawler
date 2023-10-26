@@ -2,44 +2,32 @@ package node
 
 import (
 	"encoding/json"
+	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"sync/atomic"
 	"time"
 )
 
-type Status uint8
-
-const (
-	StatusUnknown = iota
-	StatusOnline
-	StatusOffline
-)
-
-func (s *Status) String() string {
-	switch *s {
-	case 1:
-		return "online"
-	case 2:
-		return "offline"
-	default:
-		return "unknown"
-	}
-}
-
 type Node struct {
-	Status     `json:"status,omitempty"`
-	Hostname   string          `json:"hostname,omitempty"`
-	Ip         string          `json:"ip,omitempty"`
-	Enable     bool            `json:"enable,omitempty"`
-	Spider     uint32          `json:"spider,omitempty"`
-	Schedule   uint32          `json:"schedule,omitempty"`
-	Task       uint32          `json:"task,omitempty"`
-	StartTime  utils.Timestamp `json:"start_time"`
-	FinishTime utils.Timestamp `json:"finish_time"`
+	pkg.CrawlerStatus `json:"status,omitempty"`
+	Id                string          `json:"id,omitempty"`
+	Hostname          string          `json:"hostname,omitempty"`
+	Ip                string          `json:"ip,omitempty"`
+	Enable            bool            `json:"enable,omitempty"`
+	Spider            uint32          `json:"spider,omitempty"`
+	Schedule          uint32          `json:"schedule,omitempty"`
+	Task              uint32          `json:"task,omitempty"`
+	Record            uint32          `json:"record,omitempty"`
+	StartTime         utils.Timestamp `json:"start_time"`
+	FinishTime        utils.Timestamp `json:"finish_time"`
 }
 
-func (n *Node) WithStatus(status Status) *Node {
-	n.Status = status
+func (n *Node) WithId(id string) pkg.StatisticsNode {
+	n.Id = id
+	return n
+}
+func (n *Node) WithStatus(status pkg.CrawlerStatus) *Node {
+	n.CrawlerStatus = status
 	return n
 }
 func (n *Node) WithEnable(enable bool) *Node {
@@ -49,8 +37,14 @@ func (n *Node) WithEnable(enable bool) *Node {
 func (n *Node) IncSpider() {
 	atomic.AddUint32(&n.Spider, 1)
 }
+func (n *Node) DecSpider() {
+	atomic.AddUint32(&n.Spider, ^uint32(0))
+}
 func (n *Node) IncTask() {
 	atomic.AddUint32(&n.Task, 1)
+}
+func (n *Node) IncRecord() {
+	atomic.AddUint32(&n.Record, 1)
 }
 func (n *Node) WithStartTime(t time.Time) *Node {
 	n.StartTime = utils.Timestamp{

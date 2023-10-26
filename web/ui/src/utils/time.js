@@ -1,6 +1,6 @@
 const isTimestampString = (str) => {
     const timestamp = Number(str);
-    return !isNaN(timestamp) && timestamp >= 0;
+    return !isNaN(timestamp) && timestamp > 0;
 }
 const formattedDate = (timestamp) => {
     if (!isTimestampString(timestamp)) {
