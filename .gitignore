@@ -3,4 +3,6 @@
 .README.md
 dev.yml
 releases
-/static/dist/
+static/dist/assets
+static/dist/favicon.ico
+static/dist/index.html
