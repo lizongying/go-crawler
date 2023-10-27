@@ -8,6 +8,9 @@ export const useNodesStore = defineStore('nodes', () => {
     const GetNodes = () => {
         getNodes().then(resp => {
             console.log(resp.data.data)
+            if (resp.data.data === null) {
+                return
+            }
             nodes.splice(0, nodes.length, ...resp.data.data)
         })
     }

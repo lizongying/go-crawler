@@ -282,9 +282,9 @@ func (s *BaseSpider) Run(c pkg.Context) (err error) {
 
 	s.logger.Info(s.spider.Name(), c.GetTaskId())
 
-	//c.WithStartTime(time.Now())
-	//c.WithStatus(pkg.SpiderStatusStarted)
-	//s.GetCrawler().GetSignal().SpiderStarted(s.spider)
+	c.WithTaskStartTime(time.Now())
+	c.WithTaskStatus(pkg.TaskStatusRunning)
+	s.GetCrawler().GetSignal().TaskStarted(c)
 
 	params := []reflect.Value{
 		reflect.ValueOf(c),
@@ -419,6 +419,11 @@ func (s *BaseSpider) Stop(c pkg.Context) (err error) {
 		}
 
 		stopTime := time.Now()
+
+		c.WithTaskStopTime(stopTime)
+		c.WithTaskStatus(pkg.TaskStatusSuccess)
+		s.Crawler.GetSignal().TaskStopped(c)
+
 		c.WithStopTime(stopTime)
 		c.WithStatus(pkg.SpiderStatusStopped)
 		s.Crawler.GetSignal().SpiderStopped(s.spider)

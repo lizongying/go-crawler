@@ -8,6 +8,9 @@ export const useSpidersStore = defineStore('spiders', () => {
     const GetSpiders = () => {
         getSpiders().then(resp => {
             console.log(resp.data.data)
+            if (resp.data.data === null) {
+                return
+            }
             spiders.splice(0, spiders.length, ...resp.data.data)
         })
     }

@@ -1,7 +1,7 @@
 <template>
-  <a-table :columns="columns" :data-source="data" :scroll="{ x: '100%' }">
+  <a-table :columns="columns" :data-source="tasksStore.tasks" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
-      <template v-if="['id', 'spider', 'schedule'].includes(column.dataIndex)">
+      <template v-if="['id', 'spider', 'status', 'schedule'].includes(column.dataIndex)">
         <span style="font-weight: bold">
           {{ column.title }}
         </span>
@@ -21,11 +21,22 @@
       </template>
       <template v-else-if="column.dataIndex === 'status'">
         <span>
-          <a-tag :color="record.status === 'error' ? 'volcano' : record.status === 'running' ? 'geekblue' : 'green'"
+          <a-tag
+              :key="record.status"
+              :color="record.status === 4 ? 'volcano' : record.status===2 ? 'green' : 'geekblue'"
           >
-            {{ record.status.toUpperCase() }}
+            {{ statusName(record.status) }}
           </a-tag>
         </span>
+      </template>
+      <template v-else-if="column.dataIndex === 'start_time'">
+        {{ formattedDate(record.start_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'finish_time'">
+        {{ formattedDate(record.finish_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'duration'">
+        {{ formatDuration(record.finish_time - record.start_time) }}
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
@@ -55,6 +66,8 @@
 import {RightOutlined} from "@ant-design/icons-vue";
 import {ref} from "vue";
 import {RouterLink} from "vue-router";
+import {useTasksStore} from "@/stores/tasks";
+import {formatDuration, formattedDate} from "@/utils/time";
 
 defineEmits(['router—change'])
 
@@ -68,14 +81,17 @@ const columns = [
   {
     title: 'Schedule',
     dataIndex: 'schedule',
+    width: 100,
   },
   {
     title: 'Node',
     dataIndex: 'node',
+    width: 300,
   },
   {
     title: 'Command',
     dataIndex: 'command',
+    width: 150,
   },
   {
     title: 'Status',
@@ -99,17 +115,17 @@ const columns = [
         value: 4,
       },
     ],
-    onFilter: (value, record) => record.last_status === value,
+    onFilter: (value, record) => record.status === value,
   },
   {
-    title: 'Started',
-    dataIndex: 'started',
-    width: 150,
+    title: 'Start Time',
+    dataIndex: 'start_time',
+    width: 200,
   },
   {
-    title: 'Finished',
-    dataIndex: 'finished',
-    width: 150,
+    title: 'Finish Time',
+    dataIndex: 'finish_time',
+    width: 200,
   },
   {
     title: 'Duration',
@@ -117,8 +133,8 @@ const columns = [
     width: 100,
   },
   {
-    title: 'Records',
-    dataIndex: 'records',
+    title: 'Record',
+    dataIndex: 'record',
     width: 100,
   },
   {
@@ -128,45 +144,48 @@ const columns = [
     fixed: 'right',
   },
 ];
-const data = [
-  {
-    id: '1',
-    spider: 'John Brown',
-    schedule: 'every day',
-    status: 'success',
-    command: 'go-crawler',
-    node: 'localhost',
-    started: '1 hour ago',
-    finished: '1 second ago',
-    duration: '1h',
-    records: 100,
-  },
-  {
-    id: '2',
-    spider: 'Jim Green',
-    schedule: 'every day',
-    status: 'running',
-    command: 'go-crawler',
-    node: 'localhost',
-    started: '1 hour ago',
-    finished: '1 second ago',
-    duration: '1h',
-    records: 100,
-  },
-  {
-    id: '3',
-    spider: 'Joe Black',
-    schedule: 'every day',
-    status: 'error',
-    command: 'go-crawler',
-    node: 'localhost',
-    started: '1 hour ago',
-    finished: '1 second ago',
-    duration: '1h',
-    records: 100,
-  },
-];
+// const data = [
+//   {
+//     id: '1',
+//     spider: 'John Brown',
+//     schedule: 'every day',
+//     status: 'success',
+//     command: 'go-crawler',
+//     node: 'localhost',
+//     started: '1 hour ago',
+//     finished: '1 second ago',
+//     duration: '1h',
+//     records: 100,
+//   },
+//   {
+//     id: '2',
+//     spider: 'Jim Green',
+//     schedule: 'every day',
+//     status: 'running',
+//     command: 'go-crawler',
+//     node: 'localhost',
+//     started: '1 hour ago',
+//     finished: '1 second ago',
+//     duration: '1h',
+//     records: 100,
+//   },
+//   {
+//     id: '3',
+//     spider: 'Joe Black',
+//     schedule: 'every day',
+//     status: 'error',
+//     command: 'go-crawler',
+//     node: 'localhost',
+//     started: '1 hour ago',
+//     finished: '1 second ago',
+//     duration: '1h',
+//     records: 100,
+//   },
+// ];
 
+const tasksStore = useTasksStore();
+
+tasksStore.GetTasks()
 
 const open = ref(false);
 const showDrawer = () => {
@@ -174,6 +193,21 @@ const showDrawer = () => {
 };
 const activeKey = ref('1');
 
+
+const statusName = (status) => {
+  switch (status) {
+    case 1:
+      return 'starting'
+    case 2:
+      return 'started'
+    case 3:
+      return 'stopping'
+    case 4:
+      return 'stopped'
+    default:
+      return 'unknown'
+  }
+}
 </script>
 <style>
 </style>

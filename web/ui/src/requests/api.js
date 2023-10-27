@@ -31,4 +31,4 @@ const getRecords = data => {
     return axios.post(settingStore.setting.apiHost + '/records', data, config);
 };
 
-export {getNodes, getSpiders, getTasks, getRecords}
+export {getNodes, getSpiders, getSchedules, getTasks, getRecords}

@@ -14,11 +14,14 @@ type Context struct {
 	Meta pkg.Meta `json:"meta,omitempty"`
 
 	// task
-	TaskId    string              `json:"task_id,omitempty"`
-	Deadline  utils.TimestampNano `json:"deadline,omitempty"`
-	StartFunc string              `json:"start_func,omitempty"`
-	Args      string              `json:"args,omitempty"`
-	Mode      string              `json:"mode,omitempty"`
+	TaskId        string              `json:"task_id,omitempty"`
+	Deadline      utils.TimestampNano `json:"deadline,omitempty"`
+	StartFunc     string              `json:"start_func,omitempty"`
+	Args          string              `json:"args,omitempty"`
+	Mode          string              `json:"mode,omitempty"`
+	TaskStatus    pkg.TaskStatus      `json:"task_status,omitempty"`
+	TaskStartTime utils.Timestamp     `json:"task_start_time,omitempty"`
+	TaskStopTime  utils.Timestamp     `json:"task_stop_time,omitempty"`
 
 	// spider
 	SpiderName string           `json:"spider_name,omitempty"`
@@ -28,6 +31,9 @@ type Context struct {
 
 	// crawler
 	CrawlerId string `json:"crawler_id,omitempty"`
+
+	// schedule
+	ScheduleId string `json:"schedule_id,omitempty"`
 }
 
 func (c *Context) Global() pkg.Context {
@@ -82,6 +88,27 @@ func (c *Context) WithMode(mode string) pkg.Context {
 	c.Mode = mode
 	return c
 }
+func (c *Context) GetTaskStatus() pkg.TaskStatus {
+	return c.TaskStatus
+}
+func (c *Context) WithTaskStatus(status pkg.TaskStatus) pkg.Context {
+	c.TaskStatus = status
+	return c
+}
+func (c *Context) GetTaskStartTime() time.Time {
+	return c.TaskStartTime.Time
+}
+func (c *Context) WithTaskStartTime(t time.Time) pkg.Context {
+	c.TaskStartTime = utils.Timestamp{Time: t}
+	return c
+}
+func (c *Context) GetTaskStopTime() time.Time {
+	return c.TaskStopTime.Time
+}
+func (c *Context) WithTaskStopTime(t time.Time) pkg.Context {
+	c.TaskStopTime = utils.Timestamp{Time: t}
+	return c
+}
 func (c *Context) GetSpiderName() string {
 	return c.SpiderName
 }
@@ -115,5 +142,12 @@ func (c *Context) GetCrawlerId() string {
 }
 func (c *Context) WithCrawlerId(crawlerId string) pkg.Context {
 	c.CrawlerId = crawlerId
+	return c
+}
+func (c *Context) GetScheduleId() string {
+	return c.ScheduleId
+}
+func (c *Context) WithScheduleId(scheduleId string) pkg.Context {
+	c.ScheduleId = scheduleId
 	return c
 }

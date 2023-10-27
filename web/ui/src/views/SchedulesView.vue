@@ -32,6 +32,7 @@
 <script setup>
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
+import {useSchedulesStore} from "@/stores/schedules";
 
 defineEmits(['router—change'])
 
@@ -71,6 +72,9 @@ const data = [
     schedule: 'every day',
   },
 ];
+
+const schedulesStore = useSchedulesStore()
+schedulesStore.GetSchedules()
 </script>
 <style>
 </style>

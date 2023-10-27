@@ -1,1 +1,0 @@
-import{Y as r,Z as d,E as o}from"./index-1ddded62.js";import{g as c}from"./9b87f773.js";const l=r("nodes",()=>{const t=d([]),s=()=>{c().then(e=>{console.log(e.data.data),t.splice(0,t.length,...e.data.data)})},n=o(()=>t.length),a=o(()=>t.filter(e=>e.status===1).length);return{nodes:t,GetNodes:s,Count:n,CountActive:a}});export{l as u};

@@ -5,6 +5,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/statistics/node"
 	"github.com/lizongying/go-crawler/pkg/statistics/record"
 	statisticsSpider "github.com/lizongying/go-crawler/pkg/statistics/spider"
+	"github.com/lizongying/go-crawler/pkg/statistics/task"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"os"
 	"time"
@@ -16,7 +17,7 @@ type Statistics struct {
 	Nodes     map[string]pkg.StatisticsNode
 	Spiders   map[string]pkg.StatisticsSpider
 	Schedules []pkg.StatisticsSchedule
-	Tasks     []pkg.StatisticsTask
+	Tasks     map[string]pkg.StatisticsTask
 	Records   []pkg.StatisticsRecord
 }
 
@@ -35,8 +36,11 @@ func (s *Statistics) GetSpiders() (spiders []pkg.StatisticsSpider) {
 func (s *Statistics) GetSchedules() []pkg.StatisticsSchedule {
 	return s.Schedules
 }
-func (s *Statistics) GetTasks() []pkg.StatisticsTask {
-	return s.Tasks
+func (s *Statistics) GetTasks() (tasks []pkg.StatisticsTask) {
+	for _, v := range s.Tasks {
+		tasks = append(tasks, v)
+	}
+	return
 }
 func (s *Statistics) GetRecords() []pkg.StatisticsRecord {
 	return s.Records
@@ -53,7 +57,12 @@ func (s *Statistics) AddSpiders(spiders ...pkg.Spider) {
 	}
 }
 func (s *Statistics) AddTasks(tasks ...pkg.StatisticsTask) {
-	s.Tasks = append(s.Tasks, tasks...)
+	for _, v := range tasks {
+		//s.Tasks[v.GetCrawler().GetId()].IncSpider()
+		s.Tasks[v.GetId()] = &task.Task{
+			Id: v.GetId(),
+		}
+	}
 }
 func (s *Statistics) AddRecords(records ...pkg.StatisticsRecord) {
 	s.Records = append(s.Records, records...)
@@ -79,29 +88,24 @@ func (s *Statistics) spiderStopped(spider pkg.Spider) {
 		WithStatus(spider.GetContext().GetStatus()).
 		WithLastFinishAt(spider.GetContext().GetStopTime())
 }
-func (s *Statistics) taskOpened(spider pkg.Spider) {
-	//var sSpider pkg.StatisticsSpider
-	//for _, v := range s.Spiders {
-	//	if v.GetSpider() == spider.Name() {
-	//		sSpider = v
-	//		break
-	//	}
-	//}
-	//s.Tasks = append(s.Tasks, &task.Task{
-	//	Spider:  sSpider.(*statisticsSpider.Spider),
-	//	Started: time.Now(),
-	//})
+func (s *Statistics) taskStarted(ctx pkg.Context) {
+	s.Nodes[ctx.GetCrawlerId()].IncTask()
+	s.Spiders[ctx.GetSpiderName()].IncTask()
+
+	s.Tasks[ctx.GetTaskId()] = new(task.Task).
+		WithId(ctx.GetTaskId()).
+		WithNode(ctx.GetCrawlerId()).
+		WithSpider(ctx.GetSpiderName())
+
+	s.Tasks[ctx.GetTaskId()].
+		WithStatus(ctx.GetTaskStatus()).
+		WithStartTime(ctx.GetTaskStartTime())
 }
 
-func (s *Statistics) taskClosed(spider pkg.Spider) {
-	//var sTask pkg.StatisticsTask
-	//for _, v := range s.Tasks {
-	//	if v.GetId() == spider.Name() {
-	//		sTask = v
-	//		break
-	//	}
-	//}
-	//sTask.SetFinished(time.Now())
+func (s *Statistics) taskStopped(ctx pkg.Context) {
+	s.Tasks[ctx.GetTaskId()].
+		WithStatus(ctx.GetTaskStatus()).
+		WithFinishTime(ctx.GetTaskStopTime())
 }
 func (s *Statistics) itemSaved(itemWithContext pkg.ItemWithContext) {
 	s.AddRecords(new(record.Record).
@@ -113,6 +117,7 @@ func (s *Statistics) itemSaved(itemWithContext pkg.ItemWithContext) {
 	)
 	s.Nodes[itemWithContext.GetCrawlerId()].IncRecord()
 	s.Spiders[itemWithContext.GetSpiderName()].IncRecord()
+	s.Tasks[itemWithContext.GetTaskId()].IncRecord()
 }
 func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 	if s == nil {
@@ -124,6 +129,7 @@ func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 
 	s.Nodes = make(map[string]pkg.StatisticsNode)
 	s.Spiders = make(map[string]pkg.StatisticsSpider)
+	s.Tasks = make(map[string]pkg.StatisticsTask)
 
 	hostname, _ := os.Hostname()
 	s.Nodes[crawler.GetId()] = &node.Node{
@@ -138,6 +144,8 @@ func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 	signal.RegisterCrawlerStopped(s.crawlerStopped)
 	signal.RegisterSpiderStarted(s.spiderStarted)
 	signal.RegisterSpiderStopped(s.spiderStopped)
+	signal.RegisterTaskStarted(s.taskStarted)
+	signal.RegisterTaskStopped(s.taskStopped)
 	signal.RegisterItemSaved(s.itemSaved)
 
 	return s

@@ -1,1 +1,0 @@
-import{Y as c,Z as a,E as o}from"./index-1ddded62.js";import{b as d}from"./9b87f773.js";const l=c("records",()=>{const t=a([]),r=()=>{d().then(e=>{console.log(e.data.data),t.splice(0,t.length,...e.data.data)})},s=o(()=>t.length),n=o(()=>t.length);return{records:t,GetRecords:r,Count:s,CountActive:n}});export{l as u};

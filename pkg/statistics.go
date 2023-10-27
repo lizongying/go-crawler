@@ -4,13 +4,20 @@ import "time"
 
 type StatisticsNode interface {
 	WithId(string) StatisticsNode
-	IncRecord()
 	IncSpider()
+	DecSpider()
+	IncTask()
+	DecTask()
+	IncRecord()
+	DecRecord()
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsSpider interface {
 	GetSpider() string
+	IncTask()
+	DecTask()
 	IncRecord()
+	DecRecord()
 	WithLastRunAt(time.Time) StatisticsSpider
 	WithLastFinishAt(time.Time) StatisticsSpider
 	WithStatus(SpiderStatus) StatisticsSpider
@@ -20,9 +27,17 @@ type StatisticsSchedule interface {
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsTask interface {
+	WithStatus(status TaskStatus) StatisticsTask
 	GetId() string
-	SetStarted(dateTime time.Time)
-	SetFinished(dateTime time.Time)
+	WithId(id string) StatisticsTask
+	IncRecord()
+	DecRecord()
+	GetNode() string
+	WithNode(string) StatisticsTask
+	GetSpider() string
+	WithSpider(string) StatisticsTask
+	WithStartTime(startTime time.Time) StatisticsTask
+	WithFinishTime(finishTime time.Time) StatisticsTask
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsRecord interface {

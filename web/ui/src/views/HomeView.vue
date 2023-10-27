@@ -11,14 +11,14 @@
       <a-statistic title="Enable Spiders" :value="spidersStore.CountActive" style="margin-right: 50px"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic title="Total Schedules" :value="200" style="margin-right: 50px"/>
+      <a-statistic title="Total Schedules" :value="0" style="margin-right: 50px"/>
       <br>
-      <a-statistic title="Enable Schedules" :value="200" style="margin-right: 50px"/>
+      <a-statistic title="Enable Schedules" :value="0" style="margin-right: 50px"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic title="Total Tasks" :value="1128"/>
+      <a-statistic title="Total Tasks" :value="tasksStore.Count"/>
       <br>
-      <a-statistic title="Error Tasks" :value="1128"/>
+      <a-statistic title="Error Tasks" :value="tasksStore.CountActive"/>
     </a-col>
     <a-col :span="4">
       <a-statistic title="Total Record" :value="recordsStore.Count"/>
@@ -31,19 +31,23 @@
 import {useNodesStore} from "@/stores/nodes";
 import {useSpidersStore} from "@/stores/spiders";
 import {useRecordsStore} from "@/stores/records";
+import {useTasksStore} from "@/stores/tasks";
+import {useSchedulesStore} from "@/stores/schedules";
 
-const nodesStore = useNodesStore();
-
+const nodesStore = useNodesStore()
 nodesStore.GetNodes()
 
-const spidersStore = useSpidersStore();
+const schedulesStore = useSchedulesStore()
+schedulesStore.GetSchedules()
 
+const spidersStore = useSpidersStore()
 spidersStore.GetSpiders()
 
-const recordsStore = useRecordsStore();
+const tasksStore = useTasksStore()
+tasksStore.GetTasks()
 
+const recordsStore = useRecordsStore()
 recordsStore.GetRecords()
 </script>
-
 <style>
 </style>

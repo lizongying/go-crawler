@@ -21,6 +21,12 @@ type Context interface {
 	WithArgs(args string) Context
 	GetMode() string
 	WithMode(mode string) Context
+	GetTaskStatus() TaskStatus
+	WithTaskStatus(TaskStatus) Context
+	GetTaskStartTime() time.Time
+	WithTaskStartTime(t time.Time) Context
+	GetTaskStopTime() time.Time
+	WithTaskStopTime(t time.Time) Context
 
 	GetStatus() SpiderStatus
 	WithStatus(SpiderStatus) Context

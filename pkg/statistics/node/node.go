@@ -43,8 +43,14 @@ func (n *Node) DecSpider() {
 func (n *Node) IncTask() {
 	atomic.AddUint32(&n.Task, 1)
 }
+func (n *Node) DecTask() {
+	atomic.AddUint32(&n.Task, ^uint32(0))
+}
 func (n *Node) IncRecord() {
 	atomic.AddUint32(&n.Record, 1)
+}
+func (n *Node) DecRecord() {
+	atomic.AddUint32(&n.Record, ^uint32(0))
 }
 func (n *Node) WithStartTime(t time.Time) *Node {
 	n.StartTime = utils.Timestamp{

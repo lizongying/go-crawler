@@ -2,7 +2,6 @@ package signals
 
 import (
 	"github.com/lizongying/go-crawler/pkg"
-	"sync"
 )
 
 type Signal struct {
@@ -21,11 +20,7 @@ type Signal struct {
 
 	itemSaved []pkg.FnItemSaved
 
-	spiderStartingLocker sync.RWMutex
-	spiderStartedLocker  sync.RWMutex
-	spiderStoppingLocker sync.RWMutex
-	spiderStoppedLocker  sync.RWMutex
-	itemSavedLocker      sync.RWMutex
+	scheduled []pkg.FnScheduled
 }
 
 func (s *Signal) RegisterCrawlerStarted(fn pkg.FnCrawlerStarted) {
@@ -54,6 +49,9 @@ func (s *Signal) RegisterTaskStopped(fn pkg.FnTaskStopped) {
 }
 func (s *Signal) RegisterItemSaved(fn pkg.FnItemSaved) {
 	s.itemSaved = append(s.itemSaved, fn)
+}
+func (s *Signal) RegisterScheduled(fn pkg.FnScheduled) {
+	s.scheduled = append(s.scheduled, fn)
 }
 func (s *Signal) CrawlerStarted(crawler pkg.Crawler) {
 	for _, v := range s.crawlerStarted {
@@ -85,19 +83,24 @@ func (s *Signal) SpiderStopped(spider pkg.Spider) {
 		v(spider)
 	}
 }
-func (s *Signal) TaskStarted(spider pkg.Spider) {
+func (s *Signal) TaskStarted(ctx pkg.Context) {
 	for _, v := range s.taskStarted {
-		v(spider)
+		v(ctx)
 	}
 }
-func (s *Signal) TaskStopped(spider pkg.Spider) {
+func (s *Signal) TaskStopped(ctx pkg.Context) {
 	for _, v := range s.taskStopped {
-		v(spider)
+		v(ctx)
 	}
 }
 func (s *Signal) ItemSaved(itemWithContext pkg.ItemWithContext) {
 	for _, v := range s.itemSaved {
 		v(itemWithContext)
+	}
+}
+func (s *Signal) Scheduled(ctx pkg.Context) {
+	for _, v := range s.scheduled {
+		v(ctx)
 	}
 }
 func (s *Signal) FromCrawler(crawler pkg.Crawler) pkg.Signal {

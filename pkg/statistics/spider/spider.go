@@ -26,8 +26,14 @@ func (s *Spider) GetSpider() string {
 func (s *Spider) IncTask() {
 	atomic.AddUint32(&s.Task, 1)
 }
+func (s *Spider) DecTask() {
+	atomic.AddUint32(&s.Task, ^uint32(0))
+}
 func (s *Spider) IncRecord() {
 	atomic.AddUint32(&s.Record, 1)
+}
+func (s *Spider) DecRecord() {
+	atomic.AddUint32(&s.Record, ^uint32(0))
 }
 func (s *Spider) WithLastRunAt(t time.Time) pkg.StatisticsSpider {
 	s.LastRunAt = utils.Timestamp{
