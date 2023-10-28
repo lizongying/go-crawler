@@ -19,9 +19,5 @@ export const useRecordsStore = defineStore('records', () => {
         return records.length
     })
 
-    const CountActive = computed(() => {
-        return records.length
-    })
-
-    return {records, GetRecords, Count, CountActive}
+    return {records, GetRecords, Count}
 })

@@ -1,7 +1,7 @@
 <template>
   <a-table :columns="columns" :data-source="nodesStore.nodes" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
-      <template v-if="['hostname', 'ip', 'enable', 'status', 'start_time', 'finish_time'].includes(column.dataIndex)">
+      <template v-if="column.dataIndex !== ''">
         <span style="font-weight: bold">
           {{ column.title }}
         </span>
@@ -69,30 +69,36 @@ defineEmits(['router—change'])
 
 const columns = [
   {
+    title: 'Id',
+    dataIndex: 'id',
+    width: 300,
+    sorter: (a, b) => a.id - b.id,
+  },
+  {
     title: 'Hostname',
     dataIndex: 'hostname',
     width: 200,
     ellipsis: true,
-    sorter: (a, b) => a.hostname > b.hostname,
+    sorter: (a, b) => a.hostname - b.hostname,
   },
   {
     title: 'Ip',
     dataIndex: 'ip',
     width: 200,
     ellipsis: true,
-    sorter: (a, b) => a.ip > b.ip,
+    sorter: (a, b) => a.ip - b.ip,
   },
   {
     title: 'Start Time',
     dataIndex: 'start_time',
     width: 200,
-    sorter: (a, b) => a.start_time > b.start_time,
+    sorter: (a, b) => a.start_time - b.start_time,
   },
   {
     title: 'Finish Time',
     dataIndex: 'finish_time',
     width: 200,
-    sorter: (a, b) => a.finish_time > b.finish_time,
+    sorter: (a, b) => a.finish_time - b.finish_time,
   },
   {
     title: 'Enable',
@@ -130,21 +136,25 @@ const columns = [
     title: 'Spider',
     dataIndex: 'spider',
     width: 100,
+    sorter: (a, b) => a.spider - b.spider,
   },
   {
     title: 'Schedule',
     dataIndex: 'schedule',
     width: 100,
+    sorter: (a, b) => a.schedule - b.schedule,
   },
   {
     title: 'Task',
     dataIndex: 'task',
     width: 100,
+    sorter: (a, b) => a.task - b.task,
   },
   {
     title: 'Record',
     dataIndex: 'record',
     width: 100,
+    sorter: (a, b) => a.record - b.record,
   },
   {
     title: 'Action',
@@ -153,39 +163,6 @@ const columns = [
     fixed: 'right',
   },
 ];
-
-// const data = reactive([
-//   {
-//     id: '1',
-//     hostname: 'localhost',
-//     ip: '127.0.0.1:9999',
-//     status: 1,
-//     enable: true,
-//     spider: 32,
-//     schedule: 10,
-//     task: 100,
-//   },
-//   {
-//     id: '2',
-//     hostname: 'localhost',
-//     ip: '127.0.0.1:9999',
-//     status: 1,
-//     enable: true,
-//     spider: 42,
-//     schedule: 10,
-//     task: 100,
-//   },
-//   {
-//     id: '3',
-//     hostname: 'localhost',
-//     ip: '127.0.0.1:9999',
-//     status: 2,
-//     enable: false,
-//     spider: 32,
-//     schedule: 10,
-//     task: 100,
-//   },
-// ])
 
 const nodesStore = useNodesStore();
 

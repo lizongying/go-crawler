@@ -1,7 +1,7 @@
 <template>
   <a-table :columns="columns" :data-source="tasksStore.tasks" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
-      <template v-if="['id', 'spider', 'status', 'schedule'].includes(column.dataIndex)">
+      <template v-if="column.dataIndex !== ''">
         <span style="font-weight: bold">
           {{ column.title }}
         </span>
@@ -19,13 +19,18 @@
           {{ record.schedule }}
         </RouterLink>
       </template>
+      <template v-else-if="column.dataIndex === 'node'">
+        <RouterLink :to="'/nodes?id='+record.node" @click="$emit('router—change','1')">
+          {{ record.node }}
+        </RouterLink>
+      </template>
       <template v-else-if="column.dataIndex === 'status'">
         <span>
           <a-tag
               :key="record.status"
               :color="record.status === 4 ? 'volcano' : record.status===2 ? 'green' : 'geekblue'"
           >
-            {{ statusName(record.status) }}
+            {{ taskStatusName(record.status) }}
           </a-tag>
         </span>
       </template>
@@ -37,6 +42,11 @@
       </template>
       <template v-else-if="column.dataIndex === 'duration'">
         {{ formatDuration(record.finish_time - record.start_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'record'">
+        <RouterLink :to="'/records?task='+record.id" @click="$emit('router—change','6')">
+          {{ record.record }}
+        </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
@@ -56,9 +66,7 @@
             size="large"
             :closable="false">
     <a-tabs v-model:activeKey="activeKey">
-      <a-tab-pane key="1" tab="Tab 1">Content of Tab Pane 1</a-tab-pane>
-      <a-tab-pane key="2" tab="Tab 2" force-render>Content of Tab Pane 2</a-tab-pane>
-      <a-tab-pane key="3" tab="Tab 3">Content of Tab Pane 3</a-tab-pane>
+      <a-tab-pane key="1" tab="Log"></a-tab-pane>
     </a-tabs>
   </a-drawer>
 </template>
@@ -73,9 +81,21 @@ defineEmits(['router—change'])
 
 const columns = [
   {
+    title: 'Id',
+    dataIndex: 'id',
+    width: 300,
+    sorter: (a, b) => a.id - b.id,
+  },
+  {
+    title: 'Node',
+    dataIndex: 'node',
+    width: 300,
+    sorter: (a, b) => a.node - b.node,
+  },
+  {
     title: 'Spider',
     dataIndex: 'spider',
-    sorter: (a, b) => a.spider > b.spider,
+    sorter: (a, b) => a.spider - b.spider,
     width: 200,
   },
   {
@@ -84,14 +104,10 @@ const columns = [
     width: 100,
   },
   {
-    title: 'Node',
-    dataIndex: 'node',
-    width: 300,
-  },
-  {
     title: 'Command',
     dataIndex: 'command',
     width: 150,
+    ellipsis: true,
   },
   {
     title: 'Status',
@@ -121,21 +137,25 @@ const columns = [
     title: 'Start Time',
     dataIndex: 'start_time',
     width: 200,
+    sorter: (a, b) => a.start_time - b.start_time,
   },
   {
     title: 'Finish Time',
     dataIndex: 'finish_time',
     width: 200,
+    sorter: (a, b) => a.finish_time - b.finish_time,
   },
   {
     title: 'Duration',
     dataIndex: 'duration',
     width: 100,
+    sorter: (a, b) => a.duration - b.duration,
   },
   {
     title: 'Record',
     dataIndex: 'record',
     width: 100,
+    sorter: (a, b) => a.record - b.record,
   },
   {
     title: 'Action',
@@ -144,44 +164,6 @@ const columns = [
     fixed: 'right',
   },
 ];
-// const data = [
-//   {
-//     id: '1',
-//     spider: 'John Brown',
-//     schedule: 'every day',
-//     status: 'success',
-//     command: 'go-crawler',
-//     node: 'localhost',
-//     started: '1 hour ago',
-//     finished: '1 second ago',
-//     duration: '1h',
-//     records: 100,
-//   },
-//   {
-//     id: '2',
-//     spider: 'Jim Green',
-//     schedule: 'every day',
-//     status: 'running',
-//     command: 'go-crawler',
-//     node: 'localhost',
-//     started: '1 hour ago',
-//     finished: '1 second ago',
-//     duration: '1h',
-//     records: 100,
-//   },
-//   {
-//     id: '3',
-//     spider: 'Joe Black',
-//     schedule: 'every day',
-//     status: 'error',
-//     command: 'go-crawler',
-//     node: 'localhost',
-//     started: '1 hour ago',
-//     finished: '1 second ago',
-//     duration: '1h',
-//     records: 100,
-//   },
-// ];
 
 const tasksStore = useTasksStore();
 
@@ -193,17 +175,16 @@ const showDrawer = () => {
 };
 const activeKey = ref('1');
 
-
-const statusName = (status) => {
+const taskStatusName = (status) => {
   switch (status) {
     case 1:
-      return 'starting'
+      return 'pending'
     case 2:
-      return 'started'
+      return 'running'
     case 3:
-      return 'stopping'
+      return 'success'
     case 4:
-      return 'stopped'
+      return 'error'
     default:
       return 'unknown'
   }

@@ -1,29 +1,27 @@
 <template>
-  <a-row style="margin: 10px">
+  <a-row style="margin: 15px">
     <a-col :span="4">
-      <a-statistic title="Total Nodes" :value="nodesStore.Count" style="margin-right: 50px"/>
+      <a-statistic title="Total Nodes" :value="nodesStore.Count"/>
       <br>
-      <a-statistic title="Active Nodes" :value="nodesStore.CountActive" style="margin-right: 50px"/>
+      <a-statistic title="Active Nodes" :value="nodesStore.CountActive"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic title="Total Spiders" :value="spidersStore.Count" style="margin-right: 50px"/>
+      <a-statistic title="Total Spiders" :value="spidersStore.Count"/>
       <br>
-      <a-statistic title="Enable Spiders" :value="spidersStore.CountActive" style="margin-right: 50px"/>
+      <a-statistic title="Enable Spiders" :value="spidersStore.CountActive"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic title="Total Schedules" :value="0" style="margin-right: 50px"/>
+      <a-statistic title="Total Schedules" :value="0"/>
       <br>
-      <a-statistic title="Enable Schedules" :value="0" style="margin-right: 50px"/>
+      <a-statistic title="Enable Schedules" :value="0"/>
     </a-col>
     <a-col :span="4">
       <a-statistic title="Total Tasks" :value="tasksStore.Count"/>
       <br>
-      <a-statistic title="Error Tasks" :value="tasksStore.CountActive"/>
+      <a-statistic title="Error Tasks" :value="tasksStore.CountError"/>
     </a-col>
     <a-col :span="4">
       <a-statistic title="Total Record" :value="recordsStore.Count"/>
-      <br>
-      <a-statistic title="Current Record" :value="recordsStore.CountActive"/>
     </a-col>
   </a-row>
 </template>

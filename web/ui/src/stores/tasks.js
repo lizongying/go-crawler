@@ -19,9 +19,9 @@ export const useTasksStore = defineStore('tasks', () => {
         return tasks.length
     })
 
-    const CountActive = computed(() => {
-        return tasks.length
+    const CountError = computed(() => {
+        return tasks.filter(v => v.status === 4).length
     })
 
-    return {tasks, GetTasks, Count, CountActive}
+    return {tasks, GetTasks, Count, CountError}
 })

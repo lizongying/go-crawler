@@ -9,19 +9,25 @@ import (
 )
 
 type Spider struct {
-	pkg.SpiderStatus `json:"last_status,omitempty"`
-	Spider           string               `json:"spider,omitempty"`
-	Schedule         uint32               `json:"schedule,omitempty"`
-	Task             uint32               `json:"task,omitempty"`
-	Record           uint32               `json:"record,omitempty"`
-	LastTask         pkg.StatisticsTask   `json:"last_task,omitempty"`
-	LastRecord       pkg.StatisticsRecord `json:"last_record,omitempty"`
-	LastRunAt        utils.Timestamp      `json:"last_run_at,omitempty"`
-	LastFinishAt     utils.Timestamp      `json:"last_finish_at,omitempty"`
+	pkg.SpiderStatus   `json:"status,omitempty"`
+	Spider             string          `json:"spider,omitempty"`
+	Schedule           uint32          `json:"schedule,omitempty"`
+	Task               uint32          `json:"task,omitempty"`
+	Record             uint32          `json:"record,omitempty"`
+	StartTime          utils.Timestamp `json:"start_time,omitempty"`
+	FinishTime         utils.Timestamp `json:"finish_time,omitempty"`
+	LastTaskId         string          `json:"last_task_id,omitempty"`
+	LastTaskStatus     pkg.TaskStatus  `json:"last_task_status,omitempty"`
+	LastTaskStartTime  utils.Timestamp `json:"last_task_start_time,omitempty"`
+	LastTaskFinishTime utils.Timestamp `json:"last_task_finish_time,omitempty"`
 }
 
 func (s *Spider) GetSpider() string {
 	return s.Spider
+}
+func (s *Spider) WithSpider(spider string) pkg.StatisticsSpider {
+	s.Spider = spider
+	return s
 }
 func (s *Spider) IncTask() {
 	atomic.AddUint32(&s.Task, 1)
@@ -35,17 +41,43 @@ func (s *Spider) IncRecord() {
 func (s *Spider) DecRecord() {
 	atomic.AddUint32(&s.Record, ^uint32(0))
 }
-func (s *Spider) WithLastRunAt(t time.Time) pkg.StatisticsSpider {
-	s.LastRunAt = utils.Timestamp{
+func (s *Spider) WithStartTime(t time.Time) pkg.StatisticsSpider {
+	s.StartTime = utils.Timestamp{
 		Time: t,
 	}
 	return s
 }
-func (s *Spider) WithLastFinishAt(t time.Time) pkg.StatisticsSpider {
-	s.LastFinishAt = utils.Timestamp{
+func (s *Spider) WithFinishTime(t time.Time) pkg.StatisticsSpider {
+	s.FinishTime = utils.Timestamp{
 		Time: t,
 	}
 	return s
+}
+func (s *Spider) GetLastTaskId() string {
+	return s.LastTaskId
+}
+func (s *Spider) WithLastTaskId(id string) pkg.StatisticsSpider {
+	s.LastTaskId = id
+	return s
+}
+func (s *Spider) WithLastTaskStatus(status pkg.TaskStatus) pkg.StatisticsSpider {
+	s.LastTaskStatus = status
+	return s
+}
+func (s *Spider) WithLastTaskStartTime(t time.Time) pkg.StatisticsSpider {
+	s.LastTaskStartTime = utils.Timestamp{
+		Time: t,
+	}
+	return s
+}
+func (s *Spider) WithLastTaskFinishTime(t time.Time) pkg.StatisticsSpider {
+	s.LastTaskFinishTime = utils.Timestamp{
+		Time: t,
+	}
+	return s
+}
+func (s *Spider) GetStatus() pkg.SpiderStatus {
+	return s.SpiderStatus
 }
 func (s *Spider) WithStatus(status pkg.SpiderStatus) pkg.StatisticsSpider {
 	s.SpiderStatus = status

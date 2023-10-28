@@ -18,8 +18,13 @@ type StatisticsSpider interface {
 	DecTask()
 	IncRecord()
 	DecRecord()
-	WithLastRunAt(time.Time) StatisticsSpider
-	WithLastFinishAt(time.Time) StatisticsSpider
+	WithStartTime(time.Time) StatisticsSpider
+	WithFinishTime(time.Time) StatisticsSpider
+	GetLastTaskId() string
+	WithLastTaskId(string) StatisticsSpider
+	WithLastTaskStatus(TaskStatus) StatisticsSpider
+	WithLastTaskStartTime(time.Time) StatisticsSpider
+	WithLastTaskFinishTime(time.Time) StatisticsSpider
 	WithStatus(SpiderStatus) StatisticsSpider
 	Marshal() (bytes []byte, err error)
 }

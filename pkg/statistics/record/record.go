@@ -7,14 +7,24 @@ import (
 )
 
 type Record struct {
+	Id       string          `json:"id,omitempty"`
+	Node     string          `json:"node,omitempty"`
 	Spider   string          `json:"spider,omitempty"`
 	Schedule string          `json:"schedule,omitempty"`
-	TaskId   string          `json:"task_id,omitempty"`
+	Task     string          `json:"task,omitempty"`
 	Meta     string          `json:"meta,omitempty"`
 	Data     string          `json:"data,omitempty"`
 	SaveTime utils.Timestamp `json:"save_time,omitempty"`
 }
 
+func (r *Record) WithId(id string) *Record {
+	r.Id = id
+	return r
+}
+func (r *Record) WithNode(node string) *Record {
+	r.Node = node
+	return r
+}
 func (r *Record) WithSpider(spider string) *Record {
 	r.Spider = spider
 	return r
@@ -23,8 +33,8 @@ func (r *Record) WithSchedule(schedule string) *Record {
 	r.Schedule = schedule
 	return r
 }
-func (r *Record) WithTaskId(taskId string) *Record {
-	r.TaskId = taskId
+func (r *Record) WithTask(task string) *Record {
+	r.Task = task
 	return r
 }
 func (r *Record) WithMeta(meta string) *Record {

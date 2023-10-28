@@ -1,6 +1,7 @@
 package statistics
 
 import (
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/statistics/node"
 	"github.com/lizongying/go-crawler/pkg/statistics/record"
@@ -80,13 +81,13 @@ func (s *Statistics) crawlerStopped(crawler pkg.Crawler) {
 func (s *Statistics) spiderStarted(spider pkg.Spider) {
 	s.Spiders[spider.Name()].
 		WithStatus(spider.GetContext().GetStatus()).
-		WithLastRunAt(spider.GetContext().GetStartTime())
+		WithStartTime(spider.GetContext().GetStartTime())
 }
 
 func (s *Statistics) spiderStopped(spider pkg.Spider) {
 	s.Spiders[spider.Name()].
 		WithStatus(spider.GetContext().GetStatus()).
-		WithLastFinishAt(spider.GetContext().GetStopTime())
+		WithFinishTime(spider.GetContext().GetStopTime())
 }
 func (s *Statistics) taskStarted(ctx pkg.Context) {
 	s.Nodes[ctx.GetCrawlerId()].IncTask()
@@ -100,18 +101,38 @@ func (s *Statistics) taskStarted(ctx pkg.Context) {
 	s.Tasks[ctx.GetTaskId()].
 		WithStatus(ctx.GetTaskStatus()).
 		WithStartTime(ctx.GetTaskStartTime())
+
+	// spider
+	s.Spiders[ctx.GetSpiderName()].
+		WithLastTaskId(ctx.GetTaskId()).
+		WithLastTaskStatus(ctx.GetTaskStatus()).
+		WithLastTaskStartTime(ctx.GetTaskStartTime())
 }
 
 func (s *Statistics) taskStopped(ctx pkg.Context) {
 	s.Tasks[ctx.GetTaskId()].
 		WithStatus(ctx.GetTaskStatus()).
 		WithFinishTime(ctx.GetTaskStopTime())
+
+	// spider
+	spider := s.Spiders[ctx.GetSpiderName()]
+	if ctx.GetTaskId() == spider.GetLastTaskId() {
+		spider.
+			WithLastTaskStatus(ctx.GetTaskStatus()).
+			WithLastTaskFinishTime(ctx.GetTaskStopTime())
+	}
 }
 func (s *Statistics) itemSaved(itemWithContext pkg.ItemWithContext) {
+	id := itemWithContext.Id()
+	if id == nil {
+		id = itemWithContext.UniqueKey()
+	}
 	s.AddRecords(new(record.Record).
+		WithId(fmt.Sprintf("%v", id)).
 		WithSaveTime(time.Now()).
+		WithNode(itemWithContext.GetCrawlerId()).
 		WithSpider(itemWithContext.GetSpiderName()).
-		WithTaskId(itemWithContext.GetTaskId()).
+		WithTask(itemWithContext.GetTaskId()).
 		WithMeta(itemWithContext.MetaJson()).
 		WithData(itemWithContext.DataJson()),
 	)

@@ -1,7 +1,8 @@
 <template>
   <a-table :columns="columns" :data-source="spidersStore.spiders" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
-      <template v-if="['spider', 'last_status', 'last_run_at', 'last_finish_at'].includes(column.dataIndex)">
+      <template
+          v-if="column.dataIndex !== ''">
         <span style="font-weight: bold">
           {{ column.title }}
         </span>
@@ -14,13 +15,23 @@
           {{ record.spider }}
         </a>
       </template>
-      <template v-else-if="column.dataIndex === 'last_status'">
+      <template v-else-if="column.dataIndex === 'status'">
         <span>
           <a-tag
-              :key="record.last_status"
-              :color="record.last_status === 4 ? 'volcano' : record.last_status===2 ? 'green' : 'geekblue'"
+              :key="record.status"
+              :color="record.status === 4 ? 'volcano' : record.status===2 ? 'green' : 'geekblue'"
           >
-            {{ statusName(record.last_status) }}
+            {{ spiderStatusName(record.status) }}
+          </a-tag>
+        </span>
+      </template>
+      <template v-else-if="column.dataIndex === 'last_task_status'">
+        <span>
+          <a-tag
+              :key="record.last_task_status"
+              :color="record.last_task_status === 4 ? 'volcano' : record.last_task_status===2 ? 'green' : 'geekblue'"
+          >
+            {{ taskStatusName(record.last_task_status) }}
           </a-tag>
         </span>
       </template>
@@ -39,11 +50,17 @@
           {{ record.record }}
         </RouterLink>
       </template>
-      <template v-else-if="column.dataIndex === 'last_run_at'">
-        {{ formattedDate(record.last_run_at) }}
+      <template v-else-if="column.dataIndex === 'start_time'">
+        {{ formattedDate(record.start_time) }}
       </template>
-      <template v-else-if="column.dataIndex === 'last_finish_at'">
-        {{ formattedDate(record.last_finish_at) }}
+      <template v-else-if="column.dataIndex === 'finish_time'">
+        {{ formattedDate(record.finish_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'last_task_start_time'">
+        {{ formattedDate(record.last_task_start_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'last_task_finish_time'">
+        {{ formattedDate(record.last_task_finish_time) }}
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
@@ -71,14 +88,20 @@ defineEmits(['router—change'])
 
 const columns = [
   {
-    title: 'Name',
-    dataIndex: 'spider',
-    sorter: (a, b) => a.spider > b.spider,
-    width: 200,
+    title: 'Node',
+    dataIndex: 'node',
+    width: 300,
+    sorter: (a, b) => a.node - b.node,
   },
   {
-    title: 'Last Status',
-    dataIndex: 'last_status',
+    title: 'Name',
+    dataIndex: 'spider',
+    width: 200,
+    sorter: (a, b) => a.spider - b.spider,
+  },
+  {
+    title: 'Status',
+    dataIndex: 'status',
     width: 200,
     filters: [
       {
@@ -98,34 +121,73 @@ const columns = [
         value: 4,
       },
     ],
-    onFilter: (value, record) => record.last_status === value,
+    onFilter: (value, record) => record.status === value,
   },
   {
-    title: 'Last Run At',
-    dataIndex: 'last_run_at',
+    title: 'Start Time',
+    dataIndex: 'start_time',
     width: 200,
-    sorter: (a, b) => a.last_run_at - b.last_run_at,
+    sorter: (a, b) => a.start_time - b.start_time,
   },
   {
-    title: 'Last Finish At',
-    dataIndex: 'last_finish_at',
+    title: 'Finish Time',
+    dataIndex: 'finish_time',
     width: 200,
-    sorter: (a, b) => a.last_finish_at - b.last_finish_at,
+    sorter: (a, b) => a.finish_time - b.finish_time,
+  },
+  {
+    title: 'Last Task Status',
+    dataIndex: 'last_task_status',
+    width: 200,
+    filters: [
+      {
+        text: 'pending',
+        value: 1,
+      },
+      {
+        text: 'running',
+        value: 2,
+      },
+      {
+        text: 'success',
+        value: 3,
+      },
+      {
+        text: 'error',
+        value: 4,
+      },
+    ],
+    onFilter: (value, record) => record.last_task_status === value,
+  },
+  {
+    title: 'Last Task Start Time',
+    dataIndex: 'last_task_start_time',
+    width: 200,
+    sorter: (a, b) => a.last_task_start_time - b.last_task_start_time,
+  },
+  {
+    title: 'Last Task Finish Time',
+    dataIndex: 'last_task_finish_time',
+    width: 200,
+    sorter: (a, b) => a.last_task_finish_time - b.last_task_finish_time,
   },
   {
     title: 'Schedule',
     dataIndex: 'schedule',
     width: 100,
+    sorter: (a, b) => a.schedule - b.schedule,
   },
   {
     title: 'Task',
     dataIndex: 'task',
     width: 100,
+    sorter: (a, b) => a.task - b.task,
   },
   {
     title: 'Record',
     dataIndex: 'record',
     width: 100,
+    sorter: (a, b) => a.record - b.record,
   },
   {
     title: 'Action',
@@ -135,42 +197,11 @@ const columns = [
   },
 ];
 
-const data = reactive([
-  // {
-  //   id: '1',
-  //   spider: 'test1',
-  //   last_status: 0,
-  //   last_run_at: '1 hour ago',
-  //   schedule: 100,
-  //   task: 100,
-  //   record: 100,
-  // },
-  // {
-  //   id: '2',
-  //   spider: 'test2',
-  //   last_status: 0,
-  //   last_run_at: '1 hour ago',
-  //   schedule: 100,
-  //   task: 100,
-  //   record: 100,
-  // },
-  // {
-  //   id: '3',
-  //   spider: 'test3',
-  //   last_status: 0,
-  //   last_run_at: '1 hour ago',
-  //   schedule: 100,
-  //   task: 100,
-  //   record: 100,
-  // },
-])
-
-
 const spidersStore = useSpidersStore();
 
 spidersStore.GetSpiders()
 
-const statusName = (status) => {
+const spiderStatusName = (status) => {
   switch (status) {
     case 1:
       return 'starting'
@@ -180,6 +211,21 @@ const statusName = (status) => {
       return 'stopping'
     case 4:
       return 'stopped'
+    default:
+      return 'unknown'
+  }
+}
+
+const taskStatusName = (status) => {
+  switch (status) {
+    case 1:
+      return 'pending'
+    case 2:
+      return 'running'
+    case 3:
+      return 'success'
+    case 4:
+      return 'error'
     default:
       return 'unknown'
   }

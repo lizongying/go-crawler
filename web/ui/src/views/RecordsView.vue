@@ -1,7 +1,7 @@
 <template>
   <a-table :columns="columns" :data-source="recordsStore.records" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
-      <template v-if="['spider'].includes(column.dataIndex)">
+      <template v-if="column.dataIndex !== ''">
         <span style="font-weight: bold">
           {{ column.title }}
         </span>
@@ -9,8 +9,10 @@
     </template>
 
     <template #bodyCell="{ column, record }">
-      <template v-if="column.dataIndex === 'save_time'">
-        {{ formattedDate(record.save_time) }}
+      <template v-if="column.dataIndex === 'node'">
+        <RouterLink :to="'/nodes?id='+record.node" @click="$emit('router—change','1')">
+          {{ record.node }}
+        </RouterLink>
       </template>
       <template v-if="column.dataIndex === 'spider'">
         <RouterLink :to="'/spiders?name='+record.spider" @click="$emit('router—change','3')">
@@ -21,6 +23,9 @@
         <RouterLink :to="'/tasks?id='+record.task_id" @click="$emit('router—change','5')">
           {{ record.task_id }}
         </RouterLink>
+      </template>
+      <template v-else-if="column.dataIndex === 'save_time'">
+        {{ formattedDate(record.save_time) }}
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
@@ -53,23 +58,40 @@ defineEmits(['router—change'])
 
 const columns = [
   {
+    title: 'Id',
+    dataIndex: 'id',
+    width: 300,
+    sorter: (a, b) => a.id - b.id,
+  },
+  {
+    title: 'Node',
+    dataIndex: 'node',
+    width: 300,
+    sorter: (a, b) => a.node - b.node,
+  },
+  {
     title: 'Spider',
     dataIndex: 'spider',
     width: 200,
+    sorter: (a, b) => a.spider - b.spider,
   },
   {
     title: 'Task',
-    dataIndex: 'task_id',
+    dataIndex: 'task',
     width: 300,
+    sorter: (a, b) => a.task - b.task,
   },
   {
     title: 'Meta',
     dataIndex: 'meta',
+    width: 200,
+    ellipsis: true,
   },
   {
     title: 'Save Time',
     dataIndex: 'save_time',
     width: 200,
+    sorter: (a, b) => a.save_time - b.save_time,
   },
   {
     title: 'Action',
@@ -78,30 +100,6 @@ const columns = [
     fixed: 'right',
   },
 ];
-
-// const data = reactive([
-// {
-//   id: '1',
-//   spider: 'test1',
-//   task_id: '1',
-//   meta: '',
-//   save_time: 0,
-// },
-// {
-//   id: '2',
-//   spider: 'test2',
-//   task_id: '2',
-//   meta: '',
-//   save_time: 0,
-// },
-// {
-//   id: '3',
-//   spider: 'test3',
-//   task_id: '3',
-//   meta: '',
-//   save_time: 0,
-// },
-// ])
 
 const recordsStore = useRecordsStore();
 
