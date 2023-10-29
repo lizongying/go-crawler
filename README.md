@@ -659,6 +659,10 @@ needs.
 
 By using signals, it's possible to capture crawler events and perform certain actions.
 
+* `CrawlerStarted`: Indicates the started of the crawler. You can register it
+  using `RegisterCrawlerStarted(FnCrawlerStarted)`.
+* `CrawlerStopped`: Indicates the stopped of the crawler. You can register it
+  using `RegisterCrawlerClosed(FnCrawlerStopped)`.
 * `SpiderStarting`: Indicates the starting of the spider. You can register it
   using `RegisterSpiderStarting(FnSpiderStarting)`.
 * `SpiderStarted`: Indicates the started of the spider. You can register it
@@ -667,6 +671,13 @@ By using signals, it's possible to capture crawler events and perform certain ac
   using `RegisterSpiderStopping(FnSpiderStopping)`.
 * `SpiderStopped`: Indicates the stopped of the spider.You can register it
   using `RegisterSpiderClosed(FnSpiderStopped)`.
+* `ScheduleStarted`: Indicates the started of the schedule. You can register it
+  using `RegisterScheduleStarted(FnScheduleStarted)`.
+* `ScheduleStopped`: Indicates the stopped of the schedule. You can register it
+  using `RegisterScheduleClosed(FnScheduleStopped)`.
+* `TaskStarted`: Indicates the started of the task. You can register it using `RegisterTaskStarted(FnTaskStarted)`.
+* `TaskStopped`: Indicates the stopped of the task. You can register it using `RegisterTaskClosed(FnTaskStopped)`.
+* `ItemSaved`: Indicates the saved of the item. You can register it using `RegisterItemSaved(FnItemSaved)`.
 
 ### Proxy
 
@@ -939,6 +950,38 @@ curl "http://127.0.0.1:8080/spider/run" -X POST -d '{"timeout": 1000, "name": "t
 curl "http://127.0.0.1:8080/spider/stop" -X POST -d '{"task_id":""}' -H "Content-Type: application/json"
 # {"code":0,"msg":"","data":{"name":"test-must-ok"}}
 
+```
+
+### UI
+
+build
+
+```shell
+# ui
+make web_ui
+
+# server
+make web_server
+
+```
+
+Run
+
+```shell
+./releases/web_server
+```
+
+![image](./screenshot/img_1.png)
+![image](./screenshot/img_2.png)
+![image](./screenshot/img_3.png)
+![image](./screenshot/img_4.png)
+![image](./screenshot/img_5.png)
+![image](./screenshot/img_6.png)
+
+develop
+
+```shell
+npm run dev --prefix ./web/ui
 ```
 
 ## Question

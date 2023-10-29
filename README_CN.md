@@ -571,10 +571,17 @@ _ = request.Trace()
 
 通过信号可以获取爬虫事件。
 
+* `CrawlerStarted`: 程序已启动。通过`RegisterCrawlerStarted(FnCrawlerStarted)`注册。
+* `CrawlerStopped`: 程序已停止。通过`RegisterCrawlerClosed(FnCrawlerStopped)`注册。
 * `SpiderStarting`: 爬虫启动中。通过`RegisterSpiderStarting(FnSpiderStarting)`注册。
 * `SpiderStarted`: 爬虫已启动。通过`RegisterSpiderStarted(FnSpiderStarted)`注册。
 * `SpiderStopping`: 爬虫停止中。通过`RegisterSpiderStopping(FnSpiderStopping)`注册。
 * `SpiderStopped`: 爬虫已停止。通过`RegisterSpiderClosed(FnSpiderStopped)`注册。
+* `ScheduleStarted`: 计划任务已启动。通过`RegisterScheduleStarted(FnScheduleStarted)`注册。
+* `ScheduleStopped`: 计划任务已停止。通过`RegisterScheduleClosed(FnScheduleStopped)`注册。
+* `TaskStarted`: 任务已启动。通过`RegisterTaskStarted(FnTaskStarted)`注册。
+* `TaskStopped`: 任务已停止。通过`RegisterTaskClosed(FnTaskStopped)`注册。
+* `ItemSaved`: 数据已保存。通过`RegisterItemSaved(FnItemSaved)`注册。
 
 ### 代理。
 
@@ -836,6 +843,13 @@ make web_server
 ```shell
 ./releases/web_server
 ```
+
+![image](./screenshot/img_1.png)
+![image](./screenshot/img_2.png)
+![image](./screenshot/img_3.png)
+![image](./screenshot/img_4.png)
+![image](./screenshot/img_5.png)
+![image](./screenshot/img_6.png)
 
 开发
 
