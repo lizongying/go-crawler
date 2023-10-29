@@ -20,6 +20,7 @@ import (
 )
 
 type Crawler struct {
+	context     pkg.Context
 	spiders     []pkg.Spider
 	spiderName  string
 	startFunc   string
@@ -40,12 +41,18 @@ type Crawler struct {
 	statistics  pkg.Statistics
 	pkg.Signal
 
-	Id        string            `json:"id,omitempty"`
 	Status    pkg.CrawlerStatus `json:"status,omitempty"`
 	StartTime utils.Timestamp   `json:"start_time,omitempty"`
 	StopTime  utils.Timestamp   `json:"stop_time,omitempty"`
 }
 
+func (c *Crawler) GetContext() pkg.Context {
+	return c.context
+}
+func (c *Crawler) WithContext(ctx pkg.Context) pkg.Crawler {
+	c.context = ctx
+	return c
+}
 func (c *Crawler) GetStatistics() pkg.Statistics {
 	return c.statistics
 }
@@ -115,30 +122,6 @@ func (c *Crawler) GetSignal() pkg.Signal {
 func (c *Crawler) SetSignal(signal pkg.Signal) {
 	c.Signal = signal
 }
-func (c *Crawler) GetId() string {
-	return c.Id
-}
-func (c *Crawler) GetStatus() pkg.CrawlerStatus {
-	return c.Status
-}
-func (c *Crawler) WithStatus(status pkg.CrawlerStatus) pkg.Crawler {
-	c.Status = status
-	return c
-}
-func (c *Crawler) GetStartTime() time.Time {
-	return c.StartTime.Time
-}
-func (c *Crawler) WithStartTime(t time.Time) pkg.Crawler {
-	c.StartTime = utils.Timestamp{Time: t}
-	return c
-}
-func (c *Crawler) GetStopTime() time.Time {
-	return c.StopTime.Time
-}
-func (c *Crawler) WithStopTime(t time.Time) pkg.Crawler {
-	c.StopTime = utils.Timestamp{Time: t}
-	return c
-}
 func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
@@ -170,6 +153,12 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 
 	switch ctx.GetMode() {
 	case "once":
+		ctx.WithScheduleId(utils.UUIDV1WithoutHyphens())
+		ctx.WithScheduleStatus(pkg.ScheduleStatusStarted)
+		ctx.WithScheduleEnable(true)
+		ctx.WithScheduleStartTime(time.Now())
+		c.Signal.ScheduleStarted(ctx)
+
 		if ctx.GetTaskId() == "" {
 			ctx.WithTaskId(utils.UUIDV1WithoutHyphens())
 		}
@@ -178,6 +167,12 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 			return
 		}
 	case "loop":
+		ctx.WithScheduleId(utils.UUIDV1WithoutHyphens())
+		ctx.WithScheduleStatus(pkg.ScheduleStatusStarted)
+		ctx.WithScheduleEnable(true)
+		ctx.WithScheduleStartTime(time.Now())
+		c.Signal.ScheduleStarted(ctx)
+
 		for {
 			ctx.WithTaskId(utils.UUIDV1WithoutHyphens())
 			if err = spider.Start(ctx); err != nil {
@@ -186,6 +181,12 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 			}
 		}
 	case "cron":
+		ctx.WithScheduleId(utils.UUIDV1WithoutHyphens())
+		ctx.WithScheduleStatus(pkg.ScheduleStatusStarted)
+		ctx.WithScheduleEnable(true)
+		ctx.WithScheduleStartTime(time.Now())
+		c.Signal.ScheduleStarted(ctx)
+
 		cr := cron.New(cron.WithLogger(c.logger))
 		cr.MustStart()
 		job := new(cron.Job).
@@ -215,13 +216,15 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		return
 	}
 
-	c.WithStatus(pkg.CrawlerStatusOnline)
-	c.WithStartTime(time.Now())
-	c.Signal.CrawlerStarted(c)
+	c.context = crawlerContext.NewContext().
+		WithGlobalContext(ctx).
+		WithCrawlerId(utils.UUIDV1WithoutHyphens()).
+		WithCrawlerStatus(pkg.CrawlerStatusOnline).
+		WithCrawlerStartTime(time.Now())
+	c.Signal.CrawlerStarted(c.context)
 
 	if c.spiderName != "" {
-		if err = c.SpiderStart(new(crawlerContext.Context).
-			WithCrawlerId(c.Id).
+		if err = c.SpiderStart(c.context.
 			WithSpiderName(c.spiderName).
 			WithStartFunc(c.startFunc).
 			WithArgs(c.args).
@@ -238,15 +241,12 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 func (c *Crawler) Stop(ctx context.Context) (err error) {
 	c.logger.Debug("Crawler wait for stop")
 	defer func() {
-		c.WithStatus(pkg.CrawlerStatusOffline)
-		c.WithStopTime(time.Now())
-		c.Signal.CrawlerStopped(c)
+		c.context.WithGlobalContext(ctx)
+		c.context.WithCrawlerStatus(pkg.CrawlerStatusOffline)
+		c.context.WithCrawlerStopTime(time.Now())
+		c.Signal.CrawlerStopped(c.context)
 		c.logger.Info("Crawler Stopped")
 	}()
-
-	if ctx == nil {
-		ctx = context.Background()
-	}
 
 	for _, v := range c.spiders {
 		if err = v.Stop(v.GetContext()); err != nil {
@@ -275,7 +275,6 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		Store:       store,
 		mockServer:  mockServer,
 		api:         httpApi,
-		Id:          utils.UUIDV1WithoutHyphens(),
 	}
 
 	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))
@@ -299,8 +298,6 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		}
 		logger.Info("spider", v.Name(), "loaded")
 		crawler.AddSpider(v)
-
-		crawler.GetStatistics().AddSpiders(v)
 	}
 
 	if config.MockServerEnable() {

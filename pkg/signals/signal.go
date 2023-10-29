@@ -15,12 +15,13 @@ type Signal struct {
 	spiderStopping []pkg.FnSpiderStopping
 	spiderStopped  []pkg.FnSpiderStopped
 
+	scheduleStarted []pkg.FnScheduleStarted
+	scheduleStopped []pkg.FnScheduleStopped
+
 	taskStarted []pkg.FnTaskStarted
 	taskStopped []pkg.FnTaskStopped
 
 	itemSaved []pkg.FnItemSaved
-
-	scheduled []pkg.FnScheduled
 }
 
 func (s *Signal) RegisterCrawlerStarted(fn pkg.FnCrawlerStarted) {
@@ -50,37 +51,50 @@ func (s *Signal) RegisterTaskStopped(fn pkg.FnTaskStopped) {
 func (s *Signal) RegisterItemSaved(fn pkg.FnItemSaved) {
 	s.itemSaved = append(s.itemSaved, fn)
 }
-func (s *Signal) RegisterScheduled(fn pkg.FnScheduled) {
-	s.scheduled = append(s.scheduled, fn)
+func (s *Signal) RegisterScheduleStarted(fn pkg.FnScheduleStarted) {
+	s.scheduleStarted = append(s.scheduleStarted, fn)
 }
-func (s *Signal) CrawlerStarted(crawler pkg.Crawler) {
+func (s *Signal) RegisterScheduleStopped(fn pkg.FnScheduleStopped) {
+	s.scheduleStopped = append(s.scheduleStopped, fn)
+}
+func (s *Signal) CrawlerStarted(ctx pkg.Context) {
 	for _, v := range s.crawlerStarted {
-		v(crawler)
+		v(ctx)
 	}
 }
-func (s *Signal) CrawlerStopped(crawler pkg.Crawler) {
+func (s *Signal) CrawlerStopped(ctx pkg.Context) {
 	for _, v := range s.crawlerStopped {
-		v(crawler)
+		v(ctx)
 	}
 }
-func (s *Signal) SpiderStarting(spider pkg.Spider) {
+func (s *Signal) SpiderStarting(ctx pkg.Context) {
 	for _, v := range s.spiderStarting {
-		v(spider)
+		v(ctx)
 	}
 }
-func (s *Signal) SpiderStarted(spider pkg.Spider) {
+func (s *Signal) SpiderStarted(ctx pkg.Context) {
 	for _, v := range s.spiderStarted {
-		v(spider)
+		v(ctx)
 	}
 }
-func (s *Signal) SpiderStopping(spider pkg.Spider) {
+func (s *Signal) SpiderStopping(ctx pkg.Context) {
 	for _, v := range s.spiderStopping {
-		v(spider)
+		v(ctx)
 	}
 }
-func (s *Signal) SpiderStopped(spider pkg.Spider) {
+func (s *Signal) SpiderStopped(ctx pkg.Context) {
 	for _, v := range s.spiderStopped {
-		v(spider)
+		v(ctx)
+	}
+}
+func (s *Signal) ScheduleStarted(ctx pkg.Context) {
+	for _, v := range s.scheduleStarted {
+		v(ctx)
+	}
+}
+func (s *Signal) ScheduleStopped(ctx pkg.Context) {
+	for _, v := range s.scheduleStopped {
+		v(ctx)
 	}
 }
 func (s *Signal) TaskStarted(ctx pkg.Context) {
@@ -96,11 +110,6 @@ func (s *Signal) TaskStopped(ctx pkg.Context) {
 func (s *Signal) ItemSaved(itemWithContext pkg.ItemWithContext) {
 	for _, v := range s.itemSaved {
 		v(itemWithContext)
-	}
-}
-func (s *Signal) Scheduled(ctx pkg.Context) {
-	for _, v := range s.scheduled {
-		v(ctx)
 	}
 }
 func (s *Signal) FromCrawler(crawler pkg.Crawler) pkg.Signal {

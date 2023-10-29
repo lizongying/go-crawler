@@ -9,19 +9,19 @@
     </template>
 
     <template #bodyCell="{ column, record }">
-      <template v-if="column.dataIndex === 'spider'">
-        <RouterLink :to="'/spiders?name='+record.spider" @click="$emit('router—change','3')">
+      <template v-if="column.dataIndex === 'node'">
+        <RouterLink :to="'/nodes?id='+record.node">
+          {{ record.node }}
+        </RouterLink>
+      </template>
+      <template v-else-if="column.dataIndex === 'spider'">
+        <RouterLink :to="'/spiders?name='+record.spider">
           {{ record.spider }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'schedule'">
-        <RouterLink :to="'/schedules?schedule='+record.schedule" @click="$emit('router—change','4')">
+        <RouterLink :to="'/schedules?id='+record.schedule">
           {{ record.schedule }}
-        </RouterLink>
-      </template>
-      <template v-else-if="column.dataIndex === 'node'">
-        <RouterLink :to="'/nodes?id='+record.node" @click="$emit('router—change','1')">
-          {{ record.node }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'status'">
@@ -44,7 +44,7 @@
         {{ formatDuration(record.finish_time - record.start_time) }}
       </template>
       <template v-else-if="column.dataIndex === 'record'">
-        <RouterLink :to="'/records?task='+record.id" @click="$emit('router—change','6')">
+        <RouterLink :to="'/records?task='+record.id">
           {{ record.record }}
         </RouterLink>
       </template>
@@ -63,8 +63,8 @@
     </template>
   </a-table>
   <a-drawer v-model:open="open"
-            size="large"
-            :closable="false">
+            :closable="false"
+            size="large">
     <a-tabs v-model:activeKey="activeKey">
       <a-tab-pane key="1" tab="Log"></a-tab-pane>
     </a-tabs>
@@ -76,8 +76,6 @@ import {ref} from "vue";
 import {RouterLink} from "vue-router";
 import {useTasksStore} from "@/stores/tasks";
 import {formatDuration, formattedDate} from "@/utils/time";
-
-defineEmits(['router—change'])
 
 const columns = [
   {
@@ -101,7 +99,7 @@ const columns = [
   {
     title: 'Schedule',
     dataIndex: 'schedule',
-    width: 100,
+    width: 300,
   },
   {
     title: 'Command',

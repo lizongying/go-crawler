@@ -164,8 +164,6 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			}(c, response)
 		}(c, request)
 	}
-
-	return
 }
 
 func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {

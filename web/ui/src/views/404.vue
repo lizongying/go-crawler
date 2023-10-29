@@ -1,18 +1,14 @@
-<script setup>
-import {RouterLink} from "vue-router";
-
-defineEmits(['router—change'])
-
-</script>
-
 <template>
-  <a-result status="404" title="404" sub-title="Sorry, the page you visited does not exist.">
+  <a-result status="404" sub-title="Sorry, the page you visited does not exist." title="404">
     <template #extra>
-      <RouterLink to="/" @click="$emit('router—change','1')">
+      <RouterLink to="/">
         <a-button type="primary">Back Home</a-button>
       </RouterLink>
     </template>
   </a-result>
 </template>
+<script setup>
+import {RouterLink} from "vue-router";
+</script>
 <style>
 </style>

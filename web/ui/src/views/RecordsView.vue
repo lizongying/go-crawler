@@ -10,18 +10,23 @@
 
     <template #bodyCell="{ column, record }">
       <template v-if="column.dataIndex === 'node'">
-        <RouterLink :to="'/nodes?id='+record.node" @click="$emit('router—change','1')">
+        <RouterLink :to="'/nodes?id='+record.node">
           {{ record.node }}
         </RouterLink>
       </template>
       <template v-if="column.dataIndex === 'spider'">
-        <RouterLink :to="'/spiders?name='+record.spider" @click="$emit('router—change','3')">
+        <RouterLink :to="'/spiders?name='+record.spider">
           {{ record.spider }}
         </RouterLink>
       </template>
-      <template v-else-if="column.dataIndex === 'task_id'">
-        <RouterLink :to="'/tasks?id='+record.task_id" @click="$emit('router—change','5')">
-          {{ record.task_id }}
+      <template v-else-if="column.dataIndex === 'schedule'">
+        <RouterLink :to="'/schedules?id='+record.schedule">
+          {{ record.schedule }}
+        </RouterLink>
+      </template>
+      <template v-else-if="column.dataIndex === 'task'">
+        <RouterLink :to="'/tasks?id='+record.task">
+          {{ record.task }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'save_time'">
@@ -38,8 +43,8 @@
     </template>
   </a-table>
   <a-drawer v-model:open="open"
-            size="large"
-            :closable="false">
+            :closable="false"
+            size="large">
     <a-tabs v-model:activeKey="activeKey">
       <a-tab-pane key="1" tab="Data">
         <pre>{{ more.data }}</pre>
@@ -53,8 +58,6 @@ import {RouterLink} from "vue-router";
 import {formattedDate} from "@/utils/time";
 import {useRecordsStore} from "@/stores/records";
 import {reactive, ref} from "vue";
-
-defineEmits(['router—change'])
 
 const columns = [
   {
@@ -74,6 +77,12 @@ const columns = [
     dataIndex: 'spider',
     width: 200,
     sorter: (a, b) => a.spider - b.spider,
+  },
+  {
+    title: 'Schedule',
+    dataIndex: 'schedule',
+    width: 300,
+    sorter: (a, b) => a.schedule - b.schedule,
   },
   {
     title: 'Task',

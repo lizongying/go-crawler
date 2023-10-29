@@ -6,10 +6,12 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
-	"time"
 )
 
 type Crawler interface {
+	GetContext() Context
+	WithContext(Context) Crawler
+
 	GetMode() string
 	SetMode(string)
 	GetSpiders() []Spider
@@ -37,14 +39,6 @@ type Crawler interface {
 
 	GetStatistics() Statistics
 	SetStatistics(statistics Statistics)
-
-	GetId() string
-	GetStatus() CrawlerStatus
-	WithStatus(CrawlerStatus) Crawler
-	GetStartTime() time.Time
-	WithStartTime(t time.Time) Crawler
-	GetStopTime() time.Time
-	WithStopTime(t time.Time) Crawler
 }
 
 type CrawlOption func(Crawler)

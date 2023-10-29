@@ -325,9 +325,9 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 		}
 	}()
 
-	c.WithStatus(pkg.SpiderStatusStarting)
+	c.WithSpiderStatus(pkg.SpiderStatusStarting)
 	s.WithContext(c)
-	s.GetCrawler().GetSignal().SpiderStarting(s.spider)
+	s.GetCrawler().GetSignal().SpiderStarting(s.context)
 
 	ctx := c.GlobalContext()
 	if ctx == nil {
@@ -366,9 +366,9 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 			return
 		}
 
-		c.WithStartTime(time.Now())
-		c.WithStatus(pkg.SpiderStatusStarted)
-		s.GetCrawler().GetSignal().SpiderStarted(s.spider)
+		c.WithSpiderStartTime(time.Now())
+		c.WithSpiderStatus(pkg.SpiderStatusStarted)
+		s.GetCrawler().GetSignal().SpiderStarted(s.context)
 
 		_ = s.Run(c)
 
@@ -402,13 +402,13 @@ func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
 	return
 }
 func (s *BaseSpider) Stop(c pkg.Context) (err error) {
-	if c.GetStatus() == pkg.SpiderStatusStopping || c.GetStatus() == pkg.SpiderStatusStopped {
+	if c.GetSpiderStatus() == pkg.SpiderStatusStopping || c.GetSpiderStatus() == pkg.SpiderStatusStopped {
 		s.logger.Debug("stopped")
 		return
 	}
 
-	c.WithStatus(pkg.SpiderStatusStopping)
-	s.GetCrawler().GetSignal().SpiderStopping(s.spider)
+	c.WithSpiderStatus(pkg.SpiderStatusStopping)
+	s.GetCrawler().GetSignal().SpiderStopping(s.context)
 
 	s.logger.Debug("BaseSpider wait for stop")
 	defer func() {
@@ -424,11 +424,11 @@ func (s *BaseSpider) Stop(c pkg.Context) (err error) {
 		c.WithTaskStatus(pkg.TaskStatusSuccess)
 		s.Crawler.GetSignal().TaskStopped(c)
 
-		c.WithStopTime(stopTime)
-		c.WithStatus(pkg.SpiderStatusStopped)
-		s.Crawler.GetSignal().SpiderStopped(s.spider)
+		c.WithSpiderStopTime(stopTime)
+		c.WithSpiderStatus(pkg.SpiderStatusStopped)
+		s.Crawler.GetSignal().SpiderStopped(s.context)
 
-		spendTime := stopTime.Sub(c.GetStartTime())
+		spendTime := stopTime.Sub(c.GetSpiderStartTime())
 		s.logger.Info(s.spider.Name(), c.GetTaskId(), "spider finished. spend time:", spendTime)
 	}()
 

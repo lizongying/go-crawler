@@ -23,17 +23,9 @@ type Context struct {
 	TaskStartTime utils.Timestamp     `json:"task_start_time,omitempty"`
 	TaskStopTime  utils.Timestamp     `json:"task_stop_time,omitempty"`
 
-	// spider
-	SpiderName string           `json:"spider_name,omitempty"`
-	Status     pkg.SpiderStatus `json:"status,omitempty"`
-	StartTime  utils.Timestamp  `json:"start_time,omitempty"`
-	StopTime   utils.Timestamp  `json:"stop_time,omitempty"`
-
-	// crawler
-	CrawlerId string `json:"crawler_id,omitempty"`
-
-	// schedule
-	ScheduleId string `json:"schedule_id,omitempty"`
+	Crawler  *Crawler  `json:"crawler,omitempty"`
+	Spider   *Spider   `json:"spider,omitempty"`
+	Schedule *Schedule `json:"schedule,omitempty"`
 }
 
 func (c *Context) Global() pkg.Context {
@@ -109,45 +101,114 @@ func (c *Context) WithTaskStopTime(t time.Time) pkg.Context {
 	c.TaskStopTime = utils.Timestamp{Time: t}
 	return c
 }
-func (c *Context) GetSpiderName() string {
-	return c.SpiderName
-}
-func (c *Context) WithSpiderName(spiderName string) pkg.Context {
-	c.SpiderName = spiderName
-	return c
-}
-func (c *Context) GetStatus() pkg.SpiderStatus {
-	return c.Status
-}
-func (c *Context) WithStatus(status pkg.SpiderStatus) pkg.Context {
-	c.Status = status
-	return c
-}
-func (c *Context) GetStartTime() time.Time {
-	return c.StartTime.Time
-}
-func (c *Context) WithStartTime(t time.Time) pkg.Context {
-	c.StartTime = utils.Timestamp{Time: t}
-	return c
-}
-func (c *Context) GetStopTime() time.Time {
-	return c.StopTime.Time
-}
-func (c *Context) WithStopTime(t time.Time) pkg.Context {
-	c.StopTime = utils.Timestamp{Time: t}
-	return c
+
+func (c *Context) GetCrawler() pkg.ContextCrawler {
+	return c.Crawler
 }
 func (c *Context) GetCrawlerId() string {
-	return c.CrawlerId
+	return c.Crawler.GetId()
 }
-func (c *Context) WithCrawlerId(crawlerId string) pkg.Context {
-	c.CrawlerId = crawlerId
+func (c *Context) WithCrawlerId(id string) pkg.Context {
+	c.Crawler.WithId(id)
 	return c
 }
-func (c *Context) GetScheduleId() string {
-	return c.ScheduleId
+func (c *Context) GetCrawlerStatus() pkg.CrawlerStatus {
+	return c.Crawler.GetStatus()
 }
-func (c *Context) WithScheduleId(scheduleId string) pkg.Context {
-	c.ScheduleId = scheduleId
+func (c *Context) WithCrawlerStatus(status pkg.CrawlerStatus) pkg.Context {
+	c.Crawler.WithStatus(status)
+	return c
+}
+func (c *Context) GetCrawlerStartTime() time.Time {
+	return c.Crawler.GetStartTime()
+}
+func (c *Context) WithCrawlerStartTime(startTime time.Time) pkg.Context {
+	c.Crawler.WithStartTime(startTime)
+	return c
+}
+func (c *Context) GetCrawlerStopTime() time.Time {
+	return c.Crawler.GetStopTime()
+}
+func (c *Context) WithCrawlerStopTime(stopTime time.Time) pkg.Context {
+	c.Crawler.WithStopTime(stopTime)
+	return c
+}
+
+func (c *Context) GetSpider() pkg.ContextSpider {
+	return c.Spider
+}
+func (c *Context) GetSpiderName() string {
+	return c.Spider.GetName()
+}
+func (c *Context) WithSpiderName(name string) pkg.Context {
+	c.Spider.WithName(name)
+	return c
+}
+func (c *Context) GetSpiderStatus() pkg.SpiderStatus {
+	return c.Spider.GetStatus()
+}
+func (c *Context) WithSpiderStatus(status pkg.SpiderStatus) pkg.Context {
+	c.Spider.WithStatus(status)
+	return c
+}
+func (c *Context) GetSpiderStartTime() time.Time {
+	return c.Spider.GetStartTime()
+}
+func (c *Context) WithSpiderStartTime(startTime time.Time) pkg.Context {
+	c.Spider.WithStartTime(startTime)
+	return c
+}
+func (c *Context) GetSpiderStopTime() time.Time {
+	return c.Spider.GetStopTime()
+}
+func (c *Context) WithSpiderStopTime(stopTime time.Time) pkg.Context {
+	c.Spider.WithStopTime(stopTime)
+	return c
+}
+
+func (c *Context) GetSchedule() pkg.ContextSchedule {
+	return c.Schedule
+}
+func (c *Context) GetScheduleId() string {
+	return c.Schedule.GetId()
+}
+func (c *Context) WithScheduleId(id string) pkg.Context {
+	c.Schedule.WithId(id)
+	return c
+}
+func (c *Context) GetScheduleStatus() pkg.ScheduleStatus {
+	return c.Schedule.GetStatus()
+}
+func (c *Context) WithScheduleStatus(status pkg.ScheduleStatus) pkg.Context {
+	c.Schedule.WithStatus(status)
+	return c
+}
+func (c *Context) GetScheduleEnable() bool {
+	return c.Schedule.GetEnable()
+}
+func (c *Context) WithScheduleEnable(enable bool) pkg.Context {
+	c.Schedule.WithEnable(enable)
+	return c
+}
+func (c *Context) GetScheduleStartTime() time.Time {
+	return c.Schedule.GetStartTime()
+}
+func (c *Context) WithScheduleStartTime(startTime time.Time) pkg.Context {
+	c.Schedule.WithStartTime(startTime)
+	return c
+}
+func (c *Context) GetScheduleStopTime() time.Time {
+	return c.Schedule.GetStopTime()
+}
+func (c *Context) WithScheduleStopTime(stopTime time.Time) pkg.Context {
+	c.Schedule.WithStopTime(stopTime)
+	return c
+}
+
+func NewContext() pkg.Context {
+	c := new(Context)
+	c.Crawler = new(Crawler)
+	c.Spider = new(Spider)
+	c.Schedule = new(Schedule)
 	return c
 }

@@ -2,17 +2,17 @@
   <a-layout>
     <a-layout-sider v-if="!isLogin" v-model:collapsed="state.collapsed">
       <div style="text-align: center; height: 60px;">
-        <a-typography-title :content="state.collapsed ? 'GO' : 'GO CRAWLER' " ellipsis :level="3"
+        <a-typography-title :content="state.collapsed ? 'GO' : 'GO CRAWLER' " :level="3" ellipsis
                             style="color: white; line-height: 60px">
         </a-typography-title>
       </div>
       <a-menu
           v-model:openKeys="state.openKeys"
           v-model:selectedKeys="state.selectedKeys"
-          mode="inline"
-          theme="dark"
           :collapsed="state.collapsed"
           :items="items"
+          mode="inline"
+          theme="dark"
       ></a-menu>
     </a-layout-sider>
     <a-layout>
@@ -24,39 +24,39 @@
         />
         <menu-fold-outlined v-else class="trigger" @click="toggleCollapsed"/>
         <a-space style="float: right; margin-right: 10px">
-          <span @click="showModal" style="margin-right: 10px"><a><MailOutlined/>  Message</a></span>
-          <a-modal v-model:open="open" width="1000px" title="Message" @ok="handleOk">
+          <span style="margin-right: 10px" @click="showModal"><a><MailOutlined/>  Message</a></span>
+          <a-modal v-model:open="open" title="Message" width="1000px" @ok="handleOk">
             <a-space direction="vertical" style="width: 100%">
               <a-alert
                   v-for="msg in message"
                   :key="msg"
-                  :message="msg.title"
                   :description="msg.content"
+                  :message="msg.title"
                   :type="msg.level === 'info' ? 'info': 'success'"
                   show-icon
               />
             </a-space>
           </a-modal>
-          <span @click="showSetting" style="margin-right: 10px"><a><SettingOutlined/>  Setting</a></span>
-          <a-modal v-model:open="openSetting" width="1000px" title="Setting" @ok="handleSetting">
+          <span style="margin-right: 10px" @click="showSetting"><a><SettingOutlined/>  Setting</a></span>
+          <a-modal v-model:open="openSetting" title="Setting" width="1000px" @ok="handleSetting">
             <a-form
-                :model="formSetting"
-                name="basic"
                 :label-col="{ span: 4 }"
+                :model="formSetting"
                 :wrapper-col="{ span: 20 }"
                 autocomplete="off"
+                name="basic"
             >
               <a-form-item
+                  :rules="[{ required: true, message: 'Please input api host!' }]"
                   label="Api Host"
                   name="apiHost"
-                  :rules="[{ required: true, message: 'Please input api host!' }]"
               >
                 <a-input v-model:value="formSetting.apiHost" placeholder="http://localhost:8090"/>
               </a-form-item>
               <a-form-item
+                  :rules="[{ required: true, message: 'Please input api access key!' }]"
                   label="Api Access Key"
                   name="apiAccessKey"
-                  :rules="[{ required: true, message: 'Please input api access key!' }]"
               >
                 <a-input v-model:value="formSetting.apiAccessKey"
                          placeholder="8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"/>
@@ -80,7 +80,7 @@
         </a-space>
       </a-layout-header>
       <a-layout-content style="height: 100vh;">
-        <RouterView @router—change="routerChange"/>
+        <RouterView/>
       </a-layout-content>
     </a-layout>
   </a-layout>
@@ -204,10 +204,6 @@ const toggleCollapsed = () => {
   state.collapsed = !state.collapsed;
   state.openKeys = state.collapsed ? [] : state.preOpenKeys;
 };
-
-const routerChange = index => {
-  state.selectedKeys = [index]
-}
 
 // message
 const messageStore = useMessageStore();

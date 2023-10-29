@@ -17,8 +17,8 @@ type RedisFilter struct {
 	logger pkg.Logger
 }
 
-func (f *RedisFilter) SpiderOpened(spider pkg.Spider) {
-	if spider.Name() != f.spider.Name() {
+func (f *RedisFilter) SpiderOpened(c pkg.Context) {
+	if c.GetSpiderName() != f.spider.Name() {
 		return
 	}
 

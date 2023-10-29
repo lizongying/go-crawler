@@ -10,6 +10,7 @@ import (
 
 type Spider struct {
 	pkg.SpiderStatus   `json:"status,omitempty"`
+	Node               string          `json:"node,omitempty"`
 	Spider             string          `json:"spider,omitempty"`
 	Schedule           uint32          `json:"schedule,omitempty"`
 	Task               uint32          `json:"task,omitempty"`
@@ -29,6 +30,12 @@ func (s *Spider) WithSpider(spider string) pkg.StatisticsSpider {
 	s.Spider = spider
 	return s
 }
+func (s *Spider) IncSchedule() {
+	atomic.AddUint32(&s.Schedule, 1)
+}
+func (s *Spider) DecSchedule() {
+	atomic.AddUint32(&s.Schedule, ^uint32(0))
+}
 func (s *Spider) IncTask() {
 	atomic.AddUint32(&s.Task, 1)
 }
@@ -40,6 +47,13 @@ func (s *Spider) IncRecord() {
 }
 func (s *Spider) DecRecord() {
 	atomic.AddUint32(&s.Record, ^uint32(0))
+}
+func (s *Spider) GetStatus() pkg.SpiderStatus {
+	return s.SpiderStatus
+}
+func (s *Spider) WithStatus(status pkg.SpiderStatus) pkg.StatisticsSpider {
+	s.SpiderStatus = status
+	return s
 }
 func (s *Spider) WithStartTime(t time.Time) pkg.StatisticsSpider {
 	s.StartTime = utils.Timestamp{
@@ -74,13 +88,6 @@ func (s *Spider) WithLastTaskFinishTime(t time.Time) pkg.StatisticsSpider {
 	s.LastTaskFinishTime = utils.Timestamp{
 		Time: t,
 	}
-	return s
-}
-func (s *Spider) GetStatus() pkg.SpiderStatus {
-	return s.SpiderStatus
-}
-func (s *Spider) WithStatus(status pkg.SpiderStatus) pkg.StatisticsSpider {
-	s.SpiderStatus = status
 	return s
 }
 func (s *Spider) Marshal() (bytes []byte, err error) {

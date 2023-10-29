@@ -1,19 +1,19 @@
 <template>
   <a-layout style="align-items: center;">
-    <a-layout-header style="margin-top: 200px; width: 300px; text-align:center; background: #f5f5f5"> <b>Login</b>
+    <a-layout-header style="margin-top: 200px; width: 300px; text-align:center; background: #f5f5f5"><b>Login</b>
     </a-layout-header>
     <a-layout-content style="width: 300px">
       <a-form
           :model="formState"
-          name="normal_login"
           class="login-form"
+          labelAlign="right"
+          name="normal_login"
           @finish="onFinish"
           @finishFailed="onFinishFailed"
-          labelAlign="right"
       >
         <a-form-item
-            name="username"
             :rules="[{ required: true, message: 'Please input your username!' }]"
+            name="username"
         >
           <a-input v-model:value="formState.username" placeholder="admin">
             <template #prefix>
@@ -23,8 +23,8 @@
         </a-form-item>
 
         <a-form-item
-            name="password"
             :rules="[{ required: true, message: 'Please input your password!' }]"
+            name="password"
         >
           <a-input-password v-model:value="formState.password" placeholder="admin">
             <template #prefix>
@@ -40,7 +40,7 @@
         </a-form-item>
 
         <a-form-item>
-          <a-button :disabled="disabled" type="primary" html-type="submit" class="login-form-button">
+          <a-button :disabled="disabled" class="login-form-button" html-type="submit" type="primary">
             Log in
           </a-button>
         </a-form-item>
@@ -54,8 +54,6 @@ import {LockOutlined, UserOutlined} from "@ant-design/icons-vue";
 import {useUserStore} from '@/stores/user'
 import router from "../router";
 import {message} from "ant-design-vue";
-
-const emits = defineEmits(['router—change'])
 
 const userStore = useUserStore();
 

@@ -108,8 +108,8 @@ func (d *Downloader) processResponse(ctx pkg.Context, response pkg.Response) (er
 	}
 	return
 }
-func (d *Downloader) Close(spider pkg.Spider) {
-	if spider.Name() != d.spider.Name() {
+func (d *Downloader) Close(ctx pkg.Context) {
+	if ctx.GetSpiderName() != d.spider.Name() {
 		return
 	}
 	d.browserManager.Close()

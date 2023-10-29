@@ -19,9 +19,9 @@ export const useSchedulesStore = defineStore('schedules', () => {
         return schedules.length
     })
 
-    const CountActive = computed(() => {
-        return schedules.length
+    const CountEnable = computed(() => {
+        return schedules.filter(v => v.enable).length
     })
 
-    return {schedules, GetSchedules, Count, CountActive}
+    return {schedules, GetSchedules, Count, CountEnable}
 })

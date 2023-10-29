@@ -40,6 +40,12 @@ func (n *Node) IncSpider() {
 func (n *Node) DecSpider() {
 	atomic.AddUint32(&n.Spider, ^uint32(0))
 }
+func (n *Node) IncSchedule() {
+	atomic.AddUint32(&n.Schedule, 1)
+}
+func (n *Node) DecSchedule() {
+	atomic.AddUint32(&n.Schedule, ^uint32(0))
+}
 func (n *Node) IncTask() {
 	atomic.AddUint32(&n.Task, 1)
 }

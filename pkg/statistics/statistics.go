@@ -5,6 +5,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/statistics/node"
 	"github.com/lizongying/go-crawler/pkg/statistics/record"
+	"github.com/lizongying/go-crawler/pkg/statistics/schedule"
 	statisticsSpider "github.com/lizongying/go-crawler/pkg/statistics/spider"
 	"github.com/lizongying/go-crawler/pkg/statistics/task"
 	"github.com/lizongying/go-crawler/pkg/utils"
@@ -17,7 +18,7 @@ type Statistics struct {
 	logger    pkg.Logger
 	Nodes     map[string]pkg.StatisticsNode
 	Spiders   map[string]pkg.StatisticsSpider
-	Schedules []pkg.StatisticsSchedule
+	Schedules map[string]pkg.StatisticsSchedule
 	Tasks     map[string]pkg.StatisticsTask
 	Records   []pkg.StatisticsRecord
 }
@@ -34,8 +35,11 @@ func (s *Statistics) GetSpiders() (spiders []pkg.StatisticsSpider) {
 	}
 	return
 }
-func (s *Statistics) GetSchedules() []pkg.StatisticsSchedule {
-	return s.Schedules
+func (s *Statistics) GetSchedules() (schedules []pkg.StatisticsSchedule) {
+	for _, v := range s.Schedules {
+		schedules = append(schedules, v)
+	}
+	return
 }
 func (s *Statistics) GetTasks() (tasks []pkg.StatisticsTask) {
 	for _, v := range s.Tasks {
@@ -45,17 +49,6 @@ func (s *Statistics) GetTasks() (tasks []pkg.StatisticsTask) {
 }
 func (s *Statistics) GetRecords() []pkg.StatisticsRecord {
 	return s.Records
-}
-func (s *Statistics) AddSchedules(schedules ...pkg.StatisticsSchedule) {
-	s.Schedules = append(s.Schedules, schedules...)
-}
-func (s *Statistics) AddSpiders(spiders ...pkg.Spider) {
-	for _, v := range spiders {
-		s.Nodes[v.GetCrawler().GetId()].IncSpider()
-		s.Spiders[v.Name()] = &statisticsSpider.Spider{
-			Spider: v.Name(),
-		}
-	}
 }
 func (s *Statistics) AddTasks(tasks ...pkg.StatisticsTask) {
 	for _, v := range tasks {
@@ -68,35 +61,72 @@ func (s *Statistics) AddTasks(tasks ...pkg.StatisticsTask) {
 func (s *Statistics) AddRecords(records ...pkg.StatisticsRecord) {
 	s.Records = append(s.Records, records...)
 }
-func (s *Statistics) crawlerStarted(crawler pkg.Crawler) {
-	s.Nodes[crawler.GetId()].(*node.Node).
-		WithStatus(crawler.GetStatus()).
-		WithStartTime(crawler.GetStartTime())
+func (s *Statistics) crawlerStarted(ctx pkg.Context) {
+	hostname, _ := os.Hostname()
+	s.Nodes[ctx.GetCrawlerId()] = &node.Node{
+		Hostname: hostname,
+		Ip:       utils.LanIp(),
+		Enable:   true,
+	}
+	s.Nodes[ctx.GetCrawlerId()].WithId(ctx.GetCrawlerId())
+
+	s.Nodes[ctx.GetCrawlerId()].(*node.Node).
+		WithStatus(ctx.GetCrawlerStatus()).
+		WithStartTime(ctx.GetCrawlerStartTime())
+
+	for _, v := range s.crawler.GetSpiders() {
+		s.Nodes[ctx.GetCrawlerId()].IncSpider()
+		s.Spiders[v.Name()] = &statisticsSpider.Spider{
+			Node:   ctx.GetCrawlerId(),
+			Spider: v.Name(),
+		}
+	}
 }
-func (s *Statistics) crawlerStopped(crawler pkg.Crawler) {
-	s.Nodes[crawler.GetId()].(*node.Node).
-		WithStatus(crawler.GetStatus()).
-		WithFinishTime(crawler.GetStopTime())
+func (s *Statistics) crawlerStopped(ctx pkg.Context) {
+	s.Nodes[ctx.GetCrawlerId()].(*node.Node).
+		WithStatus(ctx.GetCrawlerStatus()).
+		WithFinishTime(ctx.GetCrawlerStopTime())
 }
-func (s *Statistics) spiderStarted(spider pkg.Spider) {
-	s.Spiders[spider.Name()].
-		WithStatus(spider.GetContext().GetStatus()).
-		WithStartTime(spider.GetContext().GetStartTime())
+func (s *Statistics) spiderStarted(ctx pkg.Context) {
+	s.Spiders[ctx.GetSpiderName()].
+		WithStatus(ctx.GetSpiderStatus()).
+		WithStartTime(ctx.GetSpiderStartTime())
 }
 
-func (s *Statistics) spiderStopped(spider pkg.Spider) {
-	s.Spiders[spider.Name()].
-		WithStatus(spider.GetContext().GetStatus()).
-		WithFinishTime(spider.GetContext().GetStopTime())
+func (s *Statistics) spiderStopped(ctx pkg.Context) {
+	s.Spiders[ctx.GetSpiderName()].
+		WithStatus(ctx.GetSpiderStatus()).
+		WithFinishTime(ctx.GetSpiderStopTime())
+}
+func (s *Statistics) scheduleStarted(ctx pkg.Context) {
+	s.Nodes[ctx.GetCrawlerId()].IncSchedule()
+	s.Spiders[ctx.GetSpiderName()].IncSchedule()
+
+	s.Schedules[ctx.GetScheduleId()] = new(schedule.Schedule).
+		WithId(ctx.GetScheduleId()).
+		WithEnable(ctx.GetScheduleEnable()).
+		WithNode(ctx.GetCrawlerId()).
+		WithSpider(ctx.GetSpiderName())
+
+	s.Schedules[ctx.GetScheduleId()].
+		WithStatus(ctx.GetScheduleStatus()).
+		WithStartTime(ctx.GetScheduleStartTime())
+}
+func (s *Statistics) scheduleStopped(ctx pkg.Context) {
+	s.Schedules[ctx.GetScheduleId()].
+		WithStatus(ctx.GetScheduleStatus()).
+		WithFinishTime(ctx.GetScheduleStopTime())
 }
 func (s *Statistics) taskStarted(ctx pkg.Context) {
 	s.Nodes[ctx.GetCrawlerId()].IncTask()
 	s.Spiders[ctx.GetSpiderName()].IncTask()
+	s.Schedules[ctx.GetScheduleId()].IncTask()
 
 	s.Tasks[ctx.GetTaskId()] = new(task.Task).
 		WithId(ctx.GetTaskId()).
 		WithNode(ctx.GetCrawlerId()).
-		WithSpider(ctx.GetSpiderName())
+		WithSpider(ctx.GetSpiderName()).
+		WithSchedule(ctx.GetScheduleId())
 
 	s.Tasks[ctx.GetTaskId()].
 		WithStatus(ctx.GetTaskStatus()).
@@ -132,12 +162,14 @@ func (s *Statistics) itemSaved(itemWithContext pkg.ItemWithContext) {
 		WithSaveTime(time.Now()).
 		WithNode(itemWithContext.GetCrawlerId()).
 		WithSpider(itemWithContext.GetSpiderName()).
+		WithSchedule(itemWithContext.GetScheduleId()).
 		WithTask(itemWithContext.GetTaskId()).
 		WithMeta(itemWithContext.MetaJson()).
 		WithData(itemWithContext.DataJson()),
 	)
 	s.Nodes[itemWithContext.GetCrawlerId()].IncRecord()
 	s.Spiders[itemWithContext.GetSpiderName()].IncRecord()
+	s.Schedules[itemWithContext.GetScheduleId()].IncRecord()
 	s.Tasks[itemWithContext.GetTaskId()].IncRecord()
 }
 func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
@@ -150,21 +182,16 @@ func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 
 	s.Nodes = make(map[string]pkg.StatisticsNode)
 	s.Spiders = make(map[string]pkg.StatisticsSpider)
+	s.Schedules = make(map[string]pkg.StatisticsSchedule)
 	s.Tasks = make(map[string]pkg.StatisticsTask)
-
-	hostname, _ := os.Hostname()
-	s.Nodes[crawler.GetId()] = &node.Node{
-		Hostname: hostname,
-		Ip:       utils.LanIp(),
-		Enable:   true,
-	}
-	s.Nodes[crawler.GetId()].WithId(crawler.GetId())
 
 	signal := s.crawler.GetSignal()
 	signal.RegisterCrawlerStarted(s.crawlerStarted)
 	signal.RegisterCrawlerStopped(s.crawlerStopped)
 	signal.RegisterSpiderStarted(s.spiderStarted)
 	signal.RegisterSpiderStopped(s.spiderStopped)
+	signal.RegisterScheduleStarted(s.scheduleStarted)
+	signal.RegisterScheduleStopped(s.scheduleStopped)
 	signal.RegisterTaskStarted(s.taskStarted)
 	signal.RegisterTaskStopped(s.taskStopped)
 	signal.RegisterItemSaved(s.itemSaved)

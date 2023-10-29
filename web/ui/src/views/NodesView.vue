@@ -10,22 +10,22 @@
 
     <template #bodyCell="{ column, record }">
       <template v-if="column.dataIndex === 'spider'">
-        <RouterLink :to="'/spiders?node_id='+record.id" @click="$emit('router—change','3')">
+        <RouterLink :to="'/spiders?node_id='+record.id">
           {{ record.spider }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'schedule'">
-        <RouterLink :to="'/schedules?node_id='+record.id" @click="$emit('router—change','4')">
+        <RouterLink :to="'/schedules?node_id='+record.id">
           {{ record.schedule }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'task'">
-        <RouterLink :to="'/tasks?node_id='+record.id" @click="$emit('router—change','5')">
+        <RouterLink :to="'/tasks?node_id='+record.id">
           {{ record.task }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'record'">
-        <RouterLink :to="'/records?node_id='+record.id" @click="$emit('router—change','6')">
+        <RouterLink :to="'/records?node_id='+record.id">
           {{ record.record }}
         </RouterLink>
       </template>
@@ -64,8 +64,6 @@ import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {useNodesStore} from "@/stores/nodes";
 import {formattedDate} from "@/utils/time";
-
-defineEmits(['router—change'])
 
 const columns = [
   {

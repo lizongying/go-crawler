@@ -18,7 +18,7 @@ func (h *RouteFile) Pattern() string {
 	return UrlFile
 }
 
-// NewHandlerFile curl -k -v -s https://localhost:8081/statics/images/th.jpeg
+// NewRouteFile curl -k -v -s https://localhost:8081/statics/images/th.jpeg
 func NewRouteFile(logger pkg.Logger) pkg.Route {
 	files, _ := fs.Sub(static.Statics, "statics")
 	return &RouteFile{

@@ -20,8 +20,8 @@ type RobotsTxtMiddleware struct {
 	ignoreUrl []string
 }
 
-func (m *RobotsTxtMiddleware) SpiderOpened(spider pkg.Spider) {
-	if spider.Name() != m.spider.Name() {
+func (m *RobotsTxtMiddleware) SpiderOpened(c pkg.Context) {
+	if c.GetSpiderName() != m.spider.Name() {
 		return
 	}
 	host := m.spider.GetHost()

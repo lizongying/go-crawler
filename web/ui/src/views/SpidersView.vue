@@ -35,18 +35,23 @@
           </a-tag>
         </span>
       </template>
+      <template v-else-if="column.dataIndex === 'node'">
+        <RouterLink :to="'/nodes?id='+record.node">
+          {{ record.node }}
+        </RouterLink>
+      </template>
       <template v-else-if="column.dataIndex === 'schedule'">
-        <RouterLink :to="'/schedules?spider_name='+record.name" @click="$emit('router—change','4')">
+        <RouterLink :to="'/schedules?spider_name='+record.name">
           {{ record.schedule }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'task'">
-        <RouterLink :to="'/tasks?spider_name='+record.name" @click="$emit('router—change','5')">
+        <RouterLink :to="'/tasks?spider_name='+record.name">
           {{ record.task }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'record'">
-        <RouterLink :to="'/records?spider_name='+record.name" @click="$emit('router—change','6')">
+        <RouterLink :to="'/records?spider_name='+record.name">
           {{ record.record }}
         </RouterLink>
       </template>
@@ -81,10 +86,7 @@
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {useSpidersStore} from "@/stores/spiders";
-import {reactive} from "vue";
 import {formattedDate} from "@/utils/time";
-
-defineEmits(['router—change'])
 
 const columns = [
   {

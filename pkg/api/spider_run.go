@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"github.com/lizongying/go-crawler/pkg"
-	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/http"
 	"time"
@@ -40,10 +39,9 @@ func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 	}
 
-	ctx := new(crawlerContext.Context).
+	ctx := h.crawler.GetContext().
 		WithGlobalContext(c).
 		WithTaskId(req.TaskId).
-		WithCrawlerId(h.crawler.GetId()).
 		WithSpiderName(req.Name).
 		WithStartFunc(req.Func).
 		WithArgs(req.Args).
