@@ -21,22 +21,23 @@ type MysqlPipeline struct {
 	timeout time.Duration
 }
 
-func (m *MysqlPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+func (m *MysqlPipeline) ProcessItem(item pkg.Item) (err error) {
 	spider := m.GetSpider()
+	task := item.GetContext().GetTask()
 
-	if itemWithContext == nil {
+	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	if itemWithContext.Name() != pkg.ItemMysql {
+	if item.Name() != pkg.ItemMysql {
 		m.logger.Warn("item not support", pkg.ItemMysql)
 		return
 	}
 
-	itemMysql, ok := itemWithContext.GetItem().(*items.ItemMysql)
+	itemMysql, ok := item.GetItem().(*items.ItemMysql)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemMysql)
 		return
@@ -45,21 +46,21 @@ func (m *MysqlPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 	if itemMysql.GetTable() == "" {
 		err = errors.New("table is empty")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	data := itemWithContext.Data()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
 	if m.env == "dev" {
 		m.logger.Debug("current mode don't need save")
-		spider.IncItemIgnore()
+		task.IncItemIgnore()
 		return
 	}
 
@@ -85,7 +86,7 @@ func (m *MysqlPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 	stmt, err := m.mysql.PrepareContext(ctx, s)
 	if err != nil {
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 	res, err := stmt.ExecContext(ctx, values...)
@@ -94,7 +95,7 @@ func (m *MysqlPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 		o := errors.As(err, &e)
 		if !o {
 			m.logger.Error(err)
-			spider.IncItemError()
+			task.IncItemError()
 			return
 		}
 
@@ -104,43 +105,43 @@ func (m *MysqlPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 			stmt, err = m.mysql.PrepareContext(ctx, s)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 
 			res, err = stmt.ExecContext(ctx, values...)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 
 			_, err = res.RowsAffected()
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 
 			m.logger.Info(itemMysql.GetTable(), "update success", itemMysql.Id())
 		} else {
 			m.logger.Error(err)
-			spider.IncItemError()
+			task.IncItemError()
 			return
 		}
 	} else {
 		id, e := res.LastInsertId()
 		if e != nil {
 			m.logger.Error(e)
-			spider.IncItemError()
+			task.IncItemError()
 			return
 		}
 
 		m.logger.Info(itemMysql.GetTable(), "insert success", id)
 	}
 
-	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
-	spider.IncItemSuccess()
+	spider.GetCrawler().GetSignal().ItemStopped(item)
+	task.IncItemSuccess()
 	return
 }
 

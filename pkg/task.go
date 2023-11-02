@@ -1,5 +1,17 @@
 package pkg
 
+type Task interface {
+	Scheduler
+	GetScheduler() Scheduler
+	WithScheduler(Scheduler) Task
+	ReadyRequest()
+	StartRequest()
+	StopRequest()
+	ReadyItem()
+	StartItem()
+	StopItem()
+}
+
 type TaskStatus uint8
 
 const (

@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"net/url"
 	"time"
 )
@@ -40,15 +41,13 @@ type Spider interface {
 	SetTimeout(time.Duration) Spider
 	OkHttpCodes() []int
 	SetOkHttpCodes(...int) Spider
-	GetStats() Stats
-	SetStats(Stats) Spider
 	GetFilter() Filter
 	SetFilter(Filter) Spider
-	GetScheduler() Scheduler
-	SetScheduler(Scheduler) Spider
 	GetMiddlewares() Middlewares
 	SetMiddlewares(Middlewares) Spider
-	Start(ctx Context) error
+
+	Run(context.Context, string, string, ScheduleMode, string, bool) (string, error)
+	Start(Context) error
 	Stop(ctx Context) error
 	FromCrawler(Crawler) Spider
 
@@ -58,27 +57,36 @@ type Spider interface {
 	MustYieldItem(Context, Item)
 	Request(Context, Request) (Response, error)
 	YieldRequest(Context, Request) error
+	NewRequest(Context, ...RequestOption) error
 	MustYieldRequest(Context, Request)
-	YieldExtra(any) error
-	MustYieldExtra(any)
-	GetExtra(any) error
-	MustGetExtra(any)
+	MustNewRequest(Context, ...RequestOption)
+	YieldExtra(Context, any) error
+	MustYieldExtra(Context, any)
+	GetExtra(Context, any) error
+	MustGetExtra(Context, any)
 	SetRequestRate(slot string, interval time.Duration, concurrency int)
 	AddMockServerRoutes(...Route)
-	GetMode() string
-
-	SetLogger(Logger) Spider
-
-	Stats
 
 	GetCrawler() Crawler
 
 	Options() []SpiderOption
 	WithOptions(options ...SpiderOption) Spider
 
-	StateRequest() *State
-	StateItem() *State
-	StateMethod() *State
+	Interval() time.Duration
+	WithInterval(time.Duration) Spider
+
+	RequestSlotLoad(slot string) (value any, ok bool)
+	RequestSlotStore(slot string, value any)
+
+	StopSchedule()
+
+	GetDownloader() Downloader
+	WithDownloader(Downloader) Spider
+	GetExporter() Exporter
+	WithExporter(Exporter) Spider
+
+	Downloader
+	Exporter
 }
 
 type NewSpider func(Spider) (Spider, error)
@@ -115,11 +123,6 @@ func WithBrowsers(browsers ...Browser) SpiderOption {
 		spider.SetBrowsers(browsers...)
 	}
 }
-func WithLogger(logger Logger) SpiderOption {
-	return func(spider Spider) {
-		spider.SetLogger(logger)
-	}
-}
 func WithFilter(filter Filter) SpiderOption {
 	return func(spider Spider) {
 		spider.SetFilter(filter)
@@ -127,12 +130,12 @@ func WithFilter(filter Filter) SpiderOption {
 }
 func WithDownloader(downloader Downloader) SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().SetDownloader(downloader)
+		spider.WithDownloader(downloader)
 	}
 }
 func WithExporter(exporter Exporter) SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().SetExporter(exporter)
+		spider.WithExporter(exporter)
 	}
 }
 func WithMiddleware(middleware Middleware, order uint8) SpiderOption {
@@ -242,67 +245,67 @@ func WithCustomMiddleware(middleware Middleware) SpiderOption {
 }
 func WithPipeline(pipeline Pipeline, order uint8) SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().SetPipeline(pipeline, order)
+		spider.GetExporter().SetPipeline(pipeline, order)
 	}
 }
 func WithDumpPipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithDumpPipeline()
+		spider.GetExporter().WithDumpPipeline()
 	}
 }
 func WithFilePipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithFilePipeline()
+		spider.GetExporter().WithFilePipeline()
 	}
 }
 func WithImagePipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithImagePipeline()
+		spider.GetExporter().WithImagePipeline()
 	}
 }
 func WithFilterPipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithFilterPipeline()
+		spider.GetExporter().WithFilterPipeline()
 	}
 }
 func WithNonePipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithNonePipeline()
+		spider.GetExporter().WithNonePipeline()
 	}
 }
 func WithCsvPipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithCsvPipeline()
+		spider.GetExporter().WithCsvPipeline()
 	}
 }
 func WithJsonLinesPipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithJsonLinesPipeline()
+		spider.GetExporter().WithJsonLinesPipeline()
 	}
 }
 func WithMongoPipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithMongoPipeline()
+		spider.GetExporter().WithMongoPipeline()
 	}
 }
 func WithSqlitePipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithSqlitePipeline()
+		spider.GetExporter().WithSqlitePipeline()
 	}
 }
 func WithMysqlPipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithMysqlPipeline()
+		spider.GetExporter().WithMysqlPipeline()
 	}
 }
 func WithKafkaPipeline() SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithKafkaPipeline()
+		spider.GetExporter().WithKafkaPipeline()
 	}
 }
 func WithCustomPipeline(pipeline Pipeline) SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().GetExporter().WithCustomPipeline(pipeline)
+		spider.GetExporter().WithCustomPipeline(pipeline)
 	}
 }
 func WithRetryMaxTimes(retryMaxTimes uint8) SpiderOption {
@@ -317,7 +320,7 @@ func WithTimeout(timeout time.Duration) SpiderOption {
 }
 func WithInterval(timeout time.Duration) SpiderOption {
 	return func(spider Spider) {
-		spider.GetScheduler().SetInterval(timeout)
+		spider.WithInterval(timeout)
 	}
 }
 func WithOkHttpCodes(httpCodes ...int) SpiderOption {
@@ -328,11 +331,6 @@ func WithOkHttpCodes(httpCodes ...int) SpiderOption {
 func WithRequestRate(slot string, interval time.Duration, concurrency int) SpiderOption {
 	return func(spider Spider) {
 		spider.SetRequestRate(slot, interval, concurrency)
-	}
-}
-func WithStats(stats Stats) SpiderOption {
-	return func(spider Spider) {
-		spider.SetStats(stats)
 	}
 }
 

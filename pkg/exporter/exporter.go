@@ -11,15 +11,15 @@ import (
 
 type Exporter struct {
 	pipelines      []pkg.Pipeline
-	processItemFns []func(ctx pkg.ItemWithContext) error
+	processItemFns []func(ctx pkg.Item) error
 	spider         pkg.Spider
 	logger         pkg.Logger
 	locker         sync.Mutex
 }
 
-func (e *Exporter) Export(itemWithContext pkg.ItemWithContext) (err error) {
+func (e *Exporter) Export(item pkg.Item) (err error) {
 	for _, v := range e.pipelines {
-		e := v.ProcessItem(itemWithContext)
+		e := v.ProcessItem(item)
 		if e != nil {
 			err = errors.Join(err, e)
 		}
@@ -68,7 +68,7 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 		return e.pipelines[i].Order() < e.pipelines[j].Order()
 	})
 
-	var processItemFns []func(pkg.ItemWithContext) error
+	var processItemFns []func(pkg.Item) error
 	for _, v := range e.pipelines {
 		processItemFns = append(processItemFns, v.ProcessItem)
 	}

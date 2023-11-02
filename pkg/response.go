@@ -64,7 +64,7 @@ type Response interface {
 	Url() string
 	URL() *url.URL
 	Context() context.Context
-	WithContext(context.Context) Request
+	WithRequestContext(context.Context) Request
 	IsFile() bool
 	FileOptions() *FileOptions
 	IsImage() bool

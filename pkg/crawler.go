@@ -6,14 +6,13 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
+	"time"
 )
 
 type Crawler interface {
 	GetContext() Context
 	WithContext(Context) Crawler
 
-	GetMode() string
-	SetMode(string)
 	GetSpiders() []Spider
 	AddSpider(Spider)
 	Start(context.Context) error
@@ -31,14 +30,21 @@ type Crawler interface {
 	GetSqlite() Sqlite
 	GetStore() Store
 
-	SpiderStart(Context) error
 	SpiderStop(Context) error
+	Run(context.Context, string, string, string, ScheduleMode, string) (string, error)
 
 	GetSignal() Signal
 	SetSignal(Signal)
 
 	GetStatistics() Statistics
 	SetStatistics(statistics Statistics)
+
+	GetItemDelay() time.Duration
+	WithItemDelay(time.Duration) Crawler
+	GetItemConcurrency() uint8
+	WithItemConcurrency(uint8) Crawler
+	ItemTimer() *time.Timer
+	ItemConcurrencyChan() chan struct{}
 }
 
 type CrawlOption func(Crawler)
@@ -55,9 +61,19 @@ func WithMockServerRoutes(routes ...func(logger Logger) Route) CrawlOption {
 		}
 	}
 }
-func WithMode(mode string) CrawlOption {
+func WithLogger(logger Logger) CrawlOption {
 	return func(crawler Crawler) {
-		crawler.SetMode(mode)
+		crawler.SetLogger(logger)
+	}
+}
+func WithItemDelay(delay time.Duration) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.WithItemDelay(delay)
+	}
+}
+func WithItemConcurrency(concurrency uint8) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.WithItemConcurrency(concurrency)
 	}
 }
 

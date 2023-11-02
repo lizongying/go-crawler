@@ -10,31 +10,32 @@ type NonePipeline struct {
 	logger pkg.Logger
 }
 
-func (m *NonePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+func (m *NonePipeline) ProcessItem(item pkg.Item) (err error) {
 	spider := m.GetSpider()
+	task := item.GetContext().GetTask()
 
-	if itemWithContext == nil {
+	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	if itemWithContext.Name() != pkg.ItemNone {
+	if item.Name() != pkg.ItemNone {
 		m.logger.Warn("item not support", pkg.ItemNone)
 		return
 	}
 
-	data := itemWithContext.Data()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
-	spider.IncItemSuccess()
+	spider.GetCrawler().GetSignal().ItemStopped(item)
+	task.IncItemSuccess()
 	return
 }
 

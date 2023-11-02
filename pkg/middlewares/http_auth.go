@@ -9,7 +9,7 @@ type HttpAuthMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *HttpAuthMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) (err error) {
+func (m *HttpAuthMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) (err error) {
 	spider := m.GetSpider()
 	username := spider.Username()
 	if request.GetUsername() != "" {

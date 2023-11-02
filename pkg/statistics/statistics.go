@@ -152,25 +152,25 @@ func (s *Statistics) taskStopped(ctx pkg.Context) {
 			WithLastTaskFinishTime(ctx.GetTaskStopTime())
 	}
 }
-func (s *Statistics) itemSaved(itemWithContext pkg.ItemWithContext) {
-	id := itemWithContext.Id()
+func (s *Statistics) itemStopped(item pkg.Item) {
+	id := item.Id()
 	if id == nil {
-		id = itemWithContext.UniqueKey()
+		id = item.UniqueKey()
 	}
 	s.AddRecords(new(record.Record).
 		WithId(fmt.Sprintf("%v", id)).
 		WithSaveTime(time.Now()).
-		WithNode(itemWithContext.GetCrawlerId()).
-		WithSpider(itemWithContext.GetSpiderName()).
-		WithSchedule(itemWithContext.GetScheduleId()).
-		WithTask(itemWithContext.GetTaskId()).
-		WithMeta(itemWithContext.MetaJson()).
-		WithData(itemWithContext.DataJson()),
+		WithNode(item.GetContext().GetCrawlerId()).
+		WithSpider(item.GetContext().GetSpiderName()).
+		WithSchedule(item.GetContext().GetScheduleId()).
+		WithTask(item.GetContext().GetTaskId()).
+		WithMeta(item.MetaJson()).
+		WithData(item.DataJson()),
 	)
-	s.Nodes[itemWithContext.GetCrawlerId()].IncRecord()
-	s.Spiders[itemWithContext.GetSpiderName()].IncRecord()
-	s.Schedules[itemWithContext.GetScheduleId()].IncRecord()
-	s.Tasks[itemWithContext.GetTaskId()].IncRecord()
+	s.Nodes[item.GetContext().GetCrawlerId()].IncRecord()
+	s.Spiders[item.GetContext().GetSpiderName()].IncRecord()
+	s.Schedules[item.GetContext().GetScheduleId()].IncRecord()
+	s.Tasks[item.GetContext().GetTaskId()].IncRecord()
 }
 func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 	if s == nil {
@@ -194,7 +194,7 @@ func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 	signal.RegisterScheduleStopped(s.scheduleStopped)
 	signal.RegisterTaskStarted(s.taskStarted)
 	signal.RegisterTaskStopped(s.taskStopped)
-	signal.RegisterItemSaved(s.itemSaved)
+	signal.RegisterItemStopped(s.itemStopped)
 
 	return s
 }

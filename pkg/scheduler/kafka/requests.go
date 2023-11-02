@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	request2 "github.com/lizongying/go-crawler/pkg/request"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/segmentio/kafka-go"
 	"golang.org/x/time/rate"
 	"net/http"
@@ -17,10 +19,6 @@ import (
 )
 
 func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
-	defer func() {
-		s.Spider().StateRequest().Set()
-	}()
-
 	if request == nil {
 		err = errors.New("nil request")
 		return
@@ -28,7 +26,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 
 	s.logger.Debugf("request: %+v", request)
 
-	response, err = s.Download(ctx, request)
+	response, err = s.spider.Download(ctx, request)
 	if err != nil {
 		if errors.Is(err, pkg.ErrIgnoreRequest) {
 			s.logger.Info(err)
@@ -41,20 +39,17 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 	}
 
 	s.logger.Debugf("request %+v", request)
+	ctx.GetTask().ReadyRequest()
 	return
 }
 
-func (s *Scheduler) handleRequest(ctx context.Context) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (s *Scheduler) handleRequest(ctx pkg.Context) {
 	slot := "*"
-	value, _ := s.RequestSlotLoad(slot)
+	value, _ := s.spider.RequestSlotLoad(slot)
 	requestSlot := value.(*rate.Limiter)
 
 	for {
-		req, err := s.kafkaReader.FetchMessage(ctx)
+		req, err := s.kafkaReader.FetchMessage(ctx.GetTaskContext())
 		if err != nil {
 			s.logger.Warn(err)
 			continue
@@ -82,7 +77,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		if slot == "" {
 			slot = "*"
 		}
-		slotValue, ok := s.RequestSlotLoad(slot)
+		slotValue, ok := s.spider.RequestSlotLoad(slot)
 		if !ok {
 			concurrency := uint8(1)
 			if request.GetConcurrency() != nil {
@@ -92,19 +87,19 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				concurrency = 1
 			}
 			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
-			s.RequestSlotStore(slot, requestSlot)
+			s.spider.RequestSlotStore(slot, requestSlot)
 		}
 
 		requestSlot = slotValue.(*rate.Limiter)
 
-		err = requestSlot.Wait(ctx)
+		err = requestSlot.Wait(ctx.GetTaskContext())
 		if err != nil {
 			s.logger.Error(err)
 		}
 		go func(c pkg.Context, request pkg.Request) {
 			response, e := s.Request(c, request)
 			if e != nil {
-				s.Spider().StateRequest().Out()
+				s.task.StopRequest()
 				return
 			}
 
@@ -119,42 +114,49 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 					}
 				}()
 
-				s.Spider().StateMethod().In()
-				if err = s.Spider().CallBack(request.GetCallBack())(ctx, response); err != nil {
+				if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
 					s.logger.Error(err)
 					s.HandleError(ctx, response, err, request.GetErrBack())
 				}
-				s.Spider().StateMethod().Out()
-				s.Spider().StateRequest().Out()
+				s.task.StopRequest()
 			}(c, response)
 		}(c, request)
 	}
 }
 
-func (s *Scheduler) YieldRequest(c pkg.Context, request pkg.Request) (err error) {
-	defer func() {
-		s.Spider().StateRequest().Set()
-	}()
+func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
+	requestCtx := ctx.GetRequest()
+	if requestCtx != nil {
+		// add referrer to request
+		if requestCtx.GetReferrer() != "" {
+			request.SetReferrer(requestCtx.GetReferrer())
+		}
 
-	meta := c.GetMeta()
-
-	// add referrer to request
-	if meta.Referrer != "" {
-		request.SetReferrer(meta.Referrer)
-	}
-
-	// add cookies to request
-	if len(meta.Cookies) > 0 {
-		for k, v := range meta.Cookies {
-			request.AddCookie(&http.Cookie{
-				Name:  k,
-				Value: v,
-			})
+		// add cookies to request
+		if len(requestCtx.GetCookies()) > 0 {
+			for k, v := range requestCtx.GetCookies() {
+				request.AddCookie(&http.Cookie{
+					Name:  k,
+					Value: v,
+				})
+			}
 		}
 	}
 
-	s.Spider().StateRequest().In()
-	request.WithGlobal(c)
+	c := new(crawlerContext.Context).
+		WithCrawler(ctx.GetCrawler()).
+		WithSpider(ctx.GetSpider()).
+		WithSchedule(ctx.GetSchedule()).
+		WithTask(ctx.GetTask()).
+		WithRequest(new(crawlerContext.Request).
+			WithContext(context.Background()).
+			WithId(utils.UUIDV1WithoutHyphens()).
+			WithStatus(pkg.RequestStatusPending).
+			WithStartTime(time.Now()))
+	s.crawler.GetSignal().RequestStarted(c)
+
+	request.WithContext(c)
+
 	bs, err := request.Marshal()
 	s.logger.Info("request with context:", string(bs))
 	if err != nil {
@@ -162,26 +164,21 @@ func (s *Scheduler) YieldRequest(c pkg.Context, request pkg.Request) (err error)
 		return
 	}
 
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	ctxTimeout, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err = s.kafkaWriter.WriteMessages(ctx, kafka.Message{
+	if err = s.kafkaWriter.WriteMessages(ctxTimeout, kafka.Message{
 		Value: bs,
 	}); err != nil {
 		s.logger.Error(err)
 		return
 	}
 
+	ctx.GetTask().StartRequest()
 	return
 }
 
-func (s *Scheduler) YieldExtra(extra any) (err error) {
-	defer func() {
-		s.Spider().StateRequest().In()
-		s.Spider().StateRequest().Set()
-	}()
-
+func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 	extraValue := reflect.ValueOf(extra)
 	if extraValue.Kind() != reflect.Ptr || extraValue.IsNil() {
 		err = errors.New("extra must be a non-null pointer")
@@ -203,7 +200,7 @@ func (s *Scheduler) YieldExtra(extra any) (err error) {
 	kafkaWriter := &kafka.Writer{
 		Addr:                   kafka.TCP(strings.Split(s.config.KafkaUri(), ",")...),
 		AllowAutoTopicCreation: true,
-		Topic:                  fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.Spider().Name(), name),
+		Topic:                  fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.spider.Name(), name),
 	}
 	defer func() {
 		err = kafkaWriter.Close()
@@ -218,12 +215,13 @@ func (s *Scheduler) YieldExtra(extra any) (err error) {
 		return
 	}
 
+	c.GetTask().StartRequest()
 	return
 }
 
-func (s *Scheduler) GetExtra(extra any) (err error) {
+func (s *Scheduler) GetExtra(_ pkg.Context, extra any) (err error) {
 	defer func() {
-		s.Spider().StateRequest().Out()
+		s.task.StopRequest()
 	}()
 
 	extraValue := reflect.ValueOf(extra)
@@ -243,7 +241,7 @@ func (s *Scheduler) GetExtra(extra any) (err error) {
 		msg, err = kafka.NewReader(kafka.ReaderConfig{
 			Brokers:  s.kafkaReader.Config().Brokers,
 			MaxBytes: 10e6, // 10MB
-			Topic:    fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.Spider().Name(), name),
+			Topic:    fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.spider.Name(), name),
 			GroupID:  s.config.GetBotName(),
 		}).FetchMessage(ctx)
 		if err != nil {

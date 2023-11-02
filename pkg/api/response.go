@@ -21,7 +21,6 @@ func (r *Response) OutJson(w http.ResponseWriter, code int, msg string, data any
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(200)
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(jsonData)
 }

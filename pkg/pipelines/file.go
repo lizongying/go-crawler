@@ -1,7 +1,6 @@
 package pipelines
 
 import (
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
@@ -9,36 +8,29 @@ import (
 
 type FilePipeline struct {
 	pkg.UnimplementedPipeline
-	scheduler pkg.Scheduler
-	logger    pkg.Logger
+	logger pkg.Logger
 }
 
-func (m *FilePipeline) Start(ctx context.Context, spider pkg.Spider) (err error) {
-	err = m.UnimplementedPipeline.Start(ctx, spider)
-	m.scheduler = spider.GetScheduler()
-	return nil
-}
-
-func (m *FilePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
-	if itemWithContext == nil {
+func (m *FilePipeline) ProcessItem(item pkg.Item) (err error) {
+	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		return
 	}
 
-	files := itemWithContext.FilesRequest()
+	files := item.FilesRequest()
 	if len(files) == 0 {
 		return
 	}
 
 	for _, i := range files {
 		ctx := &crawlerContext.Context{}
-		r, e := m.scheduler.Request(ctx, i)
+		r, e := m.GetSpider().Request(ctx, i)
 		if e != nil {
 			m.logger.Error(e)
 			continue
 		}
-		itemWithContext.SetFiles(r.Files())
+		item.SetFiles(r.Files())
 	}
 
 	return

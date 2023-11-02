@@ -19,22 +19,23 @@ type MongoPipeline struct {
 	timeout time.Duration
 }
 
-func (m *MongoPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+func (m *MongoPipeline) ProcessItem(item pkg.Item) (err error) {
 	spider := m.GetSpider()
+	task := item.GetContext().GetTask()
 
-	if itemWithContext == nil {
+	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	if itemWithContext.Name() != pkg.ItemMongo {
+	if item.Name() != pkg.ItemMongo {
 		m.logger.Warn("item not support", pkg.ItemMongo)
 		return
 	}
 
-	itemMongo, ok := itemWithContext.GetItem().(*items.ItemMongo)
+	itemMongo, ok := item.GetItem().(*items.ItemMongo)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemMongo)
 		return
@@ -43,28 +44,28 @@ func (m *MongoPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 	if itemMongo.GetCollection() == "" {
 		err = errors.New("collection is empty")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	data := itemWithContext.Data()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
 	bs, err := bson.Marshal(data)
 	if err != nil {
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
 	if m.env == "dev" {
 		m.logger.Debug("current mode don't need save")
-		spider.IncItemIgnore()
+		task.IncItemIgnore()
 		return
 	}
 
@@ -85,12 +86,12 @@ func (m *MongoPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 	}
 	if err != nil {
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
-	spider.IncItemSuccess()
+	spider.GetCrawler().GetSignal().ItemStopped(item)
+	task.IncItemSuccess()
 	return
 }
 

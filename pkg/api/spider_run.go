@@ -2,8 +2,9 @@ package api
 
 import (
 	"context"
+	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/utils"
+	"github.com/lizongying/go-crawler/pkg/statistics/task"
 	"net/http"
 	"time"
 )
@@ -25,11 +26,16 @@ func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var req pkg.ReqSpiderStart
 	h.BindJson(w, r, &req)
 
-	if req.TaskId == "" {
-		req.TaskId = utils.UUIDV1WithoutHyphens()
+	if req.Name == "" {
+		err := errors.New("name empty")
+		h.OutJson(w, 1, err.Error(), nil)
+		return
 	}
-	if req.Mode == "" {
-		req.Mode = "once"
+	if req.Func == "" {
+		req.Func = "Test"
+	}
+	if req.Mode == pkg.ScheduleModeUnknown {
+		req.Mode = pkg.ScheduleModeOnce
 	}
 
 	c := context.Background()
@@ -39,20 +45,13 @@ func (h *RouteSpiderRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 	}
 
-	ctx := h.crawler.GetContext().
-		WithGlobalContext(c).
-		WithTaskId(req.TaskId).
-		WithSpiderName(req.Name).
-		WithStartFunc(req.Func).
-		WithArgs(req.Args).
-		WithMode(req.Mode)
-	err := h.crawler.SpiderStart(ctx)
+	taskId, err := h.crawler.Run(c, req.Name, req.Func, req.Args, req.Mode, req.Spec)
 	if err != nil {
 		h.OutJson(w, 1, err.Error(), nil)
 		return
 	}
 
-	spider := Spider{Name: req.Name}
+	spider := task.Task{Id: taskId}
 	h.OutJson(w, 0, "", spider)
 }
 

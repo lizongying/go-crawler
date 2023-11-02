@@ -16,10 +16,6 @@ import (
 )
 
 func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
-	defer func() {
-		s.Spider().StateRequest().Set()
-	}()
-
 	if request == nil {
 		err = errors.New("nil request")
 		return
@@ -27,7 +23,7 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 
 	s.logger.Debugf("request: %+v", request)
 
-	response, err = s.Download(ctx, request)
+	response, err = s.spider.Download(ctx, request)
 	if err != nil {
 		if errors.Is(err, pkg.ErrIgnoreRequest) {
 			s.logger.Info(err)
@@ -40,21 +36,20 @@ func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.
 	}
 
 	s.logger.Debugf("request %+v", request)
+	ctx.GetTask().ReadyRequest()
 	return
 }
 
-func (s *Scheduler) handleRequest(ctx context.Context) {
-	ctx = context.Background()
-
+func (s *Scheduler) handleRequest(ctx pkg.Context) {
 	slot := "*"
-	value, _ := s.RequestSlotLoad(slot)
+	value, _ := s.spider.RequestSlotLoad(slot)
 	requestSlot := value.(*rate.Limiter)
 
 	for {
 		var req string
 		var err error
 		if s.enablePriorityQueue {
-			r, e := s.redis.Do(ctx, "EVALSHA", s.requestKeySha, 1, s.requestKey, s.batch).Result()
+			r, e := s.redis.Do(ctx.GetTaskContext(), "EVALSHA", s.requestKeySha, 1, s.requestKey, s.batch).Result()
 			if e != nil {
 				s.logger.Warn(e)
 				time.Sleep(1 * time.Second)
@@ -79,7 +74,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			}
 			s.logger.Debug("req", req)
 		} else {
-			r, e := s.redis.BLPop(ctx, 0, s.requestKey).Result()
+			r, e := s.redis.BLPop(ctx.GetTaskContext(), 0, s.requestKey).Result()
 			if e != nil {
 				s.logger.Warn(e)
 				continue
@@ -93,7 +88,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 			req = r[1]
 		}
 
-		err = s.redis.ZRem(ctx, s.requestKey, req).Err()
+		err = s.redis.ZRem(ctx.GetTaskContext(), s.requestKey, req).Err()
 		if err != nil {
 			s.logger.Warn(err)
 			continue
@@ -116,7 +111,7 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 		if slot == "" {
 			slot = "*"
 		}
-		slotValue, ok := s.RequestSlotLoad(slot)
+		slotValue, ok := s.spider.RequestSlotLoad(slot)
 		if !ok {
 			concurrency := uint8(1)
 			if request.GetConcurrency() != nil {
@@ -126,19 +121,19 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 				concurrency = 1
 			}
 			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
-			s.RequestSlotStore(slot, requestSlot)
+			s.spider.RequestSlotStore(slot, requestSlot)
 		}
 
 		requestSlot = slotValue.(*rate.Limiter)
 
-		err = requestSlot.Wait(ctx)
+		err = requestSlot.Wait(ctx.GetTaskContext())
 		if err != nil {
 			s.logger.Error(err)
 		}
 		go func(c pkg.Context, request pkg.Request) {
 			response, e := s.Request(c, request)
 			if e != nil {
-				s.Spider().StateRequest().Out()
+				s.task.StopRequest()
 				return
 			}
 
@@ -154,23 +149,17 @@ func (s *Scheduler) handleRequest(ctx context.Context) {
 					}
 				}()
 
-				s.Spider().StateMethod().In()
-				if err = s.Spider().CallBack(request.GetCallBack())(ctx, response); err != nil {
+				if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
 					s.logger.Error(err)
 					s.HandleError(ctx, response, err, request.GetErrBack())
 				}
-				s.Spider().StateMethod().Out()
-				s.Spider().StateRequest().Out()
+				s.task.StopRequest()
 			}(c, response)
 		}(c, request)
 	}
 }
 
 func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
-	defer func() {
-		s.Spider().StateRequest().Set()
-	}()
-
 	c := context.Background()
 	c, cancel := context.WithTimeout(c, 10*time.Second)
 	defer cancel()
@@ -192,16 +181,14 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		return
 	}
 
-	meta := ctx.GetMeta()
-
 	// add referrer to request
-	if meta.Referrer != "" {
-		request.SetReferrer(meta.Referrer)
+	if ctx.GetRequest().GetReferrer() != "" {
+		request.SetReferrer(ctx.GetRequest().GetReferrer())
 	}
 
 	// add cookies to request
-	if len(meta.Cookies) > 0 {
-		for k, v := range meta.Cookies {
+	if len(ctx.GetRequest().GetCookies()) > 0 {
+		for k, v := range ctx.GetRequest().GetCookies() {
 			request.AddCookie(&http.Cookie{
 				Name:  k,
 				Value: v,
@@ -209,7 +196,7 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		}
 	}
 
-	request.WithGlobal(ctx)
+	request.WithContext(ctx)
 	bs, err := request.Marshal()
 	if err != nil {
 		s.logger.Error(err)
@@ -230,11 +217,11 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		var res int64
 		res, err = s.redis.ZAdd(c, s.requestKey, z).Result()
 		if res == 1 {
-			s.Spider().StateRequest().In()
+			ctx.GetTask().StartRequest()
 		}
 	} else {
 		err = s.redis.RPush(c, s.requestKey, bs).Err()
-		s.Spider().StateRequest().In()
+		ctx.GetTask().StartRequest()
 	}
 
 	if err != nil {
@@ -245,12 +232,8 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 	return
 }
 
-func (s *Scheduler) YieldExtra(extra any) (err error) {
-	defer func() {
-		s.Spider().StateRequest().Set()
-	}()
-
-	spider := s.Spider()
+func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
+	spider := s.spider
 
 	extraValue := reflect.ValueOf(extra)
 	if extraValue.Kind() != reflect.Ptr || extraValue.IsNil() {
@@ -284,7 +267,7 @@ func (s *Scheduler) YieldExtra(extra any) (err error) {
 		}
 
 		if res == 1 {
-			s.Spider().StateRequest().In()
+			c.GetTask().StartRequest()
 		}
 	} else {
 		extraKey := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), name, spider.Name())
@@ -293,15 +276,15 @@ func (s *Scheduler) YieldExtra(extra any) (err error) {
 			return
 		}
 
-		s.Spider().StateRequest().In()
+		c.GetTask().StartRequest()
 	}
 
 	return
 }
 
-func (s *Scheduler) GetExtra(extra any) (err error) {
+func (s *Scheduler) GetExtra(_ pkg.Context, extra any) (err error) {
 	defer func() {
-		s.Spider().StateRequest().Out()
+		s.task.StopRequest()
 	}()
 
 	extraValue := reflect.ValueOf(extra)
@@ -319,7 +302,7 @@ func (s *Scheduler) GetExtra(extra any) (err error) {
 	go func() {
 		var msg []byte
 		if s.enablePriorityQueue {
-			key := fmt.Sprintf("%s:%s:extra:%s:priority", s.config.GetBotName(), s.Spider().Name(), name)
+			key := fmt.Sprintf("%s:%s:extra:%s:priority", s.config.GetBotName(), s.spider.Name(), name)
 			r, e := s.redis.Do(ctx, "EVALSHA", s.requestKeySha, 1, key, 1).Result()
 			if e != nil {
 				err = e
@@ -342,7 +325,7 @@ func (s *Scheduler) GetExtra(extra any) (err error) {
 				break
 			}
 		} else {
-			key := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), s.Spider().Name(), name)
+			key := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), s.spider.Name(), name)
 			r, e := s.redis.BLPop(ctx, 0, key).Result()
 			if e != nil {
 				err = e

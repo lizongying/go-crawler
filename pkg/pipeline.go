@@ -4,7 +4,7 @@ import "context"
 
 type Pipeline interface {
 	Start(context.Context, Spider) error
-	ProcessItem(ItemWithContext) error
+	ProcessItem(Item) error
 	Stop(Context) error
 	SetName(string)
 	Name() string
@@ -33,7 +33,7 @@ func (p *UnimplementedPipeline) Start(ctx context.Context, spider Spider) error 
 	p.spider = spider
 	return nil
 }
-func (*UnimplementedPipeline) ProcessItem(ItemWithContext) error {
+func (*UnimplementedPipeline) ProcessItem(Item) error {
 	return nil
 }
 func (*UnimplementedPipeline) Stop(Context) error {

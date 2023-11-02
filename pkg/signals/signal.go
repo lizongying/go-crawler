@@ -21,7 +21,11 @@ type Signal struct {
 	taskStarted []pkg.FnTaskStarted
 	taskStopped []pkg.FnTaskStopped
 
-	itemSaved []pkg.FnItemSaved
+	requestStarted []pkg.FnRequestStarted
+	requestStopped []pkg.FnRequestStopped
+
+	itemStarted []pkg.FnItemStarted
+	itemStopped []pkg.FnItemStopped
 }
 
 func (s *Signal) RegisterCrawlerStarted(fn pkg.FnCrawlerStarted) {
@@ -42,20 +46,29 @@ func (s *Signal) RegisterSpiderStopping(fn pkg.FnSpiderStopping) {
 func (s *Signal) RegisterSpiderStopped(fn pkg.FnSpiderStopped) {
 	s.spiderStopped = append(s.spiderStopped, fn)
 }
+func (s *Signal) RegisterScheduleStarted(fn pkg.FnScheduleStarted) {
+	s.scheduleStarted = append(s.scheduleStarted, fn)
+}
+func (s *Signal) RegisterScheduleStopped(fn pkg.FnScheduleStopped) {
+	s.scheduleStopped = append(s.scheduleStopped, fn)
+}
 func (s *Signal) RegisterTaskStarted(fn pkg.FnTaskStarted) {
 	s.taskStarted = append(s.taskStarted, fn)
 }
 func (s *Signal) RegisterTaskStopped(fn pkg.FnTaskStopped) {
 	s.taskStopped = append(s.taskStopped, fn)
 }
-func (s *Signal) RegisterItemSaved(fn pkg.FnItemSaved) {
-	s.itemSaved = append(s.itemSaved, fn)
+func (s *Signal) RegisterRequestStarted(fn pkg.FnRequestStarted) {
+	s.requestStarted = append(s.requestStarted, fn)
 }
-func (s *Signal) RegisterScheduleStarted(fn pkg.FnScheduleStarted) {
-	s.scheduleStarted = append(s.scheduleStarted, fn)
+func (s *Signal) RegisterRequestStopped(fn pkg.FnRequestStopped) {
+	s.requestStopped = append(s.requestStopped, fn)
 }
-func (s *Signal) RegisterScheduleStopped(fn pkg.FnScheduleStopped) {
-	s.scheduleStopped = append(s.scheduleStopped, fn)
+func (s *Signal) RegisterItemStarted(fn pkg.FnItemStarted) {
+	s.itemStarted = append(s.itemStarted, fn)
+}
+func (s *Signal) RegisterItemStopped(fn pkg.FnItemStopped) {
+	s.itemStopped = append(s.itemStopped, fn)
 }
 func (s *Signal) CrawlerStarted(ctx pkg.Context) {
 	for _, v := range s.crawlerStarted {
@@ -107,9 +120,24 @@ func (s *Signal) TaskStopped(ctx pkg.Context) {
 		v(ctx)
 	}
 }
-func (s *Signal) ItemSaved(itemWithContext pkg.ItemWithContext) {
-	for _, v := range s.itemSaved {
-		v(itemWithContext)
+func (s *Signal) RequestStarted(ctx pkg.Context) {
+	for _, v := range s.requestStarted {
+		v(ctx)
+	}
+}
+func (s *Signal) RequestStopped(ctx pkg.Context) {
+	for _, v := range s.requestStopped {
+		v(ctx)
+	}
+}
+func (s *Signal) ItemStarted(ctx pkg.Context) {
+	for _, v := range s.itemStarted {
+		v(ctx)
+	}
+}
+func (s *Signal) ItemStopped(item pkg.Item) {
+	for _, v := range s.itemStopped {
+		v(item)
 	}
 }
 func (s *Signal) FromCrawler(crawler pkg.Crawler) pkg.Signal {

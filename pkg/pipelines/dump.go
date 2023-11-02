@@ -11,14 +11,14 @@ type DumpPipeline struct {
 	logger pkg.Logger
 }
 
-func (m *DumpPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
-	if itemWithContext == nil {
+func (m *DumpPipeline) ProcessItem(item pkg.Item) (err error) {
+	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		return
 	}
 
-	data := itemWithContext.Data()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
@@ -27,8 +27,8 @@ func (m *DumpPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err err
 
 	m.logger.Debug("Data", utils.JsonStr(data))
 
-	m.logger.Debug("referrer", itemWithContext.Referrer())
-	m.logger.Info(m.GetSpider().Name(), itemWithContext.GetTaskId(), "item.Data:", utils.JsonStr(data))
+	m.logger.Debug("referrer", item.Referrer())
+	m.logger.Info(m.GetSpider().Name(), item.GetContext().GetTaskId(), "item.Data:", utils.JsonStr(data))
 	return
 }
 

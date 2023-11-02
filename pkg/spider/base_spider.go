@@ -5,16 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
+	"github.com/lizongying/go-crawler/pkg/downloader"
+	"github.com/lizongying/go-crawler/pkg/exporter"
 	"github.com/lizongying/go-crawler/pkg/filters"
 	"github.com/lizongying/go-crawler/pkg/middlewares"
-	kafka2 "github.com/lizongying/go-crawler/pkg/scheduler/kafka"
-	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
-	redis2 "github.com/lizongying/go-crawler/pkg/scheduler/redis"
-	"github.com/lizongying/go-crawler/pkg/stats"
+	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
+	"golang.org/x/time/rate"
 	"log"
 	"reflect"
 	"runtime"
+	"sync"
 	"time"
 )
 
@@ -32,8 +34,6 @@ func init() {
 type BaseSpider struct {
 	context pkg.Context
 	pkg.Crawler
-	pkg.Stats
-	pkg.Scheduler
 	filter      pkg.Filter
 	middlewares pkg.Middlewares
 
@@ -55,10 +55,37 @@ type BaseSpider struct {
 	spider                pkg.Spider
 	options               []pkg.SpiderOption
 
-	stateRequest *pkg.State
-	stateItem    *pkg.State
-	stateMethod  *pkg.State
-	couldStop    chan struct{}
+	job *pkg.State
+
+	concurrency uint8
+	interval    time.Duration
+
+	pkg.Downloader
+	pkg.Exporter
+
+	requestSlots sync.Map
+}
+
+func (s *BaseSpider) GetDownloader() pkg.Downloader {
+	return s.Downloader
+}
+func (s *BaseSpider) WithDownloader(downloader pkg.Downloader) pkg.Spider {
+	s.Downloader = downloader
+	return s
+}
+func (s *BaseSpider) GetExporter() pkg.Exporter {
+	return s.Exporter
+}
+func (s *BaseSpider) WithExporter(exporter pkg.Exporter) pkg.Spider {
+	s.Exporter = exporter
+	return s
+}
+func (s *BaseSpider) Interval() time.Duration {
+	return s.interval
+}
+func (s *BaseSpider) WithInterval(interval time.Duration) pkg.Spider {
+	s.interval = interval
+	return s
 }
 
 func (s *BaseSpider) GetContext() pkg.Context {
@@ -200,27 +227,11 @@ func (s *BaseSpider) SetErrBacks(errBacks map[string]pkg.ErrBack) pkg.Spider {
 func (s *BaseSpider) GetCrawler() pkg.Crawler {
 	return s.Crawler
 }
-func (s *BaseSpider) GetStats() pkg.Stats {
-	return s.Stats
-}
-func (s *BaseSpider) SetStats(stats pkg.Stats) pkg.Spider {
-	s.Stats = stats
-	return s
-}
 func (s *BaseSpider) GetFilter() pkg.Filter {
 	return s.filter
 }
 func (s *BaseSpider) SetFilter(filter pkg.Filter) pkg.Spider {
 	s.filter = filter
-	return s
-}
-func (s *BaseSpider) GetScheduler() pkg.Scheduler {
-	return s.Scheduler
-}
-func (s *BaseSpider) SetScheduler(scheduler pkg.Scheduler) pkg.Spider {
-	scheduler.SetScheduler(scheduler)
-	scheduler.SetLogger(s.logger)
-	s.Scheduler = scheduler
 	return s
 }
 func (s *BaseSpider) GetMiddlewares() pkg.Middlewares {
@@ -233,25 +244,12 @@ func (s *BaseSpider) SetMiddlewares(middlewares pkg.Middlewares) pkg.Spider {
 func (s *BaseSpider) GetLogger() pkg.Logger {
 	return s.logger
 }
-func (s *BaseSpider) SetLogger(logger pkg.Logger) pkg.Spider {
-	s.logger = logger
-	return s
-}
 func (s *BaseSpider) Options() []pkg.SpiderOption {
 	return s.options
 }
 func (s *BaseSpider) WithOptions(options ...pkg.SpiderOption) pkg.Spider {
 	s.options = options
 	return s
-}
-func (s *BaseSpider) StateRequest() *pkg.State {
-	return s.stateRequest
-}
-func (s *BaseSpider) StateItem() *pkg.State {
-	return s.stateItem
-}
-func (s *BaseSpider) StateMethod() *pkg.State {
-	return s.stateMethod
 }
 func (s *BaseSpider) registerParser() {
 	callBacks := make(map[string]pkg.CallBack)
@@ -273,111 +271,60 @@ func (s *BaseSpider) registerParser() {
 	s.SetCallBacks(callBacks)
 	s.SetErrBacks(errBacks)
 }
-func (s *BaseSpider) Run(c pkg.Context) (err error) {
-	defer func() {
-		//if r := recover(); r != nil {
-		//	s.logger.Error(r)
-		//}
-	}()
+func (s *BaseSpider) Start(c pkg.Context) (err error) {
+	ctx := context.Background()
+	if s.GetContext() == nil {
+		s.WithContext(new(crawlerContext.Context).
+			WithCrawler(c.GetCrawler()).
+			WithSpider(new(crawlerContext.Spider).
+				WithContext(ctx).
+				WithName(s.Name()).
+				WithStatus(pkg.SpiderStatusStarting).
+				WithStartTime(time.Now())))
+		s.GetCrawler().GetSignal().SpiderStarting(s.GetContext())
 
-	s.logger.Info(s.spider.Name(), c.GetTaskId())
+		s.logger.Info("spiderName", s.context.GetSpiderName())
+		s.logger.Info("allowedDomains", s.GetAllowedDomains())
+		s.logger.Info("okHttpCodes", s.OkHttpCodes())
+		s.logger.Info("platforms", s.GetPlatforms())
+		s.logger.Info("browsers", s.GetBrowsers())
 
-	c.WithTaskStartTime(time.Now())
-	c.WithTaskStatus(pkg.TaskStatusRunning)
-	s.GetCrawler().GetSignal().TaskStarted(c)
+		s.logger.Info("pipelines", s.PipelineNames())
 
-	params := []reflect.Value{
-		reflect.ValueOf(c),
-		reflect.ValueOf(c.GetArgs()),
+		for _, v := range s.Pipelines() {
+			e := v.Start(ctx, s.spider)
+			if errors.Is(e, pkg.BreakErr) {
+				s.logger.Debug("pipeline break", v.Name())
+				break
+			}
+		}
+
+		for _, v := range s.GetMiddlewares().Middlewares() {
+			if err = v.Start(ctx, s.spider); err != nil {
+				s.logger.Error(err)
+				return
+			}
+			s.logger.Info(v.Name(), "started")
+		}
 	}
-	caller := reflect.ValueOf(s.spider).MethodByName(c.GetStartFunc())
-	if !caller.IsValid() {
-		err = errors.New(fmt.Sprintf("start func is invalid: %s", c.GetStartFunc()))
-		s.logger.Error(err)
-		return
-	}
-
-	res := caller.Call(params)
-	if len(res) != 1 {
-		err = errors.New(fmt.Sprintf("%s has too many return values", c.GetStartFunc()))
-		s.logger.Error(err)
-		return
-	}
-
-	if res[0].Type().Name() != "error" {
-		err = errors.New(fmt.Sprintf("%s should return an error", c.GetStartFunc()))
-		s.logger.Error(err)
-		return
-	}
-
-	if !res[0].IsNil() {
-		err = res[0].Interface().(error)
-		s.logger.Error(err)
-		return
-	}
-
 	return
 }
-func (s *BaseSpider) Start(c pkg.Context) (err error) {
-	defer func() {
-		if err = s.Stop(c); err != nil {
-			s.logger.Error(err)
-		}
-	}()
-
-	c.WithSpiderStatus(pkg.SpiderStatusStarting)
-	s.WithContext(c)
-	s.GetCrawler().GetSignal().SpiderStarting(s.context)
-
-	ctx := c.GlobalContext()
-	if ctx == nil {
-		ctx = context.Background()
+func (s *BaseSpider) Run(c context.Context, jobFunc string, args string, mode pkg.ScheduleMode, spec string, onlyOneTask bool) (id string, err error) {
+	ctx := context.Background()
+	if s.GetContext() == nil {
+		err = errors.New("spider hasn't started")
+		s.logger.Error(err)
+		return
 	}
 
-	s.Stats = &stats.Stats{}
-
 	resultChan := make(chan struct{})
-	go func() {
-		defer func() {
-			resultChan <- struct{}{}
-		}()
 
-		states := pkg.NewMultiState(s.stateRequest, s.stateItem, s.stateMethod)
-		states.RegisterSetAndZeroFn(func() {
-			for _, v := range s.middlewares.Middlewares() {
-				e := v.Stop(c)
-				if errors.Is(e, pkg.BreakErr) {
-					s.logger.Debug("middlewares break", v.Name())
-					break
-				}
-			}
-			for _, v := range s.Pipelines() {
-				e := v.Stop(c)
-				if errors.Is(e, pkg.BreakErr) {
-					s.logger.Debug("pipeline break", v.Name())
-					break
-				}
-			}
-			s.couldStop <- struct{}{}
-		})
-
-		if err = s.StartScheduler(ctx); err != nil {
-			s.logger.Error(err)
-			return
-		}
-
-		c.WithSpiderStartTime(time.Now())
-		c.WithSpiderStatus(pkg.SpiderStatusStarted)
-		s.GetCrawler().GetSignal().SpiderStarted(s.context)
-
-		_ = s.Run(c)
-
-		<-s.couldStop
-	}()
+	id = new(Job).FromSpider(s.spider).start(s.context, jobFunc, args, mode, spec, onlyOneTask, resultChan)
+	s.job.In()
 
 	select {
 	case <-resultChan:
-		s.logger.Info(s.spider.Name(), c.GetTaskId(), "finished")
+		s.logger.Info(s.spider.Name(), id, "job success")
 		return
 	case <-ctx.Done():
 		close(resultChan)
@@ -385,6 +332,9 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 		s.logger.Error(err)
 		return
 	}
+}
+func (s *BaseSpider) StopSchedule() {
+	defer s.job.Out()
 }
 func (s *BaseSpider) Parse(_ pkg.Context, response pkg.Response) (err error) {
 	s.logger.Info("header", response.Headers())
@@ -401,44 +351,134 @@ func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
 	s.logger.Info("error", err)
 	return
 }
-func (s *BaseSpider) Stop(c pkg.Context) (err error) {
-	if c.GetSpiderStatus() == pkg.SpiderStatusStopping || c.GetSpiderStatus() == pkg.SpiderStatusStopped {
+func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
+	if s.context == nil || s.context.GetSpider() == nil {
+		s.logger.Debug("spider hasn't started")
+		return
+	}
+
+	if s.context.GetSpiderStatus() == pkg.SpiderStatusStopping || s.context.GetSpiderStatus() == pkg.SpiderStatusStopped {
 		s.logger.Debug("stopped")
 		return
 	}
 
-	c.WithSpiderStatus(pkg.SpiderStatusStopping)
+	s.context.WithSpiderStatus(pkg.SpiderStatusStopping)
 	s.GetCrawler().GetSignal().SpiderStopping(s.context)
 
 	s.logger.Debug("BaseSpider wait for stop")
 	defer func() {
-		err = s.spider.Stop(c)
+		err = s.spider.Stop(s.context)
 		if errors.Is(err, pkg.DontStopErr) {
 			s.logger.Error(err)
 			select {}
 		}
 
 		stopTime := time.Now()
-
-		c.WithTaskStopTime(stopTime)
-		c.WithTaskStatus(pkg.TaskStatusSuccess)
-		s.Crawler.GetSignal().TaskStopped(c)
-
-		c.WithSpiderStopTime(stopTime)
-		c.WithSpiderStatus(pkg.SpiderStatusStopped)
+		s.context.WithSpiderStatus(pkg.SpiderStatusStopped)
+		s.context.WithSpiderStopTime(stopTime)
 		s.Crawler.GetSignal().SpiderStopped(s.context)
 
-		spendTime := stopTime.Sub(c.GetSpiderStartTime())
-		s.logger.Info(s.spider.Name(), c.GetTaskId(), "spider finished. spend time:", spendTime)
+		spendTime := stopTime.Sub(s.context.GetSpiderStartTime())
+		s.logger.Info(s.spider.Name(), "spider finished. spend time:", spendTime)
 	}()
 
-	if err = s.StopScheduler(c); err != nil {
-		s.logger.Error(err)
-		return
+	for _, v := range s.middlewares.Middlewares() {
+		e := v.Stop(s.context)
+		if errors.Is(e, pkg.BreakErr) {
+			s.logger.Debug("middlewares break", v.Name())
+			break
+		}
+	}
+	for _, v := range s.Pipelines() {
+		e := v.Stop(s.context)
+		if errors.Is(e, pkg.BreakErr) {
+			s.logger.Debug("pipeline break", v.Name())
+			break
+		}
 	}
 
 	return
 }
+
+func (s *BaseSpider) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
+	return ctx.GetTask().Request(ctx, request)
+}
+func (s *BaseSpider) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
+	return ctx.GetTask().YieldRequest(ctx, request)
+}
+func (s *BaseSpider) MustYieldRequest(ctx pkg.Context, request pkg.Request) {
+	if err := s.YieldRequest(ctx, request); err != nil {
+		s.logger.Error(err)
+	}
+}
+func (s *BaseSpider) NewRequest(ctx pkg.Context, options ...pkg.RequestOption) (err error) {
+	req := request.NewRequest()
+	for _, v := range options {
+		v(req)
+	}
+	return ctx.GetTask().YieldRequest(ctx, req)
+}
+func (s *BaseSpider) MustNewRequest(ctx pkg.Context, options ...pkg.RequestOption) {
+	if err := s.NewRequest(ctx, options...); err != nil {
+		s.logger.Error(err)
+	}
+}
+func (s *BaseSpider) MustYieldItem(c pkg.Context, item pkg.Item) {
+	if err := s.YieldItem(c, item); err != nil {
+		s.logger.Error(err)
+	}
+}
+func (s *BaseSpider) YieldExtra(ctx pkg.Context, extra any) (err error) {
+	return ctx.GetTask().YieldExtra(ctx, extra)
+}
+func (s *BaseSpider) MustYieldExtra(ctx pkg.Context, extra any) {
+	if err := s.YieldExtra(ctx, extra); err != nil {
+		s.logger.Error(err)
+	}
+}
+func (s *BaseSpider) GetExtra(ctx pkg.Context, extra any) (err error) {
+	return ctx.GetTask().GetExtra(ctx, extra)
+}
+func (s *BaseSpider) MustGetExtra(ctx pkg.Context, extra any) {
+	if err := s.GetExtra(ctx, extra); err != nil {
+		s.logger.Error(err)
+		if errors.Is(err, pkg.ErrQueueTimeout) {
+			panic(pkg.ErrQueueTimeout)
+		}
+	}
+}
+func (s *BaseSpider) YieldItem(ctx pkg.Context, item pkg.Item) (err error) {
+	return ctx.GetTask().YieldItem(ctx, item)
+}
+func (s *BaseSpider) RequestSlotLoad(slot string) (value any, ok bool) {
+	return s.requestSlots.Load(slot)
+}
+func (s *BaseSpider) RequestSlotStore(slot string, value any) {
+	s.requestSlots.Store(slot, value)
+}
+func (s *BaseSpider) SetRequestRate(slot string, interval time.Duration, concurrency int) {
+	if slot == "" {
+		slot = "*"
+	}
+
+	if concurrency < 1 {
+		concurrency = 1
+	}
+
+	slotValue, ok := s.requestSlots.Load(slot)
+	if !ok {
+		requestSlot := rate.NewLimiter(rate.Every(interval/time.Duration(concurrency)), concurrency)
+		s.requestSlots.Store(slot, requestSlot)
+		return
+	}
+
+	limiter := slotValue.(*rate.Limiter)
+	limiter.SetBurst(concurrency)
+	limiter.SetLimit(rate.Every(interval / time.Duration(concurrency)))
+
+	return
+}
+
 func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 	if s == nil {
 		return new(BaseSpider).FromCrawler(crawler)
@@ -453,6 +493,9 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 	s.timeout = config.GetRequestTimeout()
 	s.okHttpCodes = config.GetOkHttpCodes()
 
+	s.concurrency = config.GetRequestConcurrency()
+	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
+
 	switch config.GetFilter() {
 	case pkg.FilterMemory:
 		s.SetFilter(new(filters.MemoryFilter).FromSpider(s))
@@ -463,14 +506,13 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 
 	s.middlewares = new(middlewares.Middlewares).FromSpider(s)
 
-	switch config.GetScheduler() {
-	case pkg.SchedulerMemory:
-		s.SetScheduler(new(memory.Scheduler).FromSpider(s))
-	case pkg.SchedulerRedis:
-		s.SetScheduler(new(redis2.Scheduler).FromSpider(s))
-	case pkg.SchedulerKafka:
-		s.SetScheduler(new(kafka2.Scheduler).FromSpider(s))
-	default:
+	s.WithDownloader(new(downloader.Downloader).FromSpider(s))
+	s.WithExporter(new(exporter.Exporter).FromSpider(s))
+
+	slot := "*"
+	if _, ok := s.RequestSlotLoad(slot); !ok {
+		requestSlot := rate.NewLimiter(rate.Every(s.interval/time.Duration(s.concurrency)), int(s.concurrency))
+		s.RequestSlotStore(slot, requestSlot)
 	}
 
 	return s
@@ -484,12 +526,11 @@ func NewBaseSpider(logger pkg.Logger) (pkg.Spider, error) {
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
 	}
-	s.stateRequest = pkg.NewState()
-	s.stateItem = pkg.NewState()
-	s.stateMethod = pkg.NewState()
-	s.stateItem.Set()
-	s.stateMethod.Set()
-	s.couldStop = make(chan struct{}, 10) // TODO
+
+	s.job = pkg.NewState()
+	s.job.RegisterIsReadyAndIsZero(func() {
+		_ = s.Stop(s.GetContext())
+	})
 
 	return s, nil
 }

@@ -46,7 +46,7 @@ func (m *RecordErrorMiddleware) ProcessError(ctx pkg.Context, response pkg.Respo
 	item.SetId(response.UniqueKey())
 	item.SetData(recordError)
 	if m.mongoDb != nil {
-		e = m.ToMongo(item)
+		e = m.ToMongo(ctx, item)
 		if e != nil {
 			return true
 		}
@@ -55,12 +55,12 @@ func (m *RecordErrorMiddleware) ProcessError(ctx pkg.Context, response pkg.Respo
 	return
 }
 
-func (m *RecordErrorMiddleware) ToMongo(item pkg.Item) (err error) {
-	spider := m.GetSpider()
+func (m *RecordErrorMiddleware) ToMongo(c pkg.Context, item pkg.Item) (err error) {
+	task := c.GetTask()
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 	if item.Name() != pkg.ItemMongo {
@@ -76,14 +76,14 @@ func (m *RecordErrorMiddleware) ToMongo(item pkg.Item) (err error) {
 	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
 	if itemMongo.GetCollection() == "" {
 		err = errors.New("collection is empty")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
@@ -91,7 +91,7 @@ func (m *RecordErrorMiddleware) ToMongo(item pkg.Item) (err error) {
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
@@ -99,7 +99,7 @@ func (m *RecordErrorMiddleware) ToMongo(item pkg.Item) (err error) {
 	bs, err := bson.Marshal(data)
 	if err != nil {
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 

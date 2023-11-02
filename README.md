@@ -178,7 +178,6 @@ Spider Options
 * `WithHost`: Set the host for filtering based on the host or to support robots.txt.
 * `WithPlatforms`: Set the browser platforms.
 * `WithBrowsers`: Set the browsers.
-* `WithLogger`: Set the logger.
 * `WithFilter`: Set the filter.
 * `WithDownloader`: Set the downloader.
 * `WithExporter`: Set the exporter.
@@ -230,8 +229,11 @@ Spider Options
 
 Crawler Options
 
+* `WithLogger`: Set the logger.
 * `WithMockServerRoutes` Configure development service routes, including built-in or custom ones. You don't need to
   set `mock_server.enable: true` to enable the mock Server.
+* `WithItemDelay` sets the data saving interval.
+* `WithItemConcurrency` sets the data saving parallelism.
 
 ### Item
 

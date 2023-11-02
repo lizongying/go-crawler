@@ -1,39 +1,24 @@
 package middlewares
 
 import (
-	"context"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"net/http"
 	"sort"
-	"time"
 )
 
 type StatsMiddleware struct {
 	pkg.UnimplementedMiddleware
-	logger   pkg.Logger
-	interval time.Duration
-	timer    *time.Timer
-	chanStop chan struct{}
+	logger pkg.Logger
 }
 
-func (m *StatsMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
-	err = m.UnimplementedMiddleware.Start(ctx, spider)
-	m.chanStop = make(chan struct{}, 1)
-	m.timer = time.NewTimer(m.interval)
-	go m.log(spider)
-	return
-}
-
-func (m *StatsMiddleware) Stop(c pkg.Context) (err error) {
-	spider := m.GetSpider()
-	m.timer.Stop()
-	m.chanStop <- struct{}{}
+func (m *StatsMiddleware) TaskStopped(c pkg.Context) {
+	task := c.GetTask()
 
 	var sl []any
-	sl = append(sl, spider.Name(), c.GetTaskId())
+	sl = append(sl, c.GetSpiderName(), c.GetTaskId())
 	keys := make([]string, 0)
-	kv := spider.GetStats().GetMap()
+	kv := task.GetStats().GetMap()
 	for k := range kv {
 		keys = append(keys, k)
 	}
@@ -45,47 +30,24 @@ func (m *StatsMiddleware) Stop(c pkg.Context) (err error) {
 	return
 }
 
-func (m *StatsMiddleware) ProcessRequest(_ pkg.Context, _ pkg.Request) (err error) {
-	spider := m.GetSpider()
-	spider.IncRequestSuccess()
+func (m *StatsMiddleware) ProcessRequest(ctx pkg.Context, _ pkg.Request) (err error) {
+	task := ctx.GetTask()
+	task.IncRequestSuccess()
 	return
 }
 
-func (m *StatsMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
-	spider := m.GetSpider()
+func (m *StatsMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
+	task := ctx.GetTask()
 	if response == nil {
-		spider.IncStatusErr()
+		task.IncStatusErr()
 	} else {
 		if response.GetResponse() != nil && response.StatusCode() == http.StatusOK {
-			spider.IncStatusOk()
+			task.IncStatusOk()
 		} else {
-			spider.IncStatusErr()
+			task.IncStatusErr()
 		}
 	}
 	return
-}
-
-func (m *StatsMiddleware) log(spider pkg.Spider) {
-	for {
-		m.timer.Reset(m.interval)
-		select {
-		case <-m.timer.C:
-			var sl []any
-			sl = append(sl, spider.Name())
-			keys := make([]string, 0)
-			kv := spider.GetStats().GetMap()
-			for k := range kv {
-				keys = append(keys, k)
-			}
-			sort.Strings(keys)
-			for _, k := range keys {
-				sl = append(sl, fmt.Sprintf("%s:", k), kv[k])
-			}
-			m.logger.Info(sl...)
-		case <-m.chanStop:
-			return
-		}
-	}
 }
 
 func (m *StatsMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
@@ -95,6 +57,6 @@ func (m *StatsMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 
 	m.UnimplementedMiddleware.FromSpider(spider)
 	m.logger = spider.GetLogger()
-	m.interval = time.Minute
+	spider.GetCrawler().GetSignal().RegisterTaskStopped(m.TaskStopped)
 	return m
 }

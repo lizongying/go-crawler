@@ -21,22 +21,23 @@ type SqlitePipeline struct {
 	timeout time.Duration
 }
 
-func (m *SqlitePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+func (m *SqlitePipeline) ProcessItem(item pkg.Item) (err error) {
 	spider := m.GetSpider()
+	task := item.GetContext().GetTask()
 
-	if itemWithContext == nil {
+	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	if itemWithContext.Name() != pkg.ItemSqlite {
+	if item.Name() != pkg.ItemSqlite {
 		m.logger.Warn("item not support", pkg.ItemSqlite)
 		return
 	}
 
-	itemSqlite, ok := itemWithContext.GetItem().(*items.ItemSqlite)
+	itemSqlite, ok := item.GetItem().(*items.ItemSqlite)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemSqlite)
 		return
@@ -45,21 +46,21 @@ func (m *SqlitePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err e
 	if itemSqlite.GetTable() == "" {
 		err = errors.New("table is empty")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	data := itemWithContext.Data()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
 	if m.env == "dev" {
 		m.logger.Debug("current mode don't need save")
-		spider.IncItemIgnore()
+		task.IncItemIgnore()
 		return
 	}
 
@@ -89,7 +90,7 @@ func (m *SqlitePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err e
 	stmt, err := m.sqlite.PrepareContext(ctx, s)
 	if err != nil {
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 	res, err := stmt.ExecContext(ctx, values...)
@@ -98,7 +99,7 @@ func (m *SqlitePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err e
 		o := errors.As(err, &e)
 		if !o {
 			m.logger.Error(err)
-			spider.IncItemError()
+			task.IncItemError()
 			return
 		}
 
@@ -108,43 +109,43 @@ func (m *SqlitePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err e
 			stmt, err = m.sqlite.PrepareContext(ctx, s)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 
 			res, err = stmt.ExecContext(ctx, values...)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 
 			_, err = res.RowsAffected()
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 
 			m.logger.Info(itemSqlite.GetTable(), "update success", itemSqlite.Id())
 		} else {
 			m.logger.Error(err)
-			spider.IncItemError()
+			task.IncItemError()
 			return
 		}
 	} else {
 		id, e := res.LastInsertId()
 		if e != nil {
 			m.logger.Error(e)
-			spider.IncItemError()
+			task.IncItemError()
 			return
 		}
 
 		m.logger.Info(itemSqlite.GetTable(), "insert success", id)
 	}
 
-	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
-	spider.IncItemSuccess()
+	spider.GetCrawler().GetSignal().ItemStopped(item)
+	task.IncItemSuccess()
 	return
 }
 

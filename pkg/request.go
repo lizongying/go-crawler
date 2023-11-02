@@ -143,8 +143,8 @@ type Request interface {
 	AsImage(bool) Request
 	SetImageOptions(options ImageOptions) Request
 	GetImageOptions() *ImageOptions
-	WithGlobal(Context) Request
-	GetGlobal() Context
+	GetContext() Context
+	WithContext(Context) Request
 	GetExtra() string
 	SetExtra(any) Request
 	UnmarshalExtra(any) error
@@ -152,7 +152,7 @@ type Request interface {
 	Marshal() ([]byte, error)
 	SetBasicAuth(string, string) Request
 	RequestContext() context.Context
-	WithContext(context.Context) Request
+	WithRequestContext(context.Context) Request
 	GetRequest() Request
 	GetHttpRequest() *http.Request
 	Cookies() []*http.Cookie
@@ -161,3 +161,41 @@ type Request interface {
 
 type CallBack func(Context, Response) error
 type ErrBack func(Context, Response, error)
+
+type RequestStatus uint8
+
+const (
+	RequestStatusUnknown = iota
+	RequestStatusPending
+	RequestStatusDoing
+	RequestStatusSuccess
+	RequestStatusError
+)
+
+func (s *RequestStatus) String() string {
+	switch *s {
+	case 1:
+		return "pending"
+	case 2:
+		return "doing"
+	case 3:
+		return "success"
+	case 4:
+		return "error"
+	default:
+		return "unknown"
+	}
+}
+
+type RequestOption func(Request)
+
+func WithUrl(url string) RequestOption {
+	return func(request Request) {
+		request.SetUrl(url)
+	}
+}
+func WithMethod(method string) RequestOption {
+	return func(request Request) {
+		request.SetMethod(method)
+	}
+}

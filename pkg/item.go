@@ -18,6 +18,8 @@ const (
 )
 
 type Item interface {
+	GetContext() Context
+	WithContext(Context) Item
 	GetItem() any
 	Name() ItemName
 	SetUniqueKey(string) Item
@@ -40,12 +42,8 @@ type Item interface {
 	Images() []Image
 }
 
-type ItemWithContext interface {
-	Context
-	Item
-}
-
 type ItemUnimplemented struct {
+	context   Context
 	item      any
 	name      ItemName
 	files     []Request
@@ -56,6 +54,13 @@ type ItemUnimplemented struct {
 	data      any
 }
 
+func (i *ItemUnimplemented) GetContext() Context {
+	return i.context
+}
+func (i *ItemUnimplemented) WithContext(ctx Context) Item {
+	i.context = ctx
+	return i
+}
 func (i *ItemUnimplemented) SetItem(item any) Item {
 	i.item = item
 	return i
@@ -173,4 +178,29 @@ func (i *ItemUnimplemented) Images() []Image {
 	}
 
 	return nil
+}
+
+type ItemStatus uint8
+
+const (
+	ItemStatusUnknown = iota
+	ItemStatusPending
+	ItemStatusDoing
+	ItemStatusSuccess
+	ItemStatusError
+)
+
+func (s *ItemStatus) String() string {
+	switch *s {
+	case 1:
+		return "pending"
+	case 2:
+		return "doing"
+	case 3:
+		return "success"
+	case 4:
+		return "error"
+	default:
+		return "unknown"
+	}
 }

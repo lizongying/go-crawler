@@ -17,19 +17,20 @@ type JsonLinesPipeline struct {
 	logger pkg.Logger
 }
 
-func (m *JsonLinesPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 	spider := m.GetSpider()
-	if itemWithContext == nil {
+	task := item.GetContext().GetTask()
+	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
-	if itemWithContext.Name() != pkg.ItemJsonl {
+	if item.Name() != pkg.ItemJsonl {
 		m.logger.Warn("item not support", pkg.ItemKafka)
 		return
 	}
-	itemJsonl, ok := itemWithContext.GetItem().(*items.ItemJsonl)
+	itemJsonl, ok := item.GetItem().(*items.ItemJsonl)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemKafka)
 		return
@@ -38,15 +39,15 @@ func (m *JsonLinesPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (er
 	if itemJsonl.GetFileName() == "" {
 		err = errors.New("fileName is empty")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	data := itemWithContext.Data()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
@@ -58,7 +59,7 @@ func (m *JsonLinesPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (er
 			err = os.MkdirAll(filepath.Dir(filename), 0744)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 		}
@@ -66,14 +67,14 @@ func (m *JsonLinesPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (er
 			file, err = os.Create(filename)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 		} else {
 			file, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 		}
@@ -85,13 +86,13 @@ func (m *JsonLinesPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (er
 	_, err = file.WriteString(fmt.Sprintf("%s\n", utils.JsonStr(data)))
 	if err != nil {
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return err
 	}
 
 	m.logger.Info("item saved:", filename)
-	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
-	spider.IncItemSuccess()
+	spider.GetCrawler().GetSignal().ItemStopped(item)
+	task.IncItemSuccess()
 	return
 }
 

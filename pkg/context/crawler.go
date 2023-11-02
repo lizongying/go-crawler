@@ -1,12 +1,14 @@
 package context
 
 import (
+	"context"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"time"
 )
 
 type Crawler struct {
+	Context   context.Context   `json:"-"`
 	Id        string            `json:"id,omitempty"`
 	Status    pkg.CrawlerStatus `json:"status,omitempty"`
 	StartTime utils.Timestamp   `json:"start_time,omitempty"`
@@ -18,6 +20,13 @@ func (c *Crawler) GetId() string {
 }
 func (c *Crawler) WithId(id string) pkg.ContextCrawler {
 	c.Id = id
+	return c
+}
+func (c *Crawler) GetContext() context.Context {
+	return c.Context
+}
+func (c *Crawler) WithContext(ctx context.Context) pkg.ContextCrawler {
+	c.Context = ctx
 	return c
 }
 func (c *Crawler) GetStatus() pkg.CrawlerStatus {

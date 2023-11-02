@@ -1,12 +1,14 @@
 package context
 
 import (
+	"context"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"time"
 )
 
 type Spider struct {
+	Context   context.Context  `json:"-"`
 	Name      string           `json:"name,omitempty"`
 	Status    pkg.SpiderStatus `json:"status,omitempty"`
 	StartTime utils.Timestamp  `json:"start_time,omitempty"`
@@ -18,6 +20,13 @@ func (c *Spider) GetName() string {
 }
 func (c *Spider) WithName(name string) pkg.ContextSpider {
 	c.Name = name
+	return c
+}
+func (c *Spider) GetContext() context.Context {
+	return c.Context
+}
+func (c *Spider) WithContext(ctx context.Context) pkg.ContextSpider {
+	c.Context = ctx
 	return c
 }
 func (c *Spider) GetStatus() pkg.SpiderStatus {

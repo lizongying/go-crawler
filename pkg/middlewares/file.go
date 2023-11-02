@@ -14,8 +14,7 @@ type FileMiddleware struct {
 	contentTypeMap map[string][]string
 }
 
-func (m *FileMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
-	spider := m.GetSpider()
+func (m *FileMiddleware) ProcessResponse(c pkg.Context, response pkg.Response) (err error) {
 	if len(response.BodyBytes()) == 0 {
 		m.logger.Debug("BodyBytes empty")
 		return
@@ -52,7 +51,7 @@ func (m *FileMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (
 
 		response.SetFiles(append(response.Files(), i))
 
-		stats, ok := spider.GetStats().(pkg.StatsWithFile)
+		stats, ok := c.GetTask().GetStats().(pkg.StatsWithFile)
 		if ok {
 			stats.IncFileTotal()
 		}

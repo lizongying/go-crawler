@@ -20,7 +20,7 @@ type RobotsTxtMiddleware struct {
 	ignoreUrl []string
 }
 
-func (m *RobotsTxtMiddleware) SpiderOpened(c pkg.Context) {
+func (m *RobotsTxtMiddleware) SpiderStarted(c pkg.Context) {
 	if c.GetSpiderName() != m.spider.Name() {
 		return
 	}
@@ -45,7 +45,7 @@ func (m *RobotsTxtMiddleware) SpiderOpened(c pkg.Context) {
 
 func (m *RobotsTxtMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
 	err = m.UnimplementedMiddleware.Start(ctx, spider)
-	spider.GetCrawler().GetSignal().RegisterSpiderStopped(m.SpiderOpened)
+	spider.GetCrawler().GetSignal().RegisterSpiderStarted(m.SpiderStarted)
 	return
 }
 

@@ -25,9 +25,9 @@ func (m *ReferrerMiddleware) ProcessRequest(_ pkg.Context, request pkg.Request) 
 func (m *ReferrerMiddleware) ProcessResponse(ctx pkg.Context, response pkg.Response) (err error) {
 	// add referrer to context
 	if response.URL() != nil {
-		meta := ctx.GetMeta()
-		meta.Referrer = response.URL().String()
-		ctx.WithMeta(meta)
+		request := ctx.GetRequest()
+		request.WithReferrer(response.URL().String())
+		ctx.WithRequest(request)
 	}
 
 	return

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/lizongying/cron"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
@@ -25,7 +24,7 @@ type Crawler struct {
 	spiderName  string
 	startFunc   string
 	args        string
-	mode        string
+	mode        pkg.ScheduleMode
 	spec        string
 	config      pkg.Config
 	logger      pkg.Logger
@@ -41,9 +40,15 @@ type Crawler struct {
 	statistics  pkg.Statistics
 	pkg.Signal
 
-	Status    pkg.CrawlerStatus `json:"status,omitempty"`
-	StartTime utils.Timestamp   `json:"start_time,omitempty"`
-	StopTime  utils.Timestamp   `json:"stop_time,omitempty"`
+	spider *pkg.State
+
+	// item limit
+	itemDelay           time.Duration
+	itemConcurrency     uint8
+	itemConcurrencyChan chan struct{}
+	itemTimer           *time.Timer
+
+	stop chan struct{}
 }
 
 func (c *Crawler) GetContext() pkg.Context {
@@ -58,12 +63,6 @@ func (c *Crawler) GetStatistics() pkg.Statistics {
 }
 func (c *Crawler) SetStatistics(statistics pkg.Statistics) {
 	c.statistics = statistics
-}
-func (c *Crawler) GetMode() string {
-	return c.mode
-}
-func (c *Crawler) SetMode(mode string) {
-	c.mode = mode
 }
 func (c *Crawler) GetLogger() pkg.Logger {
 	return c.logger
@@ -122,10 +121,34 @@ func (c *Crawler) GetSignal() pkg.Signal {
 func (c *Crawler) SetSignal(signal pkg.Signal) {
 	c.Signal = signal
 }
-func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
+func (c *Crawler) GetItemDelay() time.Duration {
+	return c.itemDelay
+}
+func (c *Crawler) WithItemDelay(itemDelay time.Duration) pkg.Crawler {
+	c.itemDelay = itemDelay
+	return c
+}
+func (c *Crawler) GetItemConcurrency() uint8 {
+	return c.itemConcurrency
+}
+func (c *Crawler) WithItemConcurrency(itemConcurrency uint8) pkg.Crawler {
+	if itemConcurrency < 1 {
+		itemConcurrency = 1
+	}
+
+	c.itemConcurrency = itemConcurrency
+	return c
+}
+func (c *Crawler) ItemTimer() *time.Timer {
+	return c.itemTimer
+}
+func (c *Crawler) ItemConcurrencyChan() chan struct{} {
+	return c.itemConcurrencyChan
+}
+func (c *Crawler) Run(ctx context.Context, spiderName string, startFunc string, args string, mode pkg.ScheduleMode, spec string) (id string, err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
-		if v.Name() == ctx.GetSpiderName() {
+		if v.Name() == spiderName {
 			spider = v
 			break
 		}
@@ -136,112 +159,86 @@ func (c *Crawler) SpiderStart(ctx pkg.Context) (err error) {
 		c.logger.Error(err)
 		return
 	}
-	c.logger.Info("crawlerId", ctx.GetCrawlerId())
-	c.logger.Info("name", ctx.GetSpiderName())
-	c.logger.Info("func", ctx.GetStartFunc())
-	c.logger.Info("args", ctx.GetArgs())
-	c.logger.Info("mode", ctx.GetMode())
-	c.logger.Info("allowedDomains", spider.GetAllowedDomains())
-	c.logger.Info("okHttpCodes", spider.OkHttpCodes())
-	c.logger.Info("platforms", spider.GetPlatforms())
-	c.logger.Info("browsers", spider.GetBrowsers())
+
+	if spider.GetContext() == nil {
+		if err = spider.Start(c.context); err != nil {
+			c.logger.Error(err)
+			return
+		}
+	}
+
+	c.logger.Info("name", spiderName)
+	c.logger.Info("func", startFunc)
+	c.logger.Info("args", args)
+	c.logger.Info("mode", mode)
+	c.logger.Info("spec", spec)
+
 	c.logger.Info("referrerPolicy", c.config.GetReferrerPolicy())
 	c.logger.Info("urlLengthLimit", c.config.GetUrlLengthLimit())
 	c.logger.Info("redirectMaxTimes", c.config.GetRedirectMaxTimes())
 	c.logger.Info("retryMaxTimes", c.config.GetRetryMaxTimes())
 	c.logger.Info("filter", c.config.GetFilter())
 
-	switch ctx.GetMode() {
-	case "once":
-		ctx.WithScheduleId(utils.UUIDV1WithoutHyphens())
-		ctx.WithScheduleStatus(pkg.ScheduleStatusStarted)
-		ctx.WithScheduleEnable(true)
-		ctx.WithScheduleStartTime(time.Now())
-		c.Signal.ScheduleStarted(ctx)
-
-		if ctx.GetTaskId() == "" {
-			ctx.WithTaskId(utils.UUIDV1WithoutHyphens())
-		}
-		if err = spider.Start(ctx); err != nil {
-			c.logger.Error(err)
-			return
-		}
-	case "loop":
-		ctx.WithScheduleId(utils.UUIDV1WithoutHyphens())
-		ctx.WithScheduleStatus(pkg.ScheduleStatusStarted)
-		ctx.WithScheduleEnable(true)
-		ctx.WithScheduleStartTime(time.Now())
-		c.Signal.ScheduleStarted(ctx)
-
-		for {
-			ctx.WithTaskId(utils.UUIDV1WithoutHyphens())
-			if err = spider.Start(ctx); err != nil {
-				c.logger.Error(err)
-				return
-			}
-		}
-	case "cron":
-		ctx.WithScheduleId(utils.UUIDV1WithoutHyphens())
-		ctx.WithScheduleStatus(pkg.ScheduleStatusStarted)
-		ctx.WithScheduleEnable(true)
-		ctx.WithScheduleStartTime(time.Now())
-		c.Signal.ScheduleStarted(ctx)
-
-		cr := cron.New(cron.WithLogger(c.logger))
-		cr.MustStart()
-		job := new(cron.Job).
-			MustEverySpec(c.spec).
-			Callback(func() {
-				ctx.WithTaskId(utils.UUIDV1WithoutHyphens())
-				if err = spider.Start(ctx); err != nil {
-					c.logger.Error(err)
-					return
-				}
-			})
-		cr.MustAddJob(job)
-		select {}
-	default:
-		c.logger.Warn("mode", ctx.GetMode())
+	_, err = spider.Run(ctx, startFunc, args, mode, spec, true)
+	if err != nil {
+		c.logger.Error(err)
 	}
+
 	return
 }
+
 func (c *Crawler) SpiderStop(ctx pkg.Context) (err error) {
 	taskId := ctx.GetTaskId()
 	c.logger.Info(taskId)
 	return
 }
 func (c *Crawler) Start(ctx context.Context) (err error) {
+	crawler := new(crawlerContext.Crawler).
+		WithContext(ctx).
+		WithId(utils.UUIDV1WithoutHyphens()).
+		WithStatus(pkg.CrawlerStatusOnline).
+		WithStartTime(time.Now())
+	c.context = new(crawlerContext.Context).WithCrawler(crawler)
+	c.logger.Info("crawlerId", c.context.GetCrawlerId())
+	c.Signal.CrawlerStarted(c.context)
+
+	// init item limit
+	c.itemTimer = time.NewTimer(c.GetItemDelay())
+	if c.itemConcurrency < 1 {
+		c.itemConcurrency = 1
+	}
+	c.itemConcurrencyChan = make(chan struct{}, c.itemConcurrency)
+	for i := 0; i < int(c.itemConcurrency); i++ {
+		c.itemConcurrencyChan <- struct{}{}
+	}
+
 	if err = c.api.Run(); err != nil {
 		c.logger.Error(err)
 		return
 	}
 
-	c.context = crawlerContext.NewContext().
-		WithGlobalContext(ctx).
-		WithCrawlerId(utils.UUIDV1WithoutHyphens()).
-		WithCrawlerStatus(pkg.CrawlerStatusOnline).
-		WithCrawlerStartTime(time.Now())
-	c.Signal.CrawlerStarted(c.context)
-
 	if c.spiderName != "" {
-		if err = c.SpiderStart(c.context.
-			WithSpiderName(c.spiderName).
-			WithStartFunc(c.startFunc).
-			WithArgs(c.args).
-			WithMode(c.mode)); err != nil {
+		if _, err = c.Run(ctx, c.spiderName,
+			c.startFunc,
+			c.args,
+			c.mode,
+			c.spec,
+		); err != nil {
 			c.logger.Error(err)
 			return
 		}
+		c.spider.In()
 	} else {
-		select {}
+		<-c.stop
 	}
+
 	return
 }
 
 func (c *Crawler) Stop(ctx context.Context) (err error) {
 	c.logger.Debug("Crawler wait for stop")
 	defer func() {
-		c.context.WithGlobalContext(ctx)
+		c.context.WithCrawlerContext(ctx)
 		c.context.WithCrawlerStatus(pkg.CrawlerStatusOffline)
 		c.context.WithCrawlerStopTime(time.Now())
 		c.Signal.CrawlerStopped(c.context)
@@ -249,20 +246,29 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	}()
 
 	for _, v := range c.spiders {
-		if err = v.Stop(v.GetContext()); err != nil {
+		c.logger.Infof("11111, %+v", v.GetContext())
+		if err = v.Stop(c.context); err != nil {
 			c.logger.Error(err)
 		}
 	}
 
 	return
 }
+func (c *Crawler) StopSpider() {
+	defer c.spider.Out()
+}
 
 func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, sqlite pkg.Sqlite, store pkg.Store, mockServer pkg.MockServer, httpApi *api.Api) (crawler pkg.Crawler, err error) {
+	spider := pkg.NewState()
+	spider.RegisterIsReadyAndIsZero(func() {
+		_ = crawler.Stop(crawler.GetContext().GetCrawlerContext())
+	})
+
 	crawler = &Crawler{
 		spiderName:  cli.SpiderName,
 		startFunc:   cli.StartFunc,
 		args:        cli.Args,
-		mode:        cli.Mode,
+		mode:        pkg.ScheduleModeFromString(cli.Mode),
 		spec:        cli.Spec,
 		config:      config,
 		logger:      logger,
@@ -275,6 +281,9 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		Store:       store,
 		mockServer:  mockServer,
 		api:         httpApi,
+		spider:      spider,
+
+		stop: make(chan struct{}),
 	}
 
 	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))

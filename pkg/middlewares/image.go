@@ -18,8 +18,8 @@ type ImageMiddleware struct {
 	store  pkg.Store
 }
 
-func (m *ImageMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (err error) {
-	spider := m.GetSpider()
+func (m *ImageMiddleware) ProcessResponse(c pkg.Context, response pkg.Response) (err error) {
+	task := c.GetTask()
 	if len(response.BodyBytes()) == 0 {
 		m.logger.Debug("BodyBytes empty")
 		return
@@ -65,7 +65,7 @@ func (m *ImageMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) 
 		i.SetStorePath(storePath)
 
 		response.SetImages(append(response.Images(), i))
-		stats, ok := spider.GetStats().(pkg.StatsWithImage)
+		stats, ok := task.GetStats().(pkg.StatsWithImage)
 		if ok {
 			stats.IncImageTotal()
 		}

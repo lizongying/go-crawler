@@ -90,12 +90,9 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 
 	if timeout > 0 {
 		c := context.Background()
-		if meta, ok := ctx.Value("meta").(pkg.Meta); ok {
-			c = context.WithValue(c, "meta", meta)
-		}
 		c, cancel := context.WithTimeout(c, timeout)
 		defer cancel()
-		request.WithContext(c)
+		request.WithRequestContext(c)
 	}
 
 	// Get a copy of the default root CAs

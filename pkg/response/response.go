@@ -135,8 +135,8 @@ func (r *Response) URL() *url.URL {
 func (r *Response) Context() context.Context {
 	return r.request.RequestContext()
 }
-func (r *Response) WithContext(ctx context.Context) pkg.Request {
-	return r.request.WithContext(ctx)
+func (r *Response) WithRequestContext(ctx context.Context) pkg.Request {
+	return r.request.WithRequestContext(ctx)
 }
 func (r *Response) IsFile() bool {
 	return r.request.IsFile()

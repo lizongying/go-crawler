@@ -1,7 +1,6 @@
 package pipelines
 
 import (
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
@@ -11,29 +10,22 @@ import (
 
 type ImagePipeline struct {
 	pkg.UnimplementedPipeline
-	scheduler pkg.Scheduler
-	logger    pkg.Logger
+	logger pkg.Logger
 }
 
-func (m *ImagePipeline) Start(ctx context.Context, spider pkg.Spider) (err error) {
-	err = m.UnimplementedPipeline.Start(ctx, spider)
-	m.scheduler = spider.GetScheduler()
-	return nil
-}
-
-func (m *ImagePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
-	if itemWithContext == nil {
+func (m *ImagePipeline) ProcessItem(item pkg.Item) (err error) {
+	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
 		return
 	}
 
-	images := itemWithContext.ImagesRequest()
+	images := item.ImagesRequest()
 	if len(images) == 0 {
 		return
 	}
 
-	field, ok := reflect.TypeOf(itemWithContext.Data()).Elem().FieldByName("Images")
+	field, ok := reflect.TypeOf(item.Data()).Elem().FieldByName("Images")
 	isUrl := false
 	isName := false
 	isExt := false
@@ -58,12 +50,12 @@ func (m *ImagePipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err er
 	}
 	for _, i := range images {
 		ctx := &crawlerContext.Context{}
-		r, e := m.scheduler.Request(ctx, i.SetImageOptions(imageOptions))
+		r, e := m.GetSpider().Request(ctx, i.SetImageOptions(imageOptions))
 		if e != nil {
 			m.logger.Error(e)
 			continue
 		}
-		itemWithContext.SetImages(r.Images())
+		item.SetImages(r.Images())
 	}
 
 	return

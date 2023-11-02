@@ -18,7 +18,7 @@ func (m *FilterMiddleware) Start(ctx context.Context, spider pkg.Spider) (err er
 }
 
 func (m *FilterMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) (err error) {
-	spider := m.GetSpider()
+	task := ctx.GetTask()
 	skipFilter := false
 	if request.IsSkipFilter() != nil {
 		skipFilter = *request.IsSkipFilter()
@@ -42,7 +42,7 @@ func (m *FilterMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) 
 	if ok {
 		err = pkg.ErrIgnoreRequest
 		m.logger.Infof("%s in filter", request.GetUniqueKey())
-		spider.IncRequestIgnore()
+		task.IncRequestIgnore()
 		return
 	}
 

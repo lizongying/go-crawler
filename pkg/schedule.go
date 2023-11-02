@@ -1,12 +1,14 @@
 package pkg
 
+import (
+	"fmt"
+)
+
 type ScheduleStatus uint8
 
 const (
 	ScheduleStatusUnknown = iota
 	ScheduleStatusStarted
-	ScheduleStatusPending
-	ScheduleStatusRunning
 	ScheduleStatusStopped
 )
 
@@ -15,12 +17,58 @@ func (s *ScheduleStatus) String() string {
 	case 1:
 		return "started"
 	case 2:
-		return "pending"
-	case 3:
-		return "running"
-	case 4:
 		return "stopped"
 	default:
 		return "unknown"
+	}
+}
+
+type ScheduleMode uint8
+
+const (
+	ScheduleModeUnknown = iota
+	ScheduleModeOnce
+	ScheduleModeLoop
+	ScheduleModeCron
+)
+
+func (s *ScheduleMode) String() string {
+	switch *s {
+	case 1:
+		return "once"
+	case 2:
+		return "loop"
+	case 3:
+		return "cron"
+	default:
+		return "unknown"
+	}
+}
+func (s *ScheduleMode) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("%d", *s)), nil
+}
+func (s *ScheduleMode) UnmarshalJSON(bytes []byte) error {
+	switch string(bytes) {
+	case "1":
+		*s = ScheduleModeOnce
+	case "2":
+		*s = ScheduleModeLoop
+	case "3":
+		*s = ScheduleModeCron
+	default:
+		*s = ScheduleModeUnknown
+	}
+	return nil
+}
+func ScheduleModeFromString(name string) ScheduleMode {
+	switch name {
+	case "once":
+		return ScheduleModeOnce
+	case "loop":
+		return ScheduleModeLoop
+	case "cron":
+		return ScheduleModeCron
+	default:
+		return ScheduleModeUnknown
 	}
 }

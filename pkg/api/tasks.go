@@ -20,15 +20,6 @@ func (h *RouteTasks) Pattern() string {
 
 func (h *RouteTasks) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	tasks := h.crawler.GetStatistics().GetTasks()
-	//for _, v := range nodes {
-	//	fmt.Println(v)
-	//	bs, err := v.Marshal()
-	//	if err != nil {
-	//		h.OutJson(w, 1, err.Error(), nil)
-	//		return
-	//	}
-	//
-	//}
 	h.OutJson(w, 0, "", tasks)
 }
 

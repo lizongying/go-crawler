@@ -20,7 +20,7 @@ import (
 
 type Request struct {
 	Errors             map[string]error `json:"errors,omitempty"`
-	pkg.Context        `json:"context,omitempty"`
+	Context            pkg.Context      `json:"context,omitempty"`
 	*http.Request      `json:"-"`
 	Method             string              `json:"method,omitempty"`
 	Url                string              `json:"url,omitempty"`
@@ -498,10 +498,10 @@ func (r *Request) SetImageOptions(options pkg.ImageOptions) pkg.Request {
 	r.ImageOptions = &options
 	return r
 }
-func (r *Request) GetGlobal() pkg.Context {
+func (r *Request) GetContext() pkg.Context {
 	return r.Context
 }
-func (r *Request) WithGlobal(ctx pkg.Context) pkg.Request {
+func (r *Request) WithContext(ctx pkg.Context) pkg.Request {
 	r.Context = ctx
 	return r
 }
@@ -512,7 +512,7 @@ func (r *Request) SetBasicAuth(username string, password string) pkg.Request {
 func (r *Request) RequestContext() context.Context {
 	return r.Request.Context()
 }
-func (r *Request) WithContext(ctx context.Context) pkg.Request {
+func (r *Request) WithRequestContext(ctx context.Context) pkg.Request {
 	r.Request = r.Request.WithContext(ctx)
 	return r
 }

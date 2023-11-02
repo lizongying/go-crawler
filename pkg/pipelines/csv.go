@@ -19,21 +19,22 @@ type CsvPipeline struct {
 	logger pkg.Logger
 }
 
-func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err error) {
+func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 	spider := m.GetSpider()
-	if itemWithContext == nil {
+	task := item.GetContext().GetTask()
+	if item == nil {
 		err = errors.New("nil item")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	if itemWithContext.Name() != pkg.ItemCsv {
+	if item.Name() != pkg.ItemCsv {
 		m.logger.Warn("item not support", pkg.ItemCsv)
 		return
 	}
 
-	itemCsv, ok := itemWithContext.GetItem().(*items.ItemCsv)
+	itemCsv, ok := item.GetItem().(*items.ItemCsv)
 	if !ok {
 		m.logger.Warn("item parsing failed with", pkg.ItemCsv)
 		return
@@ -42,15 +43,15 @@ func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err erro
 	if itemCsv.GetFileName() == "" {
 		err = errors.New("fileName is empty")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
-	data := itemWithContext.Data()
+	data := item.Data()
 	if data == nil {
 		err = errors.New("nil data")
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return
 	}
 
@@ -72,7 +73,7 @@ func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err erro
 			err = os.MkdirAll(filepath.Dir(filename), 0744)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 		}
@@ -80,7 +81,7 @@ func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err erro
 			file, err = os.Create(filename)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 			create = true
@@ -88,7 +89,7 @@ func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err erro
 			file, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 			if err != nil {
 				m.logger.Error(err)
-				spider.IncItemError()
+				task.IncItemError()
 				return
 			}
 		}
@@ -127,13 +128,13 @@ func (m *CsvPipeline) ProcessItem(itemWithContext pkg.ItemWithContext) (err erro
 	_, err = file.WriteString(fmt.Sprintf("%s\n", strings.Join(lines, ",")))
 	if err != nil {
 		m.logger.Error(err)
-		spider.IncItemError()
+		task.IncItemError()
 		return err
 	}
 
 	m.logger.Info("item saved:", filename)
-	spider.GetCrawler().GetSignal().ItemSaved(itemWithContext)
-	spider.IncItemSuccess()
+	spider.GetCrawler().GetSignal().ItemStopped(item)
+	task.IncItemSuccess()
 	return
 }
 

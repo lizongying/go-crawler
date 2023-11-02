@@ -173,7 +173,6 @@ Spider选项
 * `WithHost` 设置host，用于基于host的过滤或robot.txt的支持。
 * `WithPlatforms` 设置浏览器平台。
 * `WithBrowsers` 设置浏览器。
-* `WithLogger` 设置日志。
 * `WithFilter` 设置过滤器。
 * `WithDownloader` 设置下载器。
 * `WithExporter` 设置导出器。
@@ -217,7 +216,10 @@ Spider选项
 
 crawler选项
 
-* WithMockServerRoutes 设置模拟服务Route，包括内置或自定义的。不需要配置`mock_server.enable: true`
+* `WithLogger` 设置日志。
+* `WithMockServerRoutes` 设置模拟服务Route，包括内置或自定义的。不需要配置`mock_server.enable: true`
+* `WithItemDelay` 设置数据保存间隔。
+* `WithItemConcurrency` 设置数据保存并行数量。
 
 ### 存储
 
@@ -1158,8 +1160,9 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * extra速率限制
 * 没请求完，ctx退出
 * request with ctx
-* record schedule
+* new Context
 * stat->crawler
+* test refer cookie
 
 ```shell
 go get -u github.com/lizongying/go-css@latest
