@@ -41,14 +41,13 @@ type Crawler struct {
 	pkg.Signal
 
 	spider *pkg.State
+	stop   chan struct{}
 
 	// item limit
 	itemDelay           time.Duration
 	itemConcurrency     uint8
 	itemConcurrencyChan chan struct{}
 	itemTimer           *time.Timer
-
-	stop chan struct{}
 }
 
 func (c *Crawler) GetContext() pkg.Context {
@@ -80,8 +79,7 @@ func (c *Crawler) AddSpider(spider pkg.Spider) {
 	c.spiders = append(c.spiders, spider)
 }
 func (c *Crawler) RunMockServer() (err error) {
-	err = c.mockServer.Run()
-	if err != nil {
+	if err = c.mockServer.Run(); err != nil {
 		c.logger.Error(err)
 		return
 	}
@@ -173,13 +171,7 @@ func (c *Crawler) Run(ctx context.Context, spiderName string, startFunc string, 
 	c.logger.Info("mode", mode)
 	c.logger.Info("spec", spec)
 
-	c.logger.Info("referrerPolicy", c.config.GetReferrerPolicy())
-	c.logger.Info("urlLengthLimit", c.config.GetUrlLengthLimit())
-	c.logger.Info("redirectMaxTimes", c.config.GetRedirectMaxTimes())
-	c.logger.Info("retryMaxTimes", c.config.GetRetryMaxTimes())
-	c.logger.Info("filter", c.config.GetFilter())
-
-	_, err = spider.Run(ctx, startFunc, args, mode, spec, true)
+	id, err = spider.Run(ctx, startFunc, args, mode, spec, true)
 	if err != nil {
 		c.logger.Error(err)
 	}
@@ -200,10 +192,12 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		WithStartTime(time.Now())
 	c.context = new(crawlerContext.Context).WithCrawler(crawler)
 	c.logger.Info("crawlerId", c.context.GetCrawlerId())
+	c.logger.Info("referrerPolicy", c.config.GetReferrerPolicy())
+	c.logger.Info("urlLengthLimit", c.config.GetUrlLengthLimit())
 	c.Signal.CrawlerStarted(c.context)
 
 	// init item limit
-	c.itemTimer = time.NewTimer(c.GetItemDelay())
+	c.itemTimer = time.NewTimer(c.itemDelay)
 	if c.itemConcurrency < 1 {
 		c.itemConcurrency = 1
 	}
@@ -218,7 +212,8 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	}
 
 	if c.spiderName != "" {
-		if _, err = c.Run(ctx, c.spiderName,
+		var id string
+		if id, err = c.Run(ctx, c.spiderName,
 			c.startFunc,
 			c.args,
 			c.mode,
@@ -227,6 +222,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 			c.logger.Error(err)
 			return
 		}
+		c.logger.Info("job id", id)
 		c.spider.In()
 	} else {
 		<-c.stop
@@ -246,7 +242,6 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	}()
 
 	for _, v := range c.spiders {
-		c.logger.Infof("11111, %+v", v.GetContext())
 		if err = v.Stop(c.context); err != nil {
 			c.logger.Error(err)
 		}
@@ -282,14 +277,13 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		mockServer:  mockServer,
 		api:         httpApi,
 		spider:      spider,
-
-		stop: make(chan struct{}),
+		stop:        make(chan struct{}),
 	}
 
 	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteHello).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpider).FromCrawler(crawler))
-	httpApi.AddRoutes(new(api.RouteSpiderRun).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteJobRun).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteNodes).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpiders).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSchedules).FromCrawler(crawler))
@@ -310,8 +304,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 	}
 
 	if config.MockServerEnable() {
-		err = crawler.RunMockServer()
-		if err != nil {
+		if err = crawler.RunMockServer(); err != nil {
 			logger.Error(err)
 			return
 		}

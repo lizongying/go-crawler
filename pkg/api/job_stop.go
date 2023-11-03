@@ -6,29 +6,29 @@ import (
 	"net/http"
 )
 
-const UrlSpiderStop = "/spider/run"
+const UrlJobStop = "/job/stop"
 
-type RouteSpiderStop struct {
+type RouteJobStop struct {
 	Request
 	Response
 	crawler pkg.Crawler
 	logger  pkg.Logger
 }
 
-func (h *RouteSpiderStop) Pattern() string {
-	return UrlSpiderStop
+func (h *RouteJobStop) Pattern() string {
+	return UrlJobStop
 }
 
-func (h *RouteSpiderStop) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var req pkg.ReqSpiderStop
+func (h *RouteJobStop) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var req pkg.ReqJobStop
 	h.BindJson(w, r, &req)
 
-	if req.TaskId == "" {
+	if req.Id == "" {
 		h.OutJson(w, 1, "TaskId empty", nil)
 		return
 	}
 
-	ctx := new(crawlerContext.Context).WithTaskId(req.TaskId)
+	ctx := new(crawlerContext.Context).WithTaskId(req.Id)
 	err := h.crawler.SpiderStop(ctx)
 	if err != nil {
 		h.OutJson(w, 1, err.Error(), nil)
@@ -39,9 +39,9 @@ func (h *RouteSpiderStop) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.OutJson(w, 0, "", spider)
 }
 
-func (h *RouteSpiderStop) FromCrawler(crawler pkg.Crawler) pkg.Route {
+func (h *RouteJobStop) FromCrawler(crawler pkg.Crawler) pkg.Route {
 	if h == nil {
-		return new(RouteSpiderStop).FromCrawler(crawler)
+		return new(RouteJobStop).FromCrawler(crawler)
 	}
 
 	h.logger = crawler.GetLogger()

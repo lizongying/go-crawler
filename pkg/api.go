@@ -1,6 +1,6 @@
 package pkg
 
-type ReqSpiderStart struct {
+type ReqJobStart struct {
 	Name    string       `json:"name"`
 	Func    string       `json:"func"`
 	Args    string       `json:"args,omitempty"`
@@ -9,6 +9,6 @@ type ReqSpiderStart struct {
 	Timeout uint32       `json:"timeout,omitempty"` // second
 }
 
-type ReqSpiderStop struct {
-	TaskId string `json:"task_id"` // uuid
+type ReqJobStop struct {
+	Id string `json:"id"` // uuid
 }

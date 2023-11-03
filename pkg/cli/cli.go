@@ -16,11 +16,11 @@ type Cli struct {
 
 func NewCli() (c *Cli, err error) {
 	configFilePtr := flag.String("c", os.Getenv("CRAWLER_CONFIG_FILE"), "config file")
-	spiderNamePtr := flag.String("n", os.Getenv("CRAWLER_SPIDER_NAME"), "spider name")
-	startFuncPtr := flag.String("f", os.Getenv("CRAWLER_SPIDER_FUNC"), "spider func")
-	argsPtr := flag.String("a", os.Getenv("CRAWLER_SPIDER_ARGS"), "spider args")
-	modePtr := flag.String("m", os.Getenv("CRAWLER_SPIDER_MODE"), "spider mode")
-	specPtr := flag.String("s", os.Getenv("CRAWLER_SPIDER_SPEC"), "spider spec")
+	spiderNamePtr := flag.String("n", os.Getenv("CRAWLER_NAME"), "spider name")
+	startFuncPtr := flag.String("f", os.Getenv("CRAWLER_FUNC"), "start func")
+	argsPtr := flag.String("a", os.Getenv("CRAWLER_ARGS"), "args")
+	modePtr := flag.String("m", os.Getenv("CRAWLER_MODE"), "mode")
+	specPtr := flag.String("s", os.Getenv("CRAWLER_SPEC"), "spec")
 
 	flag.Parse()
 
@@ -33,7 +33,7 @@ func NewCli() (c *Cli, err error) {
 	args := *argsPtr
 	mode := *modePtr
 	if mode == "" {
-		mode = "manual"
+		mode = "0"
 	}
 
 	c = &Cli{

@@ -37,6 +37,8 @@ type Spider interface {
 	IsAllowedDomain(*url.URL) bool
 	RetryMaxTimes() uint8
 	SetRetryMaxTimes(uint8) Spider
+	RedirectMaxTimes() uint8
+	SetRedirectMaxTimes(uint8) Spider
 	Timeout() time.Duration
 	SetTimeout(time.Duration) Spider
 	OkHttpCodes() []int
@@ -78,7 +80,7 @@ type Spider interface {
 	RequestSlotLoad(slot string) (value any, ok bool)
 	RequestSlotStore(slot string, value any)
 
-	StopSchedule()
+	StopSchedule(Context, error)
 
 	GetDownloader() Downloader
 	WithDownloader(Downloader) Spider
@@ -311,6 +313,11 @@ func WithCustomPipeline(pipeline Pipeline) SpiderOption {
 func WithRetryMaxTimes(retryMaxTimes uint8) SpiderOption {
 	return func(spider Spider) {
 		spider.SetRetryMaxTimes(retryMaxTimes)
+	}
+}
+func WithRedirectMaxTimes(redirectMaxTimes uint8) SpiderOption {
+	return func(spider Spider) {
+		spider.SetRedirectMaxTimes(redirectMaxTimes)
 	}
 }
 func WithTimeout(timeout time.Duration) SpiderOption {

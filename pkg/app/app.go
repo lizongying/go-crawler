@@ -78,8 +78,7 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 
 			ctx := context.Background()
 
-			err = crawler.Start(ctx)
-			if err != nil {
+			if err = crawler.Start(ctx); err != nil {
 				logger.Error(err)
 				err = shutdowner.Shutdown()
 				if err != nil {
@@ -101,8 +100,7 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 				return
 			}
 
-			err = shutdowner.Shutdown()
-			if err != nil {
+			if err = shutdowner.Shutdown(); err != nil {
 				logger.Error(err)
 				return
 			}

@@ -223,6 +223,7 @@ Spider Options
 * `WithKafkaPipeline`: Set the Kafka data processing pipeline to send crawled data to a Kafka message queue.
 * `WithCustomPipeline`: Set the custom data processing pipeline.
 * `WithRetryMaxTimes`: Set the maximum number of retries for requests.
+* `WithRedirectMaxTimes` Set the maximum number of redirect for requests.
 * `WithTimeout`: Set the timeout for requests.
 * `WithInterval`: Set the interval between requests.
 * `WithOkHttpCodes`: Set the normal HTTP status codes.
@@ -776,26 +777,26 @@ spider -c example.yml -n example -f TestOk -m once
     * Environment variable `CRAWLER_CONFIG_FILE`
     * Startup parameter `-c`
 * Spider name, must be configured.
-    * Environment variable `CRAWLER_SPIDER_NAME`
+    * Environment variable `CRAWLER_NAME`
     * Startup parameter `-n`
 * Initial method, default is "Test". Please note that the case must be consistent.
-    * Environment variable `CRAWLER_SPIDER_FUNC`
+    * Environment variable `CRAWLER_FUNC`
     * Startup parameter `-f`
 * Additional parameters, this parameter is optional. It is recommended to use a JSON string. The parameters will be
   passed to the initial method.
-    * Environment variable `CRAWLER_SPIDER_ARGS`
+    * Environment variable `CRAWLER_ARGS`
     * Startup parameter `-a`
-* Startup mode, default is "manual". You can use different modes as needed
-    * Environment variable `CRAWLER_SPIDER_MODE`
+* Startup mode, default is 0(manual). You can use different modes as needed
+    * Environment variable `CRAWLER_MODE`
     * Startup parameter `-m`
     * You can use different modes as needed:
     * Optional values
-        * `manual`: Executes manually (default is no execution); can be managed through the API.
-        * `loop`: Executes repeatedly.
-        * `once`: Executes only once.
-        * `cron`: Executes at scheduled intervals.
+        * 0: manual. Executes manually (default is no execution); can be managed through the API.
+        * 1: once. Executes only once.
+        * 2: loop. Executes repeatedly.
+        * 3: cron. Executes at scheduled intervals.
 * Scheduled task. This configuration is only applied when the mode is set to "cron", such as "1s/2i/3h/4d/5m/6w"
-    * Environment variable `CRAWLER_SPIDER_SPEC`
+    * Environment variable `CRAWLER_SPEC`
     * Startup parameter `-s`
 
 ### Configuration

@@ -210,6 +210,7 @@ Spider选项
 * `WithKafkaPipeline` 设置 Kafka 数据处理管道，将爬取的数据发送到 Kafka 消息队列。
 * `WithCustomPipeline` 设置自定义数据处理管道。
 * `WithRetryMaxTimes` 设置请求的最大重试次数。
+* `WithRedirectMaxTimes` 设置请求的最大跳转次数。
 * `WithTimeout` 设置请求的超时时间。
 * `WithInterval` 设置请求的间隔时间。
 * `WithOkHttpCodes` 设置正常的HTTP状态码。
@@ -659,24 +660,24 @@ spider -c example.yml -n example -f TestOk -m once
     * 环境变量 `CRAWLER_CONFIG_FILE`
     * 启动参数 `-c`
 * 爬虫名称，必须进行配置。
-    * 环境变量 `CRAWLER_SPIDER_NAME`
+    * 环境变量 `CRAWLER_NAME`
     * 启动参数 `-n`
 * 初始方法名称，默认Test，注意大小写需一致。
-    * 环境变量 `CRAWLER_SPIDER_FUNC`
+    * 环境变量 `CRAWLER_FUNC`
     * 启动参数 `-f`
 * 额外的参数，该参数是非必须项。建议使用JSON字符串。参数会被传递到初始方法中。
-    * 环境变量 `CRAWLER_SPIDER_ARGS`
+    * 环境变量 `CRAWLER_ARGS`
     * 启动参数 `-a`
-* 模式，默认为manual。您可以根据需要使用不同的模式。
-    * 环境变量 `CRAWLER_SPIDER_MODE`
+* 模式，默认为0(manual)。您可以根据需要使用不同的模式。
+    * 环境变量 `CRAWLER_MODE`
     * 启动参数 `-m`
     * 可选值
-        * manual 手动执行，默认不执行，可以通过api进行管理。
-        * loop 一直重复执行
-        * once 只执行一次
-        * cron 定时执行
+        * 0: manual 手动执行，默认不执行，可以通过api进行管理。
+        * 1: once 只执行一次
+        * 2: loop 一直重复执行
+        * 3: cron 定时执行
 * 定时任务。只有在模式为cron下，才会应用此配置。如"1s/2i/3h/4d/5m/6w"
-    * 环境变量 `CRAWLER_SPIDER_SPEC`
+    * 环境变量 `CRAWLER_SPEC`
     * 启动参数 `-s`
 
 ### 配置
@@ -818,8 +819,8 @@ curl "http://127.0.0.1:8090" -H "Content-Type: application/json"
 curl "http://127.0.0.1:8090/spiders" -X POST -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
 
 # spider run
-curl "http://127.0.0.1:8090/spider/run" -X POST -d '{"timeout": 1000, "name": "test-must-ok", "func":"TestOk", "args":"", "mode":"once"}' -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
-# {"code":0,"msg":"","data":{"name":"test-must-ok"}}
+curl "http://127.0.0.1:8090/spider/run" -X POST -d '{"timeout": 2, "name": "test-must-ok", "func":"TestOk", "args":"", "mode":1}' -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+# {"code":0,"msg":"","data":{"id":"133198dc7a0911ee904b9221bc92ca26","start_time":0,"finish_time":0}}
 
 # spider stop
 curl "http://127.0.0.1:8080/spider/stop" -X POST -d '{"task_id":""}' -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
@@ -1160,7 +1161,6 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * extra速率限制
 * 没请求完，ctx退出
 * request with ctx
-* new Context
 * stat->crawler
 * test refer cookie
 

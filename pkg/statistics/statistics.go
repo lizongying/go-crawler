@@ -10,6 +10,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/statistics/task"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -21,6 +22,7 @@ type Statistics struct {
 	Schedules map[string]pkg.StatisticsSchedule
 	Tasks     map[string]pkg.StatisticsTask
 	Records   []pkg.StatisticsRecord
+	mutex     sync.RWMutex
 }
 
 func (s *Statistics) GetNodes() (nodes []pkg.StatisticsNode) {
@@ -118,6 +120,8 @@ func (s *Statistics) scheduleStopped(ctx pkg.Context) {
 		WithFinishTime(ctx.GetScheduleStopTime())
 }
 func (s *Statistics) taskStarted(ctx pkg.Context) {
+	defer s.mutex.Unlock()
+	s.mutex.Lock()
 	s.Nodes[ctx.GetCrawlerId()].IncTask()
 	s.Spiders[ctx.GetSpiderName()].IncTask()
 	s.Schedules[ctx.GetScheduleId()].IncTask()
@@ -140,6 +144,8 @@ func (s *Statistics) taskStarted(ctx pkg.Context) {
 }
 
 func (s *Statistics) taskStopped(ctx pkg.Context) {
+	defer s.mutex.Unlock()
+	s.mutex.Lock()
 	s.Tasks[ctx.GetTaskId()].
 		WithStatus(ctx.GetTaskStatus()).
 		WithFinishTime(ctx.GetTaskStopTime())

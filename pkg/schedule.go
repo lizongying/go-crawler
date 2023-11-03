@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"fmt"
+	"strings"
 )
 
 type ScheduleStatus uint8
@@ -41,7 +42,7 @@ func (s *ScheduleMode) String() string {
 	case 3:
 		return "cron"
 	default:
-		return "unknown"
+		return "manual"
 	}
 }
 func (s *ScheduleMode) MarshalJSON() ([]byte, error) {
@@ -61,7 +62,13 @@ func (s *ScheduleMode) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 func ScheduleModeFromString(name string) ScheduleMode {
-	switch name {
+	switch strings.ToLower(name) {
+	case "1":
+		return ScheduleModeOnce
+	case "2":
+		return ScheduleModeLoop
+	case "3":
+		return ScheduleModeLoop
 	case "once":
 		return ScheduleModeOnce
 	case "loop":
