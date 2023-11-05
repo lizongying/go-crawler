@@ -11,6 +11,7 @@ import vueJsx from "@vitejs/plugin-vue-jsx";
 export default defineConfig(({mode}) => {
     const env = loadEnv(mode, process.cwd())
     return {
+        base: env.VITE_BASE_DIR,
         plugins: [
             vue(),
             vueJsx(),
@@ -34,7 +35,6 @@ export default defineConfig(({mode}) => {
                     chunkFileNames: `assets/[hash].js`,
                 },
             },
-            assetsDir: env.VITE_ASSETS_DIR
         },
     }
 })
