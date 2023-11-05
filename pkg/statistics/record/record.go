@@ -10,7 +10,7 @@ type Record struct {
 	Id       string          `json:"id,omitempty"`
 	Node     string          `json:"node,omitempty"`
 	Spider   string          `json:"spider,omitempty"`
-	Schedule string          `json:"schedule,omitempty"`
+	Job      string          `json:"job,omitempty"`
 	Task     string          `json:"task,omitempty"`
 	Meta     string          `json:"meta,omitempty"`
 	Data     string          `json:"data,omitempty"`
@@ -29,8 +29,8 @@ func (r *Record) WithSpider(spider string) *Record {
 	r.Spider = spider
 	return r
 }
-func (r *Record) WithSchedule(schedule string) *Record {
-	r.Schedule = schedule
+func (r *Record) WithJob(job string) *Record {
+	r.Job = job
 	return r
 }
 func (r *Record) WithTask(task string) *Record {

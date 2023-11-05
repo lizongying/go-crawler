@@ -127,7 +127,7 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 	c := new(crawlerContext.Context).
 		WithCrawler(ctx.GetCrawler()).
 		WithSpider(ctx.GetSpider()).
-		WithSchedule(ctx.GetSchedule()).
+		WithJob(ctx.GetJob()).
 		WithTask(ctx.GetTask()).
 		WithRequest(new(crawlerContext.Request).
 			WithContext(context.Background()).

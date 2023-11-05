@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/statistics/schedule"
+	"github.com/lizongying/go-crawler/pkg/statistics/job"
 	"net/http"
 	"time"
 )
@@ -34,8 +34,8 @@ func (h *RouteJobRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if req.Func == "" {
 		req.Func = "Test"
 	}
-	if req.Mode == pkg.ScheduleModeUnknown {
-		req.Mode = pkg.ScheduleModeOnce
+	if req.Mode == pkg.JobModeUnknown {
+		req.Mode = pkg.JobModeOnce
 	}
 
 	c := context.Background()
@@ -49,8 +49,7 @@ func (h *RouteJobRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	job := schedule.Schedule{Id: jobId}
-	h.OutJson(w, 0, "", &job)
+	h.OutJson(w, 0, "", &job.Job{Id: jobId})
 }
 
 func (h *RouteJobRun) FromCrawler(crawler pkg.Crawler) pkg.Route {

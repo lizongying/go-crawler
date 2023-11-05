@@ -40,18 +40,18 @@
           {{ record.node }}
         </RouterLink>
       </template>
-      <template v-else-if="column.dataIndex === 'schedule'">
-        <RouterLink :to="'/schedules?spider_name='+record.name">
-          {{ record.schedule }}
+      <template v-else-if="column.dataIndex === 'job'">
+        <RouterLink :to="'/jobs?spider='+record.spider">
+          {{ record.job }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'task'">
-        <RouterLink :to="'/tasks?spider_name='+record.name">
+        <RouterLink :to="'/tasks?spider='+record.spider">
           {{ record.task }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'record'">
-        <RouterLink :to="'/records?spider_name='+record.name">
+        <RouterLink :to="'/records?spider='+record.spider">
           {{ record.record }}
         </RouterLink>
       </template>
@@ -60,6 +60,9 @@
       </template>
       <template v-else-if="column.dataIndex === 'finish_time'">
         {{ formattedDate(record.finish_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'duration'">
+        {{ formatDuration(record.finish_time - record.start_time) }}
       </template>
       <template v-else-if="column.dataIndex === 'last_task_start_time'">
         {{ formattedDate(record.last_task_start_time) }}
@@ -86,7 +89,7 @@
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {useSpidersStore} from "@/stores/spiders";
-import {formattedDate} from "@/utils/time";
+import {formatDuration, formattedDate} from "@/utils/time";
 
 const columns = [
   {
@@ -138,6 +141,12 @@ const columns = [
     sorter: (a, b) => a.finish_time - b.finish_time,
   },
   {
+    title: 'Duration',
+    dataIndex: 'duration',
+    width: 150,
+    sorter: (a, b) => a.duration - b.duration,
+  },
+  {
     title: 'Last Task Status',
     dataIndex: 'last_task_status',
     width: 200,
@@ -174,10 +183,10 @@ const columns = [
     sorter: (a, b) => a.last_task_finish_time - b.last_task_finish_time,
   },
   {
-    title: 'Schedule',
-    dataIndex: 'schedule',
+    title: 'Job',
+    dataIndex: 'job',
     width: 100,
-    sorter: (a, b) => a.schedule - b.schedule,
+    sorter: (a, b) => a.job - b.job,
   },
   {
     title: 'Task',

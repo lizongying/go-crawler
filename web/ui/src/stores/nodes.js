@@ -23,5 +23,21 @@ export const useNodesStore = defineStore('nodes', () => {
         return nodes.filter(v => v.status === 1).length
     })
 
-    return {nodes, GetNodes, Count, CountActive}
+    const CountTask = computed(() => {
+        if (nodes.length === 0) {
+            return 0
+        }
+
+        return nodes.filter(v => v.task).map(v => v.task).reduce((a, b) => a + b, 0)
+    })
+
+    const CountRecord = computed(() => {
+        if (nodes.length === 0) {
+            return 0
+        }
+
+        return nodes.filter(v => v.record).map(v => v.record).reduce((a, b) => a + b, 0)
+    })
+
+    return {nodes, GetNodes, Count, CountActive, CountTask, CountRecord}
 })

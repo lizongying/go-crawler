@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"strings"
 )
@@ -19,4 +20,9 @@ func UUIDV4WithoutHyphens() string {
 	uuidStr := u.String()
 	uuidStr = strings.Replace(uuidStr, "-", "", -1)
 	return uuidStr
+}
+
+func StrToUUID(str string)  {
+	u, err := uuid.Parse(str)
+	fmt.Println(u, err)
 }

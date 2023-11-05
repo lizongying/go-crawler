@@ -24,7 +24,7 @@ type Crawler struct {
 	spiderName  string
 	startFunc   string
 	args        string
-	mode        pkg.ScheduleMode
+	mode        pkg.JobMode
 	spec        string
 	config      pkg.Config
 	logger      pkg.Logger
@@ -143,7 +143,7 @@ func (c *Crawler) ItemTimer() *time.Timer {
 func (c *Crawler) ItemConcurrencyChan() chan struct{} {
 	return c.itemConcurrencyChan
 }
-func (c *Crawler) Run(ctx context.Context, spiderName string, startFunc string, args string, mode pkg.ScheduleMode, spec string) (id string, err error) {
+func (c *Crawler) Run(ctx context.Context, spiderName string, startFunc string, args string, mode pkg.JobMode, spec string) (id string, err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
 		if v.Name() == spiderName {
@@ -263,7 +263,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		spiderName:  cli.SpiderName,
 		startFunc:   cli.StartFunc,
 		args:        cli.Args,
-		mode:        pkg.ScheduleModeFromString(cli.Mode),
+		mode:        pkg.JobModeFromString(cli.Mode),
 		spec:        cli.Spec,
 		config:      config,
 		logger:      logger,
@@ -286,7 +286,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 	httpApi.AddRoutes(new(api.RouteJobRun).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteNodes).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpiders).FromCrawler(crawler))
-	httpApi.AddRoutes(new(api.RouteSchedules).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteJobs).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteTasks).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteRecords).FromCrawler(crawler))
 

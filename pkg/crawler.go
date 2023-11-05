@@ -31,7 +31,7 @@ type Crawler interface {
 	GetStore() Store
 
 	SpiderStop(Context) error
-	Run(context.Context, string, string, string, ScheduleMode, string) (string, error)
+	Run(context.Context, string, string, string, JobMode, string) (string, error)
 
 	GetSignal() Signal
 	SetSignal(Signal)

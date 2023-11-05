@@ -19,9 +19,9 @@
           {{ record.spider }}
         </RouterLink>
       </template>
-      <template v-else-if="column.dataIndex === 'schedule'">
-        <RouterLink :to="'/schedules?id='+record.schedule">
-          {{ record.schedule }}
+      <template v-else-if="column.dataIndex === 'job'">
+        <RouterLink :to="'/jobs?id='+record.job">
+          {{ record.job }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'task'">
@@ -79,10 +79,10 @@ const columns = [
     sorter: (a, b) => a.spider - b.spider,
   },
   {
-    title: 'Schedule',
-    dataIndex: 'schedule',
+    title: 'Job',
+    dataIndex: 'job',
     width: 300,
-    sorter: (a, b) => a.schedule - b.schedule,
+    sorter: (a, b) => a.job - b.job,
   },
   {
     title: 'Task',

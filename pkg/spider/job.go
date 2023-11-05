@@ -26,14 +26,14 @@ func (j *Job) WithContext(ctx pkg.Context) *Job {
 	j.context = ctx
 	return j
 }
-func (j *Job) start(ctx pkg.Context, jobFunc string, args string, mode pkg.ScheduleMode, spec string, onlyOneTask bool) (err error) {
+func (j *Job) start(ctx pkg.Context, jobFunc string, args string, mode pkg.JobMode, spec string, onlyOneTask bool) (err error) {
 	j.context = new(crawlerContext.Context).
 		WithCrawler(ctx.GetCrawler()).
 		WithSpider(ctx.GetSpider()).
-		WithSchedule(new(crawlerContext.Schedule).
+		WithJob(new(crawlerContext.Job).
 			WithContext(context.Background()).
 			WithId(utils.UUIDV1WithoutHyphens()).
-			WithStatus(pkg.ScheduleStatusStarted).
+			WithStatus(pkg.JobStatusStarted).
 			WithStartTime(time.Now()).
 			WithEnable(true).
 			WithFunc(jobFunc).
@@ -41,7 +41,7 @@ func (j *Job) start(ctx pkg.Context, jobFunc string, args string, mode pkg.Sched
 			WithMode(mode).
 			WithSpec(spec).
 			WithOnlyOneTask(onlyOneTask))
-	j.crawler.GetSignal().ScheduleStarted(j.context)
+	j.crawler.GetSignal().JobStarted(j.context)
 	return
 }
 func (j *Job) run(ctx context.Context) (err error) {
@@ -54,7 +54,7 @@ func (j *Job) run(ctx context.Context) (err error) {
 	go func() {
 		select {
 		case <-ctx.Done():
-			if j.context.GetScheduleStatus() != pkg.ScheduleStatusStopped {
+			if j.context.GetJobStatus() != pkg.JobStatusStopped {
 				j.stop(ctx.Err())
 			}
 			return
@@ -64,24 +64,24 @@ func (j *Job) run(ctx context.Context) (err error) {
 	j.task.RegisterIsReadyAndIsZero(func() {
 		j.stop(nil)
 	})
-	j.context.WithScheduleContext(ctx)
-	//j.crawler.GetSignal().ScheduleStarted(j.context)
+	j.context.WithJobContext(ctx)
+	//j.crawler.GetSignal().JobStarted(j.context)
 
-	switch j.context.GetScheduleMode() {
-	case pkg.ScheduleModeOnce:
+	switch j.context.GetJobMode() {
+	case pkg.JobModeOnce:
 		go j.startTask()
-	case pkg.ScheduleModeLoop:
+	case pkg.JobModeLoop:
 		go j.startTask()
-	case pkg.ScheduleModeCron:
-		if j.context.GetScheduleOnlyOneTask() {
+	case pkg.JobModeCron:
+		if j.context.GetJobOnlyOneTask() {
 			j.cronJob <- struct{}{}
 		}
 		cr := cron.New(cron.WithLogger(j.logger))
 		cr.MustStart()
 		job := new(cron.Job).
-			MustEverySpec(j.context.GetScheduleSpec()).
+			MustEverySpec(j.context.GetJobSpec()).
 			Callback(func() {
-				if j.context.GetScheduleOnlyOneTask() {
+				if j.context.GetJobOnlyOneTask() {
 					<-j.cronJob
 				}
 				j.startTask()
@@ -95,33 +95,33 @@ func (j *Job) run(ctx context.Context) (err error) {
 
 func (j *Job) stop(err error) {
 	if err != nil {
-		j.context.GetSchedule().
-			WithStatus(pkg.ScheduleStatusStopped).
+		j.context.GetJob().
+			WithStatus(pkg.JobStatusStopped).
 			WithStopTime(time.Now())
-		j.crawler.GetSignal().ScheduleStopped(j.context)
+		j.crawler.GetSignal().JobStopped(j.context)
 
-		j.spider.StopSchedule(j.context, err)
+		j.spider.StopJob(j.context, err)
 		return
 	}
 
-	if j.context.GetScheduleStatus() == pkg.ScheduleStatusStopped {
+	if j.context.GetJobStatus() == pkg.JobStatusStopped {
 		err = errors.New("the job has been finished early")
 		j.logger.Error(err)
 		return
 	}
 
-	switch j.context.GetScheduleMode() {
-	case pkg.ScheduleModeOnce:
-		j.context.GetSchedule().
-			WithStatus(pkg.ScheduleStatusStopped).
+	switch j.context.GetJobMode() {
+	case pkg.JobModeOnce:
+		j.context.GetJob().
+			WithStatus(pkg.JobStatusStopped).
 			WithStopTime(time.Now())
-		j.crawler.GetSignal().ScheduleStopped(j.context)
+		j.crawler.GetSignal().JobStopped(j.context)
 
-		j.spider.StopSchedule(j.context, nil)
-	case pkg.ScheduleModeLoop:
+		j.spider.StopJob(j.context, nil)
+	case pkg.JobModeLoop:
 		j.startTask()
-	case pkg.ScheduleModeCron:
-		if j.context.GetScheduleOnlyOneTask() {
+	case pkg.JobModeCron:
+		if j.context.GetJobOnlyOneTask() {
 			j.cronJob <- struct{}{}
 		}
 	default:

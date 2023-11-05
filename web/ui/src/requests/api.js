@@ -19,8 +19,8 @@ const getSpiders = data => {
     return axios.post(settingStore.setting.apiHost + '/spiders', data, config);
 };
 
-const getSchedules = data => {
-    return axios.post(settingStore.setting.apiHost + '/schedules', data, config);
+const getJobs = data => {
+    return axios.post(settingStore.setting.apiHost + '/jobs', data, config);
 };
 
 const getTasks = data => {
@@ -31,4 +31,4 @@ const getRecords = data => {
     return axios.post(settingStore.setting.apiHost + '/records', data, config);
 };
 
-export {getNodes, getSpiders, getSchedules, getTasks, getRecords}
+export {getNodes, getSpiders, getJobs, getTasks, getRecords}

@@ -48,7 +48,7 @@ type Spider interface {
 	GetMiddlewares() Middlewares
 	SetMiddlewares(Middlewares) Spider
 
-	Run(context.Context, string, string, ScheduleMode, string, bool) (string, error)
+	Run(context.Context, string, string, JobMode, string, bool) (string, error)
 	Start(Context) error
 	Stop(ctx Context) error
 	FromCrawler(Crawler) Spider
@@ -80,7 +80,7 @@ type Spider interface {
 	RequestSlotLoad(slot string) (value any, ok bool)
 	RequestSlotStore(slot string, value any)
 
-	StopSchedule(Context, error)
+	StopJob(Context, error)
 
 	GetDownloader() Downloader
 	WithDownloader(Downloader) Spider

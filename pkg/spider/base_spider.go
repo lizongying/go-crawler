@@ -400,7 +400,7 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 	}
 	return
 }
-func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode pkg.ScheduleMode, spec string, onlyOneTask bool) (id string, err error) {
+func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode pkg.JobMode, spec string, onlyOneTask bool) (id string, err error) {
 	if s.GetContext() == nil {
 		err = errors.New("spider hasn't started")
 		s.logger.Error(err)
@@ -413,7 +413,7 @@ func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode 
 		return
 	}
 
-	id = job.context.GetScheduleId()
+	id = job.context.GetJobId()
 
 	if err = job.run(ctx); err != nil {
 		s.logger.Error(err)
@@ -423,11 +423,11 @@ func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode 
 	s.job.In()
 	return
 }
-func (s *BaseSpider) StopSchedule(ctx pkg.Context, err error) {
+func (s *BaseSpider) StopJob(ctx pkg.Context, err error) {
 	if err != nil {
-		s.logger.Info(s.spider.Name(), ctx.GetScheduleId(), "the job finished with an error:", err, "spend time:", ctx.GetScheduleStopTime().Sub(ctx.GetScheduleStartTime()))
+		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "the job finished with an error:", err, "spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
 	} else {
-		s.logger.Info(s.spider.Name(), ctx.GetScheduleId(), "the job finished successfully. spend time:", ctx.GetScheduleStopTime().Sub(ctx.GetScheduleStartTime()))
+		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "the job finished successfully. spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
 	}
 
 	defer s.job.Out()

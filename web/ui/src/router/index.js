@@ -19,9 +19,9 @@ const router = createRouter({
             component: () => import('../views/SpidersView.vue')
         },
         {
-            path: '/schedules',
-            name: 'schedules',
-            component: () => import('../views/SchedulesView.vue')
+            path: '/jobs',
+            name: 'jobs',
+            component: () => import('../views/JobsView.vue')
         },
         {
             path: '/tasks',

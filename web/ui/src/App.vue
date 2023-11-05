@@ -134,7 +134,7 @@ router.beforeEach((to, from, next) => {
     case '/spiders':
       state.selectedKeys = ['3']
       break
-    case '/schedules':
+    case '/jobs':
       state.selectedKeys = ['4']
       break
     case '/tasks':
@@ -178,8 +178,8 @@ const items = reactive([
   {
     key: '4',
     icon: () => h(ScheduleOutlined),
-    label: <RouterLink to="/schedules">Schedules</RouterLink>,
-    title: 'Schedules',
+    label: <RouterLink to="/jobs">Jobs</RouterLink>,
+    title: 'Jobs',
   },
   {
     key: '5',

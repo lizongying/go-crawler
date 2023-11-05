@@ -6,8 +6,8 @@ type StatisticsNode interface {
 	WithId(string) StatisticsNode
 	IncSpider()
 	DecSpider()
-	IncSchedule()
-	DecSchedule()
+	IncJob()
+	DecJob()
 	IncTask()
 	DecTask()
 	IncRecord()
@@ -16,8 +16,8 @@ type StatisticsNode interface {
 }
 type StatisticsSpider interface {
 	GetSpider() string
-	IncSchedule()
-	DecSchedule()
+	IncJob()
+	DecJob()
 	IncTask()
 	DecTask()
 	IncRecord()
@@ -32,19 +32,20 @@ type StatisticsSpider interface {
 	WithLastTaskFinishTime(time.Time) StatisticsSpider
 	Marshal() (bytes []byte, err error)
 }
-type StatisticsSchedule interface {
-	WithStatus(status ScheduleStatus) StatisticsSchedule
-	WithId(id string) StatisticsSchedule
-	WithSchedule(schedule string) StatisticsSchedule
-	WithNode(node string) StatisticsSchedule
-	WithSpider(spider string) StatisticsSchedule
+type StatisticsJob interface {
+	WithStatus(status JobStatus) StatisticsJob
+	WithId(id string) StatisticsJob
+	WithSchedule(schedule string) StatisticsJob
+	WithCommand(command string) StatisticsJob
+	WithNode(node string) StatisticsJob
+	WithSpider(spider string) StatisticsJob
 	IncTask()
 	DecTask()
 	IncRecord()
 	DecRecord()
-	WithEnable(enable bool) StatisticsSchedule
-	WithStartTime(time.Time) StatisticsSchedule
-	WithFinishTime(time.Time) StatisticsSchedule
+	WithEnable(enable bool) StatisticsJob
+	WithStartTime(time.Time) StatisticsJob
+	WithFinishTime(time.Time) StatisticsJob
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsTask interface {
@@ -57,8 +58,8 @@ type StatisticsTask interface {
 	WithNode(string) StatisticsTask
 	GetSpider() string
 	WithSpider(string) StatisticsTask
-	GetSchedule() string
-	WithSchedule(string) StatisticsTask
+	GetJob() string
+	WithJob(string) StatisticsTask
 	WithStartTime(startTime time.Time) StatisticsTask
 	WithFinishTime(finishTime time.Time) StatisticsTask
 	Marshal() (bytes []byte, err error)
@@ -69,9 +70,7 @@ type StatisticsRecord interface {
 type Statistics interface {
 	GetNodes() []StatisticsNode
 	GetSpiders() []StatisticsSpider
-	GetSchedules() []StatisticsSchedule
+	GetJobs() []StatisticsJob
 	GetTasks() []StatisticsTask
 	GetRecords() []StatisticsRecord
-	AddTasks(...StatisticsTask)
-	AddRecords(...StatisticsRecord)
 }

@@ -7,94 +7,94 @@ import (
 	"time"
 )
 
-type Schedule struct {
-	Context     context.Context    `json:"-"`
-	Id          string             `json:"id,omitempty"`
-	Status      pkg.ScheduleStatus `json:"status,omitempty"`
-	StartTime   utils.Timestamp    `json:"start_time,omitempty"`
-	StopTime    utils.Timestamp    `json:"stop_time,omitempty"`
-	Enable      bool               `json:"enable,omitempty"`
-	Func        string             `json:"func,omitempty"`
-	Args        string             `json:"args,omitempty"`
-	Mode        pkg.ScheduleMode   `json:"mode,omitempty"`
-	Spec        string             `json:"spec,omitempty"`
-	OnlyOneTask bool               `json:"only_one_task,omitempty"`
+type Job struct {
+	Context     context.Context `json:"-"`
+	Id          string          `json:"id,omitempty"`
+	Status      pkg.JobStatus   `json:"status,omitempty"`
+	StartTime   utils.Timestamp `json:"start_time,omitempty"`
+	StopTime    utils.Timestamp `json:"stop_time,omitempty"`
+	Enable      bool            `json:"enable,omitempty"`
+	Func        string          `json:"func,omitempty"`
+	Args        string          `json:"args,omitempty"`
+	Mode        pkg.JobMode     `json:"mode,omitempty"`
+	Spec        string          `json:"spec,omitempty"`
+	OnlyOneTask bool            `json:"only_one_task,omitempty"`
 }
 
-func (c *Schedule) GetId() string {
+func (c *Job) GetId() string {
 	return c.Id
 }
-func (c *Schedule) WithId(id string) pkg.ContextSchedule {
+func (c *Job) WithId(id string) pkg.ContextJob {
 	c.Id = id
 	return c
 }
-func (c *Schedule) GetContext() context.Context {
+func (c *Job) GetContext() context.Context {
 	return c.Context
 }
-func (c *Schedule) WithContext(ctx context.Context) pkg.ContextSchedule {
+func (c *Job) WithContext(ctx context.Context) pkg.ContextJob {
 	c.Context = ctx
 	return c
 }
-func (c *Schedule) GetStatus() pkg.ScheduleStatus {
+func (c *Job) GetStatus() pkg.JobStatus {
 	return c.Status
 }
-func (c *Schedule) WithStatus(status pkg.ScheduleStatus) pkg.ContextSchedule {
+func (c *Job) WithStatus(status pkg.JobStatus) pkg.ContextJob {
 	c.Status = status
 	return c
 }
-func (c *Schedule) GetStartTime() time.Time {
+func (c *Job) GetStartTime() time.Time {
 	return c.StartTime.Time
 }
-func (c *Schedule) WithStartTime(startTime time.Time) pkg.ContextSchedule {
+func (c *Job) WithStartTime(startTime time.Time) pkg.ContextJob {
 	c.StartTime = utils.Timestamp{Time: startTime}
 	return c
 }
-func (c *Schedule) GetStopTime() time.Time {
+func (c *Job) GetStopTime() time.Time {
 	return c.StopTime.Time
 }
-func (c *Schedule) WithStopTime(stopTime time.Time) pkg.ContextSchedule {
+func (c *Job) WithStopTime(stopTime time.Time) pkg.ContextJob {
 	c.StopTime = utils.Timestamp{Time: stopTime}
 	return c
 }
-func (c *Schedule) GetEnable() bool {
+func (c *Job) GetEnable() bool {
 	return c.Enable
 }
-func (c *Schedule) WithEnable(enable bool) pkg.ContextSchedule {
+func (c *Job) WithEnable(enable bool) pkg.ContextJob {
 	c.Enable = enable
 	return c
 }
-func (c *Schedule) GetFunc() string {
+func (c *Job) GetFunc() string {
 	return c.Func
 }
-func (c *Schedule) WithFunc(fn string) pkg.ContextSchedule {
+func (c *Job) WithFunc(fn string) pkg.ContextJob {
 	c.Func = fn
 	return c
 }
-func (c *Schedule) GetArgs() string {
+func (c *Job) GetArgs() string {
 	return c.Args
 }
-func (c *Schedule) WithArgs(args string) pkg.ContextSchedule {
+func (c *Job) WithArgs(args string) pkg.ContextJob {
 	c.Args = args
 	return c
 }
-func (c *Schedule) GetMode() pkg.ScheduleMode {
+func (c *Job) GetMode() pkg.JobMode {
 	return c.Mode
 }
-func (c *Schedule) WithMode(mode pkg.ScheduleMode) pkg.ContextSchedule {
+func (c *Job) WithMode(mode pkg.JobMode) pkg.ContextJob {
 	c.Mode = mode
 	return c
 }
-func (c *Schedule) GetSpec() string {
+func (c *Job) GetSpec() string {
 	return c.Spec
 }
-func (c *Schedule) WithSpec(spec string) pkg.ContextSchedule {
+func (c *Job) WithSpec(spec string) pkg.ContextJob {
 	c.Spec = spec
 	return c
 }
-func (c *Schedule) GetOnlyOneTask() bool {
+func (c *Job) GetOnlyOneTask() bool {
 	return c.OnlyOneTask
 }
-func (c *Schedule) WithOnlyOneTask(onlyOneTask bool) pkg.ContextSchedule {
+func (c *Job) WithOnlyOneTask(onlyOneTask bool) pkg.ContextJob {
 	c.OnlyOneTask = onlyOneTask
 	return c
 }

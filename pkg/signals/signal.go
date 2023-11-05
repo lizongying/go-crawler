@@ -15,8 +15,8 @@ type Signal struct {
 	spiderStopping []pkg.FnSpiderStopping
 	spiderStopped  []pkg.FnSpiderStopped
 
-	scheduleStarted []pkg.FnScheduleStarted
-	scheduleStopped []pkg.FnScheduleStopped
+	jobStarted []pkg.FnJobStarted
+	jobStopped []pkg.FnJobStopped
 
 	taskStarted []pkg.FnTaskStarted
 	taskStopped []pkg.FnTaskStopped
@@ -46,11 +46,11 @@ func (s *Signal) RegisterSpiderStopping(fn pkg.FnSpiderStopping) {
 func (s *Signal) RegisterSpiderStopped(fn pkg.FnSpiderStopped) {
 	s.spiderStopped = append(s.spiderStopped, fn)
 }
-func (s *Signal) RegisterScheduleStarted(fn pkg.FnScheduleStarted) {
-	s.scheduleStarted = append(s.scheduleStarted, fn)
+func (s *Signal) RegisterJobStarted(fn pkg.FnJobStarted) {
+	s.jobStarted = append(s.jobStarted, fn)
 }
-func (s *Signal) RegisterScheduleStopped(fn pkg.FnScheduleStopped) {
-	s.scheduleStopped = append(s.scheduleStopped, fn)
+func (s *Signal) RegisterJobStopped(fn pkg.FnJobStopped) {
+	s.jobStopped = append(s.jobStopped, fn)
 }
 func (s *Signal) RegisterTaskStarted(fn pkg.FnTaskStarted) {
 	s.taskStarted = append(s.taskStarted, fn)
@@ -100,13 +100,13 @@ func (s *Signal) SpiderStopped(ctx pkg.Context) {
 		v(ctx)
 	}
 }
-func (s *Signal) ScheduleStarted(ctx pkg.Context) {
-	for _, v := range s.scheduleStarted {
+func (s *Signal) JobStarted(ctx pkg.Context) {
+	for _, v := range s.jobStarted {
 		v(ctx)
 	}
 }
-func (s *Signal) ScheduleStopped(ctx pkg.Context) {
-	for _, v := range s.scheduleStopped {
+func (s *Signal) JobStopped(ctx pkg.Context) {
+	for _, v := range s.jobStopped {
 		v(ctx)
 	}
 }

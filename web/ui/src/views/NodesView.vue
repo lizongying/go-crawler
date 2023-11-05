@@ -10,22 +10,22 @@
 
     <template #bodyCell="{ column, record }">
       <template v-if="column.dataIndex === 'spider'">
-        <RouterLink :to="'/spiders?node_id='+record.id">
+        <RouterLink :to="'/spiders?node='+record.id">
           {{ record.spider }}
         </RouterLink>
       </template>
-      <template v-else-if="column.dataIndex === 'schedule'">
-        <RouterLink :to="'/schedules?node_id='+record.id">
-          {{ record.schedule }}
+      <template v-else-if="column.dataIndex === 'job'">
+        <RouterLink :to="'/jobs?node='+record.id">
+          {{ record.job }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'task'">
-        <RouterLink :to="'/tasks?node_id='+record.id">
+        <RouterLink :to="'/tasks?node='+record.id">
           {{ record.task }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'record'">
-        <RouterLink :to="'/records?node_id='+record.id">
+        <RouterLink :to="'/records?node='+record.id">
           {{ record.record }}
         </RouterLink>
       </template>
@@ -34,6 +34,9 @@
       </template>
       <template v-else-if="column.dataIndex === 'finish_time'">
         {{ formattedDate(record.finish_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'duration'">
+        {{ formatDuration(record.finish_time - record.start_time) }}
       </template>
       <template v-else-if="column.dataIndex === 'status'">
         <span>
@@ -63,7 +66,7 @@
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {useNodesStore} from "@/stores/nodes";
-import {formattedDate} from "@/utils/time";
+import {formatDuration, formattedDate} from "@/utils/time";
 
 const columns = [
   {
@@ -97,6 +100,12 @@ const columns = [
     dataIndex: 'finish_time',
     width: 200,
     sorter: (a, b) => a.finish_time - b.finish_time,
+  },
+  {
+    title: 'Duration',
+    dataIndex: 'duration',
+    width: 150,
+    sorter: (a, b) => a.duration - b.duration,
   },
   {
     title: 'Enable',
@@ -137,10 +146,10 @@ const columns = [
     sorter: (a, b) => a.spider - b.spider,
   },
   {
-    title: 'Schedule',
-    dataIndex: 'schedule',
+    title: 'Job',
+    dataIndex: 'job',
     width: 100,
-    sorter: (a, b) => a.schedule - b.schedule,
+    sorter: (a, b) => a.job - b.job,
   },
   {
     title: 'Task',

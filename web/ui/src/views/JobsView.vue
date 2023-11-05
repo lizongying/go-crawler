@@ -1,5 +1,5 @@
 <template>
-  <a-table :columns="columns" :data-source="schedulesStore.schedules" :scroll="{ x: '100%' }">
+  <a-table :columns="columns" :data-source="jobsStore.jobs" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
         <span style="font-weight: bold">
@@ -19,13 +19,22 @@
           {{ record.spider }}
         </RouterLink>
       </template>
+      <template v-else-if="column.dataIndex === 'start_time'">
+        {{ formattedDate(record.start_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'finish_time'">
+        {{ formattedDate(record.finish_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'duration'">
+        {{ formatDuration(record.finish_time - record.start_time) }}
+      </template>
       <template v-else-if="column.dataIndex === 'task'">
-        <RouterLink :to="'/tasks?schedule='+record.id">
+        <RouterLink :to="'/tasks?job='+record.id">
           {{ record.task }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'record'">
-        <RouterLink :to="'/records?schedule='+record.id">
+        <RouterLink :to="'/records?job='+record.id">
           {{ record.record }}
         </RouterLink>
       </template>
@@ -47,7 +56,8 @@
 <script setup>
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
-import {useSchedulesStore} from "@/stores/schedules";
+import {useJobsStore} from "@/stores/jobs";
+import {formatDuration, formattedDate} from "@/utils/time";
 
 const columns = [
   {
@@ -63,6 +73,12 @@ const columns = [
     sorter: (a, b) => a.schedule - b.schedule,
   },
   {
+    title: 'Command',
+    dataIndex: 'command',
+    width: 200,
+    ellipsis: true,
+  },
+  {
     title: 'Node',
     dataIndex: 'node',
     width: 300,
@@ -73,6 +89,24 @@ const columns = [
     dataIndex: 'spider',
     sorter: (a, b) => a.spider - b.spider,
     width: 200,
+  },
+  {
+    title: 'Start Time',
+    dataIndex: 'start_time',
+    width: 200,
+    sorter: (a, b) => a.start_time - b.start_time,
+  },
+  {
+    title: 'Finish Time',
+    dataIndex: 'finish_time',
+    width: 200,
+    sorter: (a, b) => a.finish_time - b.finish_time,
+  },
+  {
+    title: 'Duration',
+    dataIndex: 'duration',
+    width: 150,
+    sorter: (a, b) => a.duration - b.duration,
   },
   {
     title: 'Task',
@@ -94,8 +128,8 @@ const columns = [
   },
 ];
 
-const schedulesStore = useSchedulesStore()
-schedulesStore.GetSchedules()
+const jobsStore = useJobsStore()
+jobsStore.GetJobs()
 </script>
 <style>
 </style>

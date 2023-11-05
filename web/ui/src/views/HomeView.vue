@@ -11,41 +11,33 @@
       <a-statistic :value="spidersStore.CountActive" title="Enable Spiders"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic :value="schedulesStore.Count" title="Total Schedules"/>
+      <a-statistic :value="schedulesStore.Count" title="Total Jobs"/>
       <br>
-      <a-statistic :value="schedulesStore.CountEnable" title="Enable Schedules"/>
+      <a-statistic :value="schedulesStore.CountEnable" title="Enable Jobs"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic :value="tasksStore.Count" title="Total Tasks"/>
+      <a-statistic :value="nodesStore.CountTask" title="Total Tasks"/>
       <br>
-      <a-statistic :value="tasksStore.CountError" title="Error Tasks"/>
+      <a-statistic :value="nodesStore.CountTask" title="Success Tasks"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic :value="recordsStore.Count" title="Total Record"/>
+      <a-statistic :value="nodesStore.CountRecord" title="Total Record"/>
     </a-col>
   </a-row>
 </template>
 <script setup>
 import {useNodesStore} from "@/stores/nodes";
 import {useSpidersStore} from "@/stores/spiders";
-import {useRecordsStore} from "@/stores/records";
-import {useTasksStore} from "@/stores/tasks";
-import {useSchedulesStore} from "@/stores/schedules";
+import {useJobsStore} from "@/stores/jobs";
 
 const nodesStore = useNodesStore()
 nodesStore.GetNodes()
 
-const schedulesStore = useSchedulesStore()
-schedulesStore.GetSchedules()
+const schedulesStore = useJobsStore()
+schedulesStore.GetJobs()
 
 const spidersStore = useSpidersStore()
 spidersStore.GetSpiders()
-
-const tasksStore = useTasksStore()
-tasksStore.GetTasks()
-
-const recordsStore = useRecordsStore()
-recordsStore.GetRecords()
 </script>
 <style>
 </style>

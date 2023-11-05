@@ -12,7 +12,7 @@ type Spider struct {
 	pkg.SpiderStatus   `json:"status,omitempty"`
 	Node               string          `json:"node,omitempty"`
 	Spider             string          `json:"spider,omitempty"`
-	Schedule           uint32          `json:"schedule,omitempty"`
+	Job                uint32          `json:"job,omitempty"`
 	Task               uint32          `json:"task,omitempty"`
 	Record             uint32          `json:"record,omitempty"`
 	StartTime          utils.Timestamp `json:"start_time,omitempty"`
@@ -30,11 +30,11 @@ func (s *Spider) WithSpider(spider string) pkg.StatisticsSpider {
 	s.Spider = spider
 	return s
 }
-func (s *Spider) IncSchedule() {
-	atomic.AddUint32(&s.Schedule, 1)
+func (s *Spider) IncJob() {
+	atomic.AddUint32(&s.Job, 1)
 }
-func (s *Spider) DecSchedule() {
-	atomic.AddUint32(&s.Schedule, ^uint32(0))
+func (s *Spider) DecJob() {
+	atomic.AddUint32(&s.Job, ^uint32(0))
 }
 func (s *Spider) IncTask() {
 	atomic.AddUint32(&s.Task, 1)

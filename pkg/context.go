@@ -33,30 +33,30 @@ type Context interface {
 	GetSpiderStopTime() time.Time
 	WithSpiderStopTime(time.Time) Context
 
-	GetSchedule() ContextSchedule
-	WithSchedule(ContextSchedule) Context
-	GetScheduleContext() context.Context
-	WithScheduleContext(context.Context) Context
-	GetScheduleId() string
-	WithScheduleId(string) Context
-	GetScheduleStatus() ScheduleStatus
-	WithScheduleStatus(ScheduleStatus) Context
-	GetScheduleEnable() bool
-	WithScheduleEnable(bool) Context
-	GetScheduleStartTime() time.Time
-	WithScheduleStartTime(time.Time) Context
-	GetScheduleStopTime() time.Time
-	WithScheduleStopTime(time.Time) Context
-	GetScheduleFunc() string
-	WithScheduleFunc(string) Context
-	GetScheduleArgs() string
-	WithScheduleArgs(string) Context
-	GetScheduleMode() ScheduleMode
-	WithScheduleMode(ScheduleMode) Context
-	GetScheduleSpec() string
-	WithScheduleSpec(string) Context
-	GetScheduleOnlyOneTask() bool
-	WithScheduleOnlyOneTask(bool) Context
+	GetJob() ContextJob
+	WithJob(ContextJob) Context
+	GetJobContext() context.Context
+	WithJobContext(context.Context) Context
+	GetJobId() string
+	WithJobId(string) Context
+	GetJobStatus() JobStatus
+	WithJobStatus(JobStatus) Context
+	GetJobEnable() bool
+	WithJobEnable(bool) Context
+	GetJobStartTime() time.Time
+	WithJobStartTime(time.Time) Context
+	GetJobStopTime() time.Time
+	WithJobStopTime(time.Time) Context
+	GetJobFunc() string
+	WithJobFunc(string) Context
+	GetJobArgs() string
+	WithJobArgs(string) Context
+	GetJobMode() JobMode
+	WithJobMode(JobMode) Context
+	GetJobSpec() string
+	WithJobSpec(string) Context
+	GetJobOnlyOneTask() bool
+	WithJobOnlyOneTask(bool) Context
 
 	GetTask() ContextTask
 	WithTask(ContextTask) Context
@@ -132,29 +132,29 @@ type ContextSpider interface {
 	WithStopTime(time.Time) ContextSpider
 }
 
-type ContextSchedule interface {
+type ContextJob interface {
 	GetId() string
-	WithId(string) ContextSchedule
+	WithId(string) ContextJob
 	GetContext() context.Context
-	WithContext(context.Context) ContextSchedule
-	GetStatus() ScheduleStatus
-	WithStatus(ScheduleStatus) ContextSchedule
+	WithContext(context.Context) ContextJob
+	GetStatus() JobStatus
+	WithStatus(JobStatus) ContextJob
 	GetStartTime() time.Time
-	WithStartTime(time.Time) ContextSchedule
+	WithStartTime(time.Time) ContextJob
 	GetStopTime() time.Time
-	WithStopTime(time.Time) ContextSchedule
+	WithStopTime(time.Time) ContextJob
 	GetEnable() bool
-	WithEnable(bool) ContextSchedule
+	WithEnable(bool) ContextJob
 	GetFunc() string
-	WithFunc(string) ContextSchedule
+	WithFunc(string) ContextJob
 	GetArgs() string
-	WithArgs(string) ContextSchedule
-	GetMode() ScheduleMode
-	WithMode(ScheduleMode) ContextSchedule
+	WithArgs(string) ContextJob
+	GetMode() JobMode
+	WithMode(JobMode) ContextJob
 	GetSpec() string
-	WithSpec(string) ContextSchedule
+	WithSpec(string) ContextJob
 	GetOnlyOneTask() bool
-	WithOnlyOneTask(bool) ContextSchedule
+	WithOnlyOneTask(bool) ContextJob
 }
 
 type ContextTask interface {

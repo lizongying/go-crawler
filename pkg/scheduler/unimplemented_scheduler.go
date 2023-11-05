@@ -93,7 +93,7 @@ func (s *UnimplementedScheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err 
 	c := new(crawlerContext.Context).
 		WithCrawler(ctx.GetCrawler()).
 		WithSpider(ctx.GetSpider()).
-		WithSchedule(ctx.GetSchedule()).
+		WithJob(ctx.GetJob()).
 		WithTask(ctx.GetTask()).
 		WithItem(new(crawlerContext.Item).
 			WithContext(context.Background()).

@@ -15,7 +15,7 @@ type Node struct {
 	Ip                string          `json:"ip,omitempty"`
 	Enable            bool            `json:"enable,omitempty"`
 	Spider            uint32          `json:"spider,omitempty"`
-	Schedule          uint32          `json:"schedule,omitempty"`
+	Job               uint32          `json:"job,omitempty"`
 	Task              uint32          `json:"task,omitempty"`
 	Record            uint32          `json:"record,omitempty"`
 	StartTime         utils.Timestamp `json:"start_time"`
@@ -40,11 +40,11 @@ func (n *Node) IncSpider() {
 func (n *Node) DecSpider() {
 	atomic.AddUint32(&n.Spider, ^uint32(0))
 }
-func (n *Node) IncSchedule() {
-	atomic.AddUint32(&n.Schedule, 1)
+func (n *Node) IncJob() {
+	atomic.AddUint32(&n.Job, 1)
 }
-func (n *Node) DecSchedule() {
-	atomic.AddUint32(&n.Schedule, ^uint32(0))
+func (n *Node) DecJob() {
+	atomic.AddUint32(&n.Job, ^uint32(0))
 }
 func (n *Node) IncTask() {
 	atomic.AddUint32(&n.Task, 1)

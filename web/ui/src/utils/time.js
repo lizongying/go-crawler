@@ -17,6 +17,9 @@ const formattedDate = (timestamp) => {
 }
 
 function formatDuration(seconds) {
+    if (seconds < 0) {
+        seconds = Math.round(new Date().getTime() / 1000) + seconds
+    }
     if (seconds < 60) {
         return seconds === 1 ? '1 second' : `${seconds} seconds`
     } else if (seconds < 3600) {
