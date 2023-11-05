@@ -11,6 +11,10 @@ jobs:
       pages: write      # to deploy to Pages
       id-token: write   # to verify the deployment originates from an appropriate source
 
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,6 +30,15 @@ jobs:
         run: npm install --prefix ./web/ui
 
       - run: npm run build --prefix ./web/ui
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # upload entire directory
+          path: './static/dist'
 
       - name: Deploy to GitHub Pages
         id: deployment
