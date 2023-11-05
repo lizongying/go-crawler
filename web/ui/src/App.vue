@@ -16,15 +16,17 @@
       ></a-menu>
     </a-layout-sider>
     <a-layout>
-      <a-layout-header v-if="!isLogin" style="background: #fff; padding: 0">
-        <menu-unfold-outlined
-            v-if="state.collapsed"
-            class="trigger"
-            @click="toggleCollapsed"
-        />
-        <menu-fold-outlined v-else class="trigger" @click="toggleCollapsed"/>
+      <a-layout-header style="background: #fff; padding: 0">
+        <template v-if="!isLogin">
+          <menu-unfold-outlined
+              v-if="state.collapsed"
+              class="trigger"
+              @click="toggleCollapsed"
+          />
+          <menu-fold-outlined v-else class="trigger" @click="toggleCollapsed"/>
+        </template>
         <a-space style="float: right; margin-right: 10px">
-          <span style="margin-right: 10px" @click="showModal"><a><MailOutlined/>  Message</a></span>
+          <span v-if="!isLogin" style="margin-right: 10px" @click="showModal"><a><MailOutlined/>  Message</a></span>
           <a-modal v-model:open="open" title="Message" width="1000px" @ok="handleOk">
             <a-space direction="vertical" style="width: 100%">
               <a-alert
@@ -63,7 +65,7 @@
               </a-form-item>
             </a-form>
           </a-modal>
-          <a-dropdown>
+          <a-dropdown v-if="!isLogin">
             <a class="ant-dropdown-link" @click.prevent>
               <UserOutlined/>
               {{ userStore.user.userInfo.name }}
