@@ -20,7 +20,7 @@ jobs:
         id: install-dependencies
         run: npm install --prefix ./web/ui
 
-      - run: ls /home/runner/work/go-crawler/go-crawler/web/ui/src/views/LoginView.vue && npm run build --prefix ./web/ui
+      - run: ls /home/runner/work/go-crawler/go-crawler && npm run build --prefix ./web/ui
 
       - name: Deploy to GitHub Pages
         id: deployment
