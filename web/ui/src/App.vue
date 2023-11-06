@@ -55,14 +55,6 @@
               >
                 <a-input v-model:value="formSetting.apiHost" placeholder="http://localhost:8090"/>
               </a-form-item>
-              <a-form-item
-                  :rules="[{ required: true, message: 'Please input api access key!' }]"
-                  label="Api Access Key"
-                  name="apiAccessKey"
-              >
-                <a-input v-model:value="formSetting.apiAccessKey"
-                         placeholder="8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"/>
-              </a-form-item>
             </a-form>
           </a-modal>
           <a-dropdown v-if="!isLogin">
@@ -118,31 +110,31 @@ const logout = () => {
   router.push('/login')
 }
 
-const isLogin = ref(false);
+const isLogin = ref(true);
 
 router.beforeEach((to, from, next) => {
-  isLogin.value = to.path === '/login'
-  if (to.path !== '/login' && !userStore.user.token) {
+  if (to.name !== 'login' && !userStore.user.token) {
     router.push('/login')
     return
   }
-  switch (to.path) {
-    case '/':
+  isLogin.value = to.name === 'login'
+  switch (to.name) {
+    case '':
       state.selectedKeys = ['1']
       break
-    case '/nodes':
+    case 'nodes':
       state.selectedKeys = ['2']
       break
-    case '/spiders':
+    case 'spiders':
       state.selectedKeys = ['3']
       break
-    case '/jobs':
+    case 'jobs':
       state.selectedKeys = ['4']
       break
-    case '/tasks':
+    case 'tasks':
       state.selectedKeys = ['5']
       break
-    case '/records':
+    case 'records':
       state.selectedKeys = ['6']
       break
     default:
@@ -229,7 +221,6 @@ settingStore.InitSetting()
 
 const formSetting = reactive({
   apiHost: settingStore.setting.apiHost,
-  apiAccessKey: settingStore.setting.apiAccessKey,
 })
 
 const openSetting = ref(false);
@@ -239,6 +230,5 @@ const showSetting = () => {
 const handleSetting = _ => {
   openSetting.value = false;
   settingStore.SetApiHost(formSetting.apiHost)
-  settingStore.SetApiAccessKey(formSetting.apiAccessKey)
 };
 </script>

@@ -289,6 +289,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 	httpApi.AddRoutes(new(api.RouteJobs).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteTasks).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteRecords).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteUser).FromCrawler(crawler))
 
 	crawler.SetSignal(new(signals.Signal).FromCrawler(crawler))
 	crawler.SetStatistics(new(statistics.Statistics).FromCrawler(crawler))

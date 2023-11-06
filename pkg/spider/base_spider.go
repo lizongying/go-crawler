@@ -366,9 +366,9 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 			WithSpider(new(crawlerContext.Spider).
 				WithContext(ctx).
 				WithName(s.Name()).
-				WithStatus(pkg.SpiderStatusStarting).
+				WithStatus(pkg.SpiderStatusStarted).
 				WithStartTime(time.Now())))
-		s.GetCrawler().GetSignal().SpiderStarting(s.GetContext())
+		s.GetCrawler().GetSignal().SpiderStarted(s.GetContext())
 
 		s.logger.Info("spiderName", s.context.GetSpiderName())
 		s.logger.Info("allowedDomains", s.GetAllowedDomains())

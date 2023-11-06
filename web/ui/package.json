@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "dev-github": "vite --mode github",
     "build": "vite build",
     "build-github": "vite build --mode github",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "preview-github": "vite preview --mode github"
   },
   "dependencies": {
     "@ant-design/icons-vue": "^7.0.0",

@@ -1,10 +1,11 @@
 import {defineStore} from 'pinia'
 import {reactive, watch} from "vue";
+import {getUser} from "@/requests/api";
 
 export const useUserStore = defineStore('user', () => {
     const user = reactive({
-        username: '',
-        password: '',
+        username: 'admin',
+        password: 'znU2LtswYWW8kbf5',
         remember: true,
         token: '',
         userInfo: {},
@@ -45,8 +46,18 @@ export const useUserStore = defineStore('user', () => {
     }
 
     const Login = async () => {
-        setToken('admin')
-        setUserInfo({name: 'Admin'})
+        return await getUser({
+            username: user.username,
+            password: user.password,
+        }).then(resp => {
+            console.log(resp.data.data)
+            if (resp.data.data === null) {
+                return
+            }
+            setToken(resp.data.data.token)
+            setUserInfo({name: resp.data.data.user_info.name, rote: resp.data.data.user_info.rote})
+            return user;
+        })
     }
     const Logout = async () => {
         setToken('')

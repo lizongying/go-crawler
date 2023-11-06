@@ -11,9 +11,9 @@
       <a-statistic :value="spidersStore.CountActive" title="Enable Spiders"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic :value="schedulesStore.Count" title="Total Jobs"/>
+      <a-statistic :value="JobsStore.Count" title="Total Jobs"/>
       <br>
-      <a-statistic :value="schedulesStore.CountEnable" title="Enable Jobs"/>
+      <a-statistic :value="JobsStore.CountEnable" title="Enable Jobs"/>
     </a-col>
     <a-col :span="4">
       <a-statistic :value="nodesStore.CountTask" title="Total Tasks"/>
@@ -33,11 +33,11 @@ import {useJobsStore} from "@/stores/jobs";
 const nodesStore = useNodesStore()
 nodesStore.GetNodes()
 
-const schedulesStore = useJobsStore()
-schedulesStore.GetJobs()
-
 const spidersStore = useSpidersStore()
 spidersStore.GetSpiders()
+
+const JobsStore = useJobsStore()
+JobsStore.GetJobs()
 </script>
 <style>
 </style>

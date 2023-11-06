@@ -54,6 +54,8 @@ type Config interface {
 	GetOkHttpCodes() []int
 	GetFilter() FilterType
 	GetScheduler() SchedulerType
+	ApiAccessKey() string
+	SetApiAccessKey(accessKey string)
 	MockServerEnable() bool
 	SetMockServerEnable(enable bool)
 	MockServerHost() *url.URL

@@ -1,34 +1,48 @@
-import axios from "axios";
-import {useSettingStore} from "@/stores/setting";
+import axios from 'axios'
 
-// setting
-const settingStore = useSettingStore();
-
-const config = {
-    headers: {
-        'Content-Type': 'application/json',
-        'X-API-Key': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
+const api = async () => {
+    const useSettingStore = () => import('@/stores/setting')
+    const userUserStore = () => import('@/stores/user')
+    const settingStore = await useSettingStore()
+    const userStore = await userUserStore()
+    return {
+        host: settingStore.useSettingStore().setting.apiHost,
+        config: {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-Key': userStore.useUserStore().user.token,
+            }
+        }
     }
 }
-
-const getNodes = data => {
-    return axios.post(settingStore.setting.apiHost + '/nodes', data, config);
+const getUser = async data => {
+    const {host, config} = await api()
+    return axios.post(host + '/user', data, config);
 };
 
-const getSpiders = data => {
-    return axios.post(settingStore.setting.apiHost + '/spiders', data, config);
+const getNodes = async data => {
+    const {host, config} = await api()
+    return axios.post(host + '/nodes', data, config);
 };
 
-const getJobs = data => {
-    return axios.post(settingStore.setting.apiHost + '/jobs', data, config);
+const getSpiders = async data => {
+    const {host, config} = await api()
+    return axios.post(host + '/spiders', data, config);
 };
 
-const getTasks = data => {
-    return axios.post(settingStore.setting.apiHost + '/tasks', data, config);
+const getJobs = async data => {
+    const {host, config} = await api()
+    return axios.post(host + '/jobs', data, config);
 };
 
-const getRecords = data => {
-    return axios.post(settingStore.setting.apiHost + '/records', data, config);
+const getTasks = async data => {
+    const {host, config} = await api()
+    return axios.post(host + '/tasks', data, config);
 };
 
-export {getNodes, getSpiders, getJobs, getTasks, getRecords}
+const getRecords = async data => {
+    const {host, config} = await api()
+    return axios.post(host + '/records', data, config);
+};
+
+export {getUser, getNodes, getSpiders, getJobs, getTasks, getRecords}

@@ -13,6 +13,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/lizongying/cron v1.0.0
 	github.com/lizongying/go-css v0.0.0-20230906104236-b58497123e0f
+	github.com/lizongying/go-gua64 v0.1.0
 	github.com/lizongying/go-json v0.0.0-20230906102344-7915011b6304
 	github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f
 	github.com/lizongying/go-re v0.0.0-20230906094757-1b48356fa6db
@@ -27,6 +28,7 @@ require (
 	github.com/tidwall/gjson v1.16.0
 	go.mongodb.org/mongo-driver v1.11.3
 	go.uber.org/fx v1.19.2
+	golang.org/x/crypto v0.12.0
 	golang.org/x/text v0.13.0
 	golang.org/x/time v0.3.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -71,7 +73,6 @@ require (
 	go.uber.org/dig v1.16.1 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect
-	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
