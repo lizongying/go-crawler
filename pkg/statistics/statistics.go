@@ -84,8 +84,6 @@ func (s *Statistics) crawlerStopped(ctx pkg.Context) {
 		WithFinishTime(ctx.GetCrawlerStopTime())
 }
 func (s *Statistics) spiderStarted(ctx pkg.Context) {
-	fmt.Println(1111111111, ctx.GetSpiderStartTime())
-	fmt.Println(2222222222, s.Spiders[ctx.GetSpiderName()])
 	s.Spiders[ctx.GetSpiderName()].
 		WithStatus(ctx.GetSpiderStatus()).
 		WithStartTime(ctx.GetSpiderStartTime())
