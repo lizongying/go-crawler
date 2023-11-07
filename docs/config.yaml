@@ -1,6 +1,6 @@
 # hugo server --minify --themesDir ../.. --baseURL=http://0.0.0.0:1313/theme/hugo-book/
 
-baseURL: https://lizongying.github.io/go-crawler/quickstart/
+baseURL: https://lizongying.github.io/go-crawler/docs/
 title: Go Crawler
 theme: hugo-book
 

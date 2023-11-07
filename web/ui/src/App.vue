@@ -26,19 +26,6 @@
           <menu-fold-outlined v-else class="trigger" @click="toggleCollapsed"/>
         </template>
         <a-space style="float: right; margin-right: 10px">
-          <span v-if="!isLogin" style="margin-right: 10px" @click="showModal"><a><MailOutlined/>  Message</a></span>
-          <a-modal v-model:open="open" title="Message" width="1000px" @ok="handleOk">
-            <a-space direction="vertical" style="width: 100%">
-              <a-alert
-                  v-for="msg in message"
-                  :key="msg"
-                  :description="msg.content"
-                  :message="msg.title"
-                  :type="msg.level === 'info' ? 'info': 'success'"
-                  show-icon
-              />
-            </a-space>
-          </a-modal>
           <span style="margin-right: 10px"><a href="/go-crawler/docs/"><ReadOutlined/>  Docs</a></span>
           <span style="margin-right: 10px" @click="showSetting"><a><SettingOutlined/>  Setting</a></span>
           <a-modal v-model:open="openSetting" title="Setting" width="1000px" @ok="handleSetting">
@@ -57,6 +44,19 @@
                 <a-input v-model:value="formSetting.apiHost" placeholder="http://localhost:8090"/>
               </a-form-item>
             </a-form>
+          </a-modal>
+          <span v-if="!isLogin" style="margin-right: 10px" @click="showModal"><a><MailOutlined/>  Message</a></span>
+          <a-modal v-model:open="open" title="Message" width="1000px" @ok="handleOk">
+            <a-space direction="vertical" style="width: 100%">
+              <a-alert
+                  v-for="msg in message"
+                  :key="msg"
+                  :description="msg.content"
+                  :message="msg.title"
+                  :type="msg.level === 'info' ? 'info': 'success'"
+                  show-icon
+              />
+            </a-space>
           </a-modal>
           <a-dropdown v-if="!isLogin">
             <a class="ant-dropdown-link" @click.prevent>
