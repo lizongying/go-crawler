@@ -53,6 +53,7 @@ params:
   # (Optional, default favicon.png) Set the path to a favicon file.
   # If the favicon is /static/favicon.png then the path would be favicon.png
   # BookFavicon: "favicon.png"
+#  BookFavicon: "favicon.png"
 
   # (Optional, default none) Set the path to a logo for the book.
   # If the logo is /static/logo.png then the path would be logo.png
@@ -65,7 +66,7 @@ params:
   # (Optional, default docs) Specify root page to render child pages as menu.
   # Page is resoled by .GetPage function: https://gohugo.io/functions/getpage/
   # For backward compatibility you can set '*' to render all sections to menu. Acts same as '/'
-  BookSection: docs
+  BookSection: "*"
 
   # Set source repository location.
   # Used for 'Last Modified' and 'Edit this page' links.
@@ -81,7 +82,7 @@ params:
   # Enable "Edit this page" links for 'doc' page type.
   # Disabled by default. Uncomment to enable. Requires 'BookRepo' param.
   # Edit path must point to root directory of repo.
-  BookEditPath: edit/main/docs
+  BookEditPath: edit/development/docs
 
   # Configure the date format used on the pages
   # - In git information
