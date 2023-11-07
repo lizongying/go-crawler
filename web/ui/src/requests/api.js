@@ -11,7 +11,8 @@ const api = async () => {
             headers: {
                 'Content-Type': 'application/json',
                 'X-API-Key': userStore.useUserStore().user.token,
-            }
+            },
+            timeout: 5000
         }
     }
 }

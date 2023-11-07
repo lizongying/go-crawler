@@ -4,8 +4,6 @@ bookFlatSection: true
 title: Introduction
 ---
 
-# Go Crawler Documentation
-
 ## About Go Crawler
 
 A web crawling framework implemented in Golang, it is simple to write and delivers powerful performance. It comes with a
