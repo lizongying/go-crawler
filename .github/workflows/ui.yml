@@ -1,0 +1,57 @@
+name: ui
+
+on:
+  push:
+    branches:
+      - development
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      contents: read
+      pages: write      # to deploy to Pages
+      id-token: write   # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+
+      - name: Install dependencies
+        run: npm install --prefix ./web/ui
+
+      - name: Build UI
+        run: npm run build-github --prefix ./web/ui
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: 'latest'
+
+      - run: hugo version
+
+      - name: Build Docs
+        run: hugo --source docs --noBuildLock --destination ../static/dist/docs
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # upload entire directory
+          path: './static/dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

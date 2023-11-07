@@ -83,6 +83,8 @@ github.com/lizongying/cron v1.0.0 h1:mxAaooETYGsqta04WCmtEzJhRlYonVsweGtFY7bMuCU
 github.com/lizongying/cron v1.0.0/go.mod h1:DXQE+B2MzkaDNdP0rSZ3vAgZXLHC4fPxEAmAu1af1+Y=
 github.com/lizongying/go-css v0.0.0-20230906104236-b58497123e0f h1:2zaV/KZ/zFTYyBHRjf6EEbHB7gbGIIy3z+QlcKC1rRI=
 github.com/lizongying/go-css v0.0.0-20230906104236-b58497123e0f/go.mod h1:uXnGqUn4wsh5AJUJMH7dYhSEPdjeMzTktt8r3TjEO9I=
+github.com/lizongying/go-gua64 v0.1.0 h1:Pd9qKb357T7qRW71nnvQXH/Jw5+wNcyqovJrEJ+TZ/c=
+github.com/lizongying/go-gua64 v0.1.0/go.mod h1:eWarkBK8N3gqOXnugrnvdkNBF/7SlT3vv2W9mwByvK4=
 github.com/lizongying/go-json v0.0.0-20230906102344-7915011b6304 h1:LEqGvzkC40ccCRbKFaLY+THBN6xTcRs03EeYNdcEiwE=
 github.com/lizongying/go-json v0.0.0-20230906102344-7915011b6304/go.mod h1:3p/GCST7stW/ClwmJYETKvGELxf55LJLtvp6HEPHk5w=
 github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f h1:NlitwGPZLOwMSo8chrEbYBMU1ggJnPPuwYuhXt1uRI8=

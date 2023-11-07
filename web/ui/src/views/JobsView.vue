@@ -69,13 +69,13 @@ const columns = [
   {
     title: 'Schedule',
     dataIndex: 'schedule',
-    width: 200,
+    width: 150,
     sorter: (a, b) => a.schedule - b.schedule,
   },
   {
     title: 'Command',
     dataIndex: 'command',
-    width: 200,
+    width: 350,
     ellipsis: true,
   },
   {

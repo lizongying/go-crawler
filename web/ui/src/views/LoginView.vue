@@ -65,9 +65,9 @@ const formState = reactive({
 
 const onFinish = values => {
   (async () => {
-    if (values.username === 'admin' && values.password === 'admin') {
-      await userStore.Login()
-      if (userStore.user.userInfo) {
+    if (values.username !== '' && values.password !== '') {
+      const user = await userStore.Login()
+      if (user.userInfo) {
         if (values.remember) {
           userStore.Remember(values.username, values.password, values.remember)
         } else {

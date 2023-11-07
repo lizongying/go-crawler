@@ -858,6 +858,9 @@ make web_server
 
 ```shell
 npm run dev --prefix ./web/ui
+
+# docs
+hugo server --source docs --noBuildLock
 ```
 
 ## 问答

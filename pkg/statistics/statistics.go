@@ -99,6 +99,7 @@ func (s *Statistics) scheduleStarted(ctx pkg.Context) {
 	s.Spiders[ctx.GetSpiderName()].IncJob()
 
 	var spec string
+	mode := ctx.GetJobMode()
 	switch ctx.GetJobMode() {
 	case pkg.JobModeOnce:
 		spec = "once"
@@ -107,12 +108,21 @@ func (s *Statistics) scheduleStarted(ctx pkg.Context) {
 	case pkg.JobModeCron:
 		spec = fmt.Sprintf("cron (every %s)", ctx.GetJobSpec())
 	}
+
+	command := fmt.Sprintf("-n %s -f %s -m %s -s %s -a %s",
+		ctx.GetSpiderName(),
+		ctx.GetJobFunc(),
+		(&mode).String(),
+		ctx.GetJobSpec(),
+		ctx.GetJobArgs(),
+	)
 	s.Jobs[ctx.GetJobId()] = new(job.Job).
 		WithId(ctx.GetJobId()).
 		WithEnable(ctx.GetJobEnable()).
 		WithNode(ctx.GetCrawlerId()).
 		WithSpider(ctx.GetSpiderName()).
-		WithSchedule(spec)
+		WithSchedule(spec).
+		WithCommand(command)
 
 	s.Jobs[ctx.GetJobId()].
 		WithStatus(ctx.GetJobStatus()).
@@ -204,7 +214,7 @@ func (s *Statistics) itemStopped(item pkg.Item) {
 					WithTask(ctx.GetTaskId()).
 					WithMeta(item.MetaJson()).
 					WithData(item.DataJson()),
-				ctx.GetItemStartTime().UnixNano())
+				ctx.GetItemStopTime().UnixNano())
 		}
 	}
 }

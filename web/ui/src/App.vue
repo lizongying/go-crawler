@@ -16,27 +16,17 @@
       ></a-menu>
     </a-layout-sider>
     <a-layout>
-      <a-layout-header v-if="!isLogin" style="background: #fff; padding: 0">
-        <menu-unfold-outlined
-            v-if="state.collapsed"
-            class="trigger"
-            @click="toggleCollapsed"
-        />
-        <menu-fold-outlined v-else class="trigger" @click="toggleCollapsed"/>
+      <a-layout-header style="background: #fff; padding: 0">
+        <template v-if="!isLogin">
+          <menu-unfold-outlined
+              v-if="state.collapsed"
+              class="trigger"
+              @click="toggleCollapsed"
+          />
+          <menu-fold-outlined v-else class="trigger" @click="toggleCollapsed"/>
+        </template>
         <a-space style="float: right; margin-right: 10px">
-          <span style="margin-right: 10px" @click="showModal"><a><MailOutlined/>  Message</a></span>
-          <a-modal v-model:open="open" title="Message" width="1000px" @ok="handleOk">
-            <a-space direction="vertical" style="width: 100%">
-              <a-alert
-                  v-for="msg in message"
-                  :key="msg"
-                  :description="msg.content"
-                  :message="msg.title"
-                  :type="msg.level === 'info' ? 'info': 'success'"
-                  show-icon
-              />
-            </a-space>
-          </a-modal>
+          <span style="margin-right: 10px"><a href="/go-crawler/docs/"><ReadOutlined/>  Docs</a></span>
           <span style="margin-right: 10px" @click="showSetting"><a><SettingOutlined/>  Setting</a></span>
           <a-modal v-model:open="openSetting" title="Setting" width="1000px" @ok="handleSetting">
             <a-form
@@ -53,17 +43,22 @@
               >
                 <a-input v-model:value="formSetting.apiHost" placeholder="http://localhost:8090"/>
               </a-form-item>
-              <a-form-item
-                  :rules="[{ required: true, message: 'Please input api access key!' }]"
-                  label="Api Access Key"
-                  name="apiAccessKey"
-              >
-                <a-input v-model:value="formSetting.apiAccessKey"
-                         placeholder="8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"/>
-              </a-form-item>
             </a-form>
           </a-modal>
-          <a-dropdown>
+          <span v-if="!isLogin" style="margin-right: 10px" @click="showModal"><a><MailOutlined/>  Message</a></span>
+          <a-modal v-model:open="open" title="Message" width="1000px" @ok="handleOk">
+            <a-space direction="vertical" style="width: 100%">
+              <a-alert
+                  v-for="msg in message"
+                  :key="msg"
+                  :description="msg.content"
+                  :message="msg.title"
+                  :type="msg.level === 'info' ? 'info': 'success'"
+                  show-icon
+              />
+            </a-space>
+          </a-modal>
+          <a-dropdown v-if="!isLogin">
             <a class="ant-dropdown-link" @click.prevent>
               <UserOutlined/>
               {{ userStore.user.userInfo.name }}
@@ -97,6 +92,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PieChartOutlined,
+  ReadOutlined,
   ScheduleOutlined,
   SettingOutlined,
   UserOutlined,
@@ -116,31 +112,31 @@ const logout = () => {
   router.push('/login')
 }
 
-const isLogin = ref(false);
+const isLogin = ref(true);
 
 router.beforeEach((to, from, next) => {
-  isLogin.value = to.path === '/login'
-  if (to.path !== '/login' && !userStore.user.token) {
+  if (to.name !== 'login' && !userStore.user.token) {
     router.push('/login')
     return
   }
-  switch (to.path) {
-    case '/':
+  isLogin.value = to.name === 'login'
+  switch (to.name) {
+    case '':
       state.selectedKeys = ['1']
       break
-    case '/nodes':
+    case 'nodes':
       state.selectedKeys = ['2']
       break
-    case '/spiders':
+    case 'spiders':
       state.selectedKeys = ['3']
       break
-    case '/jobs':
+    case 'jobs':
       state.selectedKeys = ['4']
       break
-    case '/tasks':
+    case 'tasks':
       state.selectedKeys = ['5']
       break
-    case '/records':
+    case 'records':
       state.selectedKeys = ['6']
       break
     default:
@@ -227,7 +223,6 @@ settingStore.InitSetting()
 
 const formSetting = reactive({
   apiHost: settingStore.setting.apiHost,
-  apiAccessKey: settingStore.setting.apiAccessKey,
 })
 
 const openSetting = ref(false);
@@ -237,6 +232,5 @@ const showSetting = () => {
 const handleSetting = _ => {
   openSetting.value = false;
   settingStore.SetApiHost(formSetting.apiHost)
-  settingStore.SetApiAccessKey(formSetting.apiAccessKey)
 };
 </script>
