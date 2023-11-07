@@ -6,3 +6,4 @@ releases
 static/dist/assets
 static/dist/docs
 static/dist/index.html
+.hugo_build.lock
