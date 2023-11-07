@@ -1,6 +1,7 @@
 ---
+weight: 1
+bookFlatSection: true
 title: 介绍
-type: docs
 ---
 
 # Go Crawler 文档
