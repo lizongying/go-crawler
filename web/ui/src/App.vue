@@ -39,6 +39,7 @@
               />
             </a-space>
           </a-modal>
+          <span style="margin-right: 10px"><a href="/go-crawler/docs/"><ReadOutlined/>  Docs</a></span>
           <span style="margin-right: 10px" @click="showSetting"><a><SettingOutlined/>  Setting</a></span>
           <a-modal v-model:open="openSetting" title="Setting" width="1000px" @ok="handleSetting">
             <a-form
@@ -91,6 +92,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PieChartOutlined,
+  ReadOutlined,
   ScheduleOutlined,
   SettingOutlined,
   UserOutlined,

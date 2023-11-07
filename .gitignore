@@ -4,4 +4,5 @@
 dev.yml
 releases
 static/dist/assets
+static/dist/docs
 static/dist/index.html

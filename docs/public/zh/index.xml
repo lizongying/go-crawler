@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>介绍 on Go Crawler</title>
+    <link>https://lizongying.github.io/go-crawler/quickstart/zh/</link>
+    <description>Recent content in 介绍 on Go Crawler</description>
+    <generator>Hugo -- gohugo.io</generator><atom:link href="https://lizongying.github.io/go-crawler/quickstart/zh/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>

@@ -1,0 +1,1 @@
+navigator.serviceWorker&&navigator.serviceWorker.register("/go-crawler/quickstart/sw.js",{scope:"/"})
