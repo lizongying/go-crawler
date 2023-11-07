@@ -38,12 +38,10 @@ jobs:
         with:
           hugo-version: 'latest'
 
+      - run: hugo version
+
       - name: Build Docs
         run: hugo --source docs --noBuildLock --destination ../static/dist/docs
-
-      - run: hugo version ../static/dist/docs
-
-      - run: cat ../static/dist/docs/zh/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
