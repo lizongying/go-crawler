@@ -1,9 +1,8 @@
 ---
+weight: 1
+bookFlatSection: true
 title: 介绍
-type: docs
 ---
-
-# Go Crawler 文档
 
 基于golang实现的爬虫框架，编写简单，性能强劲。内置了丰富的实用中间件，支持多种解析、保存方式，支持分布式部署。
 

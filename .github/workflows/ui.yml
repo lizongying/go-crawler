@@ -38,8 +38,6 @@ jobs:
         with:
           hugo-version: 'latest'
 
-      - run: hugo version
-
       - name: Build Docs
         run: hugo --source docs --noBuildLock --destination ../static/dist/docs
 

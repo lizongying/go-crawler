@@ -1,9 +1,8 @@
 ---
+weight: 1
+bookFlatSection: true
 title: Introduction
-type: docs
 ---
-
-# Go Crawler Documentation
 
 ## About Go Crawler
 

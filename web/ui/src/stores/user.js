@@ -57,6 +57,9 @@ export const useUserStore = defineStore('user', () => {
             setToken(resp.data.data.token)
             setUserInfo({name: resp.data.data.user_info.name, rote: resp.data.data.user_info.rote})
             return user;
+        }).catch((err) => {
+            console.log(err);
+            return null
         })
     }
     const Logout = async () => {
