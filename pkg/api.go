@@ -8,7 +8,3 @@ type ReqJobStart struct {
 	Spec    string  `json:"spec,omitempty"`
 	Timeout uint32  `json:"timeout,omitempty"` // second
 }
-
-type ReqJobStop struct {
-	Id string `json:"id"` // uuid
-}

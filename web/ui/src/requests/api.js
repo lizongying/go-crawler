@@ -36,6 +36,11 @@ const getJobs = async data => {
     return axios.post(host + '/jobs', data, config);
 };
 
+const stopJob = async data => {
+    const {host, config} = await api()
+    return axios.post(host + '/job/stop', data, config);
+};
+
 const getTasks = async data => {
     const {host, config} = await api()
     return axios.post(host + '/tasks', data, config);
@@ -46,4 +51,4 @@ const getRecords = async data => {
     return axios.post(host + '/records', data, config);
 };
 
-export {getUser, getNodes, getSpiders, getJobs, getTasks, getRecords}
+export {getUser, getNodes, getSpiders, getJobs, stopJob, getTasks, getRecords}

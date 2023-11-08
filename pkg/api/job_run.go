@@ -43,7 +43,7 @@ func (h *RouteJobRun) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c, _ = context.WithTimeout(c, time.Duration(req.Timeout)*time.Second)
 	}
 
-	jobId, err := h.crawler.Run(c, req.Name, req.Func, req.Args, req.Mode, req.Spec)
+	jobId, err := h.crawler.RunJob(c, req.Name, req.Func, req.Args, req.Mode, req.Spec)
 	if err != nil {
 		h.OutJson(w, 1, err.Error(), nil)
 		return

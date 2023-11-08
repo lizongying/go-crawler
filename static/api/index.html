@@ -12,40 +12,65 @@
             <li>url: /job/run</li>
             <li>method: POST</li>
             <li>body:
-                <pre>{"timeout": 2, "name": "test-must-ok", "func": "TestOk", "args": "", "mode": 1}</pre>
+                <pre>
+{
+    "timeout": 0,
+    "name": "",
+    "func": "",
+    "args": "",
+    "mode": 0
+}
+                </pre>
             </li>
             <li>header:
                 <pre>
 Content-Type: application/json
-X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+X-API-Key:
                 </pre>
             </li>
         </ul>
     </li>
     <li>response:
-        <pre>{"code":0,"msg":"","data":{"id":"133198dc7a0911ee904b9221bc92ca26","start_time":0,"finish_time":0}}</pre>
+        <pre>
+{
+    "code": 0,
+    "msg": "",
+    "data": {}
+}
+        </pre>
     </li>
 </ul>
 <hr>
 <ul>
-    <li>job stop(TODO)</li>
+    <li>job stop</li>
     <li>request:
         <ul>
             <li>url: /job/stop</li>
             <li>method: POST</li>
             <li>body:
-                <pre>{"id": "133198dc7a0911ee904b9221bc92ca26"}</pre>
+                <pre>
+{
+    "spider_name": ""
+    "job_id": ""
+}
+                </pre>
             </li>
             <li>header:
                 <pre>
 Content-Type: application/json
-X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+X-API-Key:
                 </pre>
             </li>
         </ul>
     </li>
     <li>response:
-        <pre>{"code":0,"msg":"","data":{"name":"test-from-request"}}</pre>
+        <pre>
+{
+    "code": 0,
+    "msg": "",
+    "data": {}
+}
+        </pre>
     </li>
 </ul>
 <script></script>

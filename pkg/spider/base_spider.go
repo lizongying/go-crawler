@@ -65,6 +65,9 @@ type BaseSpider struct {
 	pkg.Exporter
 
 	requestSlots sync.Map
+
+	jobs      map[string]*Job
+	jobsMutex sync.Mutex
 }
 
 func (s *BaseSpider) GetDownloader() pkg.Downloader {
@@ -407,6 +410,9 @@ func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode 
 		return
 	}
 
+	s.jobsMutex.Lock()
+	defer s.jobsMutex.Unlock()
+
 	job := new(Job).FromSpider(s.spider)
 	if err = job.start(s.context, jobFunc, args, mode, spec, onlyOneTask); err != nil {
 		s.logger.Error(err)
@@ -414,6 +420,7 @@ func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode 
 	}
 
 	id = job.context.GetJobId()
+	s.jobs[id] = job
 
 	if err = job.run(ctx); err != nil {
 		s.logger.Error(err)
@@ -423,7 +430,23 @@ func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode 
 	s.job.In()
 	return
 }
-func (s *BaseSpider) StopJob(ctx pkg.Context, err error) {
+func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
+	s.jobsMutex.Lock()
+	defer s.jobsMutex.Unlock()
+
+	job, ok := s.jobs[jobId]
+	if !ok {
+		err = errors.New("job is not exists")
+		return
+	}
+	if job.GetContext().GetJobStatus() != pkg.JobStatusStarted {
+		err = errors.New("job is not started")
+		return
+	}
+	err = job.kill(ctx)
+	return
+}
+func (s *BaseSpider) JobStopped(ctx pkg.Context, err error) {
 	if err != nil {
 		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "the job finished with an error:", err, "spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
 	} else {
@@ -459,7 +482,7 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 	}
 
 	s.context.WithSpiderStatus(pkg.SpiderStatusStopping)
-	s.GetCrawler().GetSignal().SpiderStopping(s.context)
+	s.Crawler.GetSignal().SpiderStopping(s.context)
 
 	s.logger.Debug("BaseSpider wait for stop")
 	defer func() {
@@ -476,6 +499,7 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 
 		spendTime := stopTime.Sub(s.context.GetSpiderStartTime())
 		s.logger.Info(s.spider.Name(), "spider finished. spend time:", spendTime)
+		s.Crawler.SpiderStopped(s.context, err)
 	}()
 
 	for _, v := range s.middlewares.Middlewares() {
@@ -542,6 +566,7 @@ func NewBaseSpider(logger pkg.Logger) (pkg.Spider, error) {
 		browsers:              make(map[pkg.Browser]struct{}, 4),
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
+		jobs:                  make(map[string]*Job),
 	}
 
 	s.job = pkg.NewState()

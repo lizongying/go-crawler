@@ -80,7 +80,8 @@ type Spider interface {
 	RequestSlotLoad(slot string) (value any, ok bool)
 	RequestSlotStore(slot string, value any)
 
-	StopJob(Context, error)
+	KillJob(ctx context.Context, jobId string) (err error)
+	JobStopped(Context, error)
 
 	GetDownloader() Downloader
 	WithDownloader(Downloader) Spider
