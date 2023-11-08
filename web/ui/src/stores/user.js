@@ -57,8 +57,8 @@ export const useUserStore = defineStore('user', () => {
             setToken(resp.data.data.token)
             setUserInfo({name: resp.data.data.user_info.name, rote: resp.data.data.user_info.rote})
             return user;
-        }).catch((err) => {
-            console.log(err);
+        }).catch(e => {
+            console.log(e);
             return null
         })
     }

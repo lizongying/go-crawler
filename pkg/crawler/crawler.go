@@ -143,7 +143,7 @@ func (c *Crawler) ItemTimer() *time.Timer {
 func (c *Crawler) ItemConcurrencyChan() chan struct{} {
 	return c.itemConcurrencyChan
 }
-func (c *Crawler) Run(ctx context.Context, spiderName string, startFunc string, args string, mode pkg.JobMode, spec string) (id string, err error) {
+func (c *Crawler) RunJob(ctx context.Context, spiderName string, startFunc string, args string, mode pkg.JobMode, spec string) (id string, err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
 		if v.Name() == spiderName {
@@ -179,9 +179,24 @@ func (c *Crawler) Run(ctx context.Context, spiderName string, startFunc string, 
 	return
 }
 
-func (c *Crawler) SpiderStop(ctx pkg.Context) (err error) {
-	taskId := ctx.GetTaskId()
-	c.logger.Info(taskId)
+func (c *Crawler) KillJob(ctx context.Context, spiderName string, jobId string) (err error) {
+	var spider pkg.Spider
+	for _, v := range c.spiders {
+		if v.Name() == spiderName {
+			spider = v
+			break
+		}
+	}
+
+	if spider == nil {
+		err = errors.New("nil spider")
+		c.logger.Error(err)
+		return
+	}
+
+	if err = spider.KillJob(ctx, jobId); err != nil {
+		c.logger.Error(err)
+	}
 	return
 }
 func (c *Crawler) Start(ctx context.Context) (err error) {
@@ -213,7 +228,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 
 	if c.spiderName != "" {
 		var id string
-		if id, err = c.Run(ctx, c.spiderName,
+		if id, err = c.RunJob(ctx, c.spiderName,
 			c.startFunc,
 			c.args,
 			c.mode,
@@ -249,7 +264,7 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 
 	return
 }
-func (c *Crawler) StopSpider() {
+func (c *Crawler) SpiderStopped(_ pkg.Context, _ error) {
 	defer c.spider.Out()
 }
 
@@ -284,6 +299,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 	httpApi.AddRoutes(new(api.RouteHello).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpider).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteJobRun).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteJobStop).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteNodes).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpiders).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteJobs).FromCrawler(crawler))

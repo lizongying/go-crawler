@@ -30,8 +30,10 @@ type Crawler interface {
 	GetSqlite() Sqlite
 	GetStore() Store
 
-	SpiderStop(Context) error
-	Run(context.Context, string, string, string, JobMode, string) (string, error)
+	RunJob(context.Context, string, string, string, JobMode, string) (string, error)
+	KillJob(ctx context.Context, spiderName string, jobId string) (err error)
+
+	SpiderStopped(ctx Context, err error)
 
 	GetSignal() Signal
 	SetSignal(Signal)

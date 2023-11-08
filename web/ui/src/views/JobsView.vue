@@ -19,6 +19,16 @@
           {{ record.spider }}
         </RouterLink>
       </template>
+      <template v-else-if="column.dataIndex === 'status'">
+        <span>
+          <a-tag
+              :key="record.status"
+              :color="record.status === 2 ? 'volcano' : record.status === 1 ? 'green' : 'geekblue'"
+          >
+            {{ jobStatusName(record.status) }}
+          </a-tag>
+        </span>
+      </template>
       <template v-else-if="column.dataIndex === 'start_time'">
         {{ formattedDate(record.start_time) }}
       </template>
@@ -40,7 +50,8 @@
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
-          <a>Run</a>
+          <a v-if="record.status === 2">Run</a>
+          <a v-if="record.status === 1" @click="stop(record.spider, record.id)">Stop</a>
           <a-divider type="vertical"/>
           <a>Delete</a>
           <a-divider type="vertical"/>
@@ -91,6 +102,12 @@ const columns = [
     width: 200,
   },
   {
+    title: 'Status',
+    dataIndex: 'status',
+    sorter: (a, b) => a.status - b.status,
+    width: 200,
+  },
+  {
     title: 'Start Time',
     dataIndex: 'start_time',
     width: 200,
@@ -130,6 +147,22 @@ const columns = [
 
 const jobsStore = useJobsStore()
 jobsStore.GetJobs()
+
+const jobStatusName = (status) => {
+  switch (status) {
+    case 1:
+      return 'started'
+    case 2:
+      return 'stopped'
+    default:
+      return 'unknown'
+  }
+}
+
+const stop = async (spiderName, jobId) => {
+  const res = await jobsStore.StopJob({spider_name: spiderName, job_id: jobId})
+  console.log(spiderName, jobId, res)
+}
 </script>
 <style>
 </style>

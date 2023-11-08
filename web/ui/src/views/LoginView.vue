@@ -1,7 +1,7 @@
 <template>
   <a-spin :spinning="loading" tip="Loading...">
     <a-layout style="align-items: center;">
-      <a-layout-header style="margin-top: 200px; width: 300px; text-align:center; background: #f5f5f5"><b>Login</b>
+      <a-layout-header style="margin-top: 250px; width: 300px; text-align:center; background: #f5f5f5"><b>Login</b>
       </a-layout-header>
       <a-layout-content style="width: 300px">
         <a-form

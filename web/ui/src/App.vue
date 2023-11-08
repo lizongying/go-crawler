@@ -74,7 +74,7 @@
           </a-dropdown>
         </a-space>
       </a-layout-header>
-      <a-layout-content style="height: 100vh;">
+      <a-layout-content style="height: calc(100vh - 64px);">
         <RouterView/>
       </a-layout-content>
     </a-layout>

@@ -17,6 +17,7 @@ type Job struct {
 	spider  pkg.Spider
 	logger  pkg.Logger
 	cronJob chan struct{}
+	cancel  context.CancelFunc
 }
 
 func (j *Job) GetContext() pkg.Context {
@@ -31,7 +32,6 @@ func (j *Job) start(ctx pkg.Context, jobFunc string, args string, mode pkg.JobMo
 		WithCrawler(ctx.GetCrawler()).
 		WithSpider(ctx.GetSpider()).
 		WithJob(new(crawlerContext.Job).
-			WithContext(context.Background()).
 			WithId(utils.UUIDV1WithoutHyphens()).
 			WithStatus(pkg.JobStatusStarted).
 			WithStartTime(time.Now()).
@@ -44,6 +44,10 @@ func (j *Job) start(ctx pkg.Context, jobFunc string, args string, mode pkg.JobMo
 	j.crawler.GetSignal().JobStarted(j.context)
 	return
 }
+func (j *Job) kill(_ context.Context) (err error) {
+	j.cancel()
+	return
+}
 func (j *Job) run(ctx context.Context) (err error) {
 	if j.GetContext() == nil {
 		err = errors.New("job hasn't started")
@@ -52,7 +56,14 @@ func (j *Job) run(ctx context.Context) (err error) {
 	}
 
 	go func() {
+		j.logger.Infof("2222222222%+v\n", j.context.GetJobContext())
 		select {
+		case <-j.context.GetJobContext().Done():
+			if j.context.GetJobStatus() != pkg.JobStatusStopped {
+				j.logger.Info(333333333333)
+				j.stop(ctx.Err())
+			}
+			return
 		case <-ctx.Done():
 			if j.context.GetJobStatus() != pkg.JobStatusStopped {
 				j.stop(ctx.Err())
@@ -64,7 +75,10 @@ func (j *Job) run(ctx context.Context) (err error) {
 	j.task.RegisterIsReadyAndIsZero(func() {
 		j.stop(nil)
 	})
+
+	ctx, j.cancel = context.WithCancel(context.Background())
 	j.context.WithJobContext(ctx)
+
 	//j.crawler.GetSignal().JobStarted(j.context)
 
 	switch j.context.GetJobMode() {
@@ -100,7 +114,7 @@ func (j *Job) stop(err error) {
 			WithStopTime(time.Now())
 		j.crawler.GetSignal().JobStopped(j.context)
 
-		j.spider.StopJob(j.context, err)
+		j.spider.JobStopped(j.context, err)
 		return
 	}
 
@@ -117,7 +131,7 @@ func (j *Job) stop(err error) {
 			WithStopTime(time.Now())
 		j.crawler.GetSignal().JobStopped(j.context)
 
-		j.spider.StopJob(j.context, nil)
+		j.spider.JobStopped(j.context, nil)
 	case pkg.JobModeLoop:
 		j.startTask()
 	case pkg.JobModeCron:

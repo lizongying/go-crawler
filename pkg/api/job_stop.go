@@ -1,12 +1,22 @@
 package api
 
 import (
+	"context"
 	"github.com/lizongying/go-crawler/pkg"
-	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"net/http"
 )
 
 const UrlJobStop = "/job/stop"
+
+type ReqJobStop struct {
+	SpiderName string `json:"spider_name"`
+	JobId      string `json:"job_id"`
+}
+
+type RespJobStop struct {
+	SpiderName string `json:"spider_name"`
+	JobId      string `json:"job_id"`
+}
 
 type RouteJobStop struct {
 	Request
@@ -20,23 +30,25 @@ func (h *RouteJobStop) Pattern() string {
 }
 
 func (h *RouteJobStop) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var req pkg.ReqJobStop
+	var req ReqJobStop
 	h.BindJson(w, r, &req)
 
-	if req.Id == "" {
-		h.OutJson(w, 1, "TaskId empty", nil)
+	if req.SpiderName == "" {
+		h.OutJson(w, 1, "SpiderName empty", nil)
 		return
 	}
 
-	ctx := new(crawlerContext.Context).WithTaskId(req.Id)
-	err := h.crawler.SpiderStop(ctx)
-	if err != nil {
+	if req.JobId == "" {
+		h.OutJson(w, 1, "JobId empty", nil)
+		return
+	}
+
+	if err := h.crawler.KillJob(context.TODO(), req.SpiderName, req.JobId); err != nil {
 		h.OutJson(w, 1, err.Error(), nil)
 		return
 	}
 
-	spider := Spider{Name: ""}
-	h.OutJson(w, 0, "", spider)
+	h.OutJson(w, 0, "", &RespJobStop{})
 }
 
 func (h *RouteJobStop) FromCrawler(crawler pkg.Crawler) pkg.Route {
