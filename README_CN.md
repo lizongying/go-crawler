@@ -24,8 +24,8 @@
     9. [代理](#代理)
     10. [文件和图片下载](#文件和图片下载)
     11. [模拟服务](#模拟服务)
-    12. [启动](#启动)
-    13. [配置](#配置)
+    12. [配置](#配置)
+    13. [启动](#启动)
     14. [基于字段标签的网页解析](#基于字段标签的网页解析)
 4. [api](#api)
 5. [问答](#问答)
@@ -46,7 +46,7 @@
 * 内置模拟服务，调试开发更方便。
 * 支持分布式部署
 
-### 支持情况
+## 支持情况
 
 * 解析支持CSS、XPath、Regex、Json
 * 支持Json、Csv、Mongo、Mysql、Sqlite、Kafka输出
@@ -80,16 +80,9 @@
 [go-crawler-example](https://github.com/lizongying/go-crawler-example)
 
 ```shell
-git clone git@github.com:lizongying/go-crawler-example.git
-```
-
-爬虫结构
-
-* 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
-* 可以每个爬虫单独打包，也可以多个爬虫也可以组合到一起, 减少文件数量。但执行的时候只能启动一个爬虫
-
-```go
-app.NewApp(NewExample1Spider, NewExample2Spider).Run()
+git clone git@github.com:lizongying/go-crawler-example.git my-crawler
+cd my-crawler
+go run cmd/multi_spider/*.go -c example.yml -n test1 -m once
 
 ```
 
@@ -117,7 +110,7 @@ go get -u github.com/lizongying/go-crawler@6f52307
 ### 容器构建
 
 ```shell
-docker build -f ./cmd/testSpider/Dockerfile -t go-crawler/test-spider:latest . 
+docker build -f ./cmd/test_spider/Dockerfile -t go-crawler/test-spider:latest . 
 ```
 
 ```shell
@@ -126,44 +119,45 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 
 ## 使用
 
-```go
-package main
-
-import (
-	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/app"
-)
-
-type Spider struct {
-	pkg.Spider
-	logger pkg.Logger
-}
-
-// some spider funcs
-
-func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
-	spider = &Spider{
-		Spider: baseSpider,
-		logger: baseSpider.GetLogger(),
-	}
-	spider.WithOptions(
-		pkg.WithName("test"),
-	)
-	return
-}
-
-func main() {
-	app.NewApp(NewSpider).Run()
-}
-
-```
-
 ### 基本架构
 
-* Spider：在Spider里可以发起请求和解析内容。 您需要为每个Spider设置一个唯一名称。
-  `spider.WithOptions(pkg.WithName("example"))`
-* BaseSpider：BaseSpider集成了Spider、Downloader、Exporter、Scheduler等组件，是爬虫的处理中心。
 * Crawler：Crawler里可以有多个Spider，同时管理Spider的启动和关闭等。
+* Spider：集成了Downloader、Exporter、Scheduler等组件。在Spider里可以发起请求和解析内容。 您需要为每个Spider设置一个唯一名称。
+  `spider.WithOptions(pkg.WithName("example"))`
+
+  ```go
+  package main
+  
+  import (
+      "github.com/lizongying/go-crawler/pkg"
+      "github.com/lizongying/go-crawler/pkg/app"
+  )
+  
+  type Spider struct {
+      pkg.Spider
+      logger pkg.Logger
+  }
+  
+  // some spider funcs
+  
+  func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
+      spider = &Spider{
+          Spider: baseSpider,
+          logger: baseSpider.GetLogger(),
+      }
+      spider.WithOptions(
+          pkg.WithName("test"),
+      )
+      return
+  }
+  
+  func main() {
+      app.NewApp(NewSpider).Run()
+  }
+  
+  ```
+* Job
+* Task
 
 ### 选项
 
@@ -258,46 +252,45 @@ Item有一些通用方法：
 * `SetImages([]pkg.Image)` 设置图片。下载后的图片通过这个方法设置到Item中。
 * `Images() []pkg.Image` 获取图片。
 
-*
+* 内置Item实现：框架提供了一些内置的Item实现，
+  如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、pkg.ItemMysql、pkg.ItemKafka等。
+  您可以根据需要，返回Item，并开启相应的Pipeline。如：
 
-内置Item实现：框架提供了一些内置的Item实现，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、pkg.ItemMysql、pkg.ItemKafka等。
-您可以根据需要，返回Item，并开启相应的Pipeline。如：
+    ```go
+    err = s.YieldItem(ctx, items.NewItemMongo(s.collection, true).
+    SetUniqueKey(extra.Keyword).
+    SetId(extra.Keyword).
+    SetData(&data))
+    
+    ```
 
-```go
-err = s.YieldItem(ctx, items.NewItemMongo(s.collection, true).
-SetUniqueKey(extra.Keyword).
-SetId(extra.Keyword).
-SetData(&data))
+    ```go
+    spider.WithOptions(pkg.WithMongoPipeline())
+    ```
 
-```
-
-```go
-spider.WithOptions(pkg.WithMongoPipeline())
-```
-
-* pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
-    * `items.NewItemNone()`
-* pkg.ItemCsv 保存到csv中。
-    * `items.NewItemCsv(filename string)`
-    * filename：存储的文件名，不包括拓展名
-* pkg.ItemJsonl 保存到jsonl中。
-    * `items.NewItemJsonl(filename string)`
-    * filename：存储的文件名，不包括拓展名
-* pkg.ItemMongo 保存到mongo中。
-    * `items.NewItemMongo(collection string, update bool)`
-    * collection：mongo collection
-    * update：如果数据已存在mongo中，是否更新
-* pkg.ItemSqlite 保存到Sqlite中。
-    * `items.NewItemSqlite(table string, update bool)`
-    * table：sqlite table
-    * update：如果数据已存在mongo中，是否更新
-* pkg.ItemMysql 保存到mysql中。
-    * `items.NewItemMysql(table string, update bool)`
-    * table：mysql table
-    * update：如果数据已存在mongo中，是否更新
-* pkg.ItemKafka 保存到kafka中。
-    * `items.NewItemKafka(topic string)`
-    * topic：kafka topic
+    * pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
+        * `items.NewItemNone()`
+    * pkg.ItemCsv 保存到csv中。
+        * `items.NewItemCsv(filename string)`
+        * filename：存储的文件名，不包括拓展名
+    * pkg.ItemJsonl 保存到jsonl中。
+        * `items.NewItemJsonl(filename string)`
+        * filename：存储的文件名，不包括拓展名
+    * pkg.ItemMongo 保存到mongo中。
+        * `items.NewItemMongo(collection string, update bool)`
+        * collection：mongo collection
+        * update：如果数据已存在mongo中，是否更新
+    * pkg.ItemSqlite 保存到Sqlite中。
+        * `items.NewItemSqlite(table string, update bool)`
+        * table：sqlite table
+        * update：如果数据已存在mongo中，是否更新
+    * pkg.ItemMysql 保存到mysql中。
+        * `items.NewItemMysql(table string, update bool)`
+        * table：mysql table
+        * update：如果数据已存在mongo中，是否更新
+    * pkg.ItemKafka 保存到kafka中。
+        * `items.NewItemKafka(topic string)`
+        * topic：kafka topic
 
 ### 中间件
 
@@ -580,21 +573,21 @@ _ = request.Trace()
 * `SpiderStarted`: 爬虫已启动。通过`RegisterSpiderStarted(FnSpiderStarted)`注册。
 * `SpiderStopping`: 爬虫停止中。通过`RegisterSpiderStopping(FnSpiderStopping)`注册。
 * `SpiderStopped`: 爬虫已停止。通过`RegisterSpiderClosed(FnSpiderStopped)`注册。
-* `ScheduleStarted`: 计划任务已启动。通过`RegisterScheduleStarted(FnScheduleStarted)`注册。
-* `ScheduleStopped`: 计划任务已停止。通过`RegisterScheduleClosed(FnScheduleStopped)`注册。
+* `JobStarted`: 计划任务已启动。通过`RegisterJobStarted(FnJobStarted)`注册。
+* `JobStopped`: 计划任务已停止。通过`RegisterJobClosed(FnJobStopped)`注册。
 * `TaskStarted`: 任务已启动。通过`RegisterTaskStarted(FnTaskStarted)`注册。
 * `TaskStopped`: 任务已停止。通过`RegisterTaskClosed(FnTaskStopped)`注册。
 * `ItemSaved`: 数据已保存。通过`RegisterItemSaved(FnItemSaved)`注册。
 
-### 代理。
+### 代理
 
 * 自行搭建隧道代理：您可以使用 [go-proxy](https://github.com/lizongying/go-proxy)
   等工具来搭建隧道代理。这些代理工具可以提供随机切换的代理功能，对调用方无感知，方便使用。
   您可以在爬虫框架中集成这些代理工具，以便在爬虫请求时自动切换代理。
   这是一个随机切换的隧道代理，调用方无感知，方便使用。后期会加入一些其他的调用方式，比如维持原来的代理地址。这样可以提供更大灵活性，以满足不同的代理需求。
-* 爬虫中配置：目前仅支持随机切换
+* 爬虫中配置：目前仅支持随机切
 
-### 文件和图片下载
+### 媒体下载
 
 * 如果您希望将文件保存到S3等对象存储中，需要进行相应的配置
 * 文件下载
@@ -647,38 +640,6 @@ _ = request.Trace()
     * RateLimiterRoute 模拟速率限制，目前基于全部请求，不区分用户。可与HttpAuthRoute配合使用。
     * RedirectRoute 模拟302临时跳转，需要同时启用OkRoute
     * RobotsTxtRoute 返回robots.txt文件
-
-### 启动
-
-通过配置环境变量或参数，您可以更灵活地启动爬虫，包括选择配置文件、指定爬虫名称、指定初始方法、传递额外参数以及设定启动模式。
-
-```shell
-spider -c example.yml -n example -f TestOk -m once
-```
-
-* 配置文件路径，必须进行配置。建议不同环境使用不同的配置文件。
-    * 环境变量 `CRAWLER_CONFIG_FILE`
-    * 启动参数 `-c`
-* 爬虫名称，必须进行配置。
-    * 环境变量 `CRAWLER_NAME`
-    * 启动参数 `-n`
-* 初始方法名称，默认Test，注意大小写需一致。
-    * 环境变量 `CRAWLER_FUNC`
-    * 启动参数 `-f`
-* 额外的参数，该参数是非必须项。建议使用JSON字符串。参数会被传递到初始方法中。
-    * 环境变量 `CRAWLER_ARGS`
-    * 启动参数 `-a`
-* 模式，默认为0(manual)。您可以根据需要使用不同的模式。
-    * 环境变量 `CRAWLER_MODE`
-    * 启动参数 `-m`
-    * 可选值
-        * 0: manual 手动执行，默认不执行，可以通过api进行管理。
-        * 1: once 只执行一次
-        * 2: loop 一直重复执行
-        * 3: cron 定时执行
-* 定时任务。只有在模式为cron下，才会应用此配置。如"1s/2i/3h/4d/5m/6w"
-    * 环境变量 `CRAWLER_SPEC`
-    * 启动参数 `-s`
 
 ### 配置
 
@@ -773,6 +734,48 @@ spider -c example.yml -n example -f TestOk -m once
 * scheduler: 调度方式，默认memory（内存调度），可选值memory、redis、kafka。选择redis或kafka后可以实现集群调度。
 * filter: 过滤方式，默认memory（内存过滤），可选值memory、redis。选择redis后可以实现集群过滤。
 
+### 启动
+
+通过配置环境变量或参数，您可以更灵活地启动爬虫，包括选择配置文件、指定爬虫名称、指定初始方法、传递额外参数以及设定启动模式。
+
+项目结构
+
+* 建议按照每个网站（子网站）或者每个业务为一个spider。不必分的太细，也不必把所有的网站和业务都写在一个spider里
+* 可以每个爬虫单独打包，也可以多个爬虫也可以组合到一起, 减少文件数量。但执行的时候只能启动一个爬虫
+
+```go
+app.NewApp(NewExample1Spider, NewExample2Spider).Run()
+
+```
+
+```shell
+spider -c example.yml -n example -f TestOk -m once
+```
+
+* 配置文件路径，必须进行配置。建议不同环境使用不同的配置文件。
+    * 环境变量 `CRAWLER_CONFIG_FILE`
+    * 启动参数 `-c`
+* 爬虫名称，必须进行配置。
+    * 环境变量 `CRAWLER_NAME`
+    * 启动参数 `-n`
+* 初始方法名称，默认Test，注意大小写需一致。
+    * 环境变量 `CRAWLER_FUNC`
+    * 启动参数 `-f`
+* 额外的参数，该参数是非必须项。建议使用JSON字符串。参数会被传递到初始方法中。
+    * 环境变量 `CRAWLER_ARGS`
+    * 启动参数 `-a`
+* 模式，默认为0(manual)。您可以根据需要使用不同的模式。
+    * 环境变量 `CRAWLER_MODE`
+    * 启动参数 `-m`
+    * 可选值
+        * 0: manual 手动执行，默认不执行，可以通过api进行管理。
+        * 1: once 只执行一次
+        * 2: loop 一直重复执行
+        * 3: cron 定时执行
+* 定时任务。只有在模式为cron下，才会应用此配置。如"1s/2i/3h/4d/5m/6w"
+    * 环境变量 `CRAWLER_SPEC`
+    * 启动参数 `-s`
+
 ### 基于字段标签的网页解析
 
 在本框架里，返回的数据是个结构体。我们仅需在字段上加上解析规则的标签，框架会自动进行网页解析，看起来非常简洁。
@@ -830,7 +833,20 @@ curl "http://127.0.0.1:8080/job/stop" -X POST -d '{"task_id":""}' -H "Content-Ty
 
 ### 界面
 
+你可以直接使用https://lizongying.github.io/go-crawler/
+
+开发
+
+```shell
+npm run dev --prefix ./web/ui
+
+# docs
+hugo server --source docs --noBuildLock
+```
+
 构建
+
+web_server 非必须项，你可以直接使用nginx等网络服务
 
 ```shell
 # ui
@@ -853,15 +869,6 @@ make web_server
 ![image](./screenshot/img_4.png)
 ![image](./screenshot/img_5.png)
 ![image](./screenshot/img_6.png)
-
-开发
-
-```shell
-npm run dev --prefix ./web/ui
-
-# docs
-hugo server --source docs --noBuildLock
-```
 
 ## 问答
 
@@ -954,93 +961,7 @@ func (s *Spider) Stop(ctx context.Context) (err error) {
 
 ## 示例
 
-exampleSpider.go
-
-```go
-package main
-
-import (
-	"fmt"
-	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mock_servers"
-	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/request"
-)
-
-type ExtraOk struct {
-	Count int
-}
-
-type DataOk struct {
-	Count int
-}
-
-type Spider struct {
-	pkg.Spider
-	logger pkg.Logger
-}
-
-func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
-	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	if err = s.YieldItem(ctx, items.NewItemNone().
-		SetData(&DataOk{
-			Count: extra.Count,
-		})); err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	if extra.Count > 0 {
-		s.logger.Info("manual stop")
-		return
-	}
-
-	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.Url()).
-		SetExtra(&ExtraOk{
-			Count: extra.Count + 1,
-		}).
-		SetCallBack(s.ParseOk)); err != nil {
-		s.logger.Error(err)
-	}
-	return
-}
-
-func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
-	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
-		SetExtra(&ExtraOk{}).
-		SetCallBack(s.ParseOk)); err != nil {
-		s.logger.Error(err)
-	}
-	return
-}
-
-func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
-	spider = &Spider{
-		Spider: baseSpider,
-		logger: baseSpider.GetLogger(),
-	}
-	spider.WithOptions(
-		pkg.WithName("example"),
-		pkg.WithHost("https://localhost:8081"),
-	)
-	return
-}
-
-func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mock_servers.NewRouteOk))
-}
-
-```
-
-或者
+example_spider.go
 
 ```go
 package main
@@ -1116,10 +1037,10 @@ func main() {
 
 ```
 
-### 测试
+### 运行
 
 ```shell
-go run exampleSpider.go -c example.yml -n example -f TestOk -m once
+go run example_spider.go -c example.yml -n example -f TestOk -m once
 
 ```
 

@@ -25,7 +25,7 @@ go run cmd/multi_spider/*.go -c example.yml -n test1 -m once
 * 内置模拟服务，调试开发更方便。
 * 支持分布式部署
 
-### 支持情况
+## 支持情况
 
 * 解析支持CSS、XPath、Regex、Json
 * 支持Json、Csv、Mongo、Mysql、Sqlite、Kafka输出

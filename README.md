@@ -24,10 +24,10 @@ distributed deployment.
     7. [Response](#Response)
     8. [Signals](#Signals)
     9. [Proxy](#Proxy)
-    10. [File and Image Downloads](#File-and-Image-Downloads)
-    11. [MockServer](#MockServer)
-    12. [Startup](#Startup)
-    13. [Configuration](#Configuration)
+    10. [Media Downloads](#Media-Downloads)
+    11. [Mock Server](#Mock-Server)
+    12. [Configuration](#Configuration)
+    13. [Startup](#Startup)
     14. [Web Page Parsing Based on Field Tags](#Web-Page-Parsing-Based-on-Field-Tags)
 4. [api](#api)
 5. [Q&A](#Question)
@@ -48,7 +48,7 @@ distributed deployment.
 * Includes a built-in mock Server for convenient debugging and development.
 * It supports distributed deployment.
 
-### Support Summary
+## Support Summary
 
 * Parsing supports CSS, XPath, Regex, and JSON.
 * Output supports JSON, CSV, MongoDB, MySQL, Sqlite, and Kafka.
@@ -83,19 +83,10 @@ can clone it and start development directly:：
 [go-crawler-example](https://github.com/lizongying/go-crawler-example)
 
 ```shell
-git clone git@github.com:lizongying/go-crawler-example.git
-```
+git clone git@github.com:lizongying/go-crawler-example.git my-crawler
+cd my-crawler
+go run cmd/multi_spider/*.go -c example.yml -n test1 -m once
 
-Spider Structure
-
-* It is recommended to have one spider for each website (or sub-website) or each specific business. You don't need to
-  split it too finely, nor do you need to include all websites and businesses in one spider.
-* You can package each spider
-  separately or combine multiple spiders together to reduce the number of files. However, during execution, only one
-  spider can be started.
-
-```go
-app.NewApp(NewExample1Spider, NewExample2Spider).Run()
 ```
 
 ### Build
@@ -130,45 +121,46 @@ docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirec
 
 ## Usage
 
-```go
-package main
-
-import (
-	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/app"
-)
-
-type Spider struct {
-	pkg.Spider
-	logger pkg.Logger
-}
-
-// some spider funcs
-
-func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
-	spider = &Spider{
-		Spider: baseSpider,
-		logger: baseSpider.GetLogger(),
-	}
-	spider.WithOptions(
-		pkg.WithName("test"),
-	)
-	return
-}
-
-func main() {
-	app.NewApp(NewSpider).Run()
-}
-
-```
-
 ### Basic Architecture
 
-* Spider: In the Spider, you can initiate requests and parse content. You need to set a unique name for each
-  Spider.`spider.WithOptions(pkg.WithName("example"))`
-* BaseSpider: BaseSpider integrates components such as Spider, Downloader, Exporter, and Scheduler, serving as the
-  processing center of the crawler.
 * Crawler：Within the Crawler, there can be multiple Spiders, and it manages the startup and shutdown of the Spiders.
+* Spider: Spider integrates components such as Downloader, Exporter, and Scheduler. In the Spider, you can initiate
+  requests and parse content. You need to set a unique name for each
+  Spider.`spider.WithOptions(pkg.WithName("example"))`
+
+    ```go
+    package main
+    
+    import (
+        "github.com/lizongying/go-crawler/pkg"
+        "github.com/lizongying/go-crawler/pkg/app"
+    )
+    
+    type Spider struct {
+        pkg.Spider
+        logger pkg.Logger
+    }
+    
+    // some spider funcs
+    
+    func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
+        spider = &Spider{
+            Spider: baseSpider,
+            logger: baseSpider.GetLogger(),
+        }
+        spider.WithOptions(
+            pkg.WithName("test"),
+        )
+        return
+    }
+    
+    func main() {
+        app.NewApp(NewSpider).Run()
+    }
+
+    ```
+* Job
+* Task
 
 ### Options
 
@@ -674,10 +666,10 @@ By using signals, it's possible to capture crawler events and perform certain ac
   using `RegisterSpiderStopping(FnSpiderStopping)`.
 * `SpiderStopped`: Indicates the stopped of the spider.You can register it
   using `RegisterSpiderClosed(FnSpiderStopped)`.
-* `ScheduleStarted`: Indicates the started of the schedule. You can register it
-  using `RegisterScheduleStarted(FnScheduleStarted)`.
-* `ScheduleStopped`: Indicates the stopped of the schedule. You can register it
-  using `RegisterScheduleClosed(FnScheduleStopped)`.
+* `JobStarted`: Indicates the started of the job. You can register it
+  using `RegisterJobStarted(FnScheduleStarted)`.
+* `JobStopped`: Indicates the stopped of the job. You can register it
+  using `RegisterJobClosed(FnJobStopped)`.
 * `TaskStarted`: Indicates the started of the task. You can register it using `RegisterTaskStarted(FnTaskStarted)`.
 * `TaskStopped`: Indicates the stopped of the task. You can register it using `RegisterTaskClosed(FnTaskStopped)`.
 * `ItemSaved`: Indicates the saved of the item. You can register it using `RegisterItemSaved(FnItemSaved)`.
@@ -694,7 +686,7 @@ By using signals, it's possible to capture crawler events and perform certain ac
 
   Currently, only random switching of proxies is supported in the spider configuration.
 
-### File and Image Downloads
+### Media Downloads
 
 * If you want to save files to object storage like S3, you need to perform the corresponding configuration.
 * File Download
@@ -717,7 +709,7 @@ By using signals, it's possible to capture crawler events and perform certain ac
       `SetData(&DataImage{})`
     * You can set the fields that are returned. Images []*media.Image `json:"images" field:"url,name,ext,width,height"`
 
-### MockServer
+### Mock Server
 
 To facilitate development and debugging, the framework comes with a built-in local MockServer that can be enabled by
 setting `mock_server.enable: true` in the configuration. By using the local MockServer, you can more easily simulate
@@ -761,43 +753,6 @@ spider by calling `AddMockServerRoutes(...pkg.Route)`.
       Can be used in conjunction with HttpAuthRoute.
     * RedirectRoute: Simulates a 302 temporary redirect, requires enabling OkRoute simultaneously.
     * RobotsTxtRoute: Returns the robots.txt file.
-
-### Startup
-
-By configuring environment variables or parameters, you can start the crawler more flexibly, including selecting the
-configuration file, specifying the spider's name, defining the initial method, passing additional parameters, and
-setting the startup mode.
-
-```shell
-spider -c example.yml -n example -f TestOk -m once
-```
-
-* Configuration file path, must be configured. It is recommended to use different configuration files for different
-  environments.
-    * Environment variable `CRAWLER_CONFIG_FILE`
-    * Startup parameter `-c`
-* Spider name, must be configured.
-    * Environment variable `CRAWLER_NAME`
-    * Startup parameter `-n`
-* Initial method, default is "Test". Please note that the case must be consistent.
-    * Environment variable `CRAWLER_FUNC`
-    * Startup parameter `-f`
-* Additional parameters, this parameter is optional. It is recommended to use a JSON string. The parameters will be
-  passed to the initial method.
-    * Environment variable `CRAWLER_ARGS`
-    * Startup parameter `-a`
-* Startup mode, default is 0(manual). You can use different modes as needed
-    * Environment variable `CRAWLER_MODE`
-    * Startup parameter `-m`
-    * You can use different modes as needed:
-    * Optional values
-        * 0: manual. Executes manually (default is no execution); can be managed through the API.
-        * 1: once. Executes only once.
-        * 2: loop. Executes repeatedly.
-        * 3: cron. Executes at scheduled intervals.
-* Scheduled task. This configuration is only applied when the mode is set to "cron", such as "1s/2i/3h/4d/5m/6w"
-    * Environment variable `CRAWLER_SPEC`
-    * Startup parameter `-s`
 
 ### Configuration
 
@@ -899,6 +854,55 @@ Other Configurations:
 * `filter`: Filter method. Default is `memory` (memory-based filtering). Options are `memory`, `redis`.
   Selecting `redis` enables cluster filtering.
 
+### Startup
+
+By configuring environment variables or parameters, you can start the crawler more flexibly, including selecting the
+configuration file, specifying the spider's name, defining the initial method, passing additional parameters, and
+setting the startup mode.
+
+project Structure
+
+* It is recommended to have one spider for each website (or sub-website) or each specific business. You don't need to
+  split it too finely, nor do you need to include all websites and businesses in one spider.
+* You can package each spider
+  separately or combine multiple spiders together to reduce the number of files. However, during execution, only one
+  spider can be started.
+
+```go
+app.NewApp(NewExample1Spider, NewExample2Spider).Run()
+```
+
+```shell
+spider -c example.yml -n example -f TestOk -m once
+```
+
+* Configuration file path, must be configured. It is recommended to use different configuration files for different
+  environments.
+    * Environment variable `CRAWLER_CONFIG_FILE`
+    * Startup parameter `-c`
+* Spider name, must be configured.
+    * Environment variable `CRAWLER_NAME`
+    * Startup parameter `-n`
+* Initial method, default is "Test". Please note that the case must be consistent.
+    * Environment variable `CRAWLER_FUNC`
+    * Startup parameter `-f`
+* Additional parameters, this parameter is optional. It is recommended to use a JSON string. The parameters will be
+  passed to the initial method.
+    * Environment variable `CRAWLER_ARGS`
+    * Startup parameter `-a`
+* Startup mode, default is 0(manual). You can use different modes as needed
+    * Environment variable `CRAWLER_MODE`
+    * Startup parameter `-m`
+    * You can use different modes as needed:
+    * Optional values
+        * 0: manual. Executes manually (default is no execution); can be managed through the API.
+        * 1: once. Executes only once.
+        * 2: loop. Executes repeatedly.
+        * 3: cron. Executes at scheduled intervals.
+* Scheduled task. This configuration is only applied when the mode is set to "cron", such as "1s/2i/3h/4d/5m/6w"
+    * Environment variable `CRAWLER_SPEC`
+    * Startup parameter `-s`
+
 ### Web Page Parsing Based on Field Tags
 
 In this framework, the returned data is a struct. We only need to add parsing rule tags to the fields, and the framework
@@ -957,7 +961,25 @@ curl "http://127.0.0.1:8080/job/stop" -X POST -d '{"id":""}' -H "Content-Type: a
 
 ### UI
 
+You can directly use https://lizongying.github.io/go-crawler/.
+
+develop
+
+```shell
+npm run dev --prefix ./web/ui
+```
+
+docs develop
+
+```shell
+# docs
+hugo server --source docs --noBuildLock
+
+```
+
 build
+
+The web server is optional; you can use networking services like Nginx directly.
 
 ```shell
 # ui
@@ -980,12 +1002,6 @@ Run
 ![image](./screenshot/img_4.png)
 ![image](./screenshot/img_5.png)
 ![image](./screenshot/img_6.png)
-
-develop
-
-```shell
-npm run dev --prefix ./web/ui
-```
 
 ## Question
 
@@ -1088,93 +1104,7 @@ npm run dev --prefix ./web/ui
 
 ## Example
 
-exampleSpider.go
-
-```go
-package main
-
-import (
-	"fmt"
-	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/app"
-	"github.com/lizongying/go-crawler/pkg/mock_servers"
-	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/request"
-)
-
-type ExtraOk struct {
-	Count int
-}
-
-type DataOk struct {
-	Count int
-}
-
-type Spider struct {
-	pkg.Spider
-	logger pkg.Logger
-}
-
-func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
-	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	if err = s.YieldItem(ctx, items.NewItemNone().
-		SetData(&DataOk{
-			Count: extra.Count,
-		})); err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	if extra.Count > 0 {
-		s.logger.Info("manual stop")
-		return
-	}
-
-	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(response.Url()).
-		SetExtra(&ExtraOk{
-			Count: extra.Count + 1,
-		}).
-		SetCallBack(s.ParseOk)); err != nil {
-		s.logger.Error(err)
-	}
-	return
-}
-
-func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
-	if err = s.YieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
-		SetExtra(&ExtraOk{}).
-		SetCallBack(s.ParseOk)); err != nil {
-		s.logger.Error(err)
-	}
-	return
-}
-
-func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
-	spider = &Spider{
-		Spider: baseSpider,
-		logger: baseSpider.GetLogger(),
-	}
-	spider.WithOptions(
-		pkg.WithName("example"),
-		pkg.WithHost("https://localhost:8081"),
-	)
-	return
-}
-
-func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mock_servers.NewRouteOk))
-}
-
-```
-
-or
+example_spider.go
 
 ```go
 package main
@@ -1250,7 +1180,7 @@ func main() {
 
 ```
 
-### Test
+### Run
 
 ```shell
 go run exampleSpider.go -c example.yml -n example -f TestOk -m once

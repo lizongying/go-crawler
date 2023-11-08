@@ -29,7 +29,7 @@ go run cmd/multi_spider/*.go -c example.yml -n test1 -m once
 * Includes a built-in mock Server for convenient debugging and development.
 * It supports distributed deployment.
 
-### Support Summary
+## Support Summary
 
 * Parsing supports CSS, XPath, Regex, and JSON.
 * Output supports JSON, CSV, MongoDB, MySQL, Sqlite, and Kafka.

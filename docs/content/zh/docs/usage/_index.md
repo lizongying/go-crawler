@@ -1,0 +1,44 @@
+---
+weight: 2
+bookFlatSection: true
+title: 使用
+---
+
+## 运行
+
+```shell
+git clone git@github.com:lizongying/go-crawler-example.git my-crawler
+cd my-crawler
+go run cmd/multi_spider/*.go -c example.yml -n test1 -m once
+```
+
+### 构建
+
+```shell
+make
+
+```
+
+目前框架更新较为频繁, 建议保持关注，使用最新版本。
+可以在项目里执行更新命令，如:
+
+```shell
+go get -u github.com/lizongying/go-crawler
+
+# 最新发布版本
+go get -u github.com/lizongying/go-crawler@latest
+
+# 最新提交（推荐）
+go get -u github.com/lizongying/go-crawler@6f52307
+
+```
+
+### 容器构建
+
+```shell
+docker build -f ./cmd/test_spider/Dockerfile -t go-crawler/test-spider:latest . 
+```
+
+```shell
+docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirect -m once
+```

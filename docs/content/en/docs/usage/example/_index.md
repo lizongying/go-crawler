@@ -1,10 +1,9 @@
 ---
-weight: 2
-bookFlatSection: true
-title: "示例代码"
+weight: 16
+title: Example Code
 ---
 
-## 示例
+## Example
 
 example_spider.go
 
@@ -82,7 +81,7 @@ func main() {
 
 ```
 
-### 运行
+### Run
 
 ```shell
 go run example_spider.go -c example.yml -n example -f TestOk -m once
