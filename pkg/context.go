@@ -39,6 +39,8 @@ type Context interface {
 	WithJobContext(context.Context) Context
 	GetJobId() string
 	WithJobId(string) Context
+	GetJobSubId() uint64
+	WithJobSubId(uint64) Context
 	GetJobStatus() JobStatus
 	WithJobStatus(JobStatus) Context
 	GetJobEnable() bool
@@ -47,6 +49,8 @@ type Context interface {
 	WithJobStartTime(time.Time) Context
 	GetJobStopTime() time.Time
 	WithJobStopTime(time.Time) Context
+	GetJobUpdateTime() time.Time
+	WithJobUpdateTime(time.Time) Context
 	GetJobFunc() string
 	WithJobFunc(string) Context
 	GetJobArgs() string
@@ -135,6 +139,8 @@ type ContextSpider interface {
 type ContextJob interface {
 	GetId() string
 	WithId(string) ContextJob
+	GetSubId() uint64
+	WithSubId(uint64) ContextJob
 	GetContext() context.Context
 	WithContext(context.Context) ContextJob
 	GetStatus() JobStatus
@@ -143,6 +149,8 @@ type ContextJob interface {
 	WithStartTime(time.Time) ContextJob
 	GetStopTime() time.Time
 	WithStopTime(time.Time) ContextJob
+	GetUpdateTime() time.Time
+	WithUpdateTime(time.Time) ContextJob
 	GetEnable() bool
 	WithEnable(bool) ContextJob
 	GetFunc() string
@@ -162,6 +170,8 @@ type ContextTask interface {
 	Stats
 	GetId() string
 	WithId(string) ContextTask
+	GetJobSubId() uint64
+	WithJobSubId(uint64) ContextTask
 	GetContext() context.Context
 	WithContext(context.Context) ContextTask
 	GetStatus() TaskStatus

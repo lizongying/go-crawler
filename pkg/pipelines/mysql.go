@@ -140,6 +140,7 @@ func (m *MysqlPipeline) ProcessItem(item pkg.Item) (err error) {
 		m.logger.Info(itemMysql.GetTable(), "insert success", id)
 	}
 
+	item.GetContext().WithItemStopTime(time.Now())
 	spider.GetCrawler().GetSignal().ItemStopped(item)
 	task.IncItemSuccess()
 	return

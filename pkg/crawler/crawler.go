@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
@@ -11,7 +12,7 @@ import (
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"github.com/lizongying/go-crawler/pkg/signals"
 	"github.com/lizongying/go-crawler/pkg/statistics"
-	"github.com/lizongying/go-crawler/pkg/utils"
+	"github.com/lizongying/go-uid/uid"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -48,8 +49,15 @@ type Crawler struct {
 	itemConcurrency     uint8
 	itemConcurrencyChan chan struct{}
 	itemTimer           *time.Timer
+	ug                  *uid.Uid
 }
 
+func (c *Crawler) GenUid() uint64 {
+	return c.ug.Gen()
+}
+func (c *Crawler) NextId() string {
+	return fmt.Sprintf("%d", c.ug.Gen())
+}
 func (c *Crawler) GetContext() pkg.Context {
 	return c.context
 }
@@ -178,7 +186,26 @@ func (c *Crawler) RunJob(ctx context.Context, spiderName string, startFunc strin
 
 	return
 }
+func (c *Crawler) RerunJob(ctx context.Context, spiderName string, jobId string) (err error) {
+	var spider pkg.Spider
+	for _, v := range c.spiders {
+		if v.Name() == spiderName {
+			spider = v
+			break
+		}
+	}
 
+	if spider == nil {
+		err = errors.New("nil spider")
+		c.logger.Error(err)
+		return
+	}
+
+	if err = spider.RerunJob(ctx, jobId); err != nil {
+		c.logger.Error(err)
+	}
+	return
+}
 func (c *Crawler) KillJob(ctx context.Context, spiderName string, jobId string) (err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
@@ -202,7 +229,7 @@ func (c *Crawler) KillJob(ctx context.Context, spiderName string, jobId string) 
 func (c *Crawler) Start(ctx context.Context) (err error) {
 	crawler := new(crawlerContext.Crawler).
 		WithContext(ctx).
-		WithId(utils.UUIDV1WithoutHyphens()).
+		WithId(c.NextId()).
 		WithStatus(pkg.CrawlerStatusOnline).
 		WithStartTime(time.Now())
 	c.context = new(crawlerContext.Context).WithCrawler(crawler)
@@ -274,6 +301,8 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		_ = crawler.Stop(crawler.GetContext().GetCrawlerContext())
 	})
 
+	ug, _ := uid.NewUid(1)
+
 	crawler = &Crawler{
 		spiderName:  cli.SpiderName,
 		startFunc:   cli.StartFunc,
@@ -293,12 +322,14 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		api:         httpApi,
 		spider:      spider,
 		stop:        make(chan struct{}),
+		ug:          ug,
 	}
 
 	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteHello).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpider).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteJobRun).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteJobRerun).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteJobStop).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteNodes).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteSpiders).FromCrawler(crawler))

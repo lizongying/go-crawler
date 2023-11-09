@@ -116,13 +116,17 @@ func (s *Statistics) scheduleStarted(ctx pkg.Context) {
 		ctx.GetJobSpec(),
 		ctx.GetJobArgs(),
 	)
-	s.Jobs[ctx.GetJobId()] = new(job.Job).
-		WithId(ctx.GetJobId()).
-		WithEnable(ctx.GetJobEnable()).
-		WithNode(ctx.GetCrawlerId()).
-		WithSpider(ctx.GetSpiderName()).
-		WithSchedule(spec).
-		WithCommand(command)
+
+	_, ok := s.Jobs[ctx.GetJobId()]
+	if !ok {
+		s.Jobs[ctx.GetJobId()] = new(job.Job).
+			WithId(ctx.GetJobId()).
+			WithEnable(ctx.GetJobEnable()).
+			WithNode(ctx.GetCrawlerId()).
+			WithSpider(ctx.GetSpiderName()).
+			WithSchedule(spec).
+			WithCommand(command)
+	}
 
 	s.Jobs[ctx.GetJobId()].
 		WithStatus(ctx.GetJobStatus()).
@@ -132,6 +136,39 @@ func (s *Statistics) scheduleStopped(ctx pkg.Context) {
 	s.Jobs[ctx.GetJobId()].
 		WithStatus(ctx.GetJobStatus()).
 		WithFinishTime(ctx.GetJobStopTime())
+}
+func (s *Statistics) jobChanged(ctx pkg.Context, status pkg.JobStatus) {
+	_, ok := s.Jobs[ctx.GetJobId()]
+	if !ok {
+		var spec string
+		mode := ctx.GetJobMode()
+		switch ctx.GetJobMode() {
+		case pkg.JobModeOnce:
+			spec = "once"
+		case pkg.JobModeLoop:
+			spec = "loop"
+		case pkg.JobModeCron:
+			spec = fmt.Sprintf("cron (every %s)", ctx.GetJobSpec())
+		}
+
+		command := fmt.Sprintf("-n %s -f %s -m %s -s %s -a %s",
+			ctx.GetSpiderName(),
+			ctx.GetJobFunc(),
+			(&mode).String(),
+			ctx.GetJobSpec(),
+			ctx.GetJobArgs(),
+		)
+		s.Jobs[ctx.GetJobId()] = new(job.Job).
+			WithId(ctx.GetJobId()).
+			WithEnable(ctx.GetJobEnable()).
+			WithNode(ctx.GetCrawlerId()).
+			WithSpider(ctx.GetSpiderName()).
+			WithSchedule(spec).
+			WithCommand(command)
+	}
+
+	s.Jobs[ctx.GetJobId()].
+		WithStatusAndTime(status, ctx.GetJobUpdateTime())
 }
 func (s *Statistics) taskStarted(ctx pkg.Context) {
 	defer s.mutex.Unlock()
@@ -239,6 +276,7 @@ func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 	signal.RegisterSpiderStopped(s.spiderStopped)
 	signal.RegisterJobStarted(s.scheduleStarted)
 	signal.RegisterJobStopped(s.scheduleStopped)
+	signal.RegisterJobChanged(s.jobChanged)
 	signal.RegisterTaskStarted(s.taskStarted)
 	signal.RegisterTaskStopped(s.taskStopped)
 	signal.RegisterItemStopped(s.itemStopped)

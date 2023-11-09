@@ -89,6 +89,7 @@ func (m *KafkaPipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
+	item.GetContext().WithItemStopTime(time.Now())
 	spider.GetCrawler().GetSignal().ItemStopped(item)
 	task.IncItemSuccess()
 	return

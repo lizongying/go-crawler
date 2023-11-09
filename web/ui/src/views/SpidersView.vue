@@ -90,24 +90,25 @@ import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {useSpidersStore} from "@/stores/spiders";
 import {formatDuration, formattedDate} from "@/utils/time";
+import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 
 const columns = [
   {
     title: 'Node',
     dataIndex: 'node',
-    width: 300,
-    sorter: (a, b) => a.node - b.node,
+    width: 200,
+    sorter: (a, b) => sortBigInt(a.node, b.node),
   },
   {
     title: 'Name',
     dataIndex: 'spider',
     width: 200,
-    sorter: (a, b) => a.spider - b.spider,
+    sorter: (a, b) => sortStr(a.spider, b.spider),
   },
   {
     title: 'Status',
     dataIndex: 'status',
-    width: 200,
+    width: 100,
     filters: [
       {
         text: 'starting',
@@ -138,13 +139,30 @@ const columns = [
     title: 'Finish Time',
     dataIndex: 'finish_time',
     width: 200,
-    sorter: (a, b) => a.finish_time - b.finish_time,
+    sorter: (a, b) => {
+      if (a.finish_time === b.finish_time) {
+        return 0
+      }
+      const a_finish_time = a.finish_time !== 0 ? a.finish_time : Math.floor(Date.now() / 1000)
+      const b_finish_time = b.finish_time !== 0 ? b.finish_time : Math.floor(Date.now() / 1000)
+      return a_finish_time - b_finish_time
+    },
   },
   {
     title: 'Duration',
     dataIndex: 'duration',
     width: 150,
-    sorter: (a, b) => a.duration - b.duration,
+    sorter: (a, b) => {
+      let a_finish_time = a.finish_time
+      if (a.start_time === 0 && a.finish_time === 0) {
+        a_finish_time = Math.floor(Date.now() / 1000)
+      }
+      let b_finish_time = b.finish_time
+      if (b.start_time === 0 && b.finish_time === 0) {
+        b_finish_time = Math.floor(Date.now() / 1000)
+      }
+      return (a_finish_time - a.start_time) - (b_finish_time - b.start_time)
+    },
   },
   {
     title: 'Last Task Status',
@@ -180,25 +198,32 @@ const columns = [
     title: 'Last Task Finish Time',
     dataIndex: 'last_task_finish_time',
     width: 200,
-    sorter: (a, b) => a.last_task_finish_time - b.last_task_finish_time,
+    sorter: (a, b) => {
+      if (a.last_task_finish_time === b.last_task_finish_time) {
+        return 0
+      }
+      const a_finish_time = a.last_task_finish_time !== 0 ? a.last_task_finish_time : Math.floor(Date.now() / 1000)
+      const b_finish_time = b.last_task_finish_time !== 0 ? b.last_task_finish_time : Math.floor(Date.now() / 1000)
+      return a_finish_time - b_finish_time
+    },
   },
   {
     title: 'Job',
     dataIndex: 'job',
     width: 100,
-    sorter: (a, b) => a.job - b.job,
+    sorter: (a, b) => sortInt(a.job, b.job),
   },
   {
     title: 'Task',
     dataIndex: 'task',
     width: 100,
-    sorter: (a, b) => a.task - b.task,
+    sorter: (a, b) => sortInt(a.task, b.task),
   },
   {
     title: 'Record',
     dataIndex: 'record',
     width: 100,
-    sorter: (a, b) => a.record - b.record,
+    sorter: (a, b) => sortInt(a.record, b.record),
   },
   {
     title: 'Action',

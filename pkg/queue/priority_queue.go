@@ -2,6 +2,7 @@ package queue
 
 import (
 	"container/heap"
+	"encoding/json"
 	"errors"
 )
 
@@ -91,6 +92,14 @@ func (p *PriorityQueue) update(item *Item, value any, priority int64) (err error
 	item.priority = priority
 	heap.Fix(p, item.index)
 	return
+}
+func (p *PriorityQueue) MarshalJSON() ([]byte, error) {
+	items, _ := p.GetItemN(-1)
+	res := make(map[int64]any)
+	for _, v := range items {
+		res[v.Priority()] = v.value
+	}
+	return json.Marshal(res)
 }
 
 func NewPriorityQueue(maxSize uint32) *PriorityQueue {

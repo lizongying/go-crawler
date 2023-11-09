@@ -144,6 +144,7 @@ func (m *SqlitePipeline) ProcessItem(item pkg.Item) (err error) {
 		m.logger.Info(itemSqlite.GetTable(), "insert success", id)
 	}
 
+	item.GetContext().WithItemStopTime(time.Now())
 	spider.GetCrawler().GetSignal().ItemStopped(item)
 	task.IncItemSuccess()
 	return

@@ -31,6 +31,7 @@ type Crawler interface {
 	GetStore() Store
 
 	RunJob(context.Context, string, string, string, JobMode, string) (string, error)
+	RerunJob(ctx context.Context, spiderName string, jobId string) (err error)
 	KillJob(ctx context.Context, spiderName string, jobId string) (err error)
 
 	SpiderStopped(ctx Context, err error)
@@ -47,6 +48,9 @@ type Crawler interface {
 	WithItemConcurrency(uint8) Crawler
 	ItemTimer() *time.Timer
 	ItemConcurrencyChan() chan struct{}
+
+	NextId() string
+	GenUid() uint64
 }
 
 type CrawlOption func(Crawler)

@@ -10,9 +10,11 @@ import (
 type Job struct {
 	Context     context.Context `json:"-"`
 	Id          string          `json:"id,omitempty"`
+	SubId       uint64          `json:"sub_id,omitempty"`
 	Status      pkg.JobStatus   `json:"status,omitempty"`
 	StartTime   utils.Timestamp `json:"start_time,omitempty"`
 	StopTime    utils.Timestamp `json:"stop_time,omitempty"`
+	UpdateTime  utils.Timestamp `json:"update_time,omitempty"`
 	Enable      bool            `json:"enable,omitempty"`
 	Func        string          `json:"func,omitempty"`
 	Args        string          `json:"args,omitempty"`
@@ -26,6 +28,13 @@ func (c *Job) GetId() string {
 }
 func (c *Job) WithId(id string) pkg.ContextJob {
 	c.Id = id
+	return c
+}
+func (c *Job) GetSubId() uint64 {
+	return c.SubId
+}
+func (c *Job) WithSubId(id uint64) pkg.ContextJob {
+	c.SubId = id
 	return c
 }
 func (c *Job) GetContext() context.Context {
@@ -54,6 +63,13 @@ func (c *Job) GetStopTime() time.Time {
 }
 func (c *Job) WithStopTime(stopTime time.Time) pkg.ContextJob {
 	c.StopTime = utils.Timestamp{Time: stopTime}
+	return c
+}
+func (c *Job) GetUpdateTime() time.Time {
+	return c.UpdateTime.Time
+}
+func (c *Job) WithUpdateTime(t time.Time) pkg.ContextJob {
+	c.UpdateTime = utils.Timestamp{Time: t}
 	return c
 }
 func (c *Job) GetEnable() bool {
