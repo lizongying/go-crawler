@@ -9,15 +9,24 @@ type JobStatus uint8
 
 const (
 	JobStatusUnknown = iota
-	JobStatusStarted
+	JobStatusReady
+	JobStatusStarting
+	JobStatusRunning
+	JobStatusStopping
 	JobStatusStopped
 )
 
 func (s *JobStatus) String() string {
 	switch *s {
 	case 1:
-		return "started"
+		return "ready"
 	case 2:
+		return "starting"
+	case 3:
+		return "running"
+	case 4:
+		return "stopping"
+	case 5:
 		return "stopped"
 	default:
 		return "unknown"

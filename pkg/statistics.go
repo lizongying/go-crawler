@@ -45,8 +45,6 @@ type StatisticsJob interface {
 	IncRecord()
 	DecRecord()
 	WithEnable(enable bool) StatisticsJob
-	WithStartTime(time.Time) StatisticsJob
-	WithFinishTime(time.Time) StatisticsJob
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsTask interface {

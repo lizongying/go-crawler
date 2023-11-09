@@ -94,52 +94,12 @@ func (s *Statistics) spiderStopped(ctx pkg.Context) {
 		WithStatus(ctx.GetSpiderStatus()).
 		WithFinishTime(ctx.GetSpiderStopTime())
 }
-func (s *Statistics) scheduleStarted(ctx pkg.Context) {
-	s.Nodes[ctx.GetCrawlerId()].IncJob()
-	s.Spiders[ctx.GetSpiderName()].IncJob()
-
-	var spec string
-	mode := ctx.GetJobMode()
-	switch ctx.GetJobMode() {
-	case pkg.JobModeOnce:
-		spec = "once"
-	case pkg.JobModeLoop:
-		spec = "loop"
-	case pkg.JobModeCron:
-		spec = fmt.Sprintf("cron (every %s)", ctx.GetJobSpec())
-	}
-
-	command := fmt.Sprintf("-n %s -f %s -m %s -s %s -a %s",
-		ctx.GetSpiderName(),
-		ctx.GetJobFunc(),
-		(&mode).String(),
-		ctx.GetJobSpec(),
-		ctx.GetJobArgs(),
-	)
-
+func (s *Statistics) jobChanged(ctx pkg.Context) {
 	_, ok := s.Jobs[ctx.GetJobId()]
 	if !ok {
-		s.Jobs[ctx.GetJobId()] = new(job.Job).
-			WithId(ctx.GetJobId()).
-			WithEnable(ctx.GetJobEnable()).
-			WithNode(ctx.GetCrawlerId()).
-			WithSpider(ctx.GetSpiderName()).
-			WithSchedule(spec).
-			WithCommand(command)
-	}
+		s.Nodes[ctx.GetCrawlerId()].IncJob()
+		s.Spiders[ctx.GetSpiderName()].IncJob()
 
-	s.Jobs[ctx.GetJobId()].
-		WithStatus(ctx.GetJobStatus()).
-		WithStartTime(ctx.GetJobStartTime())
-}
-func (s *Statistics) scheduleStopped(ctx pkg.Context) {
-	s.Jobs[ctx.GetJobId()].
-		WithStatus(ctx.GetJobStatus()).
-		WithFinishTime(ctx.GetJobStopTime())
-}
-func (s *Statistics) jobChanged(ctx pkg.Context, status pkg.JobStatus) {
-	_, ok := s.Jobs[ctx.GetJobId()]
-	if !ok {
 		var spec string
 		mode := ctx.GetJobMode()
 		switch ctx.GetJobMode() {
@@ -167,8 +127,10 @@ func (s *Statistics) jobChanged(ctx pkg.Context, status pkg.JobStatus) {
 			WithCommand(command)
 	}
 
+	status := ctx.GetJobStatus()
+	s.logger.Info(111111111111111, status.String())
 	s.Jobs[ctx.GetJobId()].
-		WithStatusAndTime(status, ctx.GetJobUpdateTime())
+		WithStatusAndTime(ctx.GetJobStatus(), ctx.GetJobUpdateTime())
 }
 func (s *Statistics) taskStarted(ctx pkg.Context) {
 	defer s.mutex.Unlock()
@@ -274,8 +236,6 @@ func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 	signal.RegisterCrawlerStopped(s.crawlerStopped)
 	signal.RegisterSpiderStarted(s.spiderStarted)
 	signal.RegisterSpiderStopped(s.spiderStopped)
-	signal.RegisterJobStarted(s.scheduleStarted)
-	signal.RegisterJobStopped(s.scheduleStopped)
 	signal.RegisterJobChanged(s.jobChanged)
 	signal.RegisterTaskStarted(s.taskStarted)
 	signal.RegisterTaskStopped(s.taskStopped)

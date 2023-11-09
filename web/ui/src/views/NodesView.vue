@@ -1,4 +1,12 @@
 <template>
+  <a-page-header
+      title="Nodes"
+  >
+    <template #extra>
+      <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
+      <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
+    </template>
+  </a-page-header>
   <a-table :columns="columns" :data-source="nodesStore.nodes" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
@@ -68,6 +76,7 @@ import {RouterLink} from "vue-router";
 import {useNodesStore} from "@/stores/nodes";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
+import {onBeforeUnmount, ref} from "vue";
 
 const columns = [
   {
@@ -193,6 +202,26 @@ const columns = [
 const nodesStore = useNodesStore();
 
 nodesStore.GetNodes()
+
+const refresh = () => {
+  nodesStore.GetNodes()
+}
+const checked1 = ref(false)
+const checked1Disable = ref(false)
+
+let interval = null
+const changeSwitch = () => {
+  if (checked1.value) {
+    interval = setInterval(refresh, 1000)
+    checked1Disable.value = true
+  } else {
+    clearInterval(interval)
+    checked1Disable.value = false
+  }
+}
+onBeforeUnmount(() => {
+  clearInterval(interval)
+})
 </script>
 <style>
 </style>

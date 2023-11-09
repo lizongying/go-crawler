@@ -29,6 +29,14 @@ type Job struct {
 
 func (s *Job) WithStatusAndTime(status pkg.JobStatus, t time.Time) pkg.StatisticsJob {
 	s.JobStatus = status
+	s.withUpdateTime(t)
+	switch status {
+	case pkg.JobStatusRunning:
+		s.withStartTime(t)
+	case pkg.JobStatusStopped:
+		s.withFinishTime(t)
+	}
+
 	if s.StatusList == nil {
 		s.StatusList = queue.NewPriorityQueue(10)
 	}
@@ -75,14 +83,20 @@ func (s *Job) WithEnable(enable bool) pkg.StatisticsJob {
 	s.Enable = enable
 	return s
 }
-func (s *Job) WithStartTime(t time.Time) pkg.StatisticsJob {
+func (s *Job) withStartTime(t time.Time) pkg.StatisticsJob {
 	s.StartTime = utils.Timestamp{
 		Time: t,
 	}
 	return s
 }
-func (s *Job) WithFinishTime(t time.Time) pkg.StatisticsJob {
+func (s *Job) withFinishTime(t time.Time) pkg.StatisticsJob {
 	s.FinishTime = utils.Timestamp{
+		Time: t,
+	}
+	return s
+}
+func (s *Job) withUpdateTime(t time.Time) pkg.StatisticsJob {
+	s.UpdateTime = utils.Timestamp{
 		Time: t,
 	}
 	return s

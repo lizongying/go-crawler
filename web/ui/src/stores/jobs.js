@@ -1,9 +1,23 @@
 import {defineStore} from 'pinia'
-import {computed, reactive} from 'vue';
+import {reactive} from 'vue';
 import {getJobs, rerunJob, runJob, stopJob} from "@/requests/api";
+
+export const JobStatusUnknown = 0
+export const JobStatusReady = 1
+export const JobStatusStarting = 2
+export const JobStatusRunning = 3
+export const JobStatusStopping = 4
+export const JobStatusStopped = 5
 
 export const useJobsStore = defineStore('jobs', () => {
     const jobs = reactive([])
+
+    // const JobStatusUnknown = 0
+    // const JobStatusReady = 1
+    // const JobStatusStarting = 2
+    // const JobStatusRunning = 3
+    // const JobStatusStopping = 4
+    // const JobStatusStopped = 5
 
     const GetJobs = () => {
         getJobs().then(resp => {
@@ -42,7 +56,7 @@ export const useJobsStore = defineStore('jobs', () => {
 
             const jobIdx = jobs.findIndex(v => v.id === data.job_id)
             if (jobIdx > -1) {
-                jobs[jobIdx].status = 1
+                jobs[jobIdx].status = JobStatusRunning
             }
             return resp.data.data
         }).catch(e => {
@@ -60,7 +74,7 @@ export const useJobsStore = defineStore('jobs', () => {
 
             const jobIdx = jobs.findIndex(v => v.id === data.job_id)
             if (jobIdx > -1) {
-                jobs[jobIdx].status = 2
+                jobs[jobIdx].status = JobStatusStopped
             }
             return resp.data.data
         }).catch(e => {
@@ -69,13 +83,11 @@ export const useJobsStore = defineStore('jobs', () => {
         })
     }
 
-    const Count = computed(() => {
-        return jobs.length
-    })
-
-    const CountEnable = computed(() => {
-        return jobs.filter(v => v.enable).length
-    })
-
-    return {jobs, GetJobs, StopJob, RunJob, RerunJob, Count, CountEnable}
+    return {
+        jobs,
+        GetJobs,
+        StopJob,
+        RunJob,
+        RerunJob,
+    }
 })

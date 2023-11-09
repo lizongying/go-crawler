@@ -452,11 +452,13 @@ func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 
 	job, ok := s.jobs[jobId]
 	if !ok {
-		err = errors.New("job is not exists")
+		err = errors.New("the job is not exists")
 		return
 	}
-	if job.GetContext().GetJobStatus() != pkg.JobStatusStarted {
-		err = errors.New("job is not started")
+	if !utils.InSlice(job.context.GetJobStatus(), []pkg.JobStatus{
+		pkg.JobStatusRunning,
+	}) {
+		err = errors.New("the job can be killed in the running state")
 		return
 	}
 	err = job.kill(ctx)

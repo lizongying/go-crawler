@@ -1,4 +1,13 @@
 <template>
+  <a-page-header
+      title="Jobs"
+  >
+    <template #extra>
+      <a-button key="1" type="primary">New</a-button>
+      <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
+      <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
+    </template>
+  </a-page-header>
   <a-table :columns="columns" :data-source="jobsStore.jobs" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
@@ -23,7 +32,7 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === 2 ? 'volcano' : record.status === 1 ? 'green' : 'geekblue'"
+              :color="record.status === JobStatusStopped ? 'volcano' : record.status === JobStatusRunning ? 'green' : 'geekblue'"
           >
             {{ jobStatusName(record.status) }}
           </a-tag>
@@ -50,8 +59,8 @@
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
-          <a v-if="record.status === 2" @click="rerun(record.spider, record.id)">Rerun</a>
-          <a v-if="record.status === 1" @click="stop(record.spider, record.id)">Stop</a>
+          <a v-if="record.status === JobStatusStopped" @click="rerun(record.spider, record.id)">Rerun</a>
+          <a v-if="record.status === JobStatusRunning" @click="stop(record.spider, record.id)">Stop</a>
           <a-divider type="vertical"/>
           <a>Delete</a>
           <a-divider type="vertical"/>
@@ -67,9 +76,17 @@
 <script setup>
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
-import {useJobsStore} from "@/stores/jobs";
+import {
+  JobStatusReady,
+  JobStatusRunning,
+  JobStatusStarting,
+  JobStatusStopped,
+  JobStatusStopping,
+  useJobsStore
+} from "@/stores/jobs";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
+import {onBeforeUnmount, ref} from "vue";
 
 const columns = [
   {
@@ -168,9 +185,15 @@ jobsStore.GetJobs()
 
 const jobStatusName = (status) => {
   switch (status) {
-    case 1:
-      return 'started'
-    case 2:
+    case JobStatusReady:
+      return 'ready'
+    case JobStatusStarting:
+      return 'starting'
+    case JobStatusRunning:
+      return 'running'
+    case JobStatusStopping:
+      return 'stopping'
+    case JobStatusStopped:
       return 'stopped'
     default:
       return 'unknown'
@@ -185,6 +208,25 @@ const rerun = async (spiderName, jobId) => {
   const res = await jobsStore.RerunJob({spider_name: spiderName, job_id: jobId})
   console.log(spiderName, jobId, res)
 }
+const refresh = () => {
+  jobsStore.GetJobs()
+}
+const checked1 = ref(false)
+const checked1Disable = ref(false)
+
+let interval = null
+const changeSwitch = () => {
+  if (checked1.value) {
+    interval = setInterval(refresh, 1000)
+    checked1Disable.value = true
+  } else {
+    clearInterval(interval)
+    checked1Disable.value = false
+  }
+}
+onBeforeUnmount(() => {
+  clearInterval(interval)
+})
 </script>
 <style>
 </style>

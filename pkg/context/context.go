@@ -138,28 +138,24 @@ func (c *Context) GetJobStatus() pkg.JobStatus {
 }
 func (c *Context) WithJobStatus(status pkg.JobStatus) pkg.Context {
 	c.Job.WithStatus(status)
+	t := time.Now()
+	c.Job.WithUpdateTime(t)
+	switch status {
+	case pkg.JobStatusRunning:
+		c.Job.WithStartTime(t)
+	case pkg.JobStatusStopped:
+		c.Job.WithStopTime(t)
+	}
 	return c
 }
 func (c *Context) GetJobStartTime() time.Time {
 	return c.Job.GetStartTime()
 }
-func (c *Context) WithJobStartTime(startTime time.Time) pkg.Context {
-	c.Job.WithStartTime(startTime)
-	return c
-}
 func (c *Context) GetJobStopTime() time.Time {
 	return c.Job.GetStopTime()
 }
-func (c *Context) WithJobStopTime(stopTime time.Time) pkg.Context {
-	c.Job.WithStopTime(stopTime)
-	return c
-}
 func (c *Context) GetJobUpdateTime() time.Time {
 	return c.Job.GetUpdateTime()
-}
-func (c *Context) WithJobUpdateTime(t time.Time) pkg.Context {
-	c.Job.WithUpdateTime(t)
-	return c
 }
 func (c *Context) GetJobEnable() bool {
 	return c.Job.GetEnable()

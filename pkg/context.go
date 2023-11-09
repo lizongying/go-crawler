@@ -46,11 +46,8 @@ type Context interface {
 	GetJobEnable() bool
 	WithJobEnable(bool) Context
 	GetJobStartTime() time.Time
-	WithJobStartTime(time.Time) Context
 	GetJobStopTime() time.Time
-	WithJobStopTime(time.Time) Context
 	GetJobUpdateTime() time.Time
-	WithJobUpdateTime(time.Time) Context
 	GetJobFunc() string
 	WithJobFunc(string) Context
 	GetJobArgs() string
