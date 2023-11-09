@@ -126,6 +126,13 @@ func (c *Context) WithJobId(id string) pkg.Context {
 	c.Job.WithId(id)
 	return c
 }
+func (c *Context) GetJobSubId() uint64 {
+	return c.Job.GetSubId()
+}
+func (c *Context) WithJobSubId(id uint64) pkg.Context {
+	c.Job.WithSubId(id)
+	return c
+}
 func (c *Context) GetJobStatus() pkg.JobStatus {
 	return c.Job.GetStatus()
 }
@@ -145,6 +152,13 @@ func (c *Context) GetJobStopTime() time.Time {
 }
 func (c *Context) WithJobStopTime(stopTime time.Time) pkg.Context {
 	c.Job.WithStopTime(stopTime)
+	return c
+}
+func (c *Context) GetJobUpdateTime() time.Time {
+	return c.Job.GetUpdateTime()
+}
+func (c *Context) WithJobUpdateTime(t time.Time) pkg.Context {
+	c.Job.WithUpdateTime(t)
 	return c
 }
 func (c *Context) GetJobEnable() bool {

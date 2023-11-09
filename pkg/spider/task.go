@@ -10,7 +10,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
 	redis2 "github.com/lizongying/go-crawler/pkg/scheduler/redis"
 	"github.com/lizongying/go-crawler/pkg/stats"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"reflect"
 	"time"
 )
@@ -43,7 +42,7 @@ func (t *Task) WithScheduler(scheduler pkg.Scheduler) pkg.Task {
 	return t
 }
 func (t *Task) start(ctx pkg.Context) (id string, err error) {
-	id = utils.UUIDV1WithoutHyphens()
+	id = t.crawler.NextId()
 	if t.GetContext() == nil {
 		t.WithContext(new(crawlerContext.Context).
 			WithCrawler(ctx.GetCrawler()).
@@ -53,6 +52,7 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 				WithTask(t).
 				WithContext(context.Background()).
 				WithId(id).
+				WithJobSubId(ctx.GetJob().GetSubId()).
 				WithStatus(pkg.TaskStatusPending).
 				WithStartTime(time.Now()).
 				WithStats(&stats.MediaStats{})))
@@ -119,7 +119,7 @@ func (t *Task) stop() (err error) {
 	t.crawler.GetSignal().TaskStopped(t.context)
 	t.logger.Info(t.spider.Name(), t.context.GetTaskId(), "task finished. start time:", t.context.GetTaskStartTime())
 	t.logger.Info(t.spider.Name(), t.context.GetTaskId(), "task finished. spend time:", stopTime.Sub(t.context.GetTaskStartTime()))
-	t.job.StopTask()
+	t.job.TaskStopped(t.context, nil)
 	return
 }
 func (t *Task) ReadyRequest() {

@@ -250,49 +250,49 @@ func TestMultiState_IsZero(t *testing.T) {
 	}
 }
 
-func TestMultiState_isReadyAndIsZero(t *testing.T) {
+func TestMultiState_IsReadyAndIsZero(t *testing.T) {
 	state1 := NewState()
 	state2 := NewState()
 
 	multiState := NewMultiState(state1, state2)
 
-	if multiState.isReadyAndIsZero() {
+	if multiState.IsReadyAndIsZero() {
 		t.Errorf("Expected multiState to not be ready and zero")
 	}
 
 	state1.BeReady()
 
-	if multiState.isReadyAndIsZero() {
+	if multiState.IsReadyAndIsZero() {
 		t.Errorf("Expected multiState to not be ready and zero")
 	}
 
 	state2.BeReady()
 
-	if !multiState.isReadyAndIsZero() {
+	if !multiState.IsReadyAndIsZero() {
 		t.Errorf("Expected multiState to be ready and zero")
 	}
 
 	state1.In()
 
-	if multiState.isReadyAndIsZero() {
+	if multiState.IsReadyAndIsZero() {
 		t.Errorf("Expected multiState to not be ready and zero")
 	}
 
 	state1.Out()
 
-	if !multiState.isReadyAndIsZero() {
+	if !multiState.IsReadyAndIsZero() {
 		t.Errorf("Expected multiState to be ready and zero")
 	}
 
 	state2.In()
 
-	if multiState.isReadyAndIsZero() {
+	if multiState.IsReadyAndIsZero() {
 		t.Errorf("Expected multiState to not be ready and zero")
 	}
 
 	state2.Out()
 
-	if !multiState.isReadyAndIsZero() {
+	if !multiState.IsReadyAndIsZero() {
 		t.Errorf("Expected multiState to be ready and zero")
 	}
 }

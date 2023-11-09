@@ -58,37 +58,38 @@ import {RouterLink} from "vue-router";
 import {formattedDate} from "@/utils/time";
 import {useRecordsStore} from "@/stores/records";
 import {reactive, ref} from "vue";
+import {sortBigInt, sortStr} from "@/utils/sort";
 
 const columns = [
   {
     title: 'Id',
     dataIndex: 'id',
-    width: 300,
-    sorter: (a, b) => a.id - b.id,
+    width: 200,
+    sorter: (a, b) => sortBigInt(a.id, b.id),
   },
   {
     title: 'Node',
     dataIndex: 'node',
-    width: 300,
-    sorter: (a, b) => a.node - b.node,
+    width: 200,
+    sorter: (a, b) => sortBigInt(a.node, b.node),
   },
   {
     title: 'Spider',
     dataIndex: 'spider',
     width: 200,
-    sorter: (a, b) => a.spider - b.spider,
+    sorter: (a, b) => sortStr(a.spider, b.spider),
   },
   {
     title: 'Job',
     dataIndex: 'job',
-    width: 300,
-    sorter: (a, b) => a.job - b.job,
+    width: 200,
+    sorter: (a, b) => sortStr(a.job, b.job),
   },
   {
     title: 'Task',
     dataIndex: 'task',
-    width: 300,
-    sorter: (a, b) => a.task - b.task,
+    width: 200,
+    sorter: (a, b) => sortBigInt(a.task, b.task),
   },
   {
     title: 'Meta',

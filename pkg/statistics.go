@@ -33,6 +33,7 @@ type StatisticsSpider interface {
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsJob interface {
+	WithStatusAndTime(status JobStatus, t time.Time) StatisticsJob
 	WithStatus(status JobStatus) StatisticsJob
 	WithId(id string) StatisticsJob
 	WithSchedule(schedule string) StatisticsJob

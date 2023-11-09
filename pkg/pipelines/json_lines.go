@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 type JsonLinesPipeline struct {
@@ -91,6 +92,7 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 
 	m.logger.Info("item saved:", filename)
+	item.GetContext().WithItemStopTime(time.Now())
 	spider.GetCrawler().GetSignal().ItemStopped(item)
 	task.IncItemSuccess()
 	return

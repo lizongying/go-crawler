@@ -80,6 +80,7 @@ type Spider interface {
 	RequestSlotLoad(slot string) (value any, ok bool)
 	RequestSlotStore(slot string, value any)
 
+	RerunJob(ctx context.Context, jobId string) (err error)
 	KillJob(ctx context.Context, jobId string) (err error)
 	JobStopped(Context, error)
 

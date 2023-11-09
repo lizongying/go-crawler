@@ -91,6 +91,8 @@ github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f h1:NlitwGPZLOw
 github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f/go.mod h1:gP12tZ6zLW9cHC4QlQgj0Jak14N3YVI/ZIHD/3ITp9M=
 github.com/lizongying/go-re v0.0.0-20230906094757-1b48356fa6db h1:ESoikDPZW2eHg7EBzBW6rdZ0GANAzi2NbIdFiUc4fOI=
 github.com/lizongying/go-re v0.0.0-20230906094757-1b48356fa6db/go.mod h1:khn14nE/hdfP/6Ku4wf5MYe/74K4PyCl9MPkhXIa8XM=
+github.com/lizongying/go-uid v0.0.0-20231109082237-2794e92dcc84 h1:lOXUDjp9cHZb354hamdGJ2D5joRJue8PwqZYEJlkF38=
+github.com/lizongying/go-uid v0.0.0-20231109082237-2794e92dcc84/go.mod h1:kDisATYEtZJgBslX8jwFF/jvkeU8BbSY7LuY7MTE3iQ=
 github.com/lizongying/go-xpath v0.0.0-20230906104639-f46eb0e080c4 h1:yGFXQ29+P2WCmzKXJ8qSc+oHABN90NNjfvwMqXv7jA8=
 github.com/lizongying/go-xpath v0.0.0-20230906104639-f46eb0e080c4/go.mod h1:wlEtOc9+EcNKVB9TNsSeNPcYo6DNqmgQeT51h8BmmD0=
 github.com/lizongying/gooptimizer v1.0.2 h1:y3Wj5loP1RivhMV84Jc90lj1iO8MKQrWVq611g46JRY=

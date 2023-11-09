@@ -1,6 +1,6 @@
 module github.com/lizongying/go-crawler
 
-go 1.21
+go 1.21.0
 
 require (
 	github.com/andybalholm/brotli v1.0.4
@@ -55,6 +55,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
+	github.com/lizongying/go-uid v0.0.0-20231109082237-2794e92dcc84 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

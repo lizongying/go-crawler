@@ -12,6 +12,7 @@ type Task struct {
 	pkg.Stats `json:"stats,omitempty"`
 	Context   context.Context     `json:"-"`
 	Id        string              `json:"id,omitempty"`
+	JobSubId  uint64              `json:"job_sub_id,omitempty"`
 	Status    pkg.TaskStatus      `json:"status,omitempty"`
 	StartTime utils.Timestamp     `json:"start_time,omitempty"`
 	StopTime  utils.Timestamp     `json:"stop_time,omitempty"`
@@ -37,6 +38,13 @@ func (c *Task) GetId() string {
 }
 func (c *Task) WithId(id string) pkg.ContextTask {
 	c.Id = id
+	return c
+}
+func (c *Task) GetJobSubId() uint64 {
+	return c.JobSubId
+}
+func (c *Task) WithJobSubId(id uint64) pkg.ContextTask {
+	c.JobSubId = id
 	return c
 }
 func (c *Task) GetContext() context.Context {

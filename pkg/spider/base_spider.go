@@ -430,6 +430,22 @@ func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode 
 	s.job.In()
 	return
 }
+func (s *BaseSpider) RerunJob(ctx context.Context, jobId string) (err error) {
+	s.jobsMutex.Lock()
+	defer s.jobsMutex.Unlock()
+
+	job, ok := s.jobs[jobId]
+	if !ok {
+		err = errors.New("job is not exists")
+		return
+	}
+	if job.GetContext().GetJobStatus() != pkg.JobStatusStopped {
+		err = errors.New("job is not stopped")
+		return
+	}
+	err = job.run(ctx)
+	return
+}
 func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 	s.jobsMutex.Lock()
 	defer s.jobsMutex.Unlock()

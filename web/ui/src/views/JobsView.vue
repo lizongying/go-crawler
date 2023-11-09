@@ -50,7 +50,7 @@
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
-          <a v-if="record.status === 2">Run</a>
+          <a v-if="record.status === 2" @click="rerun(record.spider, record.id)">Rerun</a>
           <a v-if="record.status === 1" @click="stop(record.spider, record.id)">Stop</a>
           <a-divider type="vertical"/>
           <a>Delete</a>
@@ -69,19 +69,21 @@ import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {useJobsStore} from "@/stores/jobs";
 import {formatDuration, formattedDate} from "@/utils/time";
+import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 
 const columns = [
   {
     title: 'Id',
     dataIndex: 'id',
-    width: 300,
-    sorter: (a, b) => a.id - b.id,
+    width: 200,
+    sorter: (a, b) => sortBigInt(a.id, b.id),
+    defaultSortOrder: 'descend',
   },
   {
     title: 'Schedule',
     dataIndex: 'schedule',
     width: 150,
-    sorter: (a, b) => a.schedule - b.schedule,
+    sorter: (a, b) => sortStr(a.schedule, b.schedule),
   },
   {
     title: 'Command',
@@ -92,20 +94,19 @@ const columns = [
   {
     title: 'Node',
     dataIndex: 'node',
-    width: 300,
-    sorter: (a, b) => a.node - b.node,
+    width: 200,
+    sorter: (a, b) => sortBigInt(a.node, b.node),
   },
   {
     title: 'Spider',
     dataIndex: 'spider',
-    sorter: (a, b) => a.spider - b.spider,
+    sorter: (a, b) => sortStr(a.spider, b.spider),
     width: 200,
   },
   {
     title: 'Status',
     dataIndex: 'status',
-    sorter: (a, b) => a.status - b.status,
-    width: 200,
+    width: 100,
   },
   {
     title: 'Start Time',
@@ -117,30 +118,47 @@ const columns = [
     title: 'Finish Time',
     dataIndex: 'finish_time',
     width: 200,
-    sorter: (a, b) => a.finish_time - b.finish_time,
+    sorter: (a, b) => {
+      if (a.finish_time === b.finish_time) {
+        return 0
+      }
+      const a_finish_time = a.finish_time !== 0 ? a.finish_time : Math.floor(Date.now() / 1000)
+      const b_finish_time = b.finish_time !== 0 ? b.finish_time : Math.floor(Date.now() / 1000)
+      return a_finish_time - b_finish_time
+    },
   },
   {
     title: 'Duration',
     dataIndex: 'duration',
     width: 150,
-    sorter: (a, b) => a.duration - b.duration,
+    sorter: (a, b) => {
+      let a_finish_time = a.finish_time
+      if (a.start_time === 0 && a.finish_time === 0) {
+        a_finish_time = Math.floor(Date.now() / 1000)
+      }
+      let b_finish_time = b.finish_time
+      if (b.start_time === 0 && b.finish_time === 0) {
+        b_finish_time = Math.floor(Date.now() / 1000)
+      }
+      return (a_finish_time - a.start_time) - (b_finish_time - b.start_time)
+    },
   },
   {
     title: 'Task',
     dataIndex: 'task',
-    sorter: (a, b) => a.task - b.task,
+    sorter: (a, b) => sortInt(a.task, b.task),
     width: 100,
   },
   {
     title: 'Record',
     dataIndex: 'record',
-    sorter: (a, b) => a.record - b.record,
+    sorter: (a, b) => sortInt(a.record, b.record),
     width: 100,
   },
   {
     title: 'Action',
     dataIndex: 'action',
-    width: 200,
+    width: 250,
     fixed: 'right',
   },
 ];
@@ -161,6 +179,10 @@ const jobStatusName = (status) => {
 
 const stop = async (spiderName, jobId) => {
   const res = await jobsStore.StopJob({spider_name: spiderName, job_id: jobId})
+  console.log(spiderName, jobId, res)
+}
+const rerun = async (spiderName, jobId) => {
+  const res = await jobsStore.RerunJob({spider_name: spiderName, job_id: jobId})
   console.log(spiderName, jobId, res)
 }
 </script>

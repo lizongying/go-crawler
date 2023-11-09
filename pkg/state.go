@@ -75,9 +75,14 @@ func (s *State) IsZero() bool {
 	return s.count.Load() == 0
 }
 
-// isReadyAndIsZero checks if the state is ready and zero.
-func (s *State) isReadyAndIsZero() bool {
+// IsReadyAndIsZero checks if the state is ready and zero.
+func (s *State) IsReadyAndIsZero() bool {
 	return s.IsReady() && s.IsZero()
+}
+
+func (s *State) Clear() {
+	s.isReady = false
+	s.count.Store(0)
 }
 
 // MultiState represents a collection of states.
@@ -128,7 +133,7 @@ func (s *MultiState) RegisterIsReadyAndIsZero(fns ...func()) {
 	s.fnIsReadyAndIsZero = append(s.fnIsReadyAndIsZero, fns...)
 	for _, v := range s.states {
 		fn := func() {
-			if s.isReadyAndIsZero() {
+			if s.IsReadyAndIsZero() {
 				for _, v2 := range s.fnIsReadyAndIsZero {
 					v2()
 				}
@@ -158,7 +163,14 @@ func (s *MultiState) IsZero() bool {
 	return true
 }
 
-// isReadyAndIsZero checks if all states in the MultiState are ready and zero.
-func (s *MultiState) isReadyAndIsZero() bool {
+// IsReadyAndIsZero checks if all states in the MultiState are ready and zero.
+func (s *MultiState) IsReadyAndIsZero() bool {
 	return s.IsReady() && s.IsZero()
+}
+
+func (s *MultiState) Clear() {
+	for _, v := range s.states {
+		v.Clear()
+	}
+	return
 }

@@ -3,6 +3,7 @@ package pipelines
 import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
+	"time"
 )
 
 type NonePipeline struct {
@@ -34,6 +35,7 @@ func (m *NonePipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
+	item.GetContext().WithItemStopTime(time.Now())
 	spider.GetCrawler().GetSignal().ItemStopped(item)
 	task.IncItemSuccess()
 	return

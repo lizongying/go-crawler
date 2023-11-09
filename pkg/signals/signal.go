@@ -17,6 +17,7 @@ type Signal struct {
 
 	jobStarted []pkg.FnJobStarted
 	jobStopped []pkg.FnJobStopped
+	jobChanged []pkg.FnJobChanged
 
 	taskStarted []pkg.FnTaskStarted
 	taskStopped []pkg.FnTaskStopped
@@ -51,6 +52,9 @@ func (s *Signal) RegisterJobStarted(fn pkg.FnJobStarted) {
 }
 func (s *Signal) RegisterJobStopped(fn pkg.FnJobStopped) {
 	s.jobStopped = append(s.jobStopped, fn)
+}
+func (s *Signal) RegisterJobChanged(fn pkg.FnJobChanged) {
+	s.jobChanged = append(s.jobChanged, fn)
 }
 func (s *Signal) RegisterTaskStarted(fn pkg.FnTaskStarted) {
 	s.taskStarted = append(s.taskStarted, fn)
@@ -108,6 +112,11 @@ func (s *Signal) JobStarted(ctx pkg.Context) {
 func (s *Signal) JobStopped(ctx pkg.Context) {
 	for _, v := range s.jobStopped {
 		v(ctx)
+	}
+}
+func (s *Signal) JobChanged(ctx pkg.Context, status pkg.JobStatus) {
+	for _, v := range s.jobChanged {
+		v(ctx, status)
 	}
 }
 func (s *Signal) TaskStarted(ctx pkg.Context) {
