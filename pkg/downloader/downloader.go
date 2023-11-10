@@ -6,17 +6,25 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/http_client"
 	"github.com/lizongying/go-crawler/pkg/http_client/browser"
+	"github.com/lizongying/go-crawler/pkg/middlewares"
 	response2 "github.com/lizongying/go-crawler/pkg/response"
 )
 
 type Downloader struct {
 	httpClient     pkg.HttpClient
 	browserManager *browser.Manager
+	middlewares    pkg.Middlewares
 	spider         pkg.Spider
 	logger         pkg.Logger
-	middlewares    []pkg.Middleware
 }
 
+func (d *Downloader) GetMiddlewares() pkg.Middlewares {
+	return d.middlewares
+}
+func (d *Downloader) SetMiddlewares(middlewares pkg.Middlewares) pkg.Downloader {
+	d.middlewares = middlewares
+	return d
+}
 func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
 	err = d.processRequest(ctx, request)
 	if err != nil {
@@ -80,7 +88,7 @@ func (d *Downloader) processRequest(ctx pkg.Context, request pkg.Request) (err e
 	if request.IsSkipMiddleware() {
 		return
 	}
-	for _, v := range d.middlewares {
+	for _, v := range d.middlewares.Middlewares() {
 		name := v.Name()
 		d.logger.Debug("enter", name, "processRequest")
 		e := v.ProcessRequest(ctx, request)
@@ -96,7 +104,7 @@ func (d *Downloader) processResponse(ctx pkg.Context, response pkg.Response) (er
 	if response.SkipMiddleware() {
 		return
 	}
-	for _, v := range d.middlewares {
+	for _, v := range d.middlewares.Middlewares() {
 		name := v.Name()
 		d.logger.Debug("enter", name, "ProcessResponse")
 		e := v.ProcessResponse(ctx, response)
@@ -125,8 +133,8 @@ func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 	d.spider = spider
 	d.httpClient = new(http_client.HttpClient).FromSpider(spider)
 	d.browserManager = new(browser.Manager).FromSpider(spider)
+	d.middlewares = new(middlewares.Middlewares).FromSpider(spider)
 	d.logger = spider.GetLogger()
-	d.middlewares = spider.GetMiddlewares().Middlewares()
 
 	spider.GetCrawler().GetSignal().RegisterSpiderChanged(d.Close)
 	return d

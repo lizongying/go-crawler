@@ -28,7 +28,7 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === 4 ? 'volcano' : record.status===2 ? 'green' : 'geekblue'"
+              :color="record.status === SpiderStatusStopped ? 'volcano' : record.status===SpiderStatusRunning ? 'green' : 'geekblue'"
           >
             {{ spiderStatusName(record.status) }}
           </a-tag>
@@ -38,7 +38,7 @@
         <span>
           <a-tag
               :key="record.last_task_status"
-              :color="record.last_task_status === 4 ? 'volcano' : record.last_task_status===2 ? 'green' : 'geekblue'"
+              :color="record.last_task_status === TaskStatusError ? 'volcano' : record.last_task_status===TaskStatusRunning ? 'green' : 'geekblue'"
           >
             {{ taskStatusName(record.last_task_status) }}
           </a-tag>
@@ -97,10 +97,18 @@
 <script setup>
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
-import {useSpidersStore} from "@/stores/spiders";
+import {
+  SpiderStatusReady,
+  SpiderStatusRunning,
+  SpiderStatusStarting,
+  SpiderStatusStopped,
+  SpiderStatusStopping,
+  useSpidersStore
+} from "@/stores/spiders";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 import {onBeforeUnmount, ref} from "vue";
+import {TaskStatusError, TaskStatusPending, TaskStatusRunning, TaskStatusSuccess} from "@/stores/tasks";
 
 const columns = [
   {
@@ -108,6 +116,7 @@ const columns = [
     dataIndex: 'id',
     width: 200,
     sorter: (a, b) => sortBigInt(a.id, b.id),
+    defaultSortOrder: 'descend',
   },
   {
     title: 'Name',
@@ -127,20 +136,24 @@ const columns = [
     width: 100,
     filters: [
       {
-        text: 'starting',
-        value: 1,
+        text: 'ready',
+        value: SpiderStatusReady,
       },
       {
-        text: 'started',
-        value: 2,
+        text: 'starting',
+        value: SpiderStatusStarting,
+      },
+      {
+        text: 'running',
+        value: SpiderStatusRunning,
       },
       {
         text: 'stopping',
-        value: 3,
+        value: SpiderStatusStopping,
       },
       {
         text: 'stopped',
-        value: 4,
+        value: SpiderStatusStopped,
       },
     ],
     onFilter: (value, record) => record.status === value,
@@ -187,19 +200,19 @@ const columns = [
     filters: [
       {
         text: 'pending',
-        value: 1,
+        value: TaskStatusPending,
       },
       {
         text: 'running',
-        value: 2,
+        value: TaskStatusRunning,
       },
       {
         text: 'success',
-        value: 3,
+        value: TaskStatusSuccess,
       },
       {
         text: 'error',
-        value: 4,
+        value: TaskStatusError,
       },
     ],
     onFilter: (value, record) => record.last_task_status === value,
@@ -256,12 +269,14 @@ spidersStore.GetSpiders()
 const spiderStatusName = (status) => {
   switch (status) {
     case 1:
-      return 'starting'
+      return 'ready'
     case 2:
-      return 'started'
+      return 'starting'
     case 3:
-      return 'stopping'
+      return 'started'
     case 4:
+      return 'stopping'
+    case 5:
       return 'stopped'
     default:
       return 'unknown'

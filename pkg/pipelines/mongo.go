@@ -91,7 +91,7 @@ func (m *MongoPipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 
 	item.GetContext().WithItemStopTime(time.Now())
-	spider.GetCrawler().GetSignal().ItemStopped(item)
+	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return
 }

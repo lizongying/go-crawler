@@ -166,7 +166,7 @@ func (c *Crawler) RunJob(ctx context.Context, spiderName string, startFunc strin
 		return
 	}
 
-	if spider.GetContext() == nil {
+	if spider.GetContext().GetSpiderStatus() == pkg.SpiderStatusReady {
 		if err = spider.Start(c.context); err != nil {
 			c.logger.Error(err)
 			return
@@ -227,12 +227,25 @@ func (c *Crawler) KillJob(ctx context.Context, spiderName string, jobId string) 
 	return
 }
 func (c *Crawler) Start(ctx context.Context) (err error) {
-	crawler := new(crawlerContext.Crawler).
-		WithContext(ctx).
-		WithId(c.NextId())
+	// load id
+	c.WithContext(new(crawlerContext.Context).
+		WithCrawler(new(crawlerContext.Crawler).
+			WithId(c.NextId())))
+	c.context.WithCrawlerStatus(pkg.CrawlerStatusReady)
+	c.Signal.CrawlerChanged(c.context)
 
-	crawler.WithStatus(pkg.CrawlerStatusRunning)
-	c.context = new(crawlerContext.Context).WithCrawler(crawler)
+	c.context.WithCrawlerContext(ctx)
+
+	c.context.WithCrawlerStatus(pkg.CrawlerStatusStarting)
+	c.Signal.CrawlerChanged(c.context)
+
+	for _, v := range c.spiders {
+		v.SetSpider(v)
+		v.FromCrawler(c)
+		c.logger.Info("spider", v.Name(), "loaded")
+	}
+
+	c.context.WithCrawlerStatus(pkg.CrawlerStatusRunning)
 	c.Signal.CrawlerChanged(c.context)
 
 	c.logger.Info("crawlerId", c.context.GetCrawlerId())
@@ -323,6 +336,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		spider:      spider,
 		stop:        make(chan struct{}),
 		ug:          ug,
+		spiders:     spiders,
 	}
 
 	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))
@@ -340,16 +354,6 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 
 	crawler.SetSignal(new(signals.Signal).FromCrawler(crawler))
 	crawler.SetStatistics(new(statistics.Statistics).FromCrawler(crawler))
-
-	for _, v := range spiders {
-		v.SetSpider(v)
-		v.FromCrawler(crawler)
-		for _, option := range v.Options() {
-			option(v)
-		}
-		logger.Info("spider", v.Name(), "loaded")
-		crawler.AddSpider(v)
-	}
 
 	if config.MockServerEnable() {
 		if err = crawler.RunMockServer(); err != nil {

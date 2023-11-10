@@ -7,18 +7,23 @@ import (
 )
 
 type Record struct {
-	Id       string          `json:"id,omitempty"`
-	Node     string          `json:"node,omitempty"`
-	Spider   string          `json:"spider,omitempty"`
-	Job      string          `json:"job,omitempty"`
-	Task     string          `json:"task,omitempty"`
-	Meta     string          `json:"meta,omitempty"`
-	Data     string          `json:"data,omitempty"`
-	SaveTime utils.Timestamp `json:"save_time,omitempty"`
+	Id        string          `json:"id,omitempty"`
+	UniqueKey string          `json:"unique_key,omitempty"`
+	Node      string          `json:"node,omitempty"`
+	Spider    string          `json:"spider,omitempty"`
+	Job       string          `json:"job,omitempty"`
+	Task      string          `json:"task,omitempty"`
+	Meta      string          `json:"meta,omitempty"`
+	Data      string          `json:"data,omitempty"`
+	SaveTime  utils.Timestamp `json:"save_time,omitempty"`
 }
 
 func (r *Record) WithId(id string) *Record {
 	r.Id = id
+	return r
+}
+func (r *Record) WithUniqueKey(uniqueKey string) *Record {
+	r.UniqueKey = uniqueKey
 	return r
 }
 func (r *Record) WithNode(node string) *Record {

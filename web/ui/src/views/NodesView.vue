@@ -165,12 +165,24 @@ const columns = [
     width: 100,
     filters: [
       {
-        text: 'online',
-        value: 'online',
+        text: 'ready',
+        value: NodeStatusReady,
       },
       {
-        text: 'offline',
-        value: 'offline',
+        text: 'starting',
+        value: NodeStatusStarting,
+      },
+      {
+        text: 'running',
+        value: NodeStatusRunning,
+      },
+      {
+        text: 'stopping',
+        value: NodeStatusStopping,
+      },
+      {
+        text: 'stopped',
+        value: NodeStatusStopped,
       },
     ],
     onFilter: (value, record) => record.status === value,

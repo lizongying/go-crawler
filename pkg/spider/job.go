@@ -184,6 +184,7 @@ func (j *Job) startTask() {
 	j.task.In()
 }
 func (j *Job) TaskStopped(ctx pkg.Context, _ error) {
+	j.logger.Info(33333, ctx.GetTask().GetJobSubId(), j.context.GetJobSubId())
 	if ctx.GetTask().GetJobSubId() == j.context.GetJobSubId() {
 		j.task.Out()
 	}

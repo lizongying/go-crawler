@@ -37,7 +37,7 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === 4 ? 'volcano' : record.status===2 ? 'green' : 'geekblue'"
+              :color="record.status === TaskStatusError ? 'volcano' : record.status===TaskStatusSuccess ? 'green' : 'geekblue'"
           >
             {{ taskStatusName(record.status) }}
           </a-tag>
@@ -83,7 +83,7 @@
 import {RightOutlined} from "@ant-design/icons-vue";
 import {onBeforeUnmount, ref} from "vue";
 import {RouterLink} from "vue-router";
-import {useTasksStore} from "@/stores/tasks";
+import {TaskStatusError, TaskStatusPending, TaskStatusRunning, TaskStatusSuccess, useTasksStore} from "@/stores/tasks";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 
@@ -120,19 +120,19 @@ const columns = [
     filters: [
       {
         text: 'pending',
-        value: 1,
+        value: TaskStatusPending,
       },
       {
         text: 'running',
-        value: 2,
+        value: TaskStatusRunning,
       },
       {
         text: 'success',
-        value: 3,
+        value: TaskStatusSuccess,
       },
       {
         text: 'error',
-        value: 4,
+        value: TaskStatusError,
       },
     ],
     onFilter: (value, record) => record.status === value,

@@ -135,7 +135,7 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 
 	m.logger.Info("item saved:", filename)
 	item.GetContext().WithItemStopTime(time.Now())
-	spider.GetCrawler().GetSignal().ItemStopped(item)
+	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return
 }

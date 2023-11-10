@@ -57,6 +57,13 @@ func (s *Spider) WithSpider(spider string) pkg.StatisticsSpider {
 	s.Spider = spider
 	return s
 }
+func (s *Spider) GetNode() string {
+	return s.Node
+}
+func (s *Spider) WithNode(node string) pkg.StatisticsSpider {
+	s.Node = node
+	return s
+}
 func (s *Spider) IncJob() {
 	atomic.AddUint32(&s.Job, 1)
 }

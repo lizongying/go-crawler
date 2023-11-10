@@ -45,8 +45,6 @@ type Spider interface {
 	SetOkHttpCodes(...int) Spider
 	GetFilter() Filter
 	SetFilter(Filter) Spider
-	GetMiddlewares() Middlewares
-	SetMiddlewares(Middlewares) Spider
 
 	Run(context.Context, string, string, JobMode, string, bool) (string, error)
 	Start(Context) error

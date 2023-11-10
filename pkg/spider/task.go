@@ -56,7 +56,7 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 				WithStatus(pkg.TaskStatusPending).
 				WithStartTime(time.Now()).
 				WithStats(&stats.MediaStats{})))
-		t.crawler.GetSignal().TaskStarted(t.context)
+		t.crawler.GetSignal().TaskChanged(t.context)
 
 		t.logger.Info(t.spider.Name(), id, "task started")
 	}
@@ -116,8 +116,7 @@ func (t *Task) stop() (err error) {
 	stopTime := time.Now()
 	t.context.WithTaskStatus(pkg.TaskStatusSuccess)
 	t.context.WithTaskStopTime(stopTime)
-	t.crawler.GetSignal().TaskStopped(t.context)
-	t.logger.Info(t.spider.Name(), t.context.GetTaskId(), "task finished. start time:", t.context.GetTaskStartTime())
+	t.crawler.GetSignal().TaskChanged(t.context)
 	t.logger.Info(t.spider.Name(), t.context.GetTaskId(), "task finished. spend time:", stopTime.Sub(t.context.GetTaskStartTime()))
 	t.job.TaskStopped(t.context, nil)
 	return

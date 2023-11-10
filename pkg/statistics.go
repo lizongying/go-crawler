@@ -19,6 +19,8 @@ type StatisticsSpider interface {
 	WithStatusAndTime(status SpiderStatus, t time.Time) StatisticsSpider
 	WithId(id uint64) StatisticsSpider
 	GetSpider() string
+	WithSpider(spider string) StatisticsSpider
+	WithNode(node string) StatisticsSpider
 	IncJob()
 	DecJob()
 	IncTask()

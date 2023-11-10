@@ -2,6 +2,12 @@ import {defineStore} from 'pinia'
 import {computed, reactive} from 'vue';
 import {getTasks} from "@/requests/api";
 
+export const TaskStatusUnknown = 0
+export const TaskStatusPending = 1
+export const TaskStatusRunning = 2
+export const TaskStatusSuccess = 3
+export const TaskStatusError = 4
+
 export const useTasksStore = defineStore('tasks', () => {
     const tasks = reactive([])
 

@@ -75,6 +75,13 @@ const columns = [
     dataIndex: 'id',
     width: 200,
     sorter: (a, b) => sortBigInt(a.id, b.id),
+    defaultSortOrder: 'descend',
+  },
+  {
+    title: 'Unique Key',
+    dataIndex: 'unique_key',
+    width: 200,
+    sorter: (a, b) => sortStr(a.unique_key, b.unique_key),
   },
   {
     title: 'Node',

@@ -89,6 +89,13 @@ import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 import {createVNode, onBeforeUnmount, ref} from "vue";
 import {Modal} from "ant-design-vue";
+import {
+  NodeStatusReady,
+  NodeStatusRunning,
+  NodeStatusStarting,
+  NodeStatusStopped,
+  NodeStatusStopping
+} from "@/stores/nodes";
 
 const columns = [
   {
@@ -126,6 +133,29 @@ const columns = [
     title: 'Status',
     dataIndex: 'status',
     width: 100,
+    filters: [
+      {
+        text: 'ready',
+        value: JobStatusReady,
+      },
+      {
+        text: 'starting',
+        value: JobStatusStarting,
+      },
+      {
+        text: 'running',
+        value: JobStatusRunning,
+      },
+      {
+        text: 'stopping',
+        value: JobStatusStopping,
+      },
+      {
+        text: 'stopped',
+        value: JobStatusStopped,
+      },
+    ],
+    onFilter: (value, record) => record.status === value,
   },
   {
     title: 'Start Time',

@@ -2,6 +2,13 @@ import {defineStore} from 'pinia'
 import {computed, reactive} from 'vue';
 import {getSpiders} from "@/requests/api";
 
+export const SpiderStatusUnknown = 0
+export const SpiderStatusReady = 1
+export const SpiderStatusStarting = 2
+export const SpiderStatusRunning = 3
+export const SpiderStatusStopping = 4
+export const SpiderStatusStopped = 5
+
 export const useSpidersStore = defineStore('spiders', () => {
     const spiders = reactive([])
 

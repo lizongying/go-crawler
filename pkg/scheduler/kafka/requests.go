@@ -8,7 +8,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	request2 "github.com/lizongying/go-crawler/pkg/request"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/segmentio/kafka-go"
 	"golang.org/x/time/rate"
 	"net/http"
@@ -150,10 +149,10 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		WithTask(ctx.GetTask()).
 		WithRequest(new(crawlerContext.Request).
 			WithContext(context.Background()).
-			WithId(utils.UUIDV1WithoutHyphens()).
+			WithId(s.crawler.NextId()).
 			WithStatus(pkg.RequestStatusPending).
 			WithStartTime(time.Now()))
-	s.crawler.GetSignal().RequestStarted(c)
+	s.crawler.GetSignal().RequestChanged(c)
 
 	request.WithContext(c)
 
