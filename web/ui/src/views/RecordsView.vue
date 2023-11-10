@@ -1,6 +1,7 @@
 <template>
   <a-page-header
       title="Records"
+      :sub-title="'Total: '+recordsStore.Count"
   >
     <template #extra>
       <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>

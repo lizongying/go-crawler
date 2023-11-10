@@ -73,6 +73,38 @@ X-API-Key:
         </pre>
     </li>
 </ul>
+<ul>
+    <li>job rerun</li>
+    <li>request:
+        <ul>
+            <li>url: /job/rerun</li>
+            <li>method: POST</li>
+            <li>body:
+                <pre>
+{
+    "spider_name": ""
+    "job_id": ""
+}
+                </pre>
+            </li>
+            <li>header:
+                <pre>
+Content-Type: application/json
+X-API-Key:
+                </pre>
+            </li>
+        </ul>
+    </li>
+    <li>response:
+        <pre>
+{
+    "code": 0,
+    "msg": "",
+    "data": {}
+}
+        </pre>
+    </li>
+</ul>
 <script></script>
 </body>
 </html>

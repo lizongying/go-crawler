@@ -24,6 +24,9 @@ func (m *RobotsTxtMiddleware) SpiderStarted(c pkg.Context) {
 	if c.GetSpiderName() != m.spider.Name() {
 		return
 	}
+	if c.GetSpiderStatus() != pkg.SpiderStatusRunning {
+		return
+	}
 	host := m.spider.GetHost()
 	if host == "" {
 		m.logger.Warn("host is emtpy")
@@ -45,7 +48,7 @@ func (m *RobotsTxtMiddleware) SpiderStarted(c pkg.Context) {
 
 func (m *RobotsTxtMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
 	err = m.UnimplementedMiddleware.Start(ctx, spider)
-	spider.GetCrawler().GetSignal().RegisterSpiderStarted(m.SpiderStarted)
+	spider.GetCrawler().GetSignal().RegisterSpiderChanged(m.SpiderStarted)
 	return
 }
 

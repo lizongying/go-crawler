@@ -1,6 +1,7 @@
 <template>
   <a-page-header
       title="Jobs"
+      :sub-title="'Total: '+jobsStore.Count"
   >
     <template #extra>
       <a-button key="1" type="primary">New</a-button>
@@ -74,7 +75,7 @@
   </a-table>
 </template>
 <script setup>
-import {RightOutlined} from "@ant-design/icons-vue";
+import {ExclamationCircleOutlined, RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {
   JobStatusReady,
@@ -86,7 +87,8 @@ import {
 } from "@/stores/jobs";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
-import {onBeforeUnmount, ref} from "vue";
+import {createVNode, onBeforeUnmount, ref} from "vue";
+import {Modal} from "ant-design-vue";
 
 const columns = [
   {
@@ -200,14 +202,6 @@ const jobStatusName = (status) => {
   }
 }
 
-const stop = async (spiderName, jobId) => {
-  const res = await jobsStore.StopJob({spider_name: spiderName, job_id: jobId})
-  console.log(spiderName, jobId, res)
-}
-const rerun = async (spiderName, jobId) => {
-  const res = await jobsStore.RerunJob({spider_name: spiderName, job_id: jobId})
-  console.log(spiderName, jobId, res)
-}
 const refresh = () => {
   jobsStore.GetJobs()
 }
@@ -227,6 +221,44 @@ const changeSwitch = () => {
 onBeforeUnmount(() => {
   clearInterval(interval)
 })
+
+// rerun confirm
+function rerun(spiderName, jobId) {
+  Modal.confirm({
+    title: 'Do you want to rerun the job?',
+    icon: createVNode(ExclamationCircleOutlined),
+    content: 'When clicked the OK button, the job will be rerun.',
+    async onOk() {
+      try {
+        const res = await jobsStore.RerunJob({spider_name: spiderName, job_id: jobId})
+        console.log(spiderName, jobId, res)
+      } catch {
+        return console.log('Oops errors!');
+      }
+    },
+    onCancel() {
+    },
+  });
+}
+
+// stop confirm
+function stop(spiderName, jobId) {
+  Modal.confirm({
+    title: 'Do you want to stop the job?',
+    icon: createVNode(ExclamationCircleOutlined),
+    content: 'When clicked the OK button, the job will be stop.',
+    async onOk() {
+      try {
+        const res = await jobsStore.StopJob({spider_name: spiderName, job_id: jobId})
+        console.log(spiderName, jobId, res)
+      } catch {
+        return console.log('Oops errors!');
+      }
+    },
+    onCancel() {
+    },
+  });
+}
 </script>
 <style>
 </style>

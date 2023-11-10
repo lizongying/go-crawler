@@ -28,7 +28,7 @@ type Job struct {
 }
 
 func (s *Job) WithStatusAndTime(status pkg.JobStatus, t time.Time) pkg.StatisticsJob {
-	s.JobStatus = status
+	s.withStatus(status)
 	s.withUpdateTime(t)
 	switch status {
 	case pkg.JobStatusRunning:
@@ -43,7 +43,7 @@ func (s *Job) WithStatusAndTime(status pkg.JobStatus, t time.Time) pkg.Statistic
 	s.StatusList.Push(queue.NewItem(status, t.UnixNano()))
 	return s
 }
-func (s *Job) WithStatus(status pkg.JobStatus) pkg.StatisticsJob {
+func (s *Job) withStatus(status pkg.JobStatus) pkg.StatisticsJob {
 	s.JobStatus = status
 	return s
 }

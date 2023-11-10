@@ -229,14 +229,15 @@ func (c *Crawler) KillJob(ctx context.Context, spiderName string, jobId string) 
 func (c *Crawler) Start(ctx context.Context) (err error) {
 	crawler := new(crawlerContext.Crawler).
 		WithContext(ctx).
-		WithId(c.NextId()).
-		WithStatus(pkg.CrawlerStatusOnline).
-		WithStartTime(time.Now())
+		WithId(c.NextId())
+
+	crawler.WithStatus(pkg.CrawlerStatusRunning)
 	c.context = new(crawlerContext.Context).WithCrawler(crawler)
+	c.Signal.CrawlerChanged(c.context)
+
 	c.logger.Info("crawlerId", c.context.GetCrawlerId())
 	c.logger.Info("referrerPolicy", c.config.GetReferrerPolicy())
 	c.logger.Info("urlLengthLimit", c.config.GetUrlLengthLimit())
-	c.Signal.CrawlerStarted(c.context)
 
 	// init item limit
 	c.itemTimer = time.NewTimer(c.itemDelay)
@@ -277,9 +278,8 @@ func (c *Crawler) Stop(ctx context.Context) (err error) {
 	c.logger.Debug("Crawler wait for stop")
 	defer func() {
 		c.context.WithCrawlerContext(ctx)
-		c.context.WithCrawlerStatus(pkg.CrawlerStatusOffline)
-		c.context.WithCrawlerStopTime(time.Now())
-		c.Signal.CrawlerStopped(c.context)
+		c.context.WithCrawlerStatus(pkg.CrawlerStatusStopped)
+		c.Signal.CrawlerChanged(c.context)
 		c.logger.Info("Crawler Stopped")
 	}()
 

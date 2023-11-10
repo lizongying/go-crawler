@@ -1,6 +1,7 @@
 <template>
   <a-page-header
       title="Spiders"
+      :sub-title="'Total: '+spidersStore.Count"
   >
     <template #extra>
       <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
@@ -103,16 +104,22 @@ import {onBeforeUnmount, ref} from "vue";
 
 const columns = [
   {
-    title: 'Node',
-    dataIndex: 'node',
+    title: 'Id',
+    dataIndex: 'id',
     width: 200,
-    sorter: (a, b) => sortBigInt(a.node, b.node),
+    sorter: (a, b) => sortBigInt(a.id, b.id),
   },
   {
     title: 'Name',
     dataIndex: 'spider',
     width: 200,
     sorter: (a, b) => sortStr(a.spider, b.spider),
+  },
+  {
+    title: 'Node',
+    dataIndex: 'node',
+    width: 200,
+    sorter: (a, b) => sortBigInt(a.node, b.node),
   },
   {
     title: 'Status',

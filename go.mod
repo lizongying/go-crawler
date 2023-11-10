@@ -17,6 +17,7 @@ require (
 	github.com/lizongying/go-json v0.0.0-20230906102344-7915011b6304
 	github.com/lizongying/go-query v0.0.0-20230720084938-e0776701ba5f
 	github.com/lizongying/go-re v0.0.0-20230906094757-1b48356fa6db
+	github.com/lizongying/go-uid v0.0.0-20231109082237-2794e92dcc84
 	github.com/lizongying/go-xpath v0.0.0-20230906104639-f46eb0e080c4
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/pkg/errors v0.9.1
@@ -55,7 +56,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
-	github.com/lizongying/go-uid v0.0.0-20231109082237-2794e92dcc84 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

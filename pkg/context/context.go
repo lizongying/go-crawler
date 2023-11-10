@@ -50,16 +50,11 @@ func (c *Context) WithCrawlerStatus(status pkg.CrawlerStatus) pkg.Context {
 func (c *Context) GetCrawlerStartTime() time.Time {
 	return c.Crawler.GetStartTime()
 }
-func (c *Context) WithCrawlerStartTime(startTime time.Time) pkg.Context {
-	c.Crawler.WithStartTime(startTime)
-	return c
-}
 func (c *Context) GetCrawlerStopTime() time.Time {
 	return c.Crawler.GetStopTime()
 }
-func (c *Context) WithCrawlerStopTime(stopTime time.Time) pkg.Context {
-	c.Crawler.WithStopTime(stopTime)
-	return c
+func (c *Context) GetCrawlerUpdateTime() time.Time {
+	return c.Crawler.GetUpdateTime()
 }
 
 func (c *Context) GetSpider() pkg.ContextSpider {
@@ -93,16 +88,11 @@ func (c *Context) WithSpiderStatus(status pkg.SpiderStatus) pkg.Context {
 func (c *Context) GetSpiderStartTime() time.Time {
 	return c.Spider.GetStartTime()
 }
-func (c *Context) WithSpiderStartTime(startTime time.Time) pkg.Context {
-	c.Spider.WithStartTime(startTime)
-	return c
-}
 func (c *Context) GetSpiderStopTime() time.Time {
 	return c.Spider.GetStopTime()
 }
-func (c *Context) WithSpiderStopTime(stopTime time.Time) pkg.Context {
-	c.Spider.WithStopTime(stopTime)
-	return c
+func (c *Context) GetSpiderUpdateTime() time.Time {
+	return c.Spider.GetUpdateTime()
 }
 
 func (c *Context) GetJob() pkg.ContextJob {
@@ -138,14 +128,6 @@ func (c *Context) GetJobStatus() pkg.JobStatus {
 }
 func (c *Context) WithJobStatus(status pkg.JobStatus) pkg.Context {
 	c.Job.WithStatus(status)
-	t := time.Now()
-	c.Job.WithUpdateTime(t)
-	switch status {
-	case pkg.JobStatusRunning:
-		c.Job.WithStartTime(t)
-	case pkg.JobStatusStopped:
-		c.Job.WithStopTime(t)
-	}
 	return c
 }
 func (c *Context) GetJobStartTime() time.Time {

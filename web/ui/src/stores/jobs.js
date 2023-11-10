@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import {reactive} from 'vue';
+import {computed, reactive} from 'vue';
 import {getJobs, rerunJob, runJob, stopJob} from "@/requests/api";
 
 export const JobStatusUnknown = 0
@@ -28,6 +28,10 @@ export const useJobsStore = defineStore('jobs', () => {
             jobs.splice(0, jobs.length, ...resp.data.data)
         })
     }
+
+    const Count = computed(() => {
+        return jobs.length
+    })
 
     const RunJob = async (data) => {
         await runJob(data).then(resp => {
@@ -86,6 +90,7 @@ export const useJobsStore = defineStore('jobs', () => {
     return {
         jobs,
         GetJobs,
+        Count,
         StopJob,
         RunJob,
         RerunJob,

@@ -2,6 +2,13 @@ import {defineStore} from 'pinia'
 import {computed, reactive} from 'vue';
 import {getNodes} from "@/requests/api";
 
+export const NodeStatusUnknown = 0
+export const NodeStatusReady = 1
+export const NodeStatusStarting = 2
+export const NodeStatusRunning = 3
+export const NodeStatusStopping = 4
+export const NodeStatusStopped = 5
+
 export const useNodesStore = defineStore('nodes', () => {
     const nodes = reactive([])
 

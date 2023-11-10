@@ -368,10 +368,10 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 			WithCrawler(c.GetCrawler()).
 			WithSpider(new(crawlerContext.Spider).
 				WithContext(ctx).
-				WithName(s.Name()).
-				WithStatus(pkg.SpiderStatusStarted).
-				WithStartTime(time.Now())))
-		s.GetCrawler().GetSignal().SpiderStarted(s.GetContext())
+				WithId(s.Crawler.GenUid()).
+				WithName(s.name).
+				WithStatus(pkg.SpiderStatusRunning)))
+		s.GetCrawler().GetSignal().SpiderChanged(s.GetContext())
 
 		s.logger.Info("spiderName", s.context.GetSpiderName())
 		s.logger.Info("allowedDomains", s.GetAllowedDomains())
@@ -500,7 +500,7 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 	}
 
 	s.context.WithSpiderStatus(pkg.SpiderStatusStopping)
-	s.Crawler.GetSignal().SpiderStopping(s.context)
+	s.Crawler.GetSignal().SpiderChanged(s.context)
 
 	s.logger.Debug("BaseSpider wait for stop")
 	defer func() {
@@ -512,8 +512,7 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 
 		stopTime := time.Now()
 		s.context.WithSpiderStatus(pkg.SpiderStatusStopped)
-		s.context.WithSpiderStopTime(stopTime)
-		s.Crawler.GetSignal().SpiderStopped(s.context)
+		s.Crawler.GetSignal().SpiderChanged(s.context)
 
 		spendTime := stopTime.Sub(s.context.GetSpiderStartTime())
 		s.logger.Info(s.spider.Name(), "spider finished. spend time:", spendTime)

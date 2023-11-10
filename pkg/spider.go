@@ -347,8 +347,9 @@ type SpiderStatus uint8
 
 const (
 	SpiderStatusUnknown = iota
+	SpiderStatusReady
 	SpiderStatusStarting
-	SpiderStatusStarted
+	SpiderStatusRunning
 	SpiderStatusStopping
 	SpiderStatusStopped
 )
@@ -356,12 +357,14 @@ const (
 func (s *SpiderStatus) String() string {
 	switch *s {
 	case 1:
-		return "starting"
+		return "ready"
 	case 2:
-		return "started"
+		return "starting"
 	case 3:
-		return "stopping"
+		return "running"
 	case 4:
+		return "stopping"
+	case 5:
 		return "stopped"
 	default:
 		return "unknown"

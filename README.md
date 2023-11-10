@@ -654,22 +654,12 @@ needs.
 
 By using signals, it's possible to capture crawler events and perform certain actions.
 
-* `CrawlerStarted`: Indicates the started of the crawler. You can register it
-  using `RegisterCrawlerStarted(FnCrawlerStarted)`.
-* `CrawlerStopped`: Indicates the stopped of the crawler. You can register it
-  using `RegisterCrawlerClosed(FnCrawlerStopped)`.
-* `SpiderStarting`: Indicates the starting of the spider. You can register it
-  using `RegisterSpiderStarting(FnSpiderStarting)`.
-* `SpiderStarted`: Indicates the started of the spider. You can register it
-  using `RegisterSpiderStarted(FnSpiderStarted)`.
-* `SpiderStopping`: Indicates the stopping of the spider.You can register it
-  using `RegisterSpiderStopping(FnSpiderStopping)`.
-* `SpiderStopped`: Indicates the stopped of the spider.You can register it
-  using `RegisterSpiderClosed(FnSpiderStopped)`.
-* `JobStarted`: Indicates the started of the job. You can register it
-  using `RegisterJobStarted(FnScheduleStarted)`.
-* `JobStopped`: Indicates the stopped of the job. You can register it
-  using `RegisterJobClosed(FnJobStopped)`.
+* `CrawlerChanged`: Indicates the status changed of the crawler. You can register it
+  using `RegisterCrawlerChanged(FnCrawlerChanged)`.
+* `SpiderChanged`: Indicates the status changed of the spider.You can register it
+  using `RegisterSpiderChanged(FnSpiderChanged)`.
+* `JobChanged`: Indicates the status changed of the job. You can register it
+  using `RegisterJobChanged(FnJobChanged)`.
 * `TaskStarted`: Indicates the started of the task. You can register it using `RegisterTaskStarted(FnTaskStarted)`.
 * `TaskStopped`: Indicates the stopped of the task. You can register it using `RegisterTaskClosed(FnTaskStopped)`.
 * `ItemSaved`: Indicates the saved of the item. You can register it using `RegisterItemSaved(FnItemSaved)`.
@@ -963,6 +953,10 @@ curl "http://127.0.0.1:8090/job/run" -X POST -d '{"timeout": 2000, "name": "test
 
 # job stop
 curl "http://127.0.0.1:8090/job/stop" -X POST -d '{"spider_name": "test-must-ok", "job_id": "894a6fe87e2411ee95139221bc92ca26"}' -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+# {"code":0,"msg":"","data":{"name":"test-must-ok"}}
+
+# job rerun
+curl "http://127.0.0.1:8090/job/rerun" -X POST -d '{"spider_name": "test-must-ok", "job_id": "894a6fe87e2411ee95139221bc92ca26"}' -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
 # {"code":0,"msg":"","data":{"name":"test-must-ok"}}
 
 ```

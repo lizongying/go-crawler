@@ -87,16 +87,25 @@ type CrawlerStatus uint8
 
 const (
 	CrawlerStatusUnknown = iota
-	CrawlerStatusOnline
-	CrawlerStatusOffline
+	CrawlerStatusReady
+	CrawlerStatusStarting
+	CrawlerStatusRunning
+	CrawlerStatusStopping
+	CrawlerStatusStopped
 )
 
 func (c *CrawlerStatus) String() string {
 	switch *c {
 	case 1:
-		return "online"
+		return "ready"
 	case 2:
-		return "offline"
+		return "starting"
+	case 3:
+		return "running"
+	case 4:
+		return "stopping"
+	case 5:
+		return "stopped"
 	default:
 		return "unknown"
 	}

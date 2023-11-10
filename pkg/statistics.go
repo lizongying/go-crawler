@@ -3,6 +3,7 @@ package pkg
 import "time"
 
 type StatisticsNode interface {
+	WithStatusAndTime(status CrawlerStatus, t time.Time) StatisticsNode
 	WithId(string) StatisticsNode
 	IncSpider()
 	DecSpider()
@@ -15,6 +16,8 @@ type StatisticsNode interface {
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsSpider interface {
+	WithStatusAndTime(status SpiderStatus, t time.Time) StatisticsSpider
+	WithId(id uint64) StatisticsSpider
 	GetSpider() string
 	IncJob()
 	DecJob()
@@ -22,9 +25,6 @@ type StatisticsSpider interface {
 	DecTask()
 	IncRecord()
 	DecRecord()
-	WithStatus(SpiderStatus) StatisticsSpider
-	WithStartTime(time.Time) StatisticsSpider
-	WithFinishTime(time.Time) StatisticsSpider
 	GetLastTaskId() string
 	WithLastTaskId(string) StatisticsSpider
 	WithLastTaskStatus(TaskStatus) StatisticsSpider
@@ -34,7 +34,6 @@ type StatisticsSpider interface {
 }
 type StatisticsJob interface {
 	WithStatusAndTime(status JobStatus, t time.Time) StatisticsJob
-	WithStatus(status JobStatus) StatisticsJob
 	WithId(id string) StatisticsJob
 	WithSchedule(schedule string) StatisticsJob
 	WithCommand(command string) StatisticsJob
