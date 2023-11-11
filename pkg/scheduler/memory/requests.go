@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"golang.org/x/time/rate"
 	"net/http"
 	"reflect"
@@ -131,10 +130,10 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		WithTask(ctx.GetTask()).
 		WithRequest(new(crawlerContext.Request).
 			WithContext(context.Background()).
-			WithId(utils.UUIDV1WithoutHyphens()).
+			WithId(s.crawler.NextId()).
 			WithStatus(pkg.RequestStatusPending).
 			WithStartTime(time.Now()))
-	s.crawler.GetSignal().RequestStarted(c)
+	s.crawler.GetSignal().RequestChanged(c)
 
 	request.WithContext(c)
 	s.requestChan <- request

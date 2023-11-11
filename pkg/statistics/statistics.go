@@ -21,8 +21,7 @@ type Statistics struct {
 	Spiders map[string]pkg.StatisticsSpider
 	Jobs    map[string]pkg.StatisticsJob
 	Tasks   *queue.GroupQueue
-	//Records *queue.GroupQueue
-	mutex sync.RWMutex
+	mutex   sync.RWMutex
 }
 
 func (s *Statistics) GetNodes() (nodes []pkg.StatisticsNode) {
@@ -57,89 +56,38 @@ func (s *Statistics) GetRecords() (records []pkg.StatisticsRecord) {
 	}
 	return
 }
-func (s *Statistics) crawlerStarted(ctx pkg.Context) {
-	hostname, _ := os.Hostname()
-	s.Nodes[ctx.GetCrawlerId()] = &node.Node{
-		Hostname: hostname,
-		Ip:       utils.LanIp(),
-		Enable:   true,
-	}
-	s.Nodes[ctx.GetCrawlerId()].WithId(ctx.GetCrawlerId())
-
-	s.Nodes[ctx.GetCrawlerId()].(*node.Node).
-		WithStatus(ctx.GetCrawlerStatus()).
-		WithStartTime(ctx.GetCrawlerStartTime())
-
-	for _, v := range s.crawler.GetSpiders() {
-		s.Nodes[ctx.GetCrawlerId()].IncSpider()
-		s.Spiders[v.Name()] = &statisticsSpider.Spider{
-			Node:   ctx.GetCrawlerId(),
-			Spider: v.Name(),
+func (s *Statistics) crawlerChanged(ctx pkg.Context) {
+	if _, ok := s.Nodes[ctx.GetCrawlerId()]; !ok {
+		hostname, _ := os.Hostname()
+		s.Nodes[ctx.GetCrawlerId()] = &node.Node{
+			Hostname: hostname,
+			Ip:       utils.LanIp(),
+			Enable:   true,
 		}
+		s.Nodes[ctx.GetCrawlerId()].WithId(ctx.GetCrawlerId())
 	}
+	s.Nodes[ctx.GetCrawlerId()].
+		WithStatusAndTime(ctx.GetCrawlerStatus(), ctx.GetCrawlerUpdateTime())
 }
-func (s *Statistics) crawlerStopped(ctx pkg.Context) {
-	s.Nodes[ctx.GetCrawlerId()].(*node.Node).
-		WithStatus(ctx.GetCrawlerStatus()).
-		WithFinishTime(ctx.GetCrawlerStopTime())
-}
-func (s *Statistics) spiderStarted(ctx pkg.Context) {
-	s.Spiders[ctx.GetSpiderName()].
-		WithStatus(ctx.GetSpiderStatus()).
-		WithStartTime(ctx.GetSpiderStartTime())
-}
-
-func (s *Statistics) spiderStopped(ctx pkg.Context) {
-	s.Spiders[ctx.GetSpiderName()].
-		WithStatus(ctx.GetSpiderStatus()).
-		WithFinishTime(ctx.GetSpiderStopTime())
-}
-func (s *Statistics) scheduleStarted(ctx pkg.Context) {
-	s.Nodes[ctx.GetCrawlerId()].IncJob()
-	s.Spiders[ctx.GetSpiderName()].IncJob()
-
-	var spec string
-	mode := ctx.GetJobMode()
-	switch ctx.GetJobMode() {
-	case pkg.JobModeOnce:
-		spec = "once"
-	case pkg.JobModeLoop:
-		spec = "loop"
-	case pkg.JobModeCron:
-		spec = fmt.Sprintf("cron (every %s)", ctx.GetJobSpec())
-	}
-
-	command := fmt.Sprintf("-n %s -f %s -m %s -s %s -a %s",
-		ctx.GetSpiderName(),
-		ctx.GetJobFunc(),
-		(&mode).String(),
-		ctx.GetJobSpec(),
-		ctx.GetJobArgs(),
-	)
-
-	_, ok := s.Jobs[ctx.GetJobId()]
+func (s *Statistics) spiderChanged(ctx pkg.Context) {
+	spiderOne, ok := s.Spiders[ctx.GetSpiderName()]
 	if !ok {
-		s.Jobs[ctx.GetJobId()] = new(job.Job).
-			WithId(ctx.GetJobId()).
-			WithEnable(ctx.GetJobEnable()).
-			WithNode(ctx.GetCrawlerId()).
+		s.Nodes[ctx.GetCrawlerId()].IncSpider()
+		spiderOne = new(statisticsSpider.Spider).
+			WithId(ctx.GetSpider().GetId()).
 			WithSpider(ctx.GetSpiderName()).
-			WithSchedule(spec).
-			WithCommand(command)
+			WithNode(ctx.GetCrawlerId())
+		s.Spiders[ctx.GetSpiderName()] = spiderOne
 	}
-
-	s.Jobs[ctx.GetJobId()].
-		WithStatus(ctx.GetJobStatus()).
-		WithStartTime(ctx.GetJobStartTime())
+	spiderOne.
+		WithStatusAndTime(ctx.GetSpiderStatus(), ctx.GetSpiderUpdateTime())
 }
-func (s *Statistics) scheduleStopped(ctx pkg.Context) {
-	s.Jobs[ctx.GetJobId()].
-		WithStatus(ctx.GetJobStatus()).
-		WithFinishTime(ctx.GetJobStopTime())
-}
-func (s *Statistics) jobChanged(ctx pkg.Context, status pkg.JobStatus) {
+func (s *Statistics) jobChanged(ctx pkg.Context) {
 	_, ok := s.Jobs[ctx.GetJobId()]
 	if !ok {
+		s.Nodes[ctx.GetCrawlerId()].IncJob()
+		s.Spiders[ctx.GetSpiderName()].IncJob()
+
 		var spec string
 		mode := ctx.GetJobMode()
 		switch ctx.GetJobMode() {
@@ -168,39 +116,39 @@ func (s *Statistics) jobChanged(ctx pkg.Context, status pkg.JobStatus) {
 	}
 
 	s.Jobs[ctx.GetJobId()].
-		WithStatusAndTime(status, ctx.GetJobUpdateTime())
+		WithStatusAndTime(ctx.GetJobStatus(), ctx.GetJobUpdateTime())
 }
-func (s *Statistics) taskStarted(ctx pkg.Context) {
+func (s *Statistics) taskChanged(ctx pkg.Context) {
 	defer s.mutex.Unlock()
 	s.mutex.Lock()
-	s.Nodes[ctx.GetCrawlerId()].IncTask()
-	s.Spiders[ctx.GetSpiderName()].IncTask()
-	s.Jobs[ctx.GetJobId()].IncTask()
 
-	// task
-	s.Tasks.Enqueue(ctx.GetJobId(),
-		task.WithRecords{
-			Task: new(task.Task).
-				WithId(ctx.GetTaskId()).
-				WithNode(ctx.GetCrawlerId()).
-				WithSpider(ctx.GetSpiderName()).
-				WithJob(ctx.GetJobId()).
-				WithStatus(ctx.GetTaskStatus()).
-				WithStartTime(ctx.GetTaskStartTime()),
-			Records: queue.NewGroupQueue(10),
-		},
-		ctx.GetTaskStartTime().UnixNano())
+	if ctx.GetTaskStatus() == pkg.TaskStatusPending {
+		s.Nodes[ctx.GetCrawlerId()].IncTask()
+		s.Spiders[ctx.GetSpiderName()].IncTask()
+		s.Jobs[ctx.GetJobId()].IncTask()
 
-	// spider
-	s.Spiders[ctx.GetSpiderName()].
-		WithLastTaskId(ctx.GetTaskId()).
-		WithLastTaskStatus(ctx.GetTaskStatus()).
-		WithLastTaskStartTime(ctx.GetTaskStartTime())
-}
+		// task
+		s.Tasks.Enqueue(ctx.GetJobId(),
+			task.WithRecords{
+				Task: new(task.Task).
+					WithId(ctx.GetTaskId()).
+					WithNode(ctx.GetCrawlerId()).
+					WithSpider(ctx.GetSpiderName()).
+					WithJob(ctx.GetJobId()).
+					WithStatus(ctx.GetTaskStatus()).
+					WithStartTime(ctx.GetTaskStartTime()),
+				Records: queue.NewGroupQueue(10),
+			},
+			ctx.GetTaskStartTime().UnixNano())
 
-func (s *Statistics) taskStopped(ctx pkg.Context) {
-	defer s.mutex.Unlock()
-	s.mutex.Lock()
+		// spider
+		s.Spiders[ctx.GetSpiderName()].
+			WithLastTaskId(ctx.GetTaskId()).
+			WithLastTaskStatus(ctx.GetTaskStatus()).
+			WithLastTaskStartTime(ctx.GetTaskStartTime())
+
+		return
+	}
 
 	// task
 	for _, v := range s.Tasks.Get(ctx.GetJobId()) {
@@ -219,7 +167,7 @@ func (s *Statistics) taskStopped(ctx pkg.Context) {
 			WithLastTaskFinishTime(ctx.GetTaskStopTime())
 	}
 }
-func (s *Statistics) itemStopped(item pkg.Item) {
+func (s *Statistics) itemChanged(item pkg.Item) {
 	defer s.mutex.Unlock()
 	s.mutex.Lock()
 
@@ -243,7 +191,8 @@ func (s *Statistics) itemStopped(item pkg.Item) {
 			}
 			t.Records.Enqueue(ctx.GetTaskId(),
 				new(record.Record).
-					WithId(fmt.Sprintf("%v", id)).
+					WithId(ctx.GetItemId()).
+					WithUniqueKey(fmt.Sprintf("%v", id)).
 					WithSaveTime(ctx.GetItemStopTime()).
 					WithNode(ctx.GetCrawlerId()).
 					WithSpider(ctx.GetSpiderName()).
@@ -267,19 +216,13 @@ func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 	s.Spiders = make(map[string]pkg.StatisticsSpider)
 	s.Jobs = make(map[string]pkg.StatisticsJob)
 	s.Tasks = queue.NewGroupQueue(10)
-	//s.Records = queue.NewGroupQueue(10)
 
 	signal := s.crawler.GetSignal()
-	signal.RegisterCrawlerStarted(s.crawlerStarted)
-	signal.RegisterCrawlerStopped(s.crawlerStopped)
-	signal.RegisterSpiderStarted(s.spiderStarted)
-	signal.RegisterSpiderStopped(s.spiderStopped)
-	signal.RegisterJobStarted(s.scheduleStarted)
-	signal.RegisterJobStopped(s.scheduleStopped)
+	signal.RegisterCrawlerChanged(s.crawlerChanged)
+	signal.RegisterSpiderChanged(s.spiderChanged)
 	signal.RegisterJobChanged(s.jobChanged)
-	signal.RegisterTaskStarted(s.taskStarted)
-	signal.RegisterTaskStopped(s.taskStopped)
-	signal.RegisterItemStopped(s.itemStopped)
+	signal.RegisterTaskChanged(s.taskChanged)
+	signal.RegisterItemChanged(s.itemChanged)
 
 	return s
 }

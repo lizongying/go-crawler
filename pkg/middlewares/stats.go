@@ -57,6 +57,6 @@ func (m *StatsMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 
 	m.UnimplementedMiddleware.FromSpider(spider)
 	m.logger = spider.GetLogger()
-	spider.GetCrawler().GetSignal().RegisterTaskStopped(m.TaskStopped)
+	spider.GetCrawler().GetSignal().RegisterTaskChanged(m.TaskStopped)
 	return m
 }

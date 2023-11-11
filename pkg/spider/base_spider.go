@@ -9,7 +9,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg/downloader"
 	"github.com/lizongying/go-crawler/pkg/exporter"
 	"github.com/lizongying/go-crawler/pkg/filters"
-	"github.com/lizongying/go-crawler/pkg/middlewares"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"golang.org/x/time/rate"
@@ -34,8 +33,7 @@ func init() {
 type BaseSpider struct {
 	context pkg.Context
 	pkg.Crawler
-	filter      pkg.Filter
-	middlewares pkg.Middlewares
+	filter pkg.Filter
 
 	name                  string
 	host                  string
@@ -56,7 +54,9 @@ type BaseSpider struct {
 	spider                pkg.Spider
 	options               []pkg.SpiderOption
 
-	job *pkg.State
+	jobs      map[string]*Job
+	job       *pkg.State
+	jobsMutex sync.Mutex
 
 	concurrency uint8
 	interval    time.Duration
@@ -65,9 +65,6 @@ type BaseSpider struct {
 	pkg.Exporter
 
 	requestSlots sync.Map
-
-	jobs      map[string]*Job
-	jobsMutex sync.Mutex
 }
 
 func (s *BaseSpider) GetDownloader() pkg.Downloader {
@@ -245,13 +242,6 @@ func (s *BaseSpider) SetFilter(filter pkg.Filter) pkg.Spider {
 	s.filter = filter
 	return s
 }
-func (s *BaseSpider) GetMiddlewares() pkg.Middlewares {
-	return s.middlewares
-}
-func (s *BaseSpider) SetMiddlewares(middlewares pkg.Middlewares) pkg.Spider {
-	s.middlewares = middlewares
-	return s
-}
 func (s *BaseSpider) GetLogger() pkg.Logger {
 	return s.logger
 }
@@ -363,43 +353,36 @@ func (s *BaseSpider) SetRequestRate(slot string, interval time.Duration, concurr
 }
 func (s *BaseSpider) Start(c pkg.Context) (err error) {
 	ctx := context.Background()
-	if s.GetContext() == nil {
-		s.WithContext(new(crawlerContext.Context).
-			WithCrawler(c.GetCrawler()).
-			WithSpider(new(crawlerContext.Spider).
-				WithContext(ctx).
-				WithName(s.Name()).
-				WithStatus(pkg.SpiderStatusStarted).
-				WithStartTime(time.Now())))
-		s.GetCrawler().GetSignal().SpiderStarted(s.GetContext())
 
-		s.logger.Info("spiderName", s.context.GetSpiderName())
-		s.logger.Info("allowedDomains", s.GetAllowedDomains())
-		s.logger.Info("okHttpCodes", s.OkHttpCodes())
-		s.logger.Info("platforms", s.GetPlatforms())
-		s.logger.Info("browsers", s.GetBrowsers())
-		s.logger.Info("retryMaxTimes", s.retryMaxTimes)
-		s.logger.Info("redirectMaxTimes", s.redirectMaxTimes)
+	s.context.WithSpiderStatus(pkg.SpiderStatusRunning)
+	s.Crawler.GetSignal().SpiderChanged(s.GetContext())
 
-		//s.logger.Info("filter", s.GetFilter())
+	s.logger.Info("spiderName", s.context.GetSpiderName())
+	s.logger.Info("allowedDomains", s.GetAllowedDomains())
+	s.logger.Info("okHttpCodes", s.OkHttpCodes())
+	s.logger.Info("platforms", s.GetPlatforms())
+	s.logger.Info("browsers", s.GetBrowsers())
+	s.logger.Info("retryMaxTimes", s.retryMaxTimes)
+	s.logger.Info("redirectMaxTimes", s.redirectMaxTimes)
 
-		s.logger.Info("pipelines", s.PipelineNames())
+	//s.logger.Info("filter", s.GetFilter())
 
-		for _, v := range s.Pipelines() {
-			e := v.Start(ctx, s.spider)
-			if errors.Is(e, pkg.BreakErr) {
-				s.logger.Debug("pipeline break", v.Name())
-				break
-			}
+	s.logger.Info("pipelines", s.PipelineNames())
+
+	for _, v := range s.Pipelines() {
+		e := v.Start(ctx, s.spider)
+		if errors.Is(e, pkg.BreakErr) {
+			s.logger.Debug("pipeline break", v.Name())
+			break
 		}
+	}
 
-		for _, v := range s.GetMiddlewares().Middlewares() {
-			if err = v.Start(ctx, s.spider); err != nil {
-				s.logger.Error(err)
-				return
-			}
-			s.logger.Info(v.Name(), "started")
+	for _, v := range s.GetMiddlewares().Middlewares() {
+		if err = v.Start(ctx, s.spider); err != nil {
+			s.logger.Error(err)
+			return
 		}
+		s.logger.Info(v.Name(), "started")
 	}
 	return
 }
@@ -409,6 +392,8 @@ func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode 
 		s.logger.Error(err)
 		return
 	}
+
+	s.context.WithSpiderContext(ctx)
 
 	s.jobsMutex.Lock()
 	defer s.jobsMutex.Unlock()
@@ -452,11 +437,13 @@ func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 
 	job, ok := s.jobs[jobId]
 	if !ok {
-		err = errors.New("job is not exists")
+		err = errors.New("the job is not exists")
 		return
 	}
-	if job.GetContext().GetJobStatus() != pkg.JobStatusStarted {
-		err = errors.New("job is not started")
+	if !utils.InSlice(job.context.GetJobStatus(), []pkg.JobStatus{
+		pkg.JobStatusRunning,
+	}) {
+		err = errors.New("the job can be killed in the running state")
 		return
 	}
 	err = job.kill(ctx)
@@ -464,12 +451,12 @@ func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 }
 func (s *BaseSpider) JobStopped(ctx pkg.Context, err error) {
 	if err != nil {
-		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "the job finished with an error:", err, "spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
+		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "job finished with an error:", err, "spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
 	} else {
-		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "the job finished successfully. spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
+		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "job finished. spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
 	}
 
-	defer s.job.Out()
+	s.job.Out()
 }
 func (s *BaseSpider) Parse(_ pkg.Context, response pkg.Response) (err error) {
 	s.logger.Info("header", response.Headers())
@@ -488,19 +475,31 @@ func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
 }
 func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 	if s.context == nil || s.context.GetSpider() == nil {
-		s.logger.Debug("spider hasn't started")
+		s.logger.Warn("spider hasn't started")
 		return
 	}
 
-	if s.context.GetSpiderStatus() == pkg.SpiderStatusStopping || s.context.GetSpiderStatus() == pkg.SpiderStatusStopped {
-		s.logger.Debug("stopped")
+	if !utils.InSlice(s.context.GetSpiderStatus(), []pkg.SpiderStatus{
+		pkg.SpiderStatusReady,
+		pkg.SpiderStatusRunning,
+	}) {
+		s.logger.Warn("spider only can stopped in ready or running")
+		return
+	}
+
+	s.context.WithSpiderStatus(pkg.SpiderStatusIdle)
+	s.Crawler.GetSignal().SpiderChanged(s.context)
+	s.logger.Debug("spider has idle")
+
+	if !s.Crawler.StartFromCLI() {
+		s.logger.Info("spider don't need to stop")
 		return
 	}
 
 	s.context.WithSpiderStatus(pkg.SpiderStatusStopping)
-	s.Crawler.GetSignal().SpiderStopping(s.context)
+	s.Crawler.GetSignal().SpiderChanged(s.context)
+	s.logger.Debug("spider wait for stop")
 
-	s.logger.Debug("BaseSpider wait for stop")
 	defer func() {
 		err = s.spider.Stop(s.context)
 		if errors.Is(err, pkg.DontStopErr) {
@@ -510,15 +509,14 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 
 		stopTime := time.Now()
 		s.context.WithSpiderStatus(pkg.SpiderStatusStopped)
-		s.context.WithSpiderStopTime(stopTime)
-		s.Crawler.GetSignal().SpiderStopped(s.context)
+		s.Crawler.GetSignal().SpiderChanged(s.context)
 
 		spendTime := stopTime.Sub(s.context.GetSpiderStartTime())
-		s.logger.Info(s.spider.Name(), "spider finished. spend time:", spendTime)
+		s.logger.Info(s.spider.Name(), s.context.GetSpider().GetId(), "spider finished. spend time:", spendTime)
 		s.Crawler.SpiderStopped(s.context, err)
 	}()
 
-	for _, v := range s.middlewares.Middlewares() {
+	for _, v := range s.GetMiddlewares().Middlewares() {
 		e := v.Stop(s.context)
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("middlewares break", v.Name())
@@ -561,8 +559,6 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 	default:
 	}
 
-	s.middlewares = new(middlewares.Middlewares).FromSpider(s)
-
 	s.WithDownloader(new(downloader.Downloader).FromSpider(s))
 	s.WithExporter(new(exporter.Exporter).FromSpider(s))
 
@@ -571,6 +567,18 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 		requestSlot := rate.NewLimiter(rate.Every(s.interval/time.Duration(s.concurrency)), int(s.concurrency))
 		s.RequestSlotStore(slot, requestSlot)
 	}
+
+	for _, option := range s.Options() {
+		option(s)
+	}
+
+	s.WithContext(new(crawlerContext.Context).
+		WithCrawler(crawler.GetContext().GetCrawler()).
+		WithSpider(new(crawlerContext.Spider).
+			WithId(s.Crawler.GenUid()).
+			WithName(s.spider.Name()).
+			WithStatus(pkg.SpiderStatusReady)))
+	s.Crawler.GetSignal().SpiderChanged(s.GetContext())
 
 	return s
 }

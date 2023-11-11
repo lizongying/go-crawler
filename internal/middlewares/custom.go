@@ -35,7 +35,7 @@ func (m *CustomMiddleware) ProcessError(_ pkg.Context, response pkg.Response, er
 	return true
 }
 
-func (m *CustomMiddleware) Stop(_ context.Context) error {
+func (m *CustomMiddleware) Stop(_ pkg.Context) error {
 	m.logger.Debug("stop")
 	return nil
 }

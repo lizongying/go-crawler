@@ -45,8 +45,6 @@ type Spider interface {
 	SetOkHttpCodes(...int) Spider
 	GetFilter() Filter
 	SetFilter(Filter) Spider
-	GetMiddlewares() Middlewares
-	SetMiddlewares(Middlewares) Spider
 
 	Run(context.Context, string, string, JobMode, string, bool) (string, error)
 	Start(Context) error
@@ -347,21 +345,27 @@ type SpiderStatus uint8
 
 const (
 	SpiderStatusUnknown = iota
+	SpiderStatusReady
 	SpiderStatusStarting
-	SpiderStatusStarted
+	SpiderStatusRunning
+	SpiderStatusIdle
 	SpiderStatusStopping
 	SpiderStatusStopped
 )
 
-func (s *SpiderStatus) String() string {
-	switch *s {
+func (s SpiderStatus) String() string {
+	switch s {
 	case 1:
-		return "starting"
+		return "ready"
 	case 2:
-		return "started"
+		return "starting"
 	case 3:
-		return "stopping"
+		return "running"
 	case 4:
+		return "idle"
+	case 5:
+		return "stopping"
+	case 6:
 		return "stopped"
 	default:
 		return "unknown"

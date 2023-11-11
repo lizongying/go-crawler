@@ -1,4 +1,14 @@
 <template>
+  <a-page-header
+      title="Jobs"
+      :sub-title="'Total: '+jobsStore.Count"
+  >
+    <template #extra>
+      <a-button key="1" type="primary">New</a-button>
+      <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
+      <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
+    </template>
+  </a-page-header>
   <a-table :columns="columns" :data-source="jobsStore.jobs" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
@@ -23,7 +33,7 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === 2 ? 'volcano' : record.status === 1 ? 'green' : 'geekblue'"
+              :color="record.status === JobStatusStopped ? 'volcano' : record.status === JobStatusRunning ? 'green' : 'geekblue'"
           >
             {{ jobStatusName(record.status) }}
           </a-tag>
@@ -50,8 +60,8 @@
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
-          <a v-if="record.status === 2" @click="rerun(record.spider, record.id)">Rerun</a>
-          <a v-if="record.status === 1" @click="stop(record.spider, record.id)">Stop</a>
+          <a v-if="record.status === JobStatusStopped" @click="rerun(record.spider, record.id)">Rerun</a>
+          <a v-if="record.status === JobStatusRunning" @click="stop(record.spider, record.id)">Stop</a>
           <a-divider type="vertical"/>
           <a>Delete</a>
           <a-divider type="vertical"/>
@@ -65,11 +75,27 @@
   </a-table>
 </template>
 <script setup>
-import {RightOutlined} from "@ant-design/icons-vue";
+import {ExclamationCircleOutlined, RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
-import {useJobsStore} from "@/stores/jobs";
+import {
+  JobStatusReady,
+  JobStatusRunning,
+  JobStatusStarting,
+  JobStatusStopped,
+  JobStatusStopping,
+  useJobsStore
+} from "@/stores/jobs";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
+import {createVNode, onBeforeUnmount, ref} from "vue";
+import {Modal} from "ant-design-vue";
+import {
+  NodeStatusReady,
+  NodeStatusRunning,
+  NodeStatusStarting,
+  NodeStatusStopped,
+  NodeStatusStopping
+} from "@/stores/nodes";
 
 const columns = [
   {
@@ -107,6 +133,29 @@ const columns = [
     title: 'Status',
     dataIndex: 'status',
     width: 100,
+    filters: [
+      {
+        text: 'ready',
+        value: JobStatusReady,
+      },
+      {
+        text: 'starting',
+        value: JobStatusStarting,
+      },
+      {
+        text: 'running',
+        value: JobStatusRunning,
+      },
+      {
+        text: 'stopping',
+        value: JobStatusStopping,
+      },
+      {
+        text: 'stopped',
+        value: JobStatusStopped,
+      },
+    ],
+    onFilter: (value, record) => record.status === value,
   },
   {
     title: 'Start Time',
@@ -168,22 +217,77 @@ jobsStore.GetJobs()
 
 const jobStatusName = (status) => {
   switch (status) {
-    case 1:
-      return 'started'
-    case 2:
+    case JobStatusReady:
+      return 'ready'
+    case JobStatusStarting:
+      return 'starting'
+    case JobStatusRunning:
+      return 'running'
+    case JobStatusStopping:
+      return 'stopping'
+    case JobStatusStopped:
       return 'stopped'
     default:
       return 'unknown'
   }
 }
 
-const stop = async (spiderName, jobId) => {
-  const res = await jobsStore.StopJob({spider_name: spiderName, job_id: jobId})
-  console.log(spiderName, jobId, res)
+const refresh = () => {
+  jobsStore.GetJobs()
 }
-const rerun = async (spiderName, jobId) => {
-  const res = await jobsStore.RerunJob({spider_name: spiderName, job_id: jobId})
-  console.log(spiderName, jobId, res)
+const checked1 = ref(false)
+const checked1Disable = ref(false)
+
+let interval = null
+const changeSwitch = () => {
+  if (checked1.value) {
+    interval = setInterval(refresh, 1000)
+    checked1Disable.value = true
+  } else {
+    clearInterval(interval)
+    checked1Disable.value = false
+  }
+}
+onBeforeUnmount(() => {
+  clearInterval(interval)
+})
+
+// rerun confirm
+function rerun(spiderName, jobId) {
+  Modal.confirm({
+    title: 'Do you want to rerun the job?',
+    icon: createVNode(ExclamationCircleOutlined),
+    content: 'When clicked the OK button, the job will be rerun.',
+    async onOk() {
+      try {
+        const res = await jobsStore.RerunJob({spider_name: spiderName, job_id: jobId})
+        console.log(spiderName, jobId, res)
+      } catch {
+        return console.log('Oops errors!');
+      }
+    },
+    onCancel() {
+    },
+  });
+}
+
+// stop confirm
+function stop(spiderName, jobId) {
+  Modal.confirm({
+    title: 'Do you want to stop the job?',
+    icon: createVNode(ExclamationCircleOutlined),
+    content: 'When clicked the OK button, the job will be stop.',
+    async onOk() {
+      try {
+        const res = await jobsStore.StopJob({spider_name: spiderName, job_id: jobId})
+        console.log(spiderName, jobId, res)
+      } catch {
+        return console.log('Oops errors!');
+      }
+    },
+    onCancel() {
+    },
+  });
 }
 </script>
 <style>

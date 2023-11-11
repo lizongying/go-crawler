@@ -16,9 +16,8 @@ type Context interface {
 	GetCrawlerStatus() CrawlerStatus
 	WithCrawlerStatus(CrawlerStatus) Context
 	GetCrawlerStartTime() time.Time
-	WithCrawlerStartTime(time.Time) Context
 	GetCrawlerStopTime() time.Time
-	WithCrawlerStopTime(time.Time) Context
+	GetCrawlerUpdateTime() time.Time
 
 	GetSpider() ContextSpider
 	WithSpider(ContextSpider) Context
@@ -29,9 +28,8 @@ type Context interface {
 	GetSpiderStatus() SpiderStatus
 	WithSpiderStatus(SpiderStatus) Context
 	GetSpiderStartTime() time.Time
-	WithSpiderStartTime(time.Time) Context
 	GetSpiderStopTime() time.Time
-	WithSpiderStopTime(time.Time) Context
+	GetSpiderUpdateTime() time.Time
 
 	GetJob() ContextJob
 	WithJob(ContextJob) Context
@@ -46,11 +44,8 @@ type Context interface {
 	GetJobEnable() bool
 	WithJobEnable(bool) Context
 	GetJobStartTime() time.Time
-	WithJobStartTime(time.Time) Context
 	GetJobStopTime() time.Time
-	WithJobStopTime(time.Time) Context
 	GetJobUpdateTime() time.Time
-	WithJobUpdateTime(time.Time) Context
 	GetJobFunc() string
 	WithJobFunc(string) Context
 	GetJobArgs() string
@@ -118,12 +113,13 @@ type ContextCrawler interface {
 	GetStatus() CrawlerStatus
 	WithStatus(CrawlerStatus) ContextCrawler
 	GetStartTime() time.Time
-	WithStartTime(time.Time) ContextCrawler
 	GetStopTime() time.Time
-	WithStopTime(time.Time) ContextCrawler
+	GetUpdateTime() time.Time
 }
 
 type ContextSpider interface {
+	GetId() uint64
+	WithId(uint64) ContextSpider
 	GetName() string
 	WithName(string) ContextSpider
 	GetContext() context.Context
@@ -131,9 +127,8 @@ type ContextSpider interface {
 	GetStatus() SpiderStatus
 	WithStatus(SpiderStatus) ContextSpider
 	GetStartTime() time.Time
-	WithStartTime(time.Time) ContextSpider
 	GetStopTime() time.Time
-	WithStopTime(time.Time) ContextSpider
+	GetUpdateTime() time.Time
 }
 
 type ContextJob interface {
@@ -146,11 +141,8 @@ type ContextJob interface {
 	GetStatus() JobStatus
 	WithStatus(JobStatus) ContextJob
 	GetStartTime() time.Time
-	WithStartTime(time.Time) ContextJob
 	GetStopTime() time.Time
-	WithStopTime(time.Time) ContextJob
 	GetUpdateTime() time.Time
-	WithUpdateTime(time.Time) ContextJob
 	GetEnable() bool
 	WithEnable(bool) ContextJob
 	GetFunc() string

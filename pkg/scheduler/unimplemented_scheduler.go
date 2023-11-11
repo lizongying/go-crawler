@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
-	"github.com/lizongying/go-crawler/pkg/utils"
 	"reflect"
 	"time"
 )
@@ -97,10 +96,10 @@ func (s *UnimplementedScheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err 
 		WithTask(ctx.GetTask()).
 		WithItem(new(crawlerContext.Item).
 			WithContext(context.Background()).
-			WithId(utils.UUIDV1WithoutHyphens()).
+			WithId(s.crawler.NextId()).
 			WithStatus(pkg.ItemStatusPending).
 			WithStartTime(time.Now()))
-	s.crawler.GetSignal().ItemStarted(c)
+	//s.crawler.GetSignal().ItemChanged(c)
 
 	item.WithContext(c)
 	s.itemChan <- item

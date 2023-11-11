@@ -1,4 +1,13 @@
 <template>
+  <a-page-header
+      title="Nodes"
+      :sub-title="'Total: '+nodesStore.Count"
+  >
+    <template #extra>
+      <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
+      <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
+    </template>
+  </a-page-header>
   <a-table :columns="columns" :data-source="nodesStore.nodes" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
@@ -42,9 +51,9 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === 2 ? 'volcano' : 'green'"
+              :color="record.status === NodeStatusStopped ? 'volcano' : record.status === NodeStatusRunning ? 'green' : 'geekblue'"
           >
-            {{ record.status === 2 ? 'OFFLINE' : 'ONLINE' }}
+                   {{ nodeStatusName(record.status) }}
           </a-tag>
         </span>
       </template>
@@ -65,9 +74,18 @@
 <script setup>
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
-import {useNodesStore} from "@/stores/nodes";
+import {
+  NodeStatusIdle,
+  NodeStatusReady,
+  NodeStatusRunning,
+  NodeStatusStarting,
+  NodeStatusStopped,
+  NodeStatusStopping,
+  useNodesStore
+} from "@/stores/nodes";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
+import {onBeforeUnmount, ref} from "vue";
 
 const columns = [
   {
@@ -148,12 +166,28 @@ const columns = [
     width: 100,
     filters: [
       {
-        text: 'online',
-        value: 'online',
+        text: 'ready',
+        value: NodeStatusReady,
       },
       {
-        text: 'offline',
-        value: 'offline',
+        text: 'starting',
+        value: NodeStatusStarting,
+      },
+      {
+        text: 'running',
+        value: NodeStatusRunning,
+      },
+      {
+        text: 'idle',
+        value: NodeStatusIdle,
+      },
+      {
+        text: 'stopping',
+        value: NodeStatusStopping,
+      },
+      {
+        text: 'stopped',
+        value: NodeStatusStopped,
       },
     ],
     onFilter: (value, record) => record.status === value,
@@ -193,6 +227,46 @@ const columns = [
 const nodesStore = useNodesStore();
 
 nodesStore.GetNodes()
+
+const refresh = () => {
+  nodesStore.GetNodes()
+}
+const checked1 = ref(false)
+const checked1Disable = ref(false)
+
+let interval = null
+const changeSwitch = () => {
+  if (checked1.value) {
+    interval = setInterval(refresh, 1000)
+    checked1Disable.value = true
+  } else {
+    clearInterval(interval)
+    checked1Disable.value = false
+  }
+}
+onBeforeUnmount(() => {
+  clearInterval(interval)
+})
+
+
+const nodeStatusName = (status) => {
+  switch (status) {
+    case NodeStatusReady:
+      return 'ready'
+    case NodeStatusStarting:
+      return 'starting'
+    case NodeStatusRunning:
+      return 'running'
+    case NodeStatusIdle:
+      return 'idle'
+    case NodeStatusStopping:
+      return 'stopping'
+    case NodeStatusStopped:
+      return 'stopped'
+    default:
+      return 'unknown'
+  }
+}
 </script>
 <style>
 </style>

@@ -21,6 +21,9 @@ func (f *RedisFilter) SpiderOpened(c pkg.Context) {
 	if c.GetSpiderName() != f.spider.Name() {
 		return
 	}
+	if c.GetSpiderStatus() != pkg.SpiderStatusRunning {
+		return
+	}
 
 	f.key = fmt.Sprintf("%s:%s:filter", f.config.GetBotName(), f.spider.Name())
 	f.logger.Debug("filter key", f.key)
@@ -68,7 +71,7 @@ func (f *RedisFilter) FromSpider(spider pkg.Spider) pkg.Filter {
 		return new(RedisFilter).FromSpider(spider)
 	}
 
-	spider.GetCrawler().GetSignal().RegisterSpiderStarted(f.SpiderOpened)
+	spider.GetCrawler().GetSignal().RegisterSpiderChanged(f.SpiderOpened)
 
 	f.config = spider.GetConfig()
 	f.spider = spider

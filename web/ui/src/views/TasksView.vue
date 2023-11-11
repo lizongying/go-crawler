@@ -1,4 +1,13 @@
 <template>
+  <a-page-header
+      title="Tasks"
+      :sub-title="'Total: '+tasksStore.Count"
+  >
+    <template #extra>
+      <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
+      <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
+    </template>
+  </a-page-header>
   <a-table :columns="columns" :data-source="tasksStore.tasks" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
@@ -28,7 +37,7 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === 4 ? 'volcano' : record.status===2 ? 'green' : 'geekblue'"
+              :color="record.status === TaskStatusError ? 'volcano' : record.status===TaskStatusSuccess ? 'green' : 'geekblue'"
           >
             {{ taskStatusName(record.status) }}
           </a-tag>
@@ -72,9 +81,9 @@
 </template>
 <script setup>
 import {RightOutlined} from "@ant-design/icons-vue";
-import {ref} from "vue";
+import {onBeforeUnmount, ref} from "vue";
 import {RouterLink} from "vue-router";
-import {useTasksStore} from "@/stores/tasks";
+import {TaskStatusError, TaskStatusPending, TaskStatusRunning, TaskStatusSuccess, useTasksStore} from "@/stores/tasks";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 
@@ -111,19 +120,19 @@ const columns = [
     filters: [
       {
         text: 'pending',
-        value: 1,
+        value: TaskStatusPending,
       },
       {
         text: 'running',
-        value: 2,
+        value: TaskStatusRunning,
       },
       {
         text: 'success',
-        value: 3,
+        value: TaskStatusSuccess,
       },
       {
         text: 'error',
-        value: 4,
+        value: TaskStatusError,
       },
     ],
     onFilter: (value, record) => record.status === value,
@@ -201,6 +210,25 @@ const taskStatusName = (status) => {
       return 'unknown'
   }
 }
+const refresh = () => {
+  tasksStore.GetTasks()
+}
+const checked1 = ref(false)
+const checked1Disable = ref(false)
+
+let interval = null
+const changeSwitch = () => {
+  if (checked1.value) {
+    interval = setInterval(refresh, 1000)
+    checked1Disable.value = true
+  } else {
+    clearInterval(interval)
+    checked1Disable.value = false
+  }
+}
+onBeforeUnmount(() => {
+  clearInterval(interval)
+})
 </script>
 <style>
 </style>

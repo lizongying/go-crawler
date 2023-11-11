@@ -7,145 +7,64 @@ import (
 type Signal struct {
 	logger pkg.Logger
 
-	crawlerStarted []pkg.FnCrawlerStarted
-	crawlerStopped []pkg.FnCrawlerStopped
+	crawlerChanged []pkg.FnCrawlerChanged
 
-	spiderStarting []pkg.FnSpiderStarting
-	spiderStarted  []pkg.FnSpiderStarted
-	spiderStopping []pkg.FnSpiderStopping
-	spiderStopped  []pkg.FnSpiderStopped
+	spiderChanged []pkg.FnSpiderChanged
 
-	jobStarted []pkg.FnJobStarted
-	jobStopped []pkg.FnJobStopped
 	jobChanged []pkg.FnJobChanged
 
-	taskStarted []pkg.FnTaskStarted
-	taskStopped []pkg.FnTaskStopped
+	taskChanged []pkg.FnTaskChanged
 
-	requestStarted []pkg.FnRequestStarted
-	requestStopped []pkg.FnRequestStopped
+	requestChanged []pkg.FnRequestChanged
 
-	itemStarted []pkg.FnItemStarted
-	itemStopped []pkg.FnItemStopped
+	itemChanged []pkg.FnItemChanged
 }
 
-func (s *Signal) RegisterCrawlerStarted(fn pkg.FnCrawlerStarted) {
-	s.crawlerStarted = append(s.crawlerStarted, fn)
+func (s *Signal) RegisterCrawlerChanged(fn pkg.FnCrawlerChanged) {
+	s.crawlerChanged = append(s.crawlerChanged, fn)
 }
-func (s *Signal) RegisterCrawlerStopped(fn pkg.FnCrawlerStopped) {
-	s.crawlerStopped = append(s.crawlerStopped, fn)
-}
-func (s *Signal) RegisterSpiderStarting(fn pkg.FnSpiderStarting) {
-	s.spiderStarting = append(s.spiderStarting, fn)
-}
-func (s *Signal) RegisterSpiderStarted(fn pkg.FnSpiderStarted) {
-	s.spiderStarted = append(s.spiderStarted, fn)
-}
-func (s *Signal) RegisterSpiderStopping(fn pkg.FnSpiderStopping) {
-	s.spiderStopping = append(s.spiderStopping, fn)
-}
-func (s *Signal) RegisterSpiderStopped(fn pkg.FnSpiderStopped) {
-	s.spiderStopped = append(s.spiderStopped, fn)
-}
-func (s *Signal) RegisterJobStarted(fn pkg.FnJobStarted) {
-	s.jobStarted = append(s.jobStarted, fn)
-}
-func (s *Signal) RegisterJobStopped(fn pkg.FnJobStopped) {
-	s.jobStopped = append(s.jobStopped, fn)
+func (s *Signal) RegisterSpiderChanged(fn pkg.FnSpiderChanged) {
+	s.spiderChanged = append(s.spiderChanged, fn)
 }
 func (s *Signal) RegisterJobChanged(fn pkg.FnJobChanged) {
 	s.jobChanged = append(s.jobChanged, fn)
 }
-func (s *Signal) RegisterTaskStarted(fn pkg.FnTaskStarted) {
-	s.taskStarted = append(s.taskStarted, fn)
+func (s *Signal) RegisterTaskChanged(fn pkg.FnTaskChanged) {
+	s.taskChanged = append(s.taskChanged, fn)
 }
-func (s *Signal) RegisterTaskStopped(fn pkg.FnTaskStopped) {
-	s.taskStopped = append(s.taskStopped, fn)
+func (s *Signal) RegisterRequestChanged(fn pkg.FnRequestChanged) {
+	s.requestChanged = append(s.requestChanged, fn)
 }
-func (s *Signal) RegisterRequestStarted(fn pkg.FnRequestStarted) {
-	s.requestStarted = append(s.requestStarted, fn)
+func (s *Signal) RegisterItemChanged(fn pkg.FnItemChanged) {
+	s.itemChanged = append(s.itemChanged, fn)
 }
-func (s *Signal) RegisterRequestStopped(fn pkg.FnRequestStopped) {
-	s.requestStopped = append(s.requestStopped, fn)
-}
-func (s *Signal) RegisterItemStarted(fn pkg.FnItemStarted) {
-	s.itemStarted = append(s.itemStarted, fn)
-}
-func (s *Signal) RegisterItemStopped(fn pkg.FnItemStopped) {
-	s.itemStopped = append(s.itemStopped, fn)
-}
-func (s *Signal) CrawlerStarted(ctx pkg.Context) {
-	for _, v := range s.crawlerStarted {
+func (s *Signal) CrawlerChanged(ctx pkg.Context) {
+	for _, v := range s.crawlerChanged {
 		v(ctx)
 	}
 }
-func (s *Signal) CrawlerStopped(ctx pkg.Context) {
-	for _, v := range s.crawlerStopped {
+func (s *Signal) SpiderChanged(ctx pkg.Context) {
+	for _, v := range s.spiderChanged {
 		v(ctx)
 	}
 }
-func (s *Signal) SpiderStarting(ctx pkg.Context) {
-	for _, v := range s.spiderStarting {
-		v(ctx)
-	}
-}
-func (s *Signal) SpiderStarted(ctx pkg.Context) {
-	for _, v := range s.spiderStarted {
-		v(ctx)
-	}
-}
-func (s *Signal) SpiderStopping(ctx pkg.Context) {
-	for _, v := range s.spiderStopping {
-		v(ctx)
-	}
-}
-func (s *Signal) SpiderStopped(ctx pkg.Context) {
-	for _, v := range s.spiderStopped {
-		v(ctx)
-	}
-}
-func (s *Signal) JobStarted(ctx pkg.Context) {
-	for _, v := range s.jobStarted {
-		v(ctx)
-	}
-}
-func (s *Signal) JobStopped(ctx pkg.Context) {
-	for _, v := range s.jobStopped {
-		v(ctx)
-	}
-}
-func (s *Signal) JobChanged(ctx pkg.Context, status pkg.JobStatus) {
+func (s *Signal) JobChanged(ctx pkg.Context) {
 	for _, v := range s.jobChanged {
-		v(ctx, status)
-	}
-}
-func (s *Signal) TaskStarted(ctx pkg.Context) {
-	for _, v := range s.taskStarted {
 		v(ctx)
 	}
 }
-func (s *Signal) TaskStopped(ctx pkg.Context) {
-	for _, v := range s.taskStopped {
+func (s *Signal) TaskChanged(ctx pkg.Context) {
+	for _, v := range s.taskChanged {
 		v(ctx)
 	}
 }
-func (s *Signal) RequestStarted(ctx pkg.Context) {
-	for _, v := range s.requestStarted {
+func (s *Signal) RequestChanged(ctx pkg.Context) {
+	for _, v := range s.requestChanged {
 		v(ctx)
 	}
 }
-func (s *Signal) RequestStopped(ctx pkg.Context) {
-	for _, v := range s.requestStopped {
-		v(ctx)
-	}
-}
-func (s *Signal) ItemStarted(ctx pkg.Context) {
-	for _, v := range s.itemStarted {
-		v(ctx)
-	}
-}
-func (s *Signal) ItemStopped(item pkg.Item) {
-	for _, v := range s.itemStopped {
+func (s *Signal) ItemChanged(item pkg.Item) {
+	for _, v := range s.itemChanged {
 		v(item)
 	}
 }

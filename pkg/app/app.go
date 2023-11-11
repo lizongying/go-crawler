@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/api"
 	"github.com/lizongying/go-crawler/pkg/cli"
@@ -77,6 +76,14 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 			}
 
 			ctx := context.Background()
+			ctx, cancel := context.WithCancel(ctx)
+			defer func() {
+				cancel()
+				if err = shutdowner.Shutdown(); err != nil {
+					logger.Error(err)
+					return
+				}
+			}()
 
 			if err = crawler.Start(ctx); err != nil {
 				logger.Error(err)
@@ -87,25 +94,6 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 				return
 			}
 
-			err = crawler.Stop(ctx)
-			if errors.Is(err, pkg.DontStopErr) {
-				select {}
-			}
-			if err != nil {
-				logger.Error(err)
-				err = shutdowner.Shutdown()
-				if err != nil {
-					logger.Error(err)
-				}
-				return
-			}
-
-			if err = shutdowner.Shutdown(); err != nil {
-				logger.Error(err)
-				return
-			}
-
-			logger.Info("Shutdown success")
 			return
 		}),
 	).Run()

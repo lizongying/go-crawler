@@ -29,4 +29,8 @@ curl "http://127.0.0.1:8090/job/run" -X POST -d '{"timeout": 2000, "name": "test
 curl "http://127.0.0.1:8090/job/stop" -X POST -d '{"spider_name": "test-must-ok", "job_id": "894a6fe87e2411ee95139221bc92ca26"}' -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
 # {"code":0,"msg":"","data":{"name":"test-must-ok"}}
 
+# job rerun
+curl "http://127.0.0.1:8090/job/rerun" -X POST -d '{"spider_name": "test-must-ok", "job_id": "894a6fe87e2411ee95139221bc92ca26"}' -H "Content-Type: application/json" -H "X-API-Key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+# {"code":0,"msg":"","data":{"name":"test-must-ok"}}
+
 ```

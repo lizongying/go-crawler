@@ -1,4 +1,13 @@
 <template>
+  <a-page-header
+      title="Spiders"
+      :sub-title="'Total: '+spidersStore.Count"
+  >
+    <template #extra>
+      <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
+      <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
+    </template>
+  </a-page-header>
   <a-table :columns="columns" :data-source="spidersStore.spiders" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template
@@ -19,7 +28,7 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === 4 ? 'volcano' : record.status===2 ? 'green' : 'geekblue'"
+              :color="record.status === SpiderStatusStopped ? 'volcano' : record.status===SpiderStatusRunning ? 'green' : 'geekblue'"
           >
             {{ spiderStatusName(record.status) }}
           </a-tag>
@@ -29,7 +38,7 @@
         <span>
           <a-tag
               :key="record.last_task_status"
-              :color="record.last_task_status === 4 ? 'volcano' : record.last_task_status===2 ? 'green' : 'geekblue'"
+              :color="record.last_task_status === TaskStatusError ? 'volcano' : record.last_task_status===TaskStatusRunning ? 'green' : 'geekblue'"
           >
             {{ taskStatusName(record.last_task_status) }}
           </a-tag>
@@ -72,8 +81,10 @@
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
+          <template v-if="record.status === SpiderStatusStopped">
           <a>Run</a>
           <a-divider type="vertical"/>
+          </template>
           <a>Delete</a>
           <a-divider type="vertical"/>
           <a class="ant-dropdown-link">
@@ -88,16 +99,27 @@
 <script setup>
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
-import {useSpidersStore} from "@/stores/spiders";
+import {
+  SpiderStatusIdle,
+  SpiderStatusReady,
+  SpiderStatusRunning,
+  SpiderStatusStarting,
+  SpiderStatusStopped,
+  SpiderStatusStopping,
+  useSpidersStore
+} from "@/stores/spiders";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
+import {onBeforeUnmount, ref} from "vue";
+import {TaskStatusError, TaskStatusPending, TaskStatusRunning, TaskStatusSuccess} from "@/stores/tasks";
 
 const columns = [
   {
-    title: 'Node',
-    dataIndex: 'node',
+    title: 'Id',
+    dataIndex: 'id',
     width: 200,
-    sorter: (a, b) => sortBigInt(a.node, b.node),
+    sorter: (a, b) => sortBigInt(a.id, b.id),
+    defaultSortOrder: 'descend',
   },
   {
     title: 'Name',
@@ -106,25 +128,39 @@ const columns = [
     sorter: (a, b) => sortStr(a.spider, b.spider),
   },
   {
+    title: 'Node',
+    dataIndex: 'node',
+    width: 200,
+    sorter: (a, b) => sortBigInt(a.node, b.node),
+  },
+  {
     title: 'Status',
     dataIndex: 'status',
     width: 100,
     filters: [
       {
-        text: 'starting',
-        value: 1,
+        text: 'ready',
+        value: SpiderStatusReady,
       },
       {
-        text: 'started',
-        value: 2,
+        text: 'starting',
+        value: SpiderStatusStarting,
+      },
+      {
+        text: 'running',
+        value: SpiderStatusRunning,
+      },
+      {
+        text: 'idle',
+        value: SpiderStatusIdle,
       },
       {
         text: 'stopping',
-        value: 3,
+        value: SpiderStatusStopping,
       },
       {
         text: 'stopped',
-        value: 4,
+        value: SpiderStatusStopped,
       },
     ],
     onFilter: (value, record) => record.status === value,
@@ -171,19 +207,19 @@ const columns = [
     filters: [
       {
         text: 'pending',
-        value: 1,
+        value: TaskStatusPending,
       },
       {
         text: 'running',
-        value: 2,
+        value: TaskStatusRunning,
       },
       {
         text: 'success',
-        value: 3,
+        value: TaskStatusSuccess,
       },
       {
         text: 'error',
-        value: 4,
+        value: TaskStatusError,
       },
     ],
     onFilter: (value, record) => record.last_task_status === value,
@@ -240,12 +276,16 @@ spidersStore.GetSpiders()
 const spiderStatusName = (status) => {
   switch (status) {
     case 1:
-      return 'starting'
+      return 'ready'
     case 2:
-      return 'started'
+      return 'starting'
     case 3:
-      return 'stopping'
+      return 'started'
     case 4:
+      return 'idle'
+    case 5:
+      return 'stopping'
+    case 6:
       return 'stopped'
     default:
       return 'unknown'
@@ -266,6 +306,25 @@ const taskStatusName = (status) => {
       return 'unknown'
   }
 }
+const refresh = () => {
+  spidersStore.GetSpiders()
+}
+const checked1 = ref(false)
+const checked1Disable = ref(false)
+
+let interval = null
+const changeSwitch = () => {
+  if (checked1.value) {
+    interval = setInterval(refresh, 1000)
+    checked1Disable.value = true
+  } else {
+    clearInterval(interval)
+    checked1Disable.value = false
+  }
+}
+onBeforeUnmount(() => {
+  clearInterval(interval)
+})
 </script>
 <style>
 </style>

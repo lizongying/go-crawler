@@ -16,7 +16,7 @@ type Crawler interface {
 	GetSpiders() []Spider
 	AddSpider(Spider)
 	Start(context.Context) error
-	Stop(context.Context) error
+	Stop(Context) error
 	RunMockServer() error
 	AddMockServerRoutes(...Route)
 	GetLogger() Logger
@@ -51,6 +51,8 @@ type Crawler interface {
 
 	NextId() string
 	GenUid() uint64
+
+	StartFromCLI() bool
 }
 
 type CrawlOption func(Crawler)
@@ -87,16 +89,28 @@ type CrawlerStatus uint8
 
 const (
 	CrawlerStatusUnknown = iota
-	CrawlerStatusOnline
-	CrawlerStatusOffline
+	CrawlerStatusReady
+	CrawlerStatusStarting
+	CrawlerStatusRunning
+	CrawlerStatusIdle
+	CrawlerStatusStopping
+	CrawlerStatusStopped
 )
 
 func (c *CrawlerStatus) String() string {
 	switch *c {
 	case 1:
-		return "online"
+		return "ready"
 	case 2:
-		return "offline"
+		return "starting"
+	case 3:
+		return "running"
+	case 4:
+		return "idle"
+	case 5:
+		return "stopping"
+	case 6:
+		return "stopped"
 	default:
 		return "unknown"
 	}

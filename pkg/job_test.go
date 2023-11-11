@@ -4,15 +4,15 @@ import (
 	"testing"
 )
 
-func TestScheduleMode_String(t *testing.T) {
+func TestJobMode_String(t *testing.T) {
 	tests := []struct {
-		mode     ScheduleMode
+		mode     JobMode
 		expected string
 	}{
-		{ScheduleModeOnce, "once"},
-		{ScheduleModeLoop, "loop"},
-		{ScheduleModeCron, "cron"},
-		{ScheduleModeUnknown, "unknown"},
+		{JobModeOnce, "once"},
+		{JobModeLoop, "loop"},
+		{JobModeCron, "cron"},
+		{JobModeUnknown, "unknown"},
 	}
 
 	for _, test := range tests {
@@ -23,15 +23,15 @@ func TestScheduleMode_String(t *testing.T) {
 	}
 }
 
-func TestScheduleMode_MarshalJSON(t *testing.T) {
+func TestJobMode_MarshalJSON(t *testing.T) {
 	tests := []struct {
-		mode     ScheduleMode
+		mode     JobMode
 		expected string
 	}{
-		{ScheduleModeOnce, "1"},
-		{ScheduleModeLoop, "2"},
-		{ScheduleModeCron, "3"},
-		{ScheduleModeUnknown, "0"},
+		{JobModeOnce, "1"},
+		{JobModeLoop, "2"},
+		{JobModeCron, "3"},
+		{JobModeUnknown, "0"},
 	}
 
 	for _, test := range tests {
@@ -45,19 +45,19 @@ func TestScheduleMode_MarshalJSON(t *testing.T) {
 	}
 }
 
-func TestScheduleMode_UnmarshalJSON(t *testing.T) {
+func TestJobMode_UnmarshalJSON(t *testing.T) {
 	tests := []struct {
 		input    string
-		expected ScheduleMode
+		expected JobMode
 	}{
-		{"1", ScheduleModeOnce},
-		{"2", ScheduleModeLoop},
-		{"3", ScheduleModeCron},
-		{"0", ScheduleModeUnknown},
+		{"1", JobModeOnce},
+		{"2", JobModeLoop},
+		{"3", JobModeCron},
+		{"0", JobModeUnknown},
 	}
 
 	for _, test := range tests {
-		var mode ScheduleMode
+		var mode JobMode
 		err := mode.UnmarshalJSON([]byte(test.input))
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)

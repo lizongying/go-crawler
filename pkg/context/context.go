@@ -50,16 +50,11 @@ func (c *Context) WithCrawlerStatus(status pkg.CrawlerStatus) pkg.Context {
 func (c *Context) GetCrawlerStartTime() time.Time {
 	return c.Crawler.GetStartTime()
 }
-func (c *Context) WithCrawlerStartTime(startTime time.Time) pkg.Context {
-	c.Crawler.WithStartTime(startTime)
-	return c
-}
 func (c *Context) GetCrawlerStopTime() time.Time {
 	return c.Crawler.GetStopTime()
 }
-func (c *Context) WithCrawlerStopTime(stopTime time.Time) pkg.Context {
-	c.Crawler.WithStopTime(stopTime)
-	return c
+func (c *Context) GetCrawlerUpdateTime() time.Time {
+	return c.Crawler.GetUpdateTime()
 }
 
 func (c *Context) GetSpider() pkg.ContextSpider {
@@ -93,16 +88,11 @@ func (c *Context) WithSpiderStatus(status pkg.SpiderStatus) pkg.Context {
 func (c *Context) GetSpiderStartTime() time.Time {
 	return c.Spider.GetStartTime()
 }
-func (c *Context) WithSpiderStartTime(startTime time.Time) pkg.Context {
-	c.Spider.WithStartTime(startTime)
-	return c
-}
 func (c *Context) GetSpiderStopTime() time.Time {
 	return c.Spider.GetStopTime()
 }
-func (c *Context) WithSpiderStopTime(stopTime time.Time) pkg.Context {
-	c.Spider.WithStopTime(stopTime)
-	return c
+func (c *Context) GetSpiderUpdateTime() time.Time {
+	return c.Spider.GetUpdateTime()
 }
 
 func (c *Context) GetJob() pkg.ContextJob {
@@ -143,23 +133,11 @@ func (c *Context) WithJobStatus(status pkg.JobStatus) pkg.Context {
 func (c *Context) GetJobStartTime() time.Time {
 	return c.Job.GetStartTime()
 }
-func (c *Context) WithJobStartTime(startTime time.Time) pkg.Context {
-	c.Job.WithStartTime(startTime)
-	return c
-}
 func (c *Context) GetJobStopTime() time.Time {
 	return c.Job.GetStopTime()
 }
-func (c *Context) WithJobStopTime(stopTime time.Time) pkg.Context {
-	c.Job.WithStopTime(stopTime)
-	return c
-}
 func (c *Context) GetJobUpdateTime() time.Time {
 	return c.Job.GetUpdateTime()
-}
-func (c *Context) WithJobUpdateTime(t time.Time) pkg.Context {
-	c.Job.WithUpdateTime(t)
-	return c
 }
 func (c *Context) GetJobEnable() bool {
 	return c.Job.GetEnable()

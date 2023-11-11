@@ -1,4 +1,13 @@
 <template>
+  <a-page-header
+      title="Records"
+      :sub-title="'Total: '+recordsStore.Count"
+  >
+    <template #extra>
+      <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
+      <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
+    </template>
+  </a-page-header>
   <a-table :columns="columns" :data-source="recordsStore.records" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
@@ -57,7 +66,7 @@ import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {formattedDate} from "@/utils/time";
 import {useRecordsStore} from "@/stores/records";
-import {reactive, ref} from "vue";
+import {onBeforeUnmount, reactive, ref} from "vue";
 import {sortBigInt, sortStr} from "@/utils/sort";
 
 const columns = [
@@ -66,6 +75,13 @@ const columns = [
     dataIndex: 'id',
     width: 200,
     sorter: (a, b) => sortBigInt(a.id, b.id),
+    defaultSortOrder: 'descend',
+  },
+  {
+    title: 'Unique Key',
+    dataIndex: 'unique_key',
+    width: 200,
+    sorter: (a, b) => sortStr(a.unique_key, b.unique_key),
   },
   {
     title: 'Node',
@@ -122,6 +138,26 @@ const showDrawer = record => {
   more.data = record.data
 };
 const activeKey = ref('1');
+
+const refresh = () => {
+  recordsStore.GetRecords()
+}
+const checked1 = ref(false)
+const checked1Disable = ref(false)
+
+let interval = null
+const changeSwitch = () => {
+  if (checked1.value) {
+    interval = setInterval(refresh, 1000)
+    checked1Disable.value = true
+  } else {
+    clearInterval(interval)
+    checked1Disable.value = false
+  }
+}
+onBeforeUnmount(() => {
+  clearInterval(interval)
+})
 </script>
 <style>
 </style>

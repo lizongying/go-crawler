@@ -26,7 +26,7 @@
           <menu-fold-outlined v-else class="trigger" @click="toggleCollapsed"/>
         </template>
         <a-space style="float: right; margin-right: 10px">
-          <span style="margin-right: 10px"><a href="/go-crawler/docs/"><ReadOutlined/>  Docs</a></span>
+          <span style="margin-right: 10px"><a target="_blank" href="https://lizongying.github.io/go-crawler/docs/"><ReadOutlined/>  Docs</a></span>
           <span style="margin-right: 10px" @click="showSetting"><a><SettingOutlined/>  Setting</a></span>
           <a-modal v-model:open="openSetting" title="Setting" width="1000px" @ok="handleSetting">
             <a-form
