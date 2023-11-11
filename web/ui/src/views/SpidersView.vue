@@ -81,8 +81,10 @@
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
+          <template v-if="record.status === SpiderStatusStopped">
           <a>Run</a>
           <a-divider type="vertical"/>
+          </template>
           <a>Delete</a>
           <a-divider type="vertical"/>
           <a class="ant-dropdown-link">
@@ -98,6 +100,7 @@
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {
+  SpiderStatusIdle,
   SpiderStatusReady,
   SpiderStatusRunning,
   SpiderStatusStarting,
@@ -146,6 +149,10 @@ const columns = [
       {
         text: 'running',
         value: SpiderStatusRunning,
+      },
+      {
+        text: 'idle',
+        value: SpiderStatusIdle,
       },
       {
         text: 'stopping',
@@ -275,8 +282,10 @@ const spiderStatusName = (status) => {
     case 3:
       return 'started'
     case 4:
-      return 'stopping'
+      return 'idle'
     case 5:
+      return 'stopping'
+    case 6:
       return 'stopped'
     default:
       return 'unknown'

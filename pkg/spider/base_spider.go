@@ -453,7 +453,7 @@ func (s *BaseSpider) JobStopped(ctx pkg.Context, err error) {
 	if err != nil {
 		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "job finished with an error:", err, "spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
 	} else {
-		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "job finished successfully. spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
+		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "job finished. spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
 	}
 
 	s.job.Out()
@@ -475,19 +475,31 @@ func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
 }
 func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 	if s.context == nil || s.context.GetSpider() == nil {
-		s.logger.Debug("spider hasn't started")
+		s.logger.Warn("spider hasn't started")
 		return
 	}
 
-	if s.context.GetSpiderStatus() == pkg.SpiderStatusStopping || s.context.GetSpiderStatus() == pkg.SpiderStatusStopped {
-		s.logger.Debug("stopped")
+	if !utils.InSlice(s.context.GetSpiderStatus(), []pkg.SpiderStatus{
+		pkg.SpiderStatusReady,
+		pkg.SpiderStatusRunning,
+	}) {
+		s.logger.Warn("spider only can stopped in ready or running")
+		return
+	}
+
+	s.context.WithSpiderStatus(pkg.SpiderStatusIdle)
+	s.Crawler.GetSignal().SpiderChanged(s.context)
+	s.logger.Debug("spider has idle")
+
+	if !s.Crawler.StartFromCLI() {
+		s.logger.Info("spider don't need to stop")
 		return
 	}
 
 	s.context.WithSpiderStatus(pkg.SpiderStatusStopping)
 	s.Crawler.GetSignal().SpiderChanged(s.context)
+	s.logger.Debug("spider wait for stop")
 
-	s.logger.Debug("BaseSpider wait for stop")
 	defer func() {
 		err = s.spider.Stop(s.context)
 		if errors.Is(err, pkg.DontStopErr) {
@@ -500,7 +512,7 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 		s.Crawler.GetSignal().SpiderChanged(s.context)
 
 		spendTime := stopTime.Sub(s.context.GetSpiderStartTime())
-		s.logger.Info(s.spider.Name(), "spider finished. spend time:", spendTime)
+		s.logger.Info(s.spider.Name(), s.context.GetSpider().GetId(), "spider finished. spend time:", spendTime)
 		s.Crawler.SpiderStopped(s.context, err)
 	}()
 

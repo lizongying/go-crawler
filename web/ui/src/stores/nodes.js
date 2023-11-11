@@ -6,8 +6,9 @@ export const NodeStatusUnknown = 0
 export const NodeStatusReady = 1
 export const NodeStatusStarting = 2
 export const NodeStatusRunning = 3
-export const NodeStatusStopping = 4
-export const NodeStatusStopped = 5
+export const NodeStatusIdle = 4
+export const NodeStatusStopping = 5
+export const NodeStatusStopped = 6
 
 export const useNodesStore = defineStore('nodes', () => {
     const nodes = reactive([])

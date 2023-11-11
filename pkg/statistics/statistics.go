@@ -70,17 +70,16 @@ func (s *Statistics) crawlerChanged(ctx pkg.Context) {
 		WithStatusAndTime(ctx.GetCrawlerStatus(), ctx.GetCrawlerUpdateTime())
 }
 func (s *Statistics) spiderChanged(ctx pkg.Context) {
-	if ctx.GetSpiderStatus() == pkg.SpiderStatusRunning {
-		s.Spiders[ctx.GetSpiderName()].WithId(ctx.GetSpider().GetId())
-	}
-	if _, ok := s.Spiders[ctx.GetSpiderName()]; !ok {
+	spiderOne, ok := s.Spiders[ctx.GetSpiderName()]
+	if !ok {
 		s.Nodes[ctx.GetCrawlerId()].IncSpider()
-		s.Spiders[ctx.GetSpiderName()] = new(statisticsSpider.Spider).
+		spiderOne = new(statisticsSpider.Spider).
 			WithId(ctx.GetSpider().GetId()).
 			WithSpider(ctx.GetSpiderName()).
 			WithNode(ctx.GetCrawlerId())
+		s.Spiders[ctx.GetSpiderName()] = spiderOne
 	}
-	s.Spiders[ctx.GetSpiderName()].
+	spiderOne.
 		WithStatusAndTime(ctx.GetSpiderStatus(), ctx.GetSpiderUpdateTime())
 }
 func (s *Statistics) jobChanged(ctx pkg.Context) {

@@ -75,6 +75,7 @@
 import {RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {
+  NodeStatusIdle,
   NodeStatusReady,
   NodeStatusRunning,
   NodeStatusStarting,
@@ -177,6 +178,10 @@ const columns = [
         value: NodeStatusRunning,
       },
       {
+        text: 'idle',
+        value: NodeStatusIdle,
+      },
+      {
         text: 'stopping',
         value: NodeStatusStopping,
       },
@@ -252,6 +257,8 @@ const nodeStatusName = (status) => {
       return 'starting'
     case NodeStatusRunning:
       return 'running'
+    case NodeStatusIdle:
+      return 'idle'
     case NodeStatusStopping:
       return 'stopping'
     case NodeStatusStopped:

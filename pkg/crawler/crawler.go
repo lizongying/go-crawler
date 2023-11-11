@@ -12,6 +12,7 @@ import (
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"github.com/lizongying/go-crawler/pkg/signals"
 	"github.com/lizongying/go-crawler/pkg/statistics"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/lizongying/go-uid/uid"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
@@ -151,6 +152,9 @@ func (c *Crawler) ItemTimer() *time.Timer {
 func (c *Crawler) ItemConcurrencyChan() chan struct{} {
 	return c.itemConcurrencyChan
 }
+func (c *Crawler) StartFromCLI() bool {
+	return c.spiderName != ""
+}
 func (c *Crawler) RunJob(ctx context.Context, spiderName string, startFunc string, args string, mode pkg.JobMode, spec string) (id string, err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
@@ -171,6 +175,7 @@ func (c *Crawler) RunJob(ctx context.Context, spiderName string, startFunc strin
 			c.logger.Error(err)
 			return
 		}
+		c.spider.In()
 	}
 
 	c.logger.Info("name", spiderName)
@@ -248,7 +253,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	c.context.WithCrawlerStatus(pkg.CrawlerStatusRunning)
 	c.Signal.CrawlerChanged(c.context)
 
-	c.logger.Info("crawlerId", c.context.GetCrawlerId())
+	c.logger.Info("crawler is running", c.context.GetCrawlerId())
 	c.logger.Info("referrerPolicy", c.config.GetReferrerPolicy())
 	c.logger.Info("urlLengthLimit", c.config.GetUrlLengthLimit())
 
@@ -279,39 +284,50 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 			return
 		}
 		c.logger.Info("job id", id)
-		c.spider.In()
-	} else {
-		<-c.stop
 	}
 
+	<-c.stop
 	return
 }
 
-func (c *Crawler) Stop(ctx context.Context) (err error) {
-	c.logger.Debug("Crawler wait for stop")
-	defer func() {
-		c.context.WithCrawlerContext(ctx)
-		c.context.WithCrawlerStatus(pkg.CrawlerStatusStopped)
-		c.Signal.CrawlerChanged(c.context)
-		c.logger.Info("Crawler Stopped")
-	}()
+func (c *Crawler) Stop(ctx pkg.Context) (err error) {
+	c.context.WithCrawlerStatus(pkg.CrawlerStatusIdle)
+	c.Signal.CrawlerChanged(ctx)
+	c.logger.Debug("crawler has idle")
+
+	if !c.StartFromCLI() {
+		c.logger.Info("crawler don't need to stop")
+		return
+	}
+
+	c.context.WithCrawlerStatus(pkg.CrawlerStatusStopping)
+	c.Signal.CrawlerChanged(ctx)
+	c.logger.Debug("crawler wait for stop")
 
 	for _, v := range c.spiders {
-		if err = v.Stop(c.context); err != nil {
-			c.logger.Error(err)
+		if !utils.InSlice(v.GetContext().GetSpiderStatus(), []pkg.SpiderStatus{
+			pkg.SpiderStatusReady,
+			pkg.SpiderStatusStopped,
+		}) {
+			c.logger.Warn("crawler has a spider that need to stop", v.GetContext().GetSpiderStatus().String())
+			return
 		}
 	}
 
+	c.context.WithCrawlerStatus(pkg.CrawlerStatusStopped)
+	c.Signal.CrawlerChanged(ctx)
+	c.logger.Info("crawler finished. spend time:", ctx.GetCrawlerStopTime().Sub(ctx.GetCrawlerStartTime()), ctx.GetCrawlerId())
+	c.stop <- struct{}{}
 	return
 }
 func (c *Crawler) SpiderStopped(_ pkg.Context, _ error) {
-	defer c.spider.Out()
+	c.spider.Out()
 }
 
 func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, sqlite pkg.Sqlite, store pkg.Store, mockServer pkg.MockServer, httpApi *api.Api) (crawler pkg.Crawler, err error) {
 	spider := pkg.NewState()
 	spider.RegisterIsReadyAndIsZero(func() {
-		_ = crawler.Stop(crawler.GetContext().GetCrawlerContext())
+		_ = crawler.Stop(crawler.GetContext())
 	})
 
 	ug, _ := uid.NewUid(1)

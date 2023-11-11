@@ -6,8 +6,9 @@ export const SpiderStatusUnknown = 0
 export const SpiderStatusReady = 1
 export const SpiderStatusStarting = 2
 export const SpiderStatusRunning = 3
-export const SpiderStatusStopping = 4
-export const SpiderStatusStopped = 5
+export const SpiderStatusIdle = 4
+export const SpiderStatusStopping = 5
+export const SpiderStatusStopped = 6
 
 export const useSpidersStore = defineStore('spiders', () => {
     const spiders = reactive([])

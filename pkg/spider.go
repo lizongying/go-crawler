@@ -348,12 +348,13 @@ const (
 	SpiderStatusReady
 	SpiderStatusStarting
 	SpiderStatusRunning
+	SpiderStatusIdle
 	SpiderStatusStopping
 	SpiderStatusStopped
 )
 
-func (s *SpiderStatus) String() string {
-	switch *s {
+func (s SpiderStatus) String() string {
+	switch s {
 	case 1:
 		return "ready"
 	case 2:
@@ -361,8 +362,10 @@ func (s *SpiderStatus) String() string {
 	case 3:
 		return "running"
 	case 4:
-		return "stopping"
+		return "idle"
 	case 5:
+		return "stopping"
+	case 6:
 		return "stopped"
 	default:
 		return "unknown"
