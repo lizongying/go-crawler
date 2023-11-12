@@ -181,7 +181,7 @@ func (c *Crawler) RunJob(ctx context.Context, spiderName string, startFunc strin
 	c.logger.Info("name", spiderName)
 	c.logger.Info("func", startFunc)
 	c.logger.Info("args", args)
-	c.logger.Info("mode", mode)
+	c.logger.Info("mode", mode.String())
 	c.logger.Info("spec", spec)
 
 	id, err = spider.Run(ctx, startFunc, args, mode, spec, true)

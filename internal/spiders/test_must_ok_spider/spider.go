@@ -5,6 +5,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
+	"time"
 )
 
 type Spider struct {
@@ -22,6 +23,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 		}))
 
 	if extra.Count > 0 {
+		time.Sleep(time.Second * 10)
 		s.logger.Info("manual stop")
 		return
 	}

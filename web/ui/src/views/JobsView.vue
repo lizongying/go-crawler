@@ -65,7 +65,7 @@
           <a-divider type="vertical"/>
           <a>Delete</a>
           <a-divider type="vertical"/>
-          <a class="ant-dropdown-link">
+          <a class="ant-dropdown-link" @click="showDrawer(record)">
             More
             <RightOutlined/>
           </a>
@@ -73,11 +73,25 @@
       </template>
     </template>
   </a-table>
+  <a-drawer v-model:open="open"
+            :closable="false"
+            size="large">
+    <a-tabs v-model:activeKey="activeKey">
+      <a-tab-pane key="1" tab="Status List">
+        <a-list size="small" bordered :data-source="more.status_list">
+          <template #renderItem="{ item }">
+            <a-list-item>{{ item }}</a-list-item>
+          </template>
+        </a-list>
+      </a-tab-pane>
+    </a-tabs>
+  </a-drawer>
 </template>
 <script setup>
 import {ExclamationCircleOutlined, RightOutlined} from "@ant-design/icons-vue";
 import {RouterLink} from "vue-router";
 import {
+  JobStatusIdle,
   JobStatusReady,
   JobStatusRunning,
   JobStatusStarting,
@@ -87,15 +101,8 @@ import {
 } from "@/stores/jobs";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
-import {createVNode, onBeforeUnmount, ref} from "vue";
+import {createVNode, onBeforeUnmount, reactive, ref} from "vue";
 import {Modal} from "ant-design-vue";
-import {
-  NodeStatusReady,
-  NodeStatusRunning,
-  NodeStatusStarting,
-  NodeStatusStopped,
-  NodeStatusStopping
-} from "@/stores/nodes";
 
 const columns = [
   {
@@ -145,6 +152,10 @@ const columns = [
       {
         text: 'running',
         value: JobStatusRunning,
+      },
+      {
+        text: 'idle',
+        value: JobStatusIdle,
       },
       {
         text: 'stopping',
@@ -223,6 +234,8 @@ const jobStatusName = (status) => {
       return 'starting'
     case JobStatusRunning:
       return 'running'
+    case JobStatusIdle:
+      return 'idle'
     case JobStatusStopping:
       return 'stopping'
     case JobStatusStopped:
@@ -289,6 +302,16 @@ function stop(spiderName, jobId) {
     },
   });
 }
+
+const open = ref(false);
+const more = reactive({})
+const showDrawer = record => {
+  open.value = true;
+  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${jobStatusName(v)}`).reverse();
+};
+// status list
+const activeKey = ref('1');
+
 </script>
 <style>
 </style>

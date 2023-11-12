@@ -59,8 +59,6 @@
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
-          <a>Run</a>
-          <a-divider type="vertical"/>
           <a>Delete</a>
           <a-divider type="vertical"/>
           <a class="ant-dropdown-link" @click="showDrawer">

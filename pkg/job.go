@@ -12,6 +12,7 @@ const (
 	JobStatusReady
 	JobStatusStarting
 	JobStatusRunning
+	JobStatusIdle
 	JobStatusStopping
 	JobStatusStopped
 )
@@ -25,8 +26,10 @@ func (s *JobStatus) String() string {
 	case 3:
 		return "running"
 	case 4:
-		return "stopping"
+		return "idle"
 	case 5:
+		return "stopping"
+	case 6:
 		return "stopped"
 	default:
 		return "unknown"
