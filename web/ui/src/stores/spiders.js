@@ -17,9 +17,32 @@ export const useSpidersStore = defineStore('spiders', () => {
         getSpiders().then(resp => {
             console.log(resp.data.data)
             if (resp.data.data === null) {
+                spiders.splice(0, spiders.length)
                 return
             }
             spiders.splice(0, spiders.length, ...resp.data.data)
+        })
+    }
+
+    const SpiderNames = computed(() => {
+        return spiders.filter(v => v.spider).map(v => {
+            return {value: v.spider, label: v.spider}
+        })
+    })
+
+    const SpiderFuncs = (id) => {
+        if (!id) {
+            return
+        }
+        const spider = spiders.find(v => v.spider === id)
+        if (spider === null) {
+            return
+        }
+        console.log(spider.funcs.map(v => {
+            return {value: v, label: v}
+        }))
+        return spider.funcs.map(v => {
+            return {value: v, label: v}
         })
     }
 
@@ -31,5 +54,5 @@ export const useSpidersStore = defineStore('spiders', () => {
         return spiders.length
     })
 
-    return {spiders, GetSpiders, Count, CountActive}
+    return {spiders, GetSpiders, SpiderNames, SpiderFuncs, Count, CountActive}
 })

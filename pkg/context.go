@@ -118,6 +118,8 @@ type ContextCrawler interface {
 }
 
 type ContextSpider interface {
+	GetSpider() Spider
+	WithSpider(Spider) ContextSpider
 	GetId() uint64
 	WithId(uint64) ContextSpider
 	GetName() string

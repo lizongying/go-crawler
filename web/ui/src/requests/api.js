@@ -61,4 +61,9 @@ const getRecords = async data => {
     return axios.post(host + '/records', data, config);
 };
 
-export {getUser, getNodes, getSpiders, getJobs, runJob, rerunJob, stopJob, getTasks, getRecords}
+const getSpider = async data => {
+    const {host, config} = await api()
+    return axios.post(host + '/spider', data, config);
+};
+
+export {getUser, getNodes, getSpiders, getJobs, runJob, rerunJob, stopJob, getTasks, getRecords, getSpider}

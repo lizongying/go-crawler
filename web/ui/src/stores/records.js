@@ -9,6 +9,7 @@ export const useRecordsStore = defineStore('records', () => {
         getRecords().then(resp => {
             console.log(resp.data.data)
             if (resp.data.data === null) {
+                records.splice(0, records.length)
                 return
             }
             records.splice(0, records.length, ...resp.data.data)

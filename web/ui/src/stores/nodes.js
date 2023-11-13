@@ -17,6 +17,7 @@ export const useNodesStore = defineStore('nodes', () => {
         getNodes().then(resp => {
             console.log(resp.data.data)
             if (resp.data.data === null) {
+                nodes.splice(0, nodes.length)
                 return
             }
             nodes.splice(0, nodes.length, ...resp.data.data)

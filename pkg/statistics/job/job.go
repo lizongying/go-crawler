@@ -19,6 +19,7 @@ type Job struct {
 	Node          string               `json:"node,omitempty"`
 	Spider        string               `json:"spider,omitempty"`
 	Task          uint32               `json:"task,omitempty"`
+	Request       uint32               `json:"request,omitempty"`
 	Record        uint32               `json:"record,omitempty"`
 	Enable        bool                 `json:"enable,omitempty"`
 	StartTime     utils.Timestamp      `json:"start_time,omitempty"`
@@ -72,6 +73,12 @@ func (s *Job) IncTask() {
 }
 func (s *Job) DecTask() {
 	atomic.AddUint32(&s.Task, ^uint32(0))
+}
+func (s *Job) IncRequest() {
+	atomic.AddUint32(&s.Request, 1)
+}
+func (s *Job) DecRequest() {
+	atomic.AddUint32(&s.Request, ^uint32(0))
 }
 func (s *Job) IncRecord() {
 	atomic.AddUint32(&s.Record, 1)

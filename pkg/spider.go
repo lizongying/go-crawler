@@ -25,10 +25,10 @@ type Spider interface {
 	SetSpider(spider Spider) Spider
 	CallBacks() map[string]CallBack
 	CallBack(name string) (callback CallBack)
-	SetCallBacks(map[string]CallBack) Spider
 	ErrBacks() map[string]ErrBack
 	ErrBack(name string) (errBack ErrBack)
-	SetErrBacks(map[string]ErrBack) Spider
+	StartFuncs() map[string]StartFunc
+	StartFunc(name string) (startFunc StartFunc)
 	GetAllowedDomains() []string
 	ReplaceAllowedDomains([]string) error
 	SetAllowedDomain(string)

@@ -4,7 +4,7 @@
       :sub-title="'Total: '+jobsStore.Count"
   >
     <template #extra>
-      <a-button key="1" type="primary">New</a-button>
+      <a-button key="1" @click="newJob" type="primary">New</a-button>
       <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
       <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
     </template>
@@ -86,6 +86,70 @@
       </a-tab-pane>
     </a-tabs>
   </a-drawer>
+  <a-modal v-model:open="openJob" title="New Job" width="1000px" @ok="handleJob">
+    <a-form
+        :label-col="{ span: 4 }"
+        :model="formJob"
+        :wrapper-col="{ span: 20 }"
+        autocomplete="off"
+        name="basic"
+    >
+      <a-form-item
+          :rules="[{ required: true, message: 'Please input spider name!' }]"
+          label="Spider Name"
+          name="name"
+      >
+        <a-select
+            v-model:value="formJob.name"
+            show-search
+            style="width: 100%"
+            :options="spidersStore.SpiderNames"
+            :filter-option="filterSpiders"
+            placeholder="Select a spider name"
+            @change="handleChange"
+        ></a-select>
+      </a-form-item>
+      <a-form-item
+          :rules="[{ required: true, message: 'Please input spider func!' }]"
+          label="Spider Func"
+          name="func"
+          :validate-status="func.status"
+          :help="func.help"
+      >
+        <a-select
+            v-model:value="formJob.func"
+            show-search
+            style="width: 100%"
+            :options="spidersStore.SpiderFuncs(formJob.name)"
+            :filter-option="filterSpiders"
+            placeholder="Select a spider func"
+            @focus="handleFocus"
+        ></a-select>
+      </a-form-item>
+      <a-form-item
+          :rules="[{ required: true, message: 'Please input func args!' }]"
+          label="Func Args"
+          name="args"
+      >
+        <a-textarea
+            v-model:value="formJob.args"
+            placeholder="The arguments should be a json"
+            :auto-size="{ minRows: 2, maxRows: 5 }"
+        />
+      </a-form-item>
+      <a-form-item
+          :rules="[{ required: true, message: 'Please choose a mode!' }]"
+          label="Run Mode"
+          name="mode"
+      >
+        <a-radio-group v-model:value="formJob.mode">
+          <a-radio-button value="1">once</a-radio-button>
+          <a-radio-button value="2">loop</a-radio-button>
+          <a-radio-button value="3">cron</a-radio-button>
+        </a-radio-group>
+      </a-form-item>
+    </a-form>
+  </a-modal>
 </template>
 <script setup>
 import {ExclamationCircleOutlined, RightOutlined} from "@ant-design/icons-vue";
@@ -102,7 +166,8 @@ import {
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 import {createVNode, onBeforeUnmount, reactive, ref} from "vue";
-import {Modal} from "ant-design-vue";
+import {message, Modal} from "ant-design-vue";
+import {useSpidersStore} from "@/stores/spiders";
 
 const columns = [
   {
@@ -245,6 +310,7 @@ const jobStatusName = (status) => {
   }
 }
 
+// auto refresh
 const refresh = () => {
   jobsStore.GetJobs()
 }
@@ -303,6 +369,7 @@ function stop(spiderName, jobId) {
   });
 }
 
+// more
 const open = ref(false);
 const more = reactive({})
 const showDrawer = record => {
@@ -312,6 +379,72 @@ const showDrawer = record => {
 // status list
 const activeKey = ref('1');
 
+
+// new job
+const formJob = reactive({
+  name: '',
+  func: '',
+  args: '{}',
+  mode: '1',
+})
+const openJob = ref(false);
+const newJob = () => {
+  openJob.value = true;
+};
+const handleJob = () => {
+  if (formJob.name === '') {
+    message.error('Spider name empty');
+    return
+  }
+  if (formJob.func === '') {
+    message.error('Spider func empty');
+    return
+  }
+  if (formJob.args === '') {
+    message.error('Func args empty');
+    return
+  }
+  try {
+    let js = JSON.parse(formJob.args)
+    formJob.args = JSON.stringify(js)
+
+    openJob.value = false;
+    jobsStore.RunJob({
+      "timeout": 0,
+      "name": formJob.name,
+      "func": formJob.func,
+      "args": formJob.args,
+      "mode": parseInt(formJob.mode)
+    })
+  } catch (e) {
+    console.log(e)
+    message.error('Argument error');
+  }
+};
+
+const spidersStore = useSpidersStore()
+spidersStore.GetSpiders()
+const filterSpiders = (input, option) => {
+  return option.label.toLowerCase().indexOf(input.toLowerCase()) >= 0;
+};
+
+const func = reactive({
+  status: '',
+  help: '',
+})
+const handleFocus = () => {
+  if (formJob.name === '') {
+    func.status = 'error'
+    func.help = 'Should be input a spider name'
+  }
+};
+const handleChange = () => {
+  if (formJob.name !== '') {
+    func.status = ''
+    func.help = ''
+  }
+  formJob.func = ''
+};
 </script>
 <style>
 </style>
