@@ -3,7 +3,6 @@ package pipelines
 import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	"time"
 )
 
 type NonePipeline struct {
@@ -22,8 +21,7 @@ func (m *NonePipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	if item.Name() != pkg.ItemNone {
-		m.logger.Warn("item not support", pkg.ItemNone)
+	if item.GetContext().GetItemProcessed() {
 		return
 	}
 
@@ -35,18 +33,20 @@ func (m *NonePipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	item.GetContext().WithItemStopTime(time.Now())
+	item.GetContext().WithItemStatus(pkg.ItemStatusSuccess)
 	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return
 }
 
-func (m *NonePipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *NonePipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(KafkaPipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	m.logger = spider.GetLogger()
-	return m
+	return
 }

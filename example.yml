@@ -91,7 +91,7 @@ enable_dump_pipeline: true
 enable_file_pipeline: true
 enable_image_pipeline: true
 enable_filter_pipeline: true
-enable_none_pipeline: false
+enable_none_pipeline: true
 enable_csv_pipeline: false
 enable_json_lines_pipeline: false
 enable_mongo_pipeline: false

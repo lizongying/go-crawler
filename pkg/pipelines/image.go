@@ -61,12 +61,14 @@ func (m *ImagePipeline) ProcessItem(item pkg.Item) (err error) {
 	return
 }
 
-func (m *ImagePipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *ImagePipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(ImagePipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	m.logger = spider.GetLogger()
-	return m
+	return
 }

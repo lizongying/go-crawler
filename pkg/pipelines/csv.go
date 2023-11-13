@@ -11,7 +11,6 @@ import (
 	"reflect"
 	"strings"
 	"sync"
-	"time"
 )
 
 type CsvPipeline struct {
@@ -55,6 +54,8 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 		task.IncItemError()
 		return
 	}
+
+	item.GetContext().WithItemProcessed(true)
 
 	refType := reflect.TypeOf(data)
 	refValue := reflect.ValueOf(data)
@@ -134,7 +135,7 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 
 	m.logger.Info("item saved:", filename)
-	item.GetContext().WithItemStopTime(time.Now())
+	item.GetContext().WithItemStatus(pkg.ItemStatusSuccess)
 	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return
@@ -151,12 +152,14 @@ func (m *CsvPipeline) Stop(_ pkg.Context) (err error) {
 	return
 }
 
-func (m *CsvPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *CsvPipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(CsvPipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	m.logger = spider.GetLogger()
-	return m
+	return
 }

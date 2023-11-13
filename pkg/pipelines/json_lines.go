@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 type JsonLinesPipeline struct {
@@ -52,6 +51,8 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
+	item.GetContext().WithItemProcessed(true)
+
 	filename := fmt.Sprintf("%s.jsonl", itemJsonl.GetFileName())
 	var file *os.File
 	fileValue, ok := m.files.Load(itemJsonl.GetFileName())
@@ -92,7 +93,7 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 
 	m.logger.Info("item saved:", filename)
-	item.GetContext().WithItemStopTime(time.Now())
+	item.GetContext().WithItemStatus(pkg.ItemStatusSuccess)
 	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return
@@ -109,12 +110,14 @@ func (m *JsonLinesPipeline) SpiderStop(_ pkg.Context) (err error) {
 	return
 }
 
-func (m *JsonLinesPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *JsonLinesPipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(JsonLinesPipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	m.logger = spider.GetLogger()
-	return m
+	return
 }

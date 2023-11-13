@@ -327,14 +327,16 @@ func (c *Context) WithItemStatus(status pkg.ItemStatus) pkg.Context {
 func (c *Context) GetItemStartTime() time.Time {
 	return c.Item.GetStartTime()
 }
-func (c *Context) WithItemStartTime(startTime time.Time) pkg.Context {
-	c.Item.WithStartTime(startTime)
-	return c
-}
 func (c *Context) GetItemStopTime() time.Time {
 	return c.Item.GetStopTime()
 }
-func (c *Context) WithItemStopTime(stopTime time.Time) pkg.Context {
-	c.Item.WithStopTime(stopTime)
+func (c *Context) GetItemUpdateTime() time.Time {
+	return c.Item.GetUpdateTime()
+}
+func (c *Context) GetItemProcessed() bool {
+	return c.Item.GetSaved()
+}
+func (c *Context) WithItemProcessed(saved bool) pkg.Context {
+	c.Item.WithSaved(saved)
 	return c
 }

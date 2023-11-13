@@ -50,7 +50,10 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 	e.locker.Lock()
 	defer e.locker.Unlock()
 
-	pipeline = pipeline.FromSpider(e.spider)
+	if err := pipeline.FromSpider(e.spider); err != nil {
+		e.logger.Error(err)
+		return
+	}
 
 	name := reflect.TypeOf(pipeline).Elem().String()
 	pipeline.SetName(name)

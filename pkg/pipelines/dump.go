@@ -32,12 +32,14 @@ func (m *DumpPipeline) ProcessItem(item pkg.Item) (err error) {
 	return
 }
 
-func (m *DumpPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *DumpPipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(DumpPipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	m.logger = spider.GetLogger()
-	return m
+	return
 }

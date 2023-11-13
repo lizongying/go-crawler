@@ -10,7 +10,7 @@ type Pipeline interface {
 	Name() string
 	SetOrder(uint8)
 	Order() uint8
-	FromSpider(Spider) Pipeline
+	FromSpider(Spider) error
 	WithContext(context context.Context) Pipeline
 }
 
@@ -51,11 +51,11 @@ func (p *UnimplementedPipeline) Order() uint8 {
 func (p *UnimplementedPipeline) SetOrder(order uint8) {
 	p.order = order
 }
-func (p *UnimplementedPipeline) FromSpider(spider Spider) Pipeline {
+func (p *UnimplementedPipeline) FromSpider(spider Spider) (err error) {
 	if p == nil {
 		return new(UnimplementedPipeline).FromSpider(spider)
 	}
 
 	p.spider = spider
-	return p
+	return
 }

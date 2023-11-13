@@ -46,12 +46,14 @@ func (m *CustomPipeline) Stop(_ pkg.Context) error {
 	return nil
 }
 
-func (m *CustomPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *CustomPipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(CustomPipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	m.logger = spider.GetLogger()
-	return m
+	return
 }

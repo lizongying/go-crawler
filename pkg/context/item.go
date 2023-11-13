@@ -8,14 +8,16 @@ import (
 )
 
 type Item struct {
-	Context   context.Context     `json:"-"`
-	Id        string              `json:"id,omitempty"`
-	Status    pkg.ItemStatus      `json:"status,omitempty"`
-	StartTime utils.Timestamp     `json:"start_time,omitempty"`
-	StopTime  utils.Timestamp     `json:"stop_time,omitempty"`
-	Deadline  utils.TimestampNano `json:"deadline,omitempty"`
-	Cookies   map[string]string   `json:"cookies,omitempty"`
-	Referrer  string              `json:"referrer,omitempty"`
+	Context    context.Context     `json:"-"`
+	Id         string              `json:"id,omitempty"`
+	Status     pkg.ItemStatus      `json:"status,omitempty"`
+	StartTime  utils.Timestamp     `json:"start_time,omitempty"`
+	StopTime   utils.Timestamp     `json:"stop_time,omitempty"`
+	UpdateTime utils.Timestamp     `json:"update_time,omitempty"`
+	Deadline   utils.TimestampNano `json:"deadline,omitempty"`
+	Cookies    map[string]string   `json:"cookies,omitempty"`
+	Referrer   string              `json:"referrer,omitempty"`
+	Saved      bool                `json:"saved,omitempty"`
 }
 
 func (c *Item) GetId() string {
@@ -37,19 +39,44 @@ func (c *Item) GetStatus() pkg.ItemStatus {
 }
 func (c *Item) WithStatus(status pkg.ItemStatus) pkg.ContextItem {
 	c.Status = status
+	t := time.Now()
+	c.withUpdateTime(t)
+	switch status {
+	case pkg.ItemStatusPending:
+		c.withStartTime(t)
+	case pkg.ItemStatusSuccess:
+		c.withStopTime(t)
+	case pkg.ItemStatusError:
+		c.withStopTime(t)
+	}
+
 	return c
 }
 func (c *Item) GetStartTime() time.Time {
 	return c.StartTime.Time
 }
-func (c *Item) WithStartTime(startTime time.Time) pkg.ContextItem {
+func (c *Item) withStartTime(startTime time.Time) pkg.ContextItem {
 	c.StartTime = utils.Timestamp{Time: startTime}
 	return c
 }
 func (c *Item) GetStopTime() time.Time {
 	return c.StopTime.Time
 }
-func (c *Item) WithStopTime(stopTime time.Time) pkg.ContextItem {
+func (c *Item) withStopTime(stopTime time.Time) pkg.ContextItem {
 	c.StopTime = utils.Timestamp{Time: stopTime}
+	return c
+}
+func (c *Item) GetUpdateTime() time.Time {
+	return c.UpdateTime.Time
+}
+func (c *Item) withUpdateTime(t time.Time) pkg.ContextItem {
+	c.UpdateTime = utils.Timestamp{Time: t}
+	return c
+}
+func (c *Item) GetSaved() bool {
+	return c.Saved
+}
+func (c *Item) WithSaved(saved bool) pkg.ContextItem {
+	c.Saved = saved
 	return c
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"reflect"
-	"time"
 )
 
 const defaultChanItemMax = 1000 * 1000
@@ -97,8 +96,7 @@ func (s *UnimplementedScheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err 
 		WithItem(new(crawlerContext.Item).
 			WithContext(context.Background()).
 			WithId(s.crawler.NextId()).
-			WithStatus(pkg.ItemStatusPending).
-			WithStartTime(time.Now()))
+			WithStatus(pkg.ItemStatusPending))
 	//s.crawler.GetSignal().ItemChanged(c)
 
 	item.WithContext(c)
