@@ -14,8 +14,10 @@ type Spider struct {
 	Id                 *utils.Uint64        `json:"id,omitempty"`
 	Node               string               `json:"node,omitempty"`
 	Spider             string               `json:"spider,omitempty"`
+	Funcs              []string             `json:"funcs,omitempty"`
 	Job                uint32               `json:"job,omitempty"`
 	Task               uint32               `json:"task,omitempty"`
+	Request            uint32               `json:"request,omitempty"`
 	Record             uint32               `json:"record,omitempty"`
 	StartTime          utils.Timestamp      `json:"start_time,omitempty"`
 	FinishTime         utils.Timestamp      `json:"finish_time,omitempty"`
@@ -57,6 +59,13 @@ func (s *Spider) WithSpider(spider string) pkg.StatisticsSpider {
 	s.Spider = spider
 	return s
 }
+func (s *Spider) GetFuncs() []string {
+	return s.Funcs
+}
+func (s *Spider) WithFuncs(funcs []string) pkg.StatisticsSpider {
+	s.Funcs = funcs
+	return s
+}
 func (s *Spider) GetNode() string {
 	return s.Node
 }
@@ -75,6 +84,12 @@ func (s *Spider) IncTask() {
 }
 func (s *Spider) DecTask() {
 	atomic.AddUint32(&s.Task, ^uint32(0))
+}
+func (s *Spider) IncRequest() {
+	atomic.AddUint32(&s.Request, 1)
+}
+func (s *Spider) DecRequest() {
+	atomic.AddUint32(&s.Request, ^uint32(0))
 }
 func (s *Spider) IncRecord() {
 	atomic.AddUint32(&s.Record, 1)

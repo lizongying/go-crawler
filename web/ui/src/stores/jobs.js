@@ -6,23 +6,18 @@ export const JobStatusUnknown = 0
 export const JobStatusReady = 1
 export const JobStatusStarting = 2
 export const JobStatusRunning = 3
-export const JobStatusStopping = 4
-export const JobStatusStopped = 5
+export const JobStatusIdle = 4
+export const JobStatusStopping = 5
+export const JobStatusStopped = 6
 
 export const useJobsStore = defineStore('jobs', () => {
     const jobs = reactive([])
-
-    // const JobStatusUnknown = 0
-    // const JobStatusReady = 1
-    // const JobStatusStarting = 2
-    // const JobStatusRunning = 3
-    // const JobStatusStopping = 4
-    // const JobStatusStopped = 5
 
     const GetJobs = () => {
         getJobs().then(resp => {
             console.log(resp.data.data)
             if (resp.data.data === null) {
+                jobs.splice(0, jobs.length)
                 return
             }
             jobs.splice(0, jobs.length, ...resp.data.data)

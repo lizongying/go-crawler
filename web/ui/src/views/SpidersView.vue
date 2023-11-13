@@ -87,7 +87,7 @@
           </template>
           <a>Delete</a>
           <a-divider type="vertical"/>
-          <a class="ant-dropdown-link">
+          <a class="ant-dropdown-link" @click="showDrawer(record)">
             More
             <RightOutlined/>
           </a>
@@ -95,6 +95,19 @@
       </template>
     </template>
   </a-table>
+  <a-drawer v-model:open="open"
+            :closable="false"
+            size="large">
+    <a-tabs v-model:activeKey="activeKey">
+      <a-tab-pane key="1" tab="Status List">
+        <a-list size="small" bordered :data-source="more.status_list">
+          <template #renderItem="{ item }">
+            <a-list-item>{{ item }}</a-list-item>
+          </template>
+        </a-list>
+      </a-tab-pane>
+    </a-tabs>
+  </a-drawer>
 </template>
 <script setup>
 import {RightOutlined} from "@ant-design/icons-vue";
@@ -110,7 +123,7 @@ import {
 } from "@/stores/spiders";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
-import {onBeforeUnmount, ref} from "vue";
+import {onBeforeUnmount, reactive, ref} from "vue";
 import {TaskStatusError, TaskStatusPending, TaskStatusRunning, TaskStatusSuccess} from "@/stores/tasks";
 
 const columns = [
@@ -325,6 +338,16 @@ const changeSwitch = () => {
 onBeforeUnmount(() => {
   clearInterval(interval)
 })
+
+const open = ref(false);
+const more = reactive({})
+const showDrawer = record => {
+  open.value = true;
+  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${spiderStatusName(v)}`).reverse();
+};
+// status list
+const activeKey = ref('1');
+
 </script>
 <style>
 </style>

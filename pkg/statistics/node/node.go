@@ -18,6 +18,7 @@ type Node struct {
 	Spider            uint32               `json:"spider,omitempty"`
 	Job               uint32               `json:"job,omitempty"`
 	Task              uint32               `json:"task,omitempty"`
+	Request           uint32               `json:"request,omitempty"`
 	Record            uint32               `json:"record,omitempty"`
 	StartTime         utils.Timestamp      `json:"start_time"`
 	FinishTime        utils.Timestamp      `json:"finish_time"`
@@ -70,6 +71,12 @@ func (n *Node) IncTask() {
 }
 func (n *Node) DecTask() {
 	atomic.AddUint32(&n.Task, ^uint32(0))
+}
+func (n *Node) IncRequest() {
+	atomic.AddUint32(&n.Request, 1)
+}
+func (n *Node) DecRequest() {
+	atomic.AddUint32(&n.Request, ^uint32(0))
 }
 func (n *Node) IncRecord() {
 	atomic.AddUint32(&n.Record, 1)

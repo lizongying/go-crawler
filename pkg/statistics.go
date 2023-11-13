@@ -11,6 +11,8 @@ type StatisticsNode interface {
 	DecJob()
 	IncTask()
 	DecTask()
+	IncRequest()
+	DecRequest()
 	IncRecord()
 	DecRecord()
 	Marshal() (bytes []byte, err error)
@@ -20,11 +22,14 @@ type StatisticsSpider interface {
 	WithId(id uint64) StatisticsSpider
 	GetSpider() string
 	WithSpider(spider string) StatisticsSpider
+	WithFuncs(funcs []string) StatisticsSpider
 	WithNode(node string) StatisticsSpider
 	IncJob()
 	DecJob()
 	IncTask()
 	DecTask()
+	IncRequest()
+	DecRequest()
 	IncRecord()
 	DecRecord()
 	GetLastTaskId() string
@@ -43,6 +48,8 @@ type StatisticsJob interface {
 	WithSpider(spider string) StatisticsJob
 	IncTask()
 	DecTask()
+	IncRequest()
+	DecRequest()
 	IncRecord()
 	DecRecord()
 	WithEnable(enable bool) StatisticsJob
@@ -52,6 +59,8 @@ type StatisticsTask interface {
 	WithStatus(status TaskStatus) StatisticsTask
 	GetId() string
 	WithId(id string) StatisticsTask
+	IncRequest()
+	DecRequest()
 	IncRecord()
 	DecRecord()
 	GetNode() string

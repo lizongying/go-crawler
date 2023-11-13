@@ -20,6 +20,7 @@ type Task struct {
 	Spider         string          `json:"spider,omitempty"`
 	Job            string          `json:"job,omitempty"`
 	Node           string          `json:"node,omitempty"`
+	Request        uint32          `json:"request,omitempty"`
 	Record         uint32          `json:"record,omitempty"`
 	StartTime      utils.Timestamp `json:"start_time"`
 	FinishTime     utils.Timestamp `json:"finish_time"`
@@ -56,6 +57,12 @@ func (t *Task) GetJob() string {
 func (t *Task) WithJob(job string) pkg.StatisticsTask {
 	t.Job = job
 	return t
+}
+func (t *Task) IncRequest() {
+	atomic.AddUint32(&t.Request, 1)
+}
+func (t *Task) DecRequest() {
+	atomic.AddUint32(&t.Request, ^uint32(0))
 }
 func (t *Task) IncRecord() {
 	atomic.AddUint32(&t.Record, 1)

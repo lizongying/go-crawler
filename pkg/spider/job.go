@@ -100,9 +100,6 @@ func (j *Job) run(ctx context.Context) (err error) {
 	j.context.WithJobContext(ctx)
 	j.context.WithJobSubId(j.crawler.GenUid())
 
-	j.context.WithJobStatus(pkg.JobStatusRunning)
-	j.crawler.GetSignal().JobChanged(j.context)
-
 	go func() {
 		select {
 		case <-j.context.GetJobContext().Done():
@@ -149,6 +146,15 @@ func (j *Job) run(ctx context.Context) (err error) {
 }
 
 func (j *Job) stop(err error) {
+	if j.context.GetJobStatus() == pkg.JobStatusStopped {
+		err = errors.New("job has been finished")
+		j.logger.Error(err)
+		return
+	}
+
+	j.context.GetJob().WithStatus(pkg.JobStatusIdle)
+	j.crawler.GetSignal().JobChanged(j.context)
+
 	if err != nil {
 		if j.context.GetJobMode() == pkg.JobModeCron {
 			close(j.cronJob)
@@ -180,11 +186,15 @@ func (j *Job) stop(err error) {
 	return
 }
 func (j *Job) startTask() {
+	// idle when job stopped
+	if j.context.GetJobStatus() != pkg.JobStatusRunning {
+		j.context.WithJobStatus(pkg.JobStatusRunning)
+		j.crawler.GetSignal().JobChanged(j.context)
+	}
 	_, _ = new(Task).FromSpider(j.spider).WithJob(j).start(j.context)
 	j.task.In()
 }
 func (j *Job) TaskStopped(ctx pkg.Context, _ error) {
-	j.logger.Info("JobSubId", ctx.GetTask().GetJobSubId(), j.context.GetJobSubId())
 	if ctx.GetTask().GetJobSubId() == j.context.GetJobSubId() {
 		j.task.Out()
 	}

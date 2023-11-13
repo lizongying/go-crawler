@@ -161,6 +161,7 @@ type Request interface {
 
 type CallBack func(Context, Response) error
 type ErrBack func(Context, Response, error)
+type StartFunc func(Context, string) error
 
 type RequestStatus uint8
 

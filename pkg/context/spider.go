@@ -8,6 +8,7 @@ import (
 )
 
 type Spider struct {
+	Spider     pkg.Spider       `json:"-"`
 	Context    context.Context  `json:"-"`
 	Id         uint64           `json:"id,omitempty"`
 	Name       string           `json:"name,omitempty"`
@@ -17,6 +18,13 @@ type Spider struct {
 	UpdateTime utils.Timestamp  `json:"update_time,omitempty"`
 }
 
+func (c *Spider) GetSpider() pkg.Spider {
+	return c.Spider
+}
+func (c *Spider) WithSpider(spider pkg.Spider) pkg.ContextSpider {
+	c.Spider = spider
+	return c
+}
 func (c *Spider) GetId() uint64 {
 	return c.Id
 }

@@ -43,6 +43,7 @@ type BaseSpider struct {
 	browsers              map[pkg.Browser]struct{}
 	callBacks             map[string]pkg.CallBack
 	errBacks              map[string]pkg.ErrBack
+	startFuncs            map[string]pkg.StartFunc
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
 	retryMaxTimes         uint8
@@ -197,7 +198,7 @@ func (s *BaseSpider) GetSpider() pkg.Spider {
 }
 func (s *BaseSpider) SetSpider(spider pkg.Spider) pkg.Spider {
 	s.spider = spider
-	s.registerParser()
+	s.registerFuncs()
 	return s
 }
 func (s *BaseSpider) CallBacks() map[string]pkg.CallBack {
@@ -212,10 +213,6 @@ func (s *BaseSpider) CallBack(name string) (callback pkg.CallBack) {
 	}
 	return
 }
-func (s *BaseSpider) SetCallBacks(callBacks map[string]pkg.CallBack) pkg.Spider {
-	s.callBacks = callBacks
-	return s
-}
 func (s *BaseSpider) ErrBacks() map[string]pkg.ErrBack {
 	return s.errBacks
 }
@@ -228,9 +225,14 @@ func (s *BaseSpider) ErrBack(name string) (errBack pkg.ErrBack) {
 	}
 	return
 }
-func (s *BaseSpider) SetErrBacks(errBacks map[string]pkg.ErrBack) pkg.Spider {
-	s.errBacks = errBacks
-	return s
+func (s *BaseSpider) StartFuncs() map[string]pkg.StartFunc {
+	return s.startFuncs
+}
+func (s *BaseSpider) StartFunc(name string) (startFunc pkg.StartFunc) {
+	if name != "" {
+		startFunc = s.startFuncs[name]
+	}
+	return
 }
 func (s *BaseSpider) GetCrawler() pkg.Crawler {
 	return s.Crawler
@@ -252,9 +254,10 @@ func (s *BaseSpider) WithOptions(options ...pkg.SpiderOption) pkg.Spider {
 	s.options = options
 	return s
 }
-func (s *BaseSpider) registerParser() {
+func (s *BaseSpider) registerFuncs() {
 	callBacks := make(map[string]pkg.CallBack)
 	errBacks := make(map[string]pkg.ErrBack)
+	startFuncs := make(map[string]pkg.StartFunc)
 	rv := reflect.ValueOf(s.spider)
 	rt := rv.Type()
 	l := rt.NumMethod()
@@ -268,9 +271,14 @@ func (s *BaseSpider) registerParser() {
 		if ok {
 			errBacks[name] = errBack
 		}
+		startFunc, ok := rv.Method(i).Interface().(func(pkg.Context, string) error)
+		if ok {
+			startFuncs[name] = startFunc
+		}
 	}
-	s.SetCallBacks(callBacks)
-	s.SetErrBacks(errBacks)
+	s.callBacks = callBacks
+	s.errBacks = errBacks
+	s.startFuncs = startFuncs
 }
 
 func (s *BaseSpider) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
@@ -575,6 +583,7 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 	s.WithContext(new(crawlerContext.Context).
 		WithCrawler(crawler.GetContext().GetCrawler()).
 		WithSpider(new(crawlerContext.Spider).
+			WithSpider(s.spider).
 			WithId(s.Crawler.GenUid()).
 			WithName(s.spider.Name()).
 			WithStatus(pkg.SpiderStatusReady)))
