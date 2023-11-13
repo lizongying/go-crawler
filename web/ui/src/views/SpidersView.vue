@@ -4,7 +4,7 @@
       :sub-title="'Total: '+spidersStore.Count"
   >
     <template #extra>
-      <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
+      <a-switch v-model:checked="checked1" checked-children="auto" un-checked-children="close" @change="changeSwitch"/>
       <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
     </template>
   </a-page-header>
@@ -85,8 +85,6 @@
           <a>Run</a>
           <a-divider type="vertical"/>
           </template>
-          <a>Delete</a>
-          <a-divider type="vertical"/>
           <a class="ant-dropdown-link" @click="showDrawer(record)">
             More
             <RightOutlined/>
@@ -322,10 +320,10 @@ const taskStatusName = (status) => {
 const refresh = () => {
   spidersStore.GetSpiders()
 }
-const checked1 = ref(false)
-const checked1Disable = ref(false)
+const checked1 = ref(true)
+const checked1Disable = ref(true)
 
-let interval = null
+let interval = setInterval(refresh, 1000)
 const changeSwitch = () => {
   if (checked1.value) {
     interval = setInterval(refresh, 1000)
