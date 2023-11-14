@@ -441,9 +441,10 @@ func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 		return
 	}
 	if !utils.InSlice(job.context.GetJobStatus(), []pkg.JobStatus{
+		pkg.SpiderStatusReady,
 		pkg.JobStatusRunning,
 	}) {
-		err = errors.New("the job can be killed in the running state")
+		err = errors.New("the job can be killed in the ready or running state")
 		return
 	}
 	err = job.kill(ctx)
@@ -479,11 +480,8 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 		return
 	}
 
-	if !utils.InSlice(s.context.GetSpiderStatus(), []pkg.SpiderStatus{
-		pkg.SpiderStatusReady,
-		pkg.SpiderStatusRunning,
-	}) {
-		s.logger.Warn("spider only can stopped in ready or running")
+	if s.context.GetSpiderStatus() == pkg.SpiderStatusStopping {
+		s.logger.Debug("spider unimplemented Stop")
 		return
 	}
 

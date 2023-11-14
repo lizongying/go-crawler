@@ -37,7 +37,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestOk go run cmd/testMustOkSpider/*.go -c example.yml -n test-must-ok -f TestOk -m once
+// TestOk go run cmd/test_must_ok_spider/*.go -c example.yml -n test-must-ok -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.MustYieldRequest(ctx, request.NewRequest().
 		SetUrl("https://localhost:8081"+mock_servers.UrlOk).
@@ -47,7 +47,7 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 }
 
 func (s *Spider) Stop(_ pkg.Context) (err error) {
-	//err = pkg.DontStopErr
+	err = pkg.DontStopErr
 	return
 }
 
