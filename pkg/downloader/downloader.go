@@ -116,7 +116,7 @@ func (d *Downloader) processResponse(ctx pkg.Context, response pkg.Response) (er
 	}
 	return
 }
-func (d *Downloader) Close(ctx pkg.Context) {
+func (d *Downloader) spiderClosed(ctx pkg.Context) (err error) {
 	if ctx.GetSpiderName() != d.spider.Name() {
 		return
 	}
@@ -124,6 +124,7 @@ func (d *Downloader) Close(ctx pkg.Context) {
 		return
 	}
 	d.browserManager.Close()
+	return
 }
 func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 	if d == nil {
@@ -136,6 +137,6 @@ func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 	d.middlewares = new(middlewares.Middlewares).FromSpider(spider)
 	d.logger = spider.GetLogger()
 
-	spider.GetCrawler().GetSignal().RegisterSpiderChanged(d.Close)
+	spider.GetCrawler().GetSignal().RegisterSpiderChanged(d.spiderClosed)
 	return d
 }

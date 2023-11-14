@@ -20,7 +20,7 @@ type MongoPipeline struct {
 }
 
 func (m *MongoPipeline) ProcessItem(item pkg.Item) (err error) {
-	spider := m.GetSpider()
+	spider := m.Spider()
 	task := item.GetContext().GetTask()
 
 	if item == nil {
@@ -56,6 +56,8 @@ func (m *MongoPipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
+	item.GetContext().WithItemProcessed(true)
+
 	bs, err := bson.Marshal(data)
 	if err != nil {
 		m.logger.Error(err)
@@ -90,22 +92,28 @@ func (m *MongoPipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	item.GetContext().WithItemStopTime(time.Now())
+	item.GetContext().WithItemStatus(pkg.ItemStatusSuccess)
 	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return
 }
 
-func (m *MongoPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *MongoPipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(MongoPipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	crawler := spider.GetCrawler()
 	m.env = spider.GetConfig().GetEnv()
 	m.logger = spider.GetLogger()
 	m.mongoDb = crawler.GetMongoDb()
+	if m.mongoDb == nil {
+		err = errors.New("mongoDb nil")
+		return
+	}
 	m.timeout = time.Minute
-	return m
+	return
 }

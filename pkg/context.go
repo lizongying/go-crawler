@@ -100,9 +100,10 @@ type Context interface {
 	GetItemStatus() ItemStatus
 	WithItemStatus(ItemStatus) Context
 	GetItemStartTime() time.Time
-	WithItemStartTime(time.Time) Context
 	GetItemStopTime() time.Time
-	WithItemStopTime(time.Time) Context
+	GetItemUpdateTime() time.Time
+	GetItemProcessed() bool
+	WithItemProcessed(bool) Context
 }
 
 type ContextCrawler interface {
@@ -207,7 +208,8 @@ type ContextItem interface {
 	GetStatus() ItemStatus
 	WithStatus(ItemStatus) ContextItem
 	GetStartTime() time.Time
-	WithStartTime(time.Time) ContextItem
 	GetStopTime() time.Time
-	WithStopTime(time.Time) ContextItem
+	GetUpdateTime() time.Time
+	GetSaved() bool
+	WithSaved(bool) ContextItem
 }

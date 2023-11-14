@@ -250,7 +250,7 @@ func (s *Spider) ParseSqlite(ctx pkg.Context, response pkg.Response) (err error)
 	return
 }
 
-// TestMongo go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestMongo -m once
+// TestMongo go run cmd/test_item_spider/*.go -c dev.yml -n test-item -f TestMongo -m once
 func (s *Spider) TestMongo(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
@@ -263,7 +263,7 @@ func (s *Spider) TestMongo(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestMysql go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestMysql -m once
+// TestMysql go run cmd/test_item_spider/*.go -c dev.yml -n test-item -f TestMysql -m once
 func (s *Spider) TestMysql(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
@@ -276,7 +276,7 @@ func (s *Spider) TestMysql(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestKafka go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestKafka -m once
+// TestKafka go run cmd/test_item_spider/*.go -c dev.yml -n test-item -f TestKafka -m once
 func (s *Spider) TestKafka(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
@@ -289,7 +289,7 @@ func (s *Spider) TestKafka(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestCsv go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestCsv -m once
+// TestCsv go run cmd/test_item_spider/*.go -c dev.yml -n test-item -f TestCsv -m once
 func (s *Spider) TestCsv(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
@@ -302,7 +302,7 @@ func (s *Spider) TestCsv(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestJsonl go run cmd/testItemSpider/*.go -c dev.yml -n test-item -f TestJsonl -m once
+// TestJsonl go run cmd/test_item_spider/*.go -c dev.yml -n test-item -f TestJsonl -m once
 func (s *Spider) TestJsonl(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
@@ -315,7 +315,7 @@ func (s *Spider) TestJsonl(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestSqlite go run cmd/testItemSpider/*.go -c example.yml -n test-item -f TestSqlite -m once
+// TestSqlite go run cmd/test_item_spider/*.go -c example.yml -n test-item -f TestSqlite -m once
 // CREATE TABLE IF NOT EXISTS test (
 //
 //	id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -351,10 +351,10 @@ func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 
 		//pkg.WithMongoPipeline(),
 		//pkg.WithCsvPipeline(),
-		//pkg.WithJsonLinesPipeline(),
+		pkg.WithJsonLinesPipeline(),
 		//pkg.WithMysqlPipeline(),
 		//pkg.WithKafkaPipeline(),
-		pkg.WithSqlitePipeline(),
+		//pkg.WithSqlitePipeline(),
 	)
 
 	return

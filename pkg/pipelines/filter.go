@@ -1,7 +1,6 @@
 package pipelines
 
 import (
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 )
@@ -10,12 +9,6 @@ type FilterPipeline struct {
 	pkg.UnimplementedPipeline
 	filter pkg.Filter
 	logger pkg.Logger
-}
-
-func (m *FilterPipeline) Start(ctx context.Context, spider pkg.Spider) (err error) {
-	err = m.UnimplementedPipeline.Start(ctx, spider)
-	m.filter = spider.GetFilter()
-	return nil
 }
 
 func (m *FilterPipeline) ProcessItem(item pkg.Item) (err error) {
@@ -36,12 +29,15 @@ func (m *FilterPipeline) ProcessItem(item pkg.Item) (err error) {
 	return
 }
 
-func (m *FilterPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *FilterPipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(FilterPipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	m.logger = spider.GetLogger()
-	return m
+	m.filter = spider.GetFilter()
+	return
 }

@@ -5,7 +5,7 @@
   >
     <template #extra>
       <a-button key="1" @click="newJob" type="primary">New</a-button>
-      <a-switch v-model:checked="checked1" checked-children="开" un-checked-children="关" @change="changeSwitch"/>
+      <a-switch v-model:checked="checked1" checked-children="auto" un-checked-children="close" @change="changeSwitch"/>
       <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
     </template>
   </a-page-header>
@@ -62,8 +62,6 @@
         <span>
           <a v-if="record.status === JobStatusStopped" @click="rerun(record.spider, record.id)">Rerun</a>
           <a v-if="record.status === JobStatusRunning" @click="stop(record.spider, record.id)">Stop</a>
-          <a-divider type="vertical"/>
-          <a>Delete</a>
           <a-divider type="vertical"/>
           <a class="ant-dropdown-link" @click="showDrawer(record)">
             More
@@ -147,6 +145,41 @@
           <a-radio-button value="2">loop</a-radio-button>
           <a-radio-button value="3">cron</a-radio-button>
         </a-radio-group>
+      </a-form-item>
+      <a-form-item
+          v-if="formJob.mode==='3'"
+          label="Spec"
+          name="spec"
+      >
+        <a-input v-model:value="formJob.specValue" addon-before="every" type="number" min="1">
+          <template #addonAfter>
+            <a-select v-model:value="formJob.specType" style="width: 100px">
+              <a-select-option value="s">seconds</a-select-option>
+              <a-select-option value="i">minutes</a-select-option>
+              <a-select-option value="h">hours</a-select-option>
+              <a-select-option value="d">days</a-select-option>
+              <a-select-option value="m">months</a-select-option>
+              <a-select-option value="w">weeks</a-select-option>
+            </a-select>
+          </template>
+        </a-input>
+      </a-form-item>
+      <a-form-item
+          label="Timeout"
+          name="timeout"
+      >
+        <a-input v-model:value="formJob.timeoutValue" type="number" min="0">
+          <template #addonAfter>
+            <a-select v-model:value="formJob.timeoutType" style="width: 100px">
+              <a-select-option value="1">seconds</a-select-option>
+              <a-select-option value="60">minutes</a-select-option>
+              <a-select-option value="360">hours</a-select-option>
+              <a-select-option value="8640">days</a-select-option>
+              <a-select-option value="259200">months</a-select-option>
+              <a-select-option value="60480">weeks</a-select-option>
+            </a-select>
+          </template>
+        </a-input>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -283,7 +316,7 @@ const columns = [
   {
     title: 'Action',
     dataIndex: 'action',
-    width: 250,
+    width: 200,
     fixed: 'right',
   },
 ];
@@ -314,10 +347,10 @@ const jobStatusName = (status) => {
 const refresh = () => {
   jobsStore.GetJobs()
 }
-const checked1 = ref(false)
-const checked1Disable = ref(false)
+const checked1 = ref(true)
+const checked1Disable = ref(true)
 
-let interval = null
+let interval = setInterval(refresh, 1000)
 const changeSwitch = () => {
   if (checked1.value) {
     interval = setInterval(refresh, 1000)
@@ -386,6 +419,10 @@ const formJob = reactive({
   func: '',
   args: '{}',
   mode: '1',
+  specType: 'h',
+  specValue: 1,
+  timeoutType: 'h',
+  timeoutValue: 0,
 })
 const openJob = ref(false);
 const newJob = () => {
@@ -409,13 +446,20 @@ const handleJob = () => {
     formJob.args = JSON.stringify(js)
 
     openJob.value = false;
-    jobsStore.RunJob({
+    const data = {
       "timeout": 0,
       "name": formJob.name,
       "func": formJob.func,
       "args": formJob.args,
       "mode": parseInt(formJob.mode)
-    })
+    }
+    if (formJob.mode === '3') {
+      data.spec = formJob.specValue + formJob.specType
+    }
+    if (formJob.timeoutValue > 0) {
+      data.timeout = formJob.timeoutValue * parseInt(formJob.timeoutType)
+    }
+    jobsStore.RunJob(data)
   } catch (e) {
     console.log(e)
     message.error('Argument error');

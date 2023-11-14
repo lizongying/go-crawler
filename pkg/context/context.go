@@ -9,7 +9,7 @@ import (
 type Context struct {
 	Crawler pkg.ContextCrawler `json:"crawler,omitempty"`
 	Spider  pkg.ContextSpider  `json:"spider,omitempty"`
-	Job     pkg.ContextJob     `json:"schedule,omitempty"`
+	Job     pkg.ContextJob     `json:"job,omitempty"`
 	Task    pkg.ContextTask    `json:"task,omitempty"`
 	Request pkg.ContextRequest `json:"request,omitempty"`
 	Item    pkg.ContextItem    `json:"item,omitempty"`
@@ -327,14 +327,16 @@ func (c *Context) WithItemStatus(status pkg.ItemStatus) pkg.Context {
 func (c *Context) GetItemStartTime() time.Time {
 	return c.Item.GetStartTime()
 }
-func (c *Context) WithItemStartTime(startTime time.Time) pkg.Context {
-	c.Item.WithStartTime(startTime)
-	return c
-}
 func (c *Context) GetItemStopTime() time.Time {
 	return c.Item.GetStopTime()
 }
-func (c *Context) WithItemStopTime(stopTime time.Time) pkg.Context {
-	c.Item.WithStopTime(stopTime)
+func (c *Context) GetItemUpdateTime() time.Time {
+	return c.Item.GetUpdateTime()
+}
+func (c *Context) GetItemProcessed() bool {
+	return c.Item.GetSaved()
+}
+func (c *Context) WithItemProcessed(saved bool) pkg.Context {
+	c.Item.WithSaved(saved)
 	return c
 }

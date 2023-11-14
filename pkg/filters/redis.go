@@ -17,7 +17,7 @@ type RedisFilter struct {
 	logger pkg.Logger
 }
 
-func (f *RedisFilter) SpiderOpened(c pkg.Context) {
+func (f *RedisFilter) SpiderOpened(c pkg.Context) (err error) {
 	if c.GetSpiderName() != f.spider.Name() {
 		return
 	}
@@ -29,11 +29,12 @@ func (f *RedisFilter) SpiderOpened(c pkg.Context) {
 	f.logger.Debug("filter key", f.key)
 	ctx := context.Background()
 	if CleanFilterOnSpiderOpened {
-		err := f.rdb.Del(ctx, f.key).Err()
+		err = f.rdb.Del(ctx, f.key).Err()
 		if err != nil {
 			f.logger.Error(err)
 		}
 	}
+	return
 }
 
 func (f *RedisFilter) IsExist(c pkg.Context, uniqueKey any) (ok bool, err error) {

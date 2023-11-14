@@ -28,16 +28,18 @@ func (m *DumpPipeline) ProcessItem(item pkg.Item) (err error) {
 	m.logger.Debug("Data", utils.JsonStr(data))
 
 	m.logger.Debug("referrer", item.Referrer())
-	m.logger.Info(m.GetSpider().Name(), item.GetContext().GetTaskId(), "item.Data:", utils.JsonStr(data))
+	m.logger.Info(m.Spider().Name(), item.GetContext().GetTaskId(), "item.Data:", utils.JsonStr(data))
 	return
 }
 
-func (m *DumpPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *DumpPipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(DumpPipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	m.logger = spider.GetLogger()
-	return m
+	return
 }

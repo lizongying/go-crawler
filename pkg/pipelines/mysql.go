@@ -22,7 +22,7 @@ type MysqlPipeline struct {
 }
 
 func (m *MysqlPipeline) ProcessItem(item pkg.Item) (err error) {
-	spider := m.GetSpider()
+	spider := m.Spider()
 	task := item.GetContext().GetTask()
 
 	if item == nil {
@@ -57,6 +57,8 @@ func (m *MysqlPipeline) ProcessItem(item pkg.Item) (err error) {
 		task.IncItemError()
 		return
 	}
+
+	item.GetContext().WithItemProcessed(true)
 
 	if m.env == "dev" {
 		m.logger.Debug("current mode don't need save")
@@ -140,22 +142,28 @@ func (m *MysqlPipeline) ProcessItem(item pkg.Item) (err error) {
 		m.logger.Info(itemMysql.GetTable(), "insert success", id)
 	}
 
-	item.GetContext().WithItemStopTime(time.Now())
+	item.GetContext().WithItemStatus(pkg.ItemStatusSuccess)
 	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return
 }
 
-func (m *MysqlPipeline) FromSpider(spider pkg.Spider) pkg.Pipeline {
+func (m *MysqlPipeline) FromSpider(spider pkg.Spider) (err error) {
 	if m == nil {
 		return new(MysqlPipeline).FromSpider(spider)
 	}
 
-	m.UnimplementedPipeline.FromSpider(spider)
+	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
+		return
+	}
 	crawler := spider.GetCrawler()
 	m.env = spider.GetConfig().GetEnv()
 	m.logger = spider.GetLogger()
 	m.mysql = crawler.GetMysql()
+	if m.mysql == nil {
+		err = errors.New("mysql nil")
+		return
+	}
 	m.timeout = time.Minute
-	return m
+	return
 }

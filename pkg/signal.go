@@ -1,11 +1,11 @@
 package pkg
 
-type FnCrawlerChanged func(Context)
-type FnSpiderChanged func(Context)
-type FnJobChanged func(Context)
-type FnTaskChanged func(Context)
-type FnRequestChanged func(Context)
-type FnItemChanged func(Item)
+type FnCrawlerChanged func(Context) error
+type FnSpiderChanged func(Context) error
+type FnJobChanged func(Context) error
+type FnTaskChanged func(Context) error
+type FnRequestChanged func(Context) error
+type FnItemChanged func(Item) error
 
 type Signal interface {
 	RegisterCrawlerChanged(FnCrawlerChanged)

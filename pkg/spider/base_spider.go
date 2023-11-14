@@ -377,14 +377,6 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 
 	s.logger.Info("pipelines", s.PipelineNames())
 
-	for _, v := range s.Pipelines() {
-		e := v.Start(ctx, s.spider)
-		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("pipeline break", v.Name())
-			break
-		}
-	}
-
 	for _, v := range s.GetMiddlewares().Middlewares() {
 		if err = v.Start(ctx, s.spider); err != nil {
 			s.logger.Error(err)
@@ -449,9 +441,10 @@ func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 		return
 	}
 	if !utils.InSlice(job.context.GetJobStatus(), []pkg.JobStatus{
+		pkg.SpiderStatusReady,
 		pkg.JobStatusRunning,
 	}) {
-		err = errors.New("the job can be killed in the running state")
+		err = errors.New("the job can be killed in the ready or running state")
 		return
 	}
 	err = job.kill(ctx)
@@ -487,11 +480,8 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 		return
 	}
 
-	if !utils.InSlice(s.context.GetSpiderStatus(), []pkg.SpiderStatus{
-		pkg.SpiderStatusReady,
-		pkg.SpiderStatusRunning,
-	}) {
-		s.logger.Warn("spider only can stopped in ready or running")
+	if s.context.GetSpiderStatus() == pkg.SpiderStatusStopping {
+		s.logger.Debug("spider unimplemented Stop")
 		return
 	}
 
@@ -528,13 +518,6 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 		e := v.Stop(s.context)
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("middlewares break", v.Name())
-			break
-		}
-	}
-	for _, v := range s.Pipelines() {
-		e := v.Stop(s.context)
-		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("pipeline break", v.Name())
 			break
 		}
 	}
