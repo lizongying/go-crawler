@@ -25,7 +25,7 @@ func (m *FilePipeline) ProcessItem(item pkg.Item) (err error) {
 
 	for _, i := range files {
 		ctx := &crawlerContext.Context{}
-		r, e := m.GetSpider().Request(ctx, i)
+		r, e := m.Spider().Request(ctx, i)
 		if e != nil {
 			m.logger.Error(e)
 			continue

@@ -1,7 +1,6 @@
 package pipelines
 
 import (
-	"context"
 	"errors"
 	items2 "github.com/lizongying/go-crawler/internal/items"
 	"github.com/lizongying/go-crawler/pkg"
@@ -10,16 +9,6 @@ import (
 type CustomPipeline struct {
 	pkg.UnimplementedPipeline
 	logger pkg.Logger
-}
-
-func (m *CustomPipeline) Name() string {
-	return "custom"
-}
-
-func (m *CustomPipeline) Start(ctx context.Context, spider pkg.Spider) (err error) {
-	err = m.UnimplementedPipeline.Start(ctx, spider)
-	m.logger.Debug("start")
-	return nil
 }
 
 func (m *CustomPipeline) ProcessItem(item pkg.Item) (err error) {
@@ -38,11 +27,6 @@ func (m *CustomPipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 	m.logger.Debug("itemCustom", itemCustom)
-	return nil
-}
-
-func (m *CustomPipeline) Stop(_ pkg.Context) error {
-	m.logger.Debug("stop")
 	return nil
 }
 

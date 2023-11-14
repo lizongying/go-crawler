@@ -13,12 +13,13 @@ import (
 
 type JsonLinesPipeline struct {
 	pkg.UnimplementedPipeline
-	files  sync.Map
+	files  map[string]*map[string]*os.File
+	mutex  sync.Mutex
 	logger pkg.Logger
 }
 
 func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
-	spider := m.GetSpider()
+	spider := m.Spider()
 	task := item.GetContext().GetTask()
 	if item == nil {
 		err = errors.New("nil item")
@@ -54,8 +55,18 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 	item.GetContext().WithItemProcessed(true)
 
 	filename := fmt.Sprintf("%s.jsonl", itemJsonl.GetFileName())
-	var file *os.File
-	fileValue, ok := m.files.Load(itemJsonl.GetFileName())
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	files, ok := m.files[item.GetContext().GetTaskId()]
+	if !ok {
+		fs := make(map[string]*os.File)
+		files = &fs
+		m.files[item.GetContext().GetTaskId()] = files
+	}
+
+	file, ok := (*files)[filename]
+
 	if !ok {
 		if !utils.ExistsDir(filename) {
 			err = os.MkdirAll(filepath.Dir(filename), 0744)
@@ -80,9 +91,8 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 				return
 			}
 		}
-		m.files.Store(itemJsonl.GetFileName(), file)
-	} else {
-		file = fileValue.(*os.File)
+
+		(*files)[filename] = file
 	}
 
 	_, err = file.WriteString(fmt.Sprintf("%s\n", utils.JsonStr(data)))
@@ -99,14 +109,17 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 	return
 }
 
-func (m *JsonLinesPipeline) SpiderStop(_ pkg.Context) (err error) {
-	m.files.Range(func(key, value any) bool {
-		err = value.(*os.File).Close()
-		if err != nil {
+func (m *JsonLinesPipeline) taskStopped(ctx pkg.Context) (err error) {
+	files, ok := m.files[ctx.GetTaskId()]
+	if !ok {
+		return
+	}
+
+	for _, v := range *files {
+		if err = v.Close(); err != nil {
 			m.logger.Error(err)
 		}
-		return true
-	})
+	}
 	return
 }
 
@@ -119,5 +132,7 @@ func (m *JsonLinesPipeline) FromSpider(spider pkg.Spider) (err error) {
 		return
 	}
 	m.logger = spider.GetLogger()
+	m.files = make(map[string]*map[string]*os.File)
+	spider.GetCrawler().GetSignal().RegisterTaskChanged(m.taskStopped)
 	return
 }

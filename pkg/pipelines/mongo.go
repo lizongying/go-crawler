@@ -20,7 +20,7 @@ type MongoPipeline struct {
 }
 
 func (m *MongoPipeline) ProcessItem(item pkg.Item) (err error) {
-	spider := m.GetSpider()
+	spider := m.Spider()
 	task := item.GetContext().GetTask()
 
 	if item == nil {

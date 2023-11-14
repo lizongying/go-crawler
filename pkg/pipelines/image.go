@@ -50,7 +50,7 @@ func (m *ImagePipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 	for _, i := range images {
 		ctx := &crawlerContext.Context{}
-		r, e := m.GetSpider().Request(ctx, i.SetImageOptions(imageOptions))
+		r, e := m.Spider().Request(ctx, i.SetImageOptions(imageOptions))
 		if e != nil {
 			m.logger.Error(e)
 			continue

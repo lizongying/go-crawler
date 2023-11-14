@@ -9,7 +9,7 @@ import (
 type Context struct {
 	Crawler pkg.ContextCrawler `json:"crawler,omitempty"`
 	Spider  pkg.ContextSpider  `json:"spider,omitempty"`
-	Job     pkg.ContextJob     `json:"schedule,omitempty"`
+	Job     pkg.ContextJob     `json:"job,omitempty"`
 	Task    pkg.ContextTask    `json:"task,omitempty"`
 	Request pkg.ContextRequest `json:"request,omitempty"`
 	Item    pkg.ContextItem    `json:"item,omitempty"`

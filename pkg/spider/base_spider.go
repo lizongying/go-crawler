@@ -377,14 +377,6 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 
 	s.logger.Info("pipelines", s.PipelineNames())
 
-	for _, v := range s.Pipelines() {
-		e := v.Start(ctx, s.spider)
-		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("pipeline break", v.Name())
-			break
-		}
-	}
-
 	for _, v := range s.GetMiddlewares().Middlewares() {
 		if err = v.Start(ctx, s.spider); err != nil {
 			s.logger.Error(err)
@@ -528,13 +520,6 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 		e := v.Stop(s.context)
 		if errors.Is(e, pkg.BreakErr) {
 			s.logger.Debug("middlewares break", v.Name())
-			break
-		}
-	}
-	for _, v := range s.Pipelines() {
-		e := v.Stop(s.context)
-		if errors.Is(e, pkg.BreakErr) {
-			s.logger.Debug("pipeline break", v.Name())
 			break
 		}
 	}

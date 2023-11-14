@@ -488,7 +488,7 @@ The following are the built-in pipelines with their respective `order` values:
     * `spider.WithOptions(pkg.WithFilterPipeline()`
 * none: 101
     * item is not processed in any way, but it is assumed that the result has been saved.
-    * You can control whether to enable this pipeline by configuring `enable_none_pipeline`, which is disabled by
+    * You can control whether to enable this pipeline by configuring `enable_none_pipeline`, which is enabled by
       default.
     * `spider.WithOptions(pkg.WithNonePipeline()`
 * csv: 102

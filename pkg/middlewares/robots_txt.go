@@ -20,7 +20,7 @@ type RobotsTxtMiddleware struct {
 	ignoreUrl []string
 }
 
-func (m *RobotsTxtMiddleware) SpiderStarted(c pkg.Context) {
+func (m *RobotsTxtMiddleware) SpiderStarted(c pkg.Context) (err error) {
 	if c.GetSpiderName() != m.spider.Name() {
 		return
 	}
@@ -44,6 +44,7 @@ func (m *RobotsTxtMiddleware) SpiderStarted(c pkg.Context) {
 		return
 	}
 	m.group = robots.FindGroup(m.userAgent)
+	return
 }
 
 func (m *RobotsTxtMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {

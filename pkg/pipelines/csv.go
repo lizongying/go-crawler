@@ -15,12 +15,13 @@ import (
 
 type CsvPipeline struct {
 	pkg.UnimplementedPipeline
-	files  sync.Map
+	files  map[string]*map[string]*os.File
+	mutex  sync.Mutex
 	logger pkg.Logger
 }
 
 func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
-	spider := m.GetSpider()
+	spider := m.Spider()
 	task := item.GetContext().GetTask()
 	if item == nil {
 		err = errors.New("nil item")
@@ -66,9 +67,21 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 
 	var lines []string
 	var columns []string
+
 	filename := fmt.Sprintf("%s.csv", itemCsv.GetFileName())
-	var file *os.File
-	fileValue, ok := m.files.Load(itemCsv.GetFileName())
+
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	files, ok := m.files[item.GetContext().GetTaskId()]
+	if !ok {
+		fs := make(map[string]*os.File)
+		files = &fs
+		m.files[item.GetContext().GetTaskId()] = files
+	}
+
+	file, ok := (*files)[filename]
+
 	create := false
 	if !ok {
 		if !utils.ExistsDir(filename) {
@@ -95,9 +108,8 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 				return
 			}
 		}
-		m.files.Store(itemCsv.GetFileName(), file)
-	} else {
-		file = fileValue.(*os.File)
+
+		(*files)[filename] = file
 	}
 
 	for i := 0; i < refType.NumField(); i++ {
@@ -141,14 +153,17 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 	return
 }
 
-func (m *CsvPipeline) Stop(_ pkg.Context) (err error) {
-	m.files.Range(func(key, value any) bool {
-		err = value.(*os.File).Close()
-		if err != nil {
+func (m *CsvPipeline) taskStopped(ctx pkg.Context) (err error) {
+	files, ok := m.files[ctx.GetTaskId()]
+	if !ok {
+		return
+	}
+
+	for _, v := range *files {
+		if err = v.Close(); err != nil {
 			m.logger.Error(err)
 		}
-		return true
-	})
+	}
 	return
 }
 
@@ -161,5 +176,7 @@ func (m *CsvPipeline) FromSpider(spider pkg.Spider) (err error) {
 		return
 	}
 	m.logger = spider.GetLogger()
+	m.files = make(map[string]*map[string]*os.File)
+	spider.GetCrawler().GetSignal().RegisterTaskChanged(m.taskStopped)
 	return
 }

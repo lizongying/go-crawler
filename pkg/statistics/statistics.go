@@ -56,7 +56,7 @@ func (s *Statistics) GetRecords() (records []pkg.StatisticsRecord) {
 	}
 	return
 }
-func (s *Statistics) crawlerChanged(ctx pkg.Context) {
+func (s *Statistics) crawlerChanged(ctx pkg.Context) (err error) {
 	if _, ok := s.Nodes[ctx.GetCrawlerId()]; !ok {
 		hostname, _ := os.Hostname()
 		s.Nodes[ctx.GetCrawlerId()] = &node.Node{
@@ -68,8 +68,9 @@ func (s *Statistics) crawlerChanged(ctx pkg.Context) {
 	}
 	s.Nodes[ctx.GetCrawlerId()].
 		WithStatusAndTime(ctx.GetCrawlerStatus(), ctx.GetCrawlerUpdateTime())
+	return
 }
-func (s *Statistics) spiderChanged(ctx pkg.Context) {
+func (s *Statistics) spiderChanged(ctx pkg.Context) (err error) {
 	spiderOne, ok := s.Spiders[ctx.GetSpiderName()]
 	if !ok {
 		s.Nodes[ctx.GetCrawlerId()].IncSpider()
@@ -86,8 +87,9 @@ func (s *Statistics) spiderChanged(ctx pkg.Context) {
 	}
 	spiderOne.
 		WithStatusAndTime(ctx.GetSpiderStatus(), ctx.GetSpiderUpdateTime())
+	return
 }
-func (s *Statistics) jobChanged(ctx pkg.Context) {
+func (s *Statistics) jobChanged(ctx pkg.Context) (err error) {
 	_, ok := s.Jobs[ctx.GetJobId()]
 	if !ok {
 		s.Nodes[ctx.GetCrawlerId()].IncJob()
@@ -122,8 +124,9 @@ func (s *Statistics) jobChanged(ctx pkg.Context) {
 
 	s.Jobs[ctx.GetJobId()].
 		WithStatusAndTime(ctx.GetJobStatus(), ctx.GetJobUpdateTime())
+	return
 }
-func (s *Statistics) taskChanged(ctx pkg.Context) {
+func (s *Statistics) taskChanged(ctx pkg.Context) (err error) {
 	defer s.mutex.Unlock()
 	s.mutex.Lock()
 
@@ -171,8 +174,9 @@ func (s *Statistics) taskChanged(ctx pkg.Context) {
 			WithLastTaskStatus(ctx.GetTaskStatus()).
 			WithLastTaskFinishTime(ctx.GetTaskStopTime())
 	}
+	return
 }
-func (s *Statistics) itemChanged(item pkg.Item) {
+func (s *Statistics) itemChanged(item pkg.Item) (err error) {
 	defer s.mutex.Unlock()
 	s.mutex.Lock()
 
@@ -208,6 +212,7 @@ func (s *Statistics) itemChanged(item pkg.Item) {
 				ctx.GetItemStopTime().UnixNano())
 		}
 	}
+	return
 }
 func (s *Statistics) FromCrawler(crawler pkg.Crawler) pkg.Statistics {
 	if s == nil {

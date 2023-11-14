@@ -415,7 +415,7 @@ middleware/pipeline包括框架内置、公共自定义（internal/middlewares�
     * `spider.WithOptions(pkg.WithFilterPipeline()`
 * none: 101
     * item不做任何处理，但会认为结果已保存。
-    * 您可以通过配置enable_none_pipeline来控制是否启用该Pipeline，默认关闭。
+    * 您可以通过配置enable_none_pipeline来控制是否启用该Pipeline，默认启用。
     * `spider.WithOptions(pkg.WithNonePipeline()`
 * csv: 102
     * 用于将结果保存到CSV文件中。

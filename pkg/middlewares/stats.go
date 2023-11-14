@@ -12,7 +12,7 @@ type StatsMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *StatsMiddleware) TaskStopped(c pkg.Context) {
+func (m *StatsMiddleware) taskStopped(c pkg.Context) (err error) {
 	task := c.GetTask()
 
 	var sl []any
@@ -57,6 +57,6 @@ func (m *StatsMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 
 	m.UnimplementedMiddleware.FromSpider(spider)
 	m.logger = spider.GetLogger()
-	spider.GetCrawler().GetSignal().RegisterTaskChanged(m.TaskStopped)
+	spider.GetCrawler().GetSignal().RegisterTaskChanged(m.taskStopped)
 	return m
 }

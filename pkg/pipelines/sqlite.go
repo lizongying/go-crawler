@@ -22,7 +22,7 @@ type SqlitePipeline struct {
 }
 
 func (m *SqlitePipeline) ProcessItem(item pkg.Item) (err error) {
-	spider := m.GetSpider()
+	spider := m.Spider()
 	task := item.GetContext().GetTask()
 
 	if item == nil {
