@@ -13,12 +13,13 @@ export const useTasksStore = defineStore('tasks', () => {
 
     const GetTasks = () => {
         getTasks().then(resp => {
-            console.log(resp.data.data)
             if (resp.data.data === null) {
                 tasks.splice(0, tasks.length)
                 return
             }
             tasks.splice(0, tasks.length, ...resp.data.data)
+        }).catch(e => {
+            console.log(e);
         })
     }
 

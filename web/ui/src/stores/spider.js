@@ -15,12 +15,13 @@ export const useSpiderStore = defineStore('spider', () => {
 
     const GetSpider = () => {
         getSpider().then(resp => {
-            console.log(resp.data.data)
             if (resp.data.data === null) {
                 return
             }
             spider.name = resp.data.data.name
             spider.funcs = resp.data.data.funcs
+        }).catch(e => {
+            console.log(e);
         })
     }
 

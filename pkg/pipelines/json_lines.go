@@ -55,8 +55,8 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 	item.GetContext().WithItemProcessed(true)
 
 	filename := fmt.Sprintf("%s.jsonl", itemJsonl.GetFileName())
+
 	m.mutex.Lock()
-	defer m.mutex.Unlock()
 
 	files, ok := m.files[item.GetContext().GetTaskId()]
 	if !ok {
@@ -66,13 +66,13 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 
 	file, ok := (*files)[filename]
-
 	if !ok {
 		if !utils.ExistsDir(filename) {
 			err = os.MkdirAll(filepath.Dir(filename), 0744)
 			if err != nil {
 				m.logger.Error(err)
 				task.IncItemError()
+				m.mutex.Unlock()
 				return
 			}
 		}
@@ -81,6 +81,7 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				task.IncItemError()
+				m.mutex.Unlock()
 				return
 			}
 		} else {
@@ -88,12 +89,14 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				task.IncItemError()
+				m.mutex.Unlock()
 				return
 			}
 		}
 
 		(*files)[filename] = file
 	}
+	m.mutex.Unlock()
 
 	_, err = file.WriteString(fmt.Sprintf("%s\n", utils.JsonStr(data)))
 	if err != nil {
@@ -110,6 +113,8 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 }
 
 func (m *JsonLinesPipeline) taskStopped(ctx pkg.Context) (err error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	files, ok := m.files[ctx.GetTaskId()]
 	if !ok {
 		return

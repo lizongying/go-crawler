@@ -382,7 +382,7 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 			s.logger.Error(err)
 			return
 		}
-		s.logger.Info(v.Name(), "started")
+		s.logger.Info(v.Name(), "loaded")
 	}
 	return
 }

@@ -3,7 +3,7 @@ import {reactive, watch} from 'vue';
 
 export const useSettingStore = defineStore('setting', () => {
     const setting = reactive({
-        apiHost: 'http://localhost:8090',
+        apiHost: 'http://81.70.206.131:8090',
     })
 
     watch(
