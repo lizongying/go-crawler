@@ -21,7 +21,7 @@ func (a *Api) crossDomainMiddleware(next http.Handler) http.Handler {
 
 func (a *Api) loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		a.logger.Info("api request:", r.Method, r.URL.Path)
+		a.logger.Debug("api request:", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }

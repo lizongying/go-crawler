@@ -71,7 +71,6 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 	filename := fmt.Sprintf("%s.csv", itemCsv.GetFileName())
 
 	m.mutex.Lock()
-	defer m.mutex.Unlock()
 
 	files, ok := m.files[item.GetContext().GetTaskId()]
 	if !ok {
@@ -81,7 +80,6 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 
 	file, ok := (*files)[filename]
-
 	create := false
 	if !ok {
 		if !utils.ExistsDir(filename) {
@@ -89,6 +87,7 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				task.IncItemError()
+				m.mutex.Unlock()
 				return
 			}
 		}
@@ -97,6 +96,7 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				task.IncItemError()
+				m.mutex.Unlock()
 				return
 			}
 			create = true
@@ -105,12 +105,14 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 			if err != nil {
 				m.logger.Error(err)
 				task.IncItemError()
+				m.mutex.Unlock()
 				return
 			}
 		}
 
 		(*files)[filename] = file
 	}
+	m.mutex.Unlock()
 
 	for i := 0; i < refType.NumField(); i++ {
 		if create {
@@ -154,6 +156,8 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 }
 
 func (m *CsvPipeline) taskStopped(ctx pkg.Context) (err error) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 	files, ok := m.files[ctx.GetTaskId()]
 	if !ok {
 		return
