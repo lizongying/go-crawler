@@ -112,11 +112,18 @@ go get -u github.com/lizongying/go-crawler@6f52307
 ### Docker build
 
 ```shell
-docker build -f ./cmd/testSpider/Dockerfile -t go-crawler/test-spider:latest . 
+# cross platform
+docker buildx create --use
+
+# for linux
+docker buildx build --platform linux/amd64 -f ./cmd/test_spider/Dockerfile -t lizongying/go-crawler/test-spider:amd64 . --load
+
+# for mac m1
+docker buildx build --platform linux/arm64 -f ./cmd/test_spider/Dockerfile -t lizongying/go-crawler/test-spider:arm64 . --load
 ```
 
 ```shell
-docker run -d go-crawler/test-spider:latest spider -c example.yml -f TestRedirect -m once
+docker run -p 8090:8090 -d lizongying/go-crawler/test-spider:arm64 -c example.yml -f TestRedirect -m once
 ```
 
 ## Usage

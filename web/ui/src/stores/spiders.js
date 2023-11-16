@@ -15,12 +15,13 @@ export const useSpidersStore = defineStore('spiders', () => {
 
     const GetSpiders = () => {
         getSpiders().then(resp => {
-            console.log(resp.data.data)
             if (resp.data.data === null) {
                 spiders.splice(0, spiders.length)
                 return
             }
             spiders.splice(0, spiders.length, ...resp.data.data)
+        }).catch(e => {
+            console.log(e);
         })
     }
 

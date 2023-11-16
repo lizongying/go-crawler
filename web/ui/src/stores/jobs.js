@@ -15,12 +15,13 @@ export const useJobsStore = defineStore('jobs', () => {
 
     const GetJobs = () => {
         getJobs().then(resp => {
-            console.log(resp.data.data)
             if (resp.data.data === null) {
                 jobs.splice(0, jobs.length)
                 return
             }
             jobs.splice(0, jobs.length, ...resp.data.data)
+        }).catch(e => {
+            console.log(e);
         })
     }
 
