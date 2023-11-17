@@ -667,9 +667,12 @@ By using signals, it's possible to capture crawler events and perform certain ac
   using `RegisterSpiderChanged(FnSpiderChanged)`.
 * `JobChanged`: Indicates the status changed of the job. You can register it
   using `RegisterJobChanged(FnJobChanged)`.
-* `TaskChanged`: Indicates the status changed of the task. You can register it using `RegisterTaskChanged(FnTaskChanged)`.
-* `RequestChanged`: Indicates the status changed of the request. You can register it using `RegisterRequestChanged(FnRequestChanged)`.
-* `ItemChanged`: Indicates the status changed of the item. You can register it using `RegisterItemChanged(FnItemChanged)`.
+* `TaskChanged`: Indicates the status changed of the task. You can register it
+  using `RegisterTaskChanged(FnTaskChanged)`.
+* `RequestChanged`: Indicates the status changed of the request. You can register it
+  using `RegisterRequestChanged(FnRequestChanged)`.
+* `ItemChanged`: Indicates the status changed of the item. You can register it
+  using `RegisterItemChanged(FnItemChanged)`.
 
 ### Proxy
 
@@ -1204,13 +1207,23 @@ For more examples, you can refer to the following project.
 
 ### Certificate
 
+* `-s` Self-signed server certificate. If not set, the default CA certificate of this project will be used for signing.
+* `-c` Create a new CA certificate. If not set, the default CA certificate of this project will be used.
+
+dev
+
 ```shell
-# CA-Signed Certificate
-./releases/tls
+go run tools/tls_generator/*.go
+```
 
-# Self-Signed Certificate
-./releases/tls -s
+build
 
+```
+# build
+make tls_generator
+
+# run
+./releases/tls_generator
 ```
 
 ### MITM

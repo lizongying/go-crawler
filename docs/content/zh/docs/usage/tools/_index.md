@@ -7,12 +7,23 @@ title: "工具"
 
 ### 证书签名
 
-```shell
-# 证书签名
-./releases/tls
+* -s 自签名服务器证书。如果不设置，会使用本项目默认ca证书进行签名
+* -c 新创建ca证书。如果不设置，会使用本项目默认ca证书
 
-# 自签名
-./releases/tls -s
+开发
+
+```shell
+go run tools/tls_generator/*.go
+```
+
+构建
+
+```
+# 构建
+make tls_generator
+
+# 使用
+./releases/tls_generator
 ```
 
 ### 中间人代理

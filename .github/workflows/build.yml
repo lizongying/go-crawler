@@ -54,12 +54,7 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v2
 
-  build-tls-generator:
-    runs-on: ubuntu-latest
 
-    needs: [ build ]
-
-    steps:
       - name: Setup Golang
         uses: actions/setup-go@v4
         with:
@@ -68,7 +63,6 @@ jobs:
       - name: Build
         run: |
           go vet ./tools/tls_generator
-          go build -ldflags "-s -w" -o ./releases/tls ./tools/tls_generator
           
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o ./releases/tls_generator_linux_amd64 ./tools/tls_generator
 
@@ -95,3 +89,46 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./releases/tls_generator_windows_amd64.exe
+
+
+#  build-tls-generator:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Setup Golang
+#        uses: actions/setup-go@v4
+#        with:
+#          go-version: '1.21'
+#
+#      - name: Build
+#        run: |
+#          go vet ./tools/tls_generator
+#
+#          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o ./releases/tls_generator_linux_amd64 ./tools/tls_generator
+#
+#          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o ./releases/tls_generator_linux_arm64 ./tools/tls_generator
+#
+#          GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o ./releases/tls_generator_darwin_amd64 ./tools/tls_generator
+#
+#          GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags "-s -w" -o ./releases/tls_generator_darwin_arm64 ./tools/tls_generator
+#
+#          GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags "-s -w" -o ./releases/tls_generator_windows_amd64.exe ./tools/tls_generator
+#
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          path: ./releases/tls_generator_linux_amd64
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          path: ./releases/tls_generator_linux_arm64
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          path: ./releases/tls_generator_darwin_amd64
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          path: ./releases/tls_generator_darwin_arm64
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          path: ./releases/tls_generator_windows_amd64.exe

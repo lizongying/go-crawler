@@ -79,7 +79,7 @@ func CreateCa() (caPrivateKey *rsa.PrivateKey, caCert *x509.Certificate, err err
 	return
 }
 
-func CaSigned(ca bool) {
+func CaSigned(ca bool, ip []string, hostname []string) {
 	var caPrivateKey *rsa.PrivateKey
 	var caCert *x509.Certificate
 	var err error
@@ -148,9 +148,20 @@ func CaSigned(ca bool) {
 	serverCert.IPAddresses = append(serverCert.IPAddresses,
 		net.ParseIP("127.0.0.1"),
 		net.ParseIP("::1"),
-		net.ParseIP("81.70.206.131"),
 	)
+	if len(ip) > 0 {
+		for _, v := range ip {
+			serverCert.IPAddresses = append(serverCert.IPAddresses,
+				net.ParseIP(v),
+			)
+		}
+	}
 	serverCert.DNSNames = append(serverCert.DNSNames, "localhost")
+	if len(hostname) > 0 {
+		for _, v := range hostname {
+			serverCert.DNSNames = append(serverCert.DNSNames, v)
+		}
+	}
 
 	// 使用CA证书签发服务器证书
 	serverCertDER, err := x509.CreateCertificate(rand.Reader, serverCert, caCert, &serverPrivateKey.PublicKey, caPrivateKey)
