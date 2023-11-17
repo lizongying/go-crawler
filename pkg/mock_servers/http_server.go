@@ -108,9 +108,9 @@ func (h *HttpServer) Run() (err error) {
 	}
 	go func() {
 		if h.url.Scheme == "https" {
-			cer, e := tls.X509KeyPair(static.ServerCert, static.ServerKey)
-			if e != nil {
-				err = e
+			var cer tls.Certificate
+			cer, err = tls.X509KeyPair(static.ServerCert, static.ServerKey)
+			if err != nil {
 				h.logger.Error(err)
 				return
 			}
