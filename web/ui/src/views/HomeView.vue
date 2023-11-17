@@ -10,23 +10,15 @@
   <a-row style="margin: 15px">
     <a-col :span="4">
       <a-statistic :value="nodesStore.Count" title="Total Nodes"/>
-      <br>
-      <a-statistic :value="nodesStore.CountActive" title="Active Nodes"/>
     </a-col>
     <a-col :span="4">
       <a-statistic :value="nodesStore.CountSpider" title="Total Spiders"/>
-      <br>
-      <a-statistic :value="nodesStore.CountSpider" title="Enable Spiders"/>
     </a-col>
     <a-col :span="4">
       <a-statistic :value="nodesStore.CountJob" title="Total Jobs"/>
-      <br>
-      <a-statistic :value="nodesStore.CountJob" title="Enable Jobs"/>
     </a-col>
     <a-col :span="4">
       <a-statistic :value="nodesStore.CountTask" title="Total Tasks"/>
-      <br>
-      <a-statistic :value="nodesStore.CountTask" title="Success Tasks"/>
     </a-col>
     <a-col :span="4">
       <a-statistic :value="nodesStore.CountRecord" title="Total Record"/>

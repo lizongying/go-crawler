@@ -244,10 +244,10 @@ const showDrawer = record => {
   open.value = true;
   more.data = JSON.stringify(JSON.parse(record.data), null, 2)
       .replace(/(".*?":)/g, '<span class="key">$1</span>')
-      .replace(/: "([^"]+)"\n/g, ': "<span class="string">$1</span>":')
-      .replace(/: \b(\d+)\b\n/g, ': <span class="number">$1</span>')
-      .replace(/: \b(true|false)\b\n/g, ': <span class="boolean">$1</span>')
-      .replace(/: \b(null)\b\n/g, ': <span class="null">$1</span>');
+      .replace(/: "([^"]+)"[\n,]/g, ': "<span class="string">$1</span>":')
+      .replace(/: \b(\d+)\b[\n,]/g, ': <span class="number">$1</span>')
+      .replace(/: \b(true|false)\b[\n,]/g, ': <span class="boolean">$1</span>')
+      .replace(/: \b(null)\b[\n,]/g, ': <span class="null">$1</span>');
 };
 const activeKey = ref('1');
 
