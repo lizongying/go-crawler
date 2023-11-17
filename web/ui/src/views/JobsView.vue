@@ -253,6 +253,7 @@ const {query} = useRoute();
 if ('id' in query) {
   filteredInfo.id = [query.id]
 }
+
 const columns = computed(() => {
   return [
     {
@@ -565,11 +566,15 @@ const state = reactive({
 });
 const searchInput = ref();
 const handleSearch = (selectedKeys, confirm, dataIndex) => {
+  filteredInfo[dataIndex] = selectedKeys
   confirm();
   state.searchText = selectedKeys[0];
   state.searchedColumn = dataIndex;
 };
 const handleReset = clearFilters => {
+  Object.keys(filteredInfo).forEach(key => {
+    delete filteredInfo[key];
+  });
   clearFilters({
     confirm: true,
   });
