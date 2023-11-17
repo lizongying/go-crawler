@@ -63,14 +63,8 @@ title: Q & A
     
     import "github.com/lizongying/go-crawler/pkg"
     
-    func (s *Spider) Stop(ctx context.Context) (err error) {
-        if err = s.Spider.Stop(ctx); err != nil {
-            s.logger.Error(err)
-            return
-        }
-    
+    func (s *Spider) Stop(_ pkg.Context) (err error) {
         err = pkg.DontStopErr
-        s.logger.Error(err)
         return
     }
 
@@ -101,3 +95,8 @@ title: Q & A
   `Must[method]` is more concise, but it might be less convenient for troubleshooting errors. Whether to use it depends
   on the individual style of the user.
   If there's a need for specific error handling, then regular methods like `YieldRequest` should be used.
+
+* Other
+
+  * Upgrade go-crawl
+  * Clean up cache

@@ -7,6 +7,9 @@ title: UI
 
 You can directly use https://lizongying.github.io/go-crawler/.
 
+If you want to view the demo, please trust the certificate.
+[ca](https://github.com/lizongying/go-crawler/blob/main/static/tls/ca.crt)
+
 develop
 
 ```shell

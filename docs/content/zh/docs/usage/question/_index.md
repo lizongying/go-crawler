@@ -53,6 +53,18 @@ title: 问答
 
   在`Stop`方法中返回`pkg.DontStopErr`即可
 
+  ```go
+  package main
+  
+  import "github.com/lizongying/go-crawler/pkg"
+  
+  func (s *Spider) Stop(_ pkg.Context) (err error) {
+      err = pkg.DontStopErr
+      return
+  }
+  
+  ```
+
 * 任务队列使用`request`、`extra`还是`unique_key`?
 
   首先说明的是，这三个词都是本框架中的概念：
@@ -74,20 +86,7 @@ title: 问答
   `Must[method]`更加简洁，但可能对于排查错误不太方便。是不是用，需要看使用者的个人风格。
   如果需要特殊处理err，就需要使用普通的方法了，如`YieldRequest`。
 
-```go
-package main
-
-import "github.com/lizongying/go-crawler/pkg"
-
-func (s *Spider) Stop(ctx context.Context) (err error) {
-	if err = s.Spider.Stop(ctx); err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	err = pkg.DontStopErr
-	s.logger.Error(err)
-	return
-}
-
-```
+* 其他
+  
+  * 升级go-crawl
+  * 清理缓存

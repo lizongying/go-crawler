@@ -975,6 +975,9 @@ curl "http://127.0.0.1:8090/job/rerun" -X POST -d '{"spider_name": "test-must-ok
 
 You can directly use https://lizongying.github.io/go-crawler/.
 
+If you want to view the demo, please trust the certificate.
+[ca](./static/tls/ca.crt)
+
 develop
 
 ```shell
@@ -1075,14 +1078,8 @@ Run
     
     import "github.com/lizongying/go-crawler/pkg"
     
-    func (s *Spider) Stop(ctx context.Context) (err error) {
-        if err = s.Spider.Stop(ctx); err != nil {
-            s.logger.Error(err)
-            return
-        }
-    
+    func (s *Spider) Stop(_ pkg.Context) (err error) {
         err = pkg.DontStopErr
-        s.logger.Error(err)
         return
     }
 
@@ -1114,6 +1111,11 @@ Run
   on the individual style of the user.
   If there's a need for specific error handling, then regular methods like `YieldRequest` should be used.
 
+* Other
+
+    * Upgrade go-crawl
+    * Clean up cache
+  
 ## Example
 
 example_spider.go
