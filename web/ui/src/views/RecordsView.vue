@@ -102,7 +102,7 @@
             size="large">
     <a-tabs v-model:activeKey="activeKey">
       <a-tab-pane key="1" tab="Data">
-        <pre>{{ more.data }}</pre>
+        <pre v-html="more.data"></pre>
       </a-tab-pane>
     </a-tabs>
   </a-drawer>
@@ -114,7 +114,6 @@ import {formattedDate} from "@/utils/time";
 import {useRecordsStore} from "@/stores/records";
 import {computed, onBeforeUnmount, reactive, ref} from "vue";
 import {sortBigInt, sortStr} from "@/utils/sort";
-import {useNodesStore} from "@/stores/nodes";
 
 const filteredInfo = reactive({});
 const {query} = useRoute();
@@ -243,7 +242,12 @@ const open = ref(false);
 const more = reactive({})
 const showDrawer = record => {
   open.value = true;
-  more.data = record.data
+  more.data = JSON.stringify(JSON.parse(record.data), null, 2)
+      .replace(/(".*?":)/g, '<span class="key">$1</span>')
+      .replace(/: "([^"]+)"\n/g, ': "<span class="string">$1</span>":')
+      .replace(/: \b(\d+)\b\n/g, ': <span class="number">$1</span>')
+      .replace(/: \b(true|false)\b\n/g, ': <span class="boolean">$1</span>')
+      .replace(/: \b(null)\b\n/g, ': <span class="null">$1</span>');
 };
 const activeKey = ref('1');
 
@@ -294,4 +298,23 @@ const handleReset = clearFilters => {
 };
 </script>
 <style>
+.key {
+  color: blue;
+}
+
+.string {
+  color: green;
+}
+
+.number {
+  color: orange;
+}
+
+.boolean {
+  color: purple;
+}
+
+.null {
+  color: rgb(128, 128, 128);
+}
 </style>
