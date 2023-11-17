@@ -1,7 +1,6 @@
 package exporter
 
 import (
-	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/pipelines"
 	"reflect"
@@ -19,13 +18,9 @@ type Exporter struct {
 
 func (e *Exporter) Export(item pkg.Item) (err error) {
 	for _, v := range e.pipelines {
-		e := v.ProcessItem(item)
-		if e != nil {
-			err = errors.Join(err, e)
+		if err = v.ProcessItem(item); err != nil {
+			e.logger.Error(err)
 		}
-	}
-	if err != nil {
-		e.logger.Error(err)
 	}
 	return
 }
