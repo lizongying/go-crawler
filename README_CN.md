@@ -846,6 +846,9 @@ curl "http://127.0.0.1:8090/job/rerun" -X POST -d '{"spider_name": "test-must-ok
 
 你可以直接使用https://lizongying.github.io/go-crawler/
 
+如果查看demo，请信任证书
+[ca](./static/tls/ca.crt)
+
 开发
 
 ```shell
@@ -931,6 +934,18 @@ make web_server
 
   在`Stop`方法中返回`pkg.DontStopErr`即可
 
+    ```go
+    package main
+    
+    import "github.com/lizongying/go-crawler/pkg"
+    
+    func (s *Spider) Stop(_ pkg.Context) (err error) {
+        err = pkg.DontStopErr
+        return
+    }
+    
+    ```
+
 * 任务队列使用`request`、`extra`还是`unique_key`?
 
   首先说明的是，这三个词都是本框架中的概念：
@@ -952,24 +967,11 @@ make web_server
   `Must[method]`更加简洁，但可能对于排查错误不太方便。是不是用，需要看使用者的个人风格。
   如果需要特殊处理err，就需要使用普通的方法了，如`YieldRequest`。
 
-```go
-package main
+* 其他
 
-import "github.com/lizongying/go-crawler/pkg"
-
-func (s *Spider) Stop(ctx context.Context) (err error) {
-	if err = s.Spider.Stop(ctx); err != nil {
-		s.logger.Error(err)
-		return
-	}
-
-	err = pkg.DontStopErr
-	s.logger.Error(err)
-	return
-}
-
-```
-
+  * 升级go-crawl
+  * 清理缓存
+  
 ## 示例
 
 example_spider.go
@@ -1063,12 +1065,23 @@ go run example_spider.go -c example.yml -n example -f TestOk -m once
 
 ### 证书签名
 
-```shell
-# 证书签名
-./releases/tls
+* -s 自签名服务器证书。如果不设置，会使用本项目默认ca证书进行签名
+* -c 新创建ca证书。如果不设置，会使用本项目默认ca证书
 
-# 自签名
-./releases/tls -s
+开发
+
+```shell
+go run tools/tls_generator/*.go
+```
+
+构建
+
+```
+# 构建
+make tls_generator
+
+# 使用
+./releases/tls_generator
 ```
 
 ### 中间人代理

@@ -667,9 +667,12 @@ By using signals, it's possible to capture crawler events and perform certain ac
   using `RegisterSpiderChanged(FnSpiderChanged)`.
 * `JobChanged`: Indicates the status changed of the job. You can register it
   using `RegisterJobChanged(FnJobChanged)`.
-* `TaskChanged`: Indicates the status changed of the task. You can register it using `RegisterTaskChanged(FnTaskChanged)`.
-* `RequestChanged`: Indicates the status changed of the request. You can register it using `RegisterRequestChanged(FnRequestChanged)`.
-* `ItemChanged`: Indicates the status changed of the item. You can register it using `RegisterItemChanged(FnItemChanged)`.
+* `TaskChanged`: Indicates the status changed of the task. You can register it
+  using `RegisterTaskChanged(FnTaskChanged)`.
+* `RequestChanged`: Indicates the status changed of the request. You can register it
+  using `RegisterRequestChanged(FnRequestChanged)`.
+* `ItemChanged`: Indicates the status changed of the item. You can register it
+  using `RegisterItemChanged(FnItemChanged)`.
 
 ### Proxy
 
@@ -972,6 +975,9 @@ curl "http://127.0.0.1:8090/job/rerun" -X POST -d '{"spider_name": "test-must-ok
 
 You can directly use https://lizongying.github.io/go-crawler/.
 
+If you want to view the demo, please trust the certificate.
+[ca](./static/tls/ca.crt)
+
 develop
 
 ```shell
@@ -1072,14 +1078,8 @@ Run
     
     import "github.com/lizongying/go-crawler/pkg"
     
-    func (s *Spider) Stop(ctx context.Context) (err error) {
-        if err = s.Spider.Stop(ctx); err != nil {
-            s.logger.Error(err)
-            return
-        }
-    
+    func (s *Spider) Stop(_ pkg.Context) (err error) {
         err = pkg.DontStopErr
-        s.logger.Error(err)
         return
     }
 
@@ -1111,6 +1111,11 @@ Run
   on the individual style of the user.
   If there's a need for specific error handling, then regular methods like `YieldRequest` should be used.
 
+* Other
+
+    * Upgrade go-crawl
+    * Clean up cache
+  
 ## Example
 
 example_spider.go
@@ -1204,13 +1209,23 @@ For more examples, you can refer to the following project.
 
 ### Certificate
 
+* `-s` Self-signed server certificate. If not set, the default CA certificate of this project will be used for signing.
+* `-c` Create a new CA certificate. If not set, the default CA certificate of this project will be used.
+
+dev
+
 ```shell
-# CA-Signed Certificate
-./releases/tls
+go run tools/tls_generator/*.go
+```
 
-# Self-Signed Certificate
-./releases/tls -s
+build
 
+```
+# build
+make tls_generator
+
+# run
+./releases/tls_generator
 ```
 
 ### MITM
