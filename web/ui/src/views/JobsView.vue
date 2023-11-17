@@ -17,8 +17,38 @@
         </span>
       </template>
     </template>
-
-    <template #bodyCell="{ column, record }">
+    <template
+        #customFilterDropdown="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }"
+    >
+      <div style="padding: 8px">
+        <a-input
+            ref="searchInput"
+            :placeholder="`Search ${column.dataIndex}`"
+            :value="selectedKeys[0]"
+            style="width: 188px; margin-bottom: 8px; display: block"
+            @change="e => setSelectedKeys(e.target.value ? [e.target.value] : [])"
+            @pressEnter="handleSearch(selectedKeys, confirm, column.dataIndex)"
+        />
+        <a-button
+            type="primary"
+            size="small"
+            style="width: 90px; margin-right: 8px"
+            @click="handleSearch(selectedKeys, confirm, column.dataIndex)"
+        >
+          <template #icon>
+            <SearchOutlined/>
+          </template>
+          Search
+        </a-button>
+        <a-button size="small" style="width: 90px" @click="handleReset(clearFilters)">
+          Reset
+        </a-button>
+      </div>
+    </template>
+    <template #customFilterIcon="{ filtered }">
+      <search-outlined :style="{ color: filtered ? '#108ee9' : undefined }"/>
+    </template>
+    <template #bodyCell="{ text, column, record }">
       <template v-if="column.dataIndex === 'node'">
         <RouterLink :to="'/nodes?id='+record.node">
           {{ record.node }}
@@ -69,6 +99,22 @@
           </a>
         </span>
       </template>
+      <span v-if="state.searchText && state.searchedColumn === column.dataIndex">
+        <template
+            v-for="(fragment, i) in text
+            .toString()
+            .split(new RegExp(`(?<=${state.searchText})|(?=${state.searchText})`, 'i'))"
+        >
+          <mark
+              v-if="fragment.toLowerCase() === state.searchText.toLowerCase()"
+              :key="i"
+              class="highlight"
+          >
+            {{ fragment }}
+          </mark>
+          <template v-else>{{ fragment }}</template>
+        </template>
+      </span>
     </template>
   </a-table>
   <a-drawer v-model:open="open"
@@ -185,8 +231,8 @@
   </a-modal>
 </template>
 <script setup>
-import {ExclamationCircleOutlined, RightOutlined} from "@ant-design/icons-vue";
-import {RouterLink} from "vue-router";
+import {ExclamationCircleOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
+import {RouterLink, useRoute} from "vue-router";
 import {
   JobStatusIdle,
   JobStatusReady,
@@ -198,128 +244,147 @@ import {
 } from "@/stores/jobs";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
-import {createVNode, onBeforeUnmount, reactive, ref} from "vue";
+import {computed, createVNode, onBeforeUnmount, reactive, ref} from "vue";
 import {message, Modal} from "ant-design-vue";
 import {useSpidersStore} from "@/stores/spiders";
 
-const columns = [
-  {
-    title: 'Id',
-    dataIndex: 'id',
-    width: 200,
-    sorter: (a, b) => sortBigInt(a.id, b.id),
-    defaultSortOrder: 'descend',
-  },
-  {
-    title: 'Schedule',
-    dataIndex: 'schedule',
-    width: 150,
-    sorter: (a, b) => sortStr(a.schedule, b.schedule),
-  },
-  {
-    title: 'Command',
-    dataIndex: 'command',
-    width: 350,
-    ellipsis: true,
-  },
-  {
-    title: 'Node',
-    dataIndex: 'node',
-    width: 200,
-    sorter: (a, b) => sortBigInt(a.node, b.node),
-  },
-  {
-    title: 'Spider',
-    dataIndex: 'spider',
-    sorter: (a, b) => sortStr(a.spider, b.spider),
-    width: 200,
-  },
-  {
-    title: 'Status',
-    dataIndex: 'status',
-    width: 100,
-    filters: [
-      {
-        text: 'ready',
-        value: JobStatusReady,
+const filteredInfo = reactive({});
+const {query} = useRoute();
+if ('id' in query) {
+  filteredInfo.id = [query.id]
+}
+const columns = computed(() => {
+  return [
+    {
+      title: 'Id',
+      dataIndex: 'id',
+      width: 200,
+      sorter: (a, b) => sortBigInt(a.id, b.id),
+      defaultSortOrder: 'descend',
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.id || null,
+      onFilter: (value, record) =>
+          record.id.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
       },
-      {
-        text: 'starting',
-        value: JobStatusStarting,
-      },
-      {
-        text: 'running',
-        value: JobStatusRunning,
-      },
-      {
-        text: 'idle',
-        value: JobStatusIdle,
-      },
-      {
-        text: 'stopping',
-        value: JobStatusStopping,
-      },
-      {
-        text: 'stopped',
-        value: JobStatusStopped,
-      },
-    ],
-    onFilter: (value, record) => record.status === value,
-  },
-  {
-    title: 'Start Time',
-    dataIndex: 'start_time',
-    width: 200,
-    sorter: (a, b) => a.start_time - b.start_time,
-  },
-  {
-    title: 'Finish Time',
-    dataIndex: 'finish_time',
-    width: 200,
-    sorter: (a, b) => {
-      if (a.finish_time === b.finish_time) {
-        return 0
-      }
-      const a_finish_time = a.finish_time !== 0 ? a.finish_time : Math.floor(Date.now() / 1000)
-      const b_finish_time = b.finish_time !== 0 ? b.finish_time : Math.floor(Date.now() / 1000)
-      return a_finish_time - b_finish_time
     },
-  },
-  {
-    title: 'Duration',
-    dataIndex: 'duration',
-    width: 150,
-    sorter: (a, b) => {
-      let a_finish_time = a.finish_time
-      if (a.start_time === 0 && a.finish_time === 0) {
-        a_finish_time = Math.floor(Date.now() / 1000)
-      }
-      let b_finish_time = b.finish_time
-      if (b.start_time === 0 && b.finish_time === 0) {
-        b_finish_time = Math.floor(Date.now() / 1000)
-      }
-      return (a_finish_time - a.start_time) - (b_finish_time - b.start_time)
+    {
+      title: 'Schedule',
+      dataIndex: 'schedule',
+      width: 150,
+      sorter: (a, b) => sortStr(a.schedule, b.schedule),
     },
-  },
-  {
-    title: 'Task',
-    dataIndex: 'task',
-    sorter: (a, b) => sortInt(a.task, b.task),
-    width: 100,
-  },
-  {
-    title: 'Record',
-    dataIndex: 'record',
-    sorter: (a, b) => sortInt(a.record, b.record),
-    width: 100,
-  },
-  {
-    title: 'Action',
-    dataIndex: 'action',
-    width: 200,
-    fixed: 'right',
-  },
-];
+    {
+      title: 'Command',
+      dataIndex: 'command',
+      width: 350,
+      ellipsis: true,
+    },
+    {
+      title: 'Node',
+      dataIndex: 'node',
+      width: 200,
+      sorter: (a, b) => sortBigInt(a.node, b.node),
+    },
+    {
+      title: 'Spider',
+      dataIndex: 'spider',
+      sorter: (a, b) => sortStr(a.spider, b.spider),
+      width: 200,
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      width: 100,
+      filters: [
+        {
+          text: 'ready',
+          value: JobStatusReady,
+        },
+        {
+          text: 'starting',
+          value: JobStatusStarting,
+        },
+        {
+          text: 'running',
+          value: JobStatusRunning,
+        },
+        {
+          text: 'idle',
+          value: JobStatusIdle,
+        },
+        {
+          text: 'stopping',
+          value: JobStatusStopping,
+        },
+        {
+          text: 'stopped',
+          value: JobStatusStopped,
+        },
+      ],
+      onFilter: (value, record) => record.status === value,
+      filteredValue: null,
+    },
+    {
+      title: 'Start Time',
+      dataIndex: 'start_time',
+      width: 200,
+      sorter: (a, b) => a.start_time - b.start_time,
+    },
+    {
+      title: 'Finish Time',
+      dataIndex: 'finish_time',
+      width: 200,
+      sorter: (a, b) => {
+        if (a.finish_time === b.finish_time) {
+          return 0
+        }
+        const a_finish_time = a.finish_time !== 0 ? a.finish_time : Math.floor(Date.now() / 1000)
+        const b_finish_time = b.finish_time !== 0 ? b.finish_time : Math.floor(Date.now() / 1000)
+        return a_finish_time - b_finish_time
+      },
+    },
+    {
+      title: 'Duration',
+      dataIndex: 'duration',
+      width: 150,
+      sorter: (a, b) => {
+        let a_finish_time = a.finish_time
+        if (a.start_time === 0 && a.finish_time === 0) {
+          a_finish_time = Math.floor(Date.now() / 1000)
+        }
+        let b_finish_time = b.finish_time
+        if (b.start_time === 0 && b.finish_time === 0) {
+          b_finish_time = Math.floor(Date.now() / 1000)
+        }
+        return (a_finish_time - a.start_time) - (b_finish_time - b.start_time)
+      },
+    },
+    {
+      title: 'Task',
+      dataIndex: 'task',
+      sorter: (a, b) => sortInt(a.task, b.task),
+      width: 100,
+    },
+    {
+      title: 'Record',
+      dataIndex: 'record',
+      sorter: (a, b) => sortInt(a.record, b.record),
+      width: 100,
+    },
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      width: 200,
+      fixed: 'right',
+    },
+  ];
+});
 
 const jobsStore = useJobsStore()
 jobsStore.GetJobs()
@@ -344,13 +409,16 @@ const jobStatusName = (status) => {
 }
 
 // auto refresh
+const checked1 = ref(true)
+const checked1Disable = ref(true)
+let interval = 0
 const refresh = () => {
   jobsStore.GetJobs()
 }
-const checked1 = ref(true)
-const checked1Disable = ref(true)
-
-let interval = setInterval(refresh, 1000)
+refresh()
+if (checked1.value) {
+  interval = setInterval(refresh, 1000)
+}
 const changeSwitch = () => {
   if (checked1.value) {
     interval = setInterval(refresh, 1000)
@@ -488,6 +556,24 @@ const handleChange = () => {
     func.help = ''
   }
   formJob.func = ''
+};
+
+// search
+const state = reactive({
+  searchText: '',
+  searchedColumn: '',
+});
+const searchInput = ref();
+const handleSearch = (selectedKeys, confirm, dataIndex) => {
+  confirm();
+  state.searchText = selectedKeys[0];
+  state.searchedColumn = dataIndex;
+};
+const handleReset = clearFilters => {
+  clearFilters({
+    confirm: true,
+  });
+  state.searchText = '';
 };
 </script>
 <style>
