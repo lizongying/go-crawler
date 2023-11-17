@@ -16,8 +16,38 @@
         </span>
       </template>
     </template>
-
-    <template #bodyCell="{ column, record }">
+    <template
+        #customFilterDropdown="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }"
+    >
+      <div style="padding: 8px">
+        <a-input
+            ref="searchInput"
+            :placeholder="`Search ${column.dataIndex}`"
+            :value="selectedKeys[0]"
+            style="width: 188px; margin-bottom: 8px; display: block"
+            @change="e => setSelectedKeys(e.target.value ? [e.target.value] : [])"
+            @pressEnter="handleSearch(selectedKeys, confirm, column.dataIndex)"
+        />
+        <a-button
+            type="primary"
+            size="small"
+            style="width: 90px; margin-right: 8px"
+            @click="handleSearch(selectedKeys, confirm, column.dataIndex)"
+        >
+          <template #icon>
+            <SearchOutlined/>
+          </template>
+          Search
+        </a-button>
+        <a-button size="small" style="width: 90px" @click="handleReset(clearFilters)">
+          Reset
+        </a-button>
+      </div>
+    </template>
+    <template #customFilterIcon="{ filtered }">
+      <search-outlined :style="{ color: filtered ? '#108ee9' : undefined }"/>
+    </template>
+    <template #bodyCell="{ text, column, record }">
       <template v-if="column.dataIndex === 'node'">
         <RouterLink :to="'/nodes?id='+record.node">
           {{ record.node }}
@@ -49,6 +79,22 @@
           </a>
         </span>
       </template>
+      <span v-if="state.searchText && state.searchedColumn === column.dataIndex">
+        <template
+            v-for="(fragment, i) in text
+            .toString()
+            .split(new RegExp(`(?<=${state.searchText})|(?=${state.searchText})`, 'i'))"
+        >
+          <mark
+              v-if="fragment.toLowerCase() === state.searchText.toLowerCase()"
+              :key="i"
+              class="highlight"
+          >
+            {{ fragment }}
+          </mark>
+          <template v-else>{{ fragment }}</template>
+        </template>
+      </span>
     </template>
   </a-table>
   <a-drawer v-model:open="open"
@@ -62,70 +108,88 @@
   </a-drawer>
 </template>
 <script setup>
-import {RightOutlined} from "@ant-design/icons-vue";
-import {RouterLink} from "vue-router";
+import {RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
+import {RouterLink, useRoute} from "vue-router";
 import {formattedDate} from "@/utils/time";
 import {useRecordsStore} from "@/stores/records";
-import {onBeforeUnmount, reactive, ref} from "vue";
+import {computed, onBeforeUnmount, reactive, ref} from "vue";
 import {sortBigInt, sortStr} from "@/utils/sort";
 
-const columns = [
-  {
-    title: 'Id',
-    dataIndex: 'id',
-    width: 200,
-    sorter: (a, b) => sortBigInt(a.id, b.id),
-    defaultSortOrder: 'descend',
-  },
-  {
-    title: 'Unique Key',
-    dataIndex: 'unique_key',
-    width: 200,
-    sorter: (a, b) => sortStr(a.unique_key, b.unique_key),
-  },
-  {
-    title: 'Node',
-    dataIndex: 'node',
-    width: 200,
-    sorter: (a, b) => sortBigInt(a.node, b.node),
-  },
-  {
-    title: 'Spider',
-    dataIndex: 'spider',
-    width: 200,
-    sorter: (a, b) => sortStr(a.spider, b.spider),
-  },
-  {
-    title: 'Job',
-    dataIndex: 'job',
-    width: 200,
-    sorter: (a, b) => sortStr(a.job, b.job),
-  },
-  {
-    title: 'Task',
-    dataIndex: 'task',
-    width: 200,
-    sorter: (a, b) => sortBigInt(a.task, b.task),
-  },
-  {
-    title: 'Meta',
-    dataIndex: 'meta',
-    width: 200,
-    ellipsis: true,
-  },
-  {
-    title: 'Save Time',
-    dataIndex: 'save_time',
-    width: 200,
-    sorter: (a, b) => a.save_time - b.save_time,
-  },
-  {
-    title: 'Action',
-    dataIndex: 'action',
-    width: 200,
-    fixed: 'right',
-  },
-];
+const filteredInfo = reactive({});
+const {query} = useRoute();
+if ('id' in query) {
+  filteredInfo.id = [query.id]
+}
+const columns = computed(() => {
+  return [
+    {
+      title: 'Id',
+      dataIndex: 'id',
+      width: 200,
+      sorter: (a, b) => sortBigInt(a.id, b.id),
+      defaultSortOrder: 'descend',
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.id || null,
+      onFilter: (value, record) =>
+          record.id.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
+    },
+    {
+      title: 'Unique Key',
+      dataIndex: 'unique_key',
+      width: 200,
+      sorter: (a, b) => sortStr(a.unique_key, b.unique_key),
+    },
+    {
+      title: 'Node',
+      dataIndex: 'node',
+      width: 200,
+      sorter: (a, b) => sortBigInt(a.node, b.node),
+    },
+    {
+      title: 'Spider',
+      dataIndex: 'spider',
+      width: 200,
+      sorter: (a, b) => sortStr(a.spider, b.spider),
+    },
+    {
+      title: 'Job',
+      dataIndex: 'job',
+      width: 200,
+      sorter: (a, b) => sortStr(a.job, b.job),
+    },
+    {
+      title: 'Task',
+      dataIndex: 'task',
+      width: 200,
+      sorter: (a, b) => sortBigInt(a.task, b.task),
+    },
+    {
+      title: 'Meta',
+      dataIndex: 'meta',
+      width: 200,
+      ellipsis: true,
+    },
+    {
+      title: 'Save Time',
+      dataIndex: 'save_time',
+      width: 200,
+      sorter: (a, b) => a.save_time - b.save_time,
+    },
+    {
+      title: 'Action',
+      dataIndex: 'action',
+      width: 200,
+      fixed: 'right',
+    },
+  ];
+});
 
 const recordsStore = useRecordsStore();
 
@@ -139,13 +203,17 @@ const showDrawer = record => {
 };
 const activeKey = ref('1');
 
+// auto refresh
+const checked1 = ref(true)
+const checked1Disable = ref(true)
+let interval = 0
 const refresh = () => {
   recordsStore.GetRecords()
 }
-const checked1 = ref(true)
-const checked1Disable = ref(true)
-
-let interval = setInterval(refresh, 1000)
+refresh()
+if (checked1.value) {
+  interval = setInterval(refresh, 1000)
+}
 const changeSwitch = () => {
   if (checked1.value) {
     interval = setInterval(refresh, 1000)
@@ -158,6 +226,28 @@ const changeSwitch = () => {
 onBeforeUnmount(() => {
   clearInterval(interval)
 })
+
+// search
+const state = reactive({
+  searchText: '',
+  searchedColumn: '',
+});
+const searchInput = ref();
+const handleSearch = (selectedKeys, confirm, dataIndex) => {
+  filteredInfo[dataIndex] = selectedKeys
+  confirm();
+  state.searchText = selectedKeys[0];
+  state.searchedColumn = dataIndex;
+};
+const handleReset = clearFilters => {
+  Object.keys(filteredInfo).forEach(key => {
+    delete filteredInfo[key];
+  });
+  clearFilters({
+    confirm: true,
+  });
+  state.searchText = '';
+};
 </script>
 <style>
 </style>

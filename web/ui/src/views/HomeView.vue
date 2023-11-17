@@ -40,13 +40,17 @@ import {onBeforeUnmount, ref} from "vue";
 const nodesStore = useNodesStore()
 nodesStore.GetNodes()
 
+// auto refresh
+const checked1 = ref(true)
+const checked1Disable = ref(true)
+let interval = 0
 const refresh = () => {
   nodesStore.GetNodes()
 }
-const checked1 = ref(false)
-const checked1Disable = ref(false)
-
-let interval = null
+refresh()
+if (checked1.value) {
+  interval = setInterval(refresh, 1000)
+}
 const changeSwitch = () => {
   if (checked1.value) {
     interval = setInterval(refresh, 1000)

@@ -9,6 +9,8 @@ title: "Tools"
 
 * `-s` Self-signed server certificate. If not set, the default CA certificate of this project will be used for signing.
 * `-c` Create a new CA certificate. If not set, the default CA certificate of this project will be used.
+* `-i` Add server IP addresses, separated by commas.
+* `-h` Add server domain names, separated by commas.
 
 dev
 
