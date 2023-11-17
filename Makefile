@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: web_ui web_server tidy tls mitm test_spider test_compress_spider test_decode_spider test_file_spider test_item_spider multi_spider
+all: web_ui web_server tidy tls_generator mitm test_spider test_compress_spider test_decode_spider test_file_spider test_item_spider multi_spider
 
 module := $(shell head -n 1 go.mod)
 module := $(subst module ,,${module})
@@ -11,9 +11,9 @@ shell:
 tidy:
 	go mod tidy
 
-tls:
-	go vet ./tools/tls
-	go build -ldflags "-s -w" -o ./releases/tls ./tools/tls
+tls_generator:
+	go vet ./tools/tls_generator
+	go build -ldflags "-s -w" -o ./releases/tls_generator ./tools/tls_generator
 
 mitm:
 	go vet ./tools/mitm
