@@ -38,7 +38,6 @@ import {useNodesStore} from "@/stores/nodes";
 import {onBeforeUnmount, ref} from "vue";
 
 const nodesStore = useNodesStore()
-nodesStore.GetNodes()
 
 // auto refresh
 const checked1 = ref(true)

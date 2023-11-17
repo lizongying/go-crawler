@@ -45,7 +45,7 @@
               </a-form-item>
             </a-form>
           </a-modal>
-          <span v-if="!isLogin" style="margin-right: 10px" @click="showModal"><a><MailOutlined/>  Message</a></span>
+          <span style="margin-right: 10px" @click="showModal"><a><MailOutlined/>  Message</a></span>
           <a-modal v-model:open="open" title="Message" width="1000px" @ok="handleOk">
             <a-space direction="vertical" style="width: 100%">
               <a-alert
@@ -53,7 +53,7 @@
                   :key="msg"
                   :description="msg.content"
                   :message="msg.title"
-                  :type="msg.level === 'info' ? 'info': 'success'"
+                  :type="msg.level"
                   show-icon
               />
             </a-space>

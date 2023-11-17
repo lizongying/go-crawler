@@ -106,7 +106,7 @@ func (s *Statistics) jobChanged(ctx pkg.Context) (err error) {
 			spec = fmt.Sprintf("cron (every %s)", ctx.GetJobSpec())
 		}
 
-		command := fmt.Sprintf("-n %s -f %s -m %s -s %s -a %s",
+		command := fmt.Sprintf("go-crawler -n %s -f %s -m %s -s %s -a '%s'",
 			ctx.GetSpiderName(),
 			ctx.GetJobFunc(),
 			(&mode).String(),
