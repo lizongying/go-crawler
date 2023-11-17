@@ -102,7 +102,7 @@
             size="large">
     <a-tabs v-model:activeKey="activeKey">
       <a-tab-pane key="1" tab="Data">
-        <pre>{{ more.data }}</pre>
+        <pre v-html="more.data"></pre>
       </a-tab-pane>
     </a-tabs>
   </a-drawer>
@@ -117,9 +117,9 @@ import {sortBigInt, sortStr} from "@/utils/sort";
 
 const filteredInfo = reactive({});
 const {query} = useRoute();
-if ('id' in query) {
-  filteredInfo.id = [query.id]
-}
+Object.entries(query).forEach(([k, v]) => {
+  filteredInfo[k] = [v]
+});
 const columns = computed(() => {
   return [
     {
@@ -145,30 +145,75 @@ const columns = computed(() => {
       dataIndex: 'unique_key',
       width: 200,
       sorter: (a, b) => sortStr(a.unique_key, b.unique_key),
+      ellipsis: true,
     },
     {
       title: 'Node',
       dataIndex: 'node',
       width: 200,
       sorter: (a, b) => sortBigInt(a.node, b.node),
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.node || null,
+      onFilter: (value, record) =>
+          record.node.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
     },
     {
       title: 'Spider',
       dataIndex: 'spider',
       width: 200,
       sorter: (a, b) => sortStr(a.spider, b.spider),
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.spider || null,
+      onFilter: (value, record) =>
+          record.spider.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
     },
     {
       title: 'Job',
       dataIndex: 'job',
       width: 200,
       sorter: (a, b) => sortStr(a.job, b.job),
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.job || null,
+      onFilter: (value, record) =>
+          record.job.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
     },
     {
       title: 'Task',
       dataIndex: 'task',
       width: 200,
       sorter: (a, b) => sortBigInt(a.task, b.task),
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.task || null,
+      onFilter: (value, record) =>
+          record.task.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
     },
     {
       title: 'Meta',
@@ -193,13 +238,16 @@ const columns = computed(() => {
 
 const recordsStore = useRecordsStore();
 
-recordsStore.GetRecords()
-
 const open = ref(false);
 const more = reactive({})
 const showDrawer = record => {
   open.value = true;
-  more.data = record.data
+  more.data = JSON.stringify(JSON.parse(record.data), null, 2)
+      .replace(/(".*?":)/g, '<span class="key">$1</span>')
+      .replace(/: "([^"]+)"[\n,]/g, ': "<span class="string">$1</span>":')
+      .replace(/: \b(\d+)\b[\n,]/g, ': <span class="number">$1</span>')
+      .replace(/: \b(true|false)\b[\n,]/g, ': <span class="boolean">$1</span>')
+      .replace(/: \b(null)\b[\n,]/g, ': <span class="null">$1</span>');
 };
 const activeKey = ref('1');
 
@@ -250,4 +298,23 @@ const handleReset = clearFilters => {
 };
 </script>
 <style>
+.key {
+  color: blue;
+}
+
+.string {
+  color: green;
+}
+
+.number {
+  color: orange;
+}
+
+.boolean {
+  color: purple;
+}
+
+.null {
+  color: rgb(128, 128, 128);
+}
 </style>

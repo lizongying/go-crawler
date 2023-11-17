@@ -247,13 +247,13 @@ import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 import {computed, createVNode, onBeforeUnmount, reactive, ref} from "vue";
 import {message, Modal} from "ant-design-vue";
 import {useSpidersStore} from "@/stores/spiders";
+import {useNodesStore} from "@/stores/nodes";
 
 const filteredInfo = reactive({});
 const {query} = useRoute();
-if ('id' in query) {
-  filteredInfo.id = [query.id]
-}
-
+Object.entries(query).forEach(([k, v]) => {
+  filteredInfo[k] = [v]
+});
 const columns = computed(() => {
   return [
     {
@@ -291,12 +291,34 @@ const columns = computed(() => {
       dataIndex: 'node',
       width: 200,
       sorter: (a, b) => sortBigInt(a.node, b.node),
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.node || null,
+      onFilter: (value, record) =>
+          record.node.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
     },
     {
       title: 'Spider',
       dataIndex: 'spider',
       sorter: (a, b) => sortStr(a.spider, b.spider),
       width: 200,
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.spider || null,
+      onFilter: (value, record) =>
+          record.spider.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
     },
     {
       title: 'Status',
@@ -388,7 +410,6 @@ const columns = computed(() => {
 });
 
 const jobsStore = useJobsStore()
-jobsStore.GetJobs()
 
 const jobStatusName = (status) => {
   switch (status) {
@@ -480,7 +501,6 @@ const showDrawer = record => {
 };
 // status list
 const activeKey = ref('1');
-
 
 // new job
 const formJob = reactive({

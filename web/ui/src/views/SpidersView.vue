@@ -169,12 +169,13 @@ import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 import {computed, onBeforeUnmount, reactive, ref} from "vue";
 import {TaskStatusError, TaskStatusPending, TaskStatusRunning, TaskStatusSuccess} from "@/stores/tasks";
+import {useNodesStore} from "@/stores/nodes";
 
 const filteredInfo = reactive({});
 const {query} = useRoute();
-if ('id' in query) {
-  filteredInfo.id = [query.id]
-}
+Object.entries(query).forEach(([k, v]) => {
+  filteredInfo[k] = [v]
+});
 const columns = computed(() => {
   return [
     {
@@ -206,6 +207,17 @@ const columns = computed(() => {
       dataIndex: 'node',
       width: 200,
       sorter: (a, b) => sortBigInt(a.node, b.node),
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.node || null,
+      onFilter: (value, record) =>
+          record.node.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
     },
     {
       title: 'Status',
@@ -347,8 +359,6 @@ const columns = computed(() => {
 });
 
 const spidersStore = useSpidersStore();
-
-spidersStore.GetSpiders()
 
 const spiderStatusName = (status) => {
   switch (status) {

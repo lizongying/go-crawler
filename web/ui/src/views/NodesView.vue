@@ -148,9 +148,9 @@ import {computed, onBeforeUnmount, reactive, ref} from "vue";
 
 const filteredInfo = reactive({});
 const {query} = useRoute();
-if ('id' in query) {
-  filteredInfo.id = [query.id]
-}
+Object.entries(query).forEach(([k, v]) => {
+  filteredInfo[k] = [v]
+});
 const columns = computed(() => {
   return [
     {
@@ -304,8 +304,6 @@ const columns = computed(() => {
 });
 
 const nodesStore = useNodesStore();
-
-nodesStore.GetNodes()
 
 // auto refresh
 const checked1 = ref(true)
