@@ -171,8 +171,17 @@ func (s *Statistics) taskChanged(ctx pkg.Context) (err error) {
 	for _, v := range s.Tasks.Get(ctx.GetJob().GetId()) {
 		t := v.Value().(task.WithRecords).Task
 		if ctx.GetTask().GetId() == t.GetId() {
-			t.WithStatus(ctx.GetTask().GetStatus()).
-				WithFinishTime(ctx.GetTask().GetStopTime())
+			t.WithStatus(ctx.GetTask().GetStatus())
+			t.WithUpdateTime(ctx.GetTask().GetUpdateTime())
+			switch ctx.GetTask().GetStatus() {
+			case pkg.TaskStatusRunning:
+				t.WithStartTime(ctx.GetTask().GetStartTime())
+			case pkg.TaskStatusSuccess:
+				t.WithFinishTime(ctx.GetTask().GetStopTime())
+			case pkg.TaskStatusError:
+				t.WithFinishTime(ctx.GetTask().GetStopTime())
+				t.WithStopReason(ctx.GetTask().GetStopReason())
+			}
 		}
 	}
 

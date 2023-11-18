@@ -195,8 +195,13 @@ func (j *Job) startTask() {
 	_, _ = new(Task).FromSpider(j.spider).WithJob(j).start(j.context)
 	j.task.In()
 }
-func (j *Job) TaskStopped(ctx pkg.Context, _ error) {
+func (j *Job) TaskStopped(ctx pkg.Context, err error) {
 	if ctx.GetTask().GetJobSubId() == j.context.GetJob().GetSubId() {
+		if err != nil {
+			j.logger.Info(j.spider.Name(), "task finished with an error:", err, "spend time:", ctx.GetTask().GetStopTime().Sub(ctx.GetTask().GetStartTime()), ctx.GetTask().GetId())
+		} else {
+			j.logger.Info(j.spider.Name(), "task finished. spend time:", ctx.GetTask().GetStopTime().Sub(ctx.GetTask().GetStartTime()), ctx.GetTask().GetId())
+		}
 		j.task.Out()
 	}
 }

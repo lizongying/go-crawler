@@ -72,6 +72,8 @@ type StatisticsTask interface {
 	WithJob(string) StatisticsTask
 	WithStartTime(startTime time.Time) StatisticsTask
 	WithFinishTime(finishTime time.Time) StatisticsTask
+	WithUpdateTime(updateTime time.Time) StatisticsTask
+	WithStopReason(stopReason string) StatisticsTask
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsRecord interface {

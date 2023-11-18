@@ -28,34 +28,44 @@ func (s *UnimplementedScheduler) SetCrawler(crawler pkg.Crawler) {
 func (s *UnimplementedScheduler) SetSpider(spider pkg.Spider) {
 	s.spider = spider
 }
+func (s *UnimplementedScheduler) GetTask() pkg.Task {
+	return s.task
+}
 func (s *UnimplementedScheduler) SetTask(task pkg.Task) {
 	s.task = task
 }
 func (s *UnimplementedScheduler) SetLogger(logger pkg.Logger) {
 	s.logger = logger
 }
-func (s *UnimplementedScheduler) HandleItem(_ pkg.Context) {
+func (s *UnimplementedScheduler) HandleItem(ctx pkg.Context) {
+out:
 	for item := range s.itemChan {
-		itemDelay := s.crawler.GetItemDelay()
-		if itemDelay > 0 {
-			s.crawler.ItemTimer().Reset(itemDelay)
-		}
-
-		<-s.crawler.ItemConcurrencyChan()
-		s.logger.Debug(cap(s.crawler.ItemConcurrencyChan()), len(s.crawler.ItemConcurrencyChan()), "id:", item.Id())
-		go func(item pkg.Item) {
-			defer func() {
-				s.crawler.ItemConcurrencyChan() <- struct{}{}
-				s.task.StopItem()
-			}()
-
-			if err := s.spider.Export(item); err != nil {
-				s.logger.Error(err)
+		select {
+		case <-ctx.GetTask().GetContext().Done():
+			s.logger.Error(ctx.GetTask().GetContext().Err())
+			break out
+		default:
+			itemDelay := s.crawler.GetItemDelay()
+			if itemDelay > 0 {
+				s.crawler.ItemTimer().Reset(itemDelay)
 			}
-		}(item)
 
-		if itemDelay > 0 {
-			<-s.crawler.ItemTimer().C
+			<-s.crawler.ItemConcurrencyChan()
+			s.logger.Debug(cap(s.crawler.ItemConcurrencyChan()), len(s.crawler.ItemConcurrencyChan()), "id:", item.Id())
+			go func(item pkg.Item) {
+				defer func() {
+					s.crawler.ItemConcurrencyChan() <- struct{}{}
+					s.task.StopItem()
+				}()
+
+				if err := s.spider.Export(item); err != nil {
+					s.logger.Error(err)
+				}
+			}(item)
+
+			if itemDelay > 0 {
+				<-s.crawler.ItemTimer().C
+			}
 		}
 	}
 

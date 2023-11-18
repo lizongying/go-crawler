@@ -452,9 +452,9 @@ func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 }
 func (s *BaseSpider) JobStopped(ctx pkg.Context, err error) {
 	if err != nil {
-		s.logger.Info(s.spider.Name(), ctx.GetJob().GetId(), "job finished with an error:", err, "spend time:", ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()))
+		s.logger.Info(s.spider.Name(), "job finished with an error:", err, "spend time:", ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()), ctx.GetJob().GetId())
 	} else {
-		s.logger.Info(s.spider.Name(), ctx.GetJob().GetId(), "job finished. spend time:", ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()))
+		s.logger.Info(s.spider.Name(), "job finished. spend time:", ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()), ctx.GetJob().GetId())
 	}
 
 	s.job.Out()

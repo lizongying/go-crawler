@@ -98,10 +98,14 @@ type ContextTask interface {
 	WithStartTime(time.Time) ContextTask
 	GetStopTime() time.Time
 	WithStopTime(time.Time) ContextTask
+	GetUpdateTime() time.Time
+	WithUpdateTime(time.Time) ContextTask
 	GetDeadline() time.Time
 	WithDeadline(time.Time) ContextTask
 	GetStats() Stats
 	WithStats(Stats) ContextTask
+	GetStopReason() string
+	WithStopReason(stopReason string) ContextTask
 }
 
 type ContextRequest interface {

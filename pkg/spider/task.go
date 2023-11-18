@@ -1,7 +1,6 @@
 package spider
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
@@ -50,7 +49,7 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 			WithJob(ctx.GetJob()).
 			WithTask(new(crawlerContext.Task).
 				WithTask(t).
-				WithContext(context.Background()).
+				WithContext(ctx.GetJob().GetContext()).
 				WithId(id).
 				WithJobSubId(ctx.GetJob().GetSubId()).
 				WithStatus(pkg.TaskStatusPending).
@@ -65,6 +64,16 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 		t.logger.Error(err)
 		return
 	}
+
+	go func() {
+		select {
+		case <-t.context.GetTask().GetContext().Done():
+			if t.context.GetTask().GetStatus() < pkg.TaskStatusSuccess {
+				t.stop(t.context.GetTask().GetContext().Err())
+			}
+			return
+		}
+	}()
 
 	go func() {
 
@@ -107,18 +116,17 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 
 	return
 }
-func (t *Task) stop() (err error) {
-	if err = t.StopScheduler(t.context); err != nil {
-		t.logger.Error(err)
-		return
-	}
+func (t *Task) stop(err error) {
+	_ = t.StopScheduler(t.context)
 
-	stopTime := time.Now()
-	t.context.GetTask().WithStatus(pkg.TaskStatusSuccess)
-	t.context.GetTask().WithStopTime(stopTime)
+	if err != nil {
+		t.context.GetTask().WithStopReason(err.Error())
+		t.context.GetTask().WithStatus(pkg.TaskStatusError)
+	} else {
+		t.context.GetTask().WithStatus(pkg.TaskStatusSuccess)
+	}
 	t.crawler.GetSignal().TaskChanged(t.context)
-	t.logger.Info(t.spider.Name(), t.context.GetTask().GetId(), "task finished. spend time:", stopTime.Sub(t.context.GetTask().GetStartTime()))
-	t.job.TaskStopped(t.context, nil)
+	t.job.TaskStopped(t.context, err)
 	return
 }
 func (t *Task) ReadyRequest() {
@@ -155,9 +163,7 @@ func (t *Task) FromSpider(spider pkg.Spider) *Task {
 	t.requestAndItem = pkg.NewMultiState(t.request, t.item)
 
 	t.requestAndItem.RegisterIsReadyAndIsZero(func() {
-		if err := t.stop(); err != nil {
-			t.logger.Error(err)
-		}
+		t.stop(nil)
 	})
 
 	config := spider.GetConfig()

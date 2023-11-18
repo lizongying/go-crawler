@@ -16,14 +16,17 @@ type WithRecords struct {
 
 type Task struct {
 	pkg.TaskStatus `json:"status,omitempty"`
-	Id             string          `json:"id,omitempty"`
-	Spider         string          `json:"spider,omitempty"`
-	Job            string          `json:"job,omitempty"`
-	Node           string          `json:"node,omitempty"`
-	Request        uint32          `json:"request,omitempty"`
-	Record         uint32          `json:"record,omitempty"`
-	StartTime      utils.Timestamp `json:"start_time"`
-	FinishTime     utils.Timestamp `json:"finish_time"`
+	Id             string               `json:"id,omitempty"`
+	Spider         string               `json:"spider,omitempty"`
+	Job            string               `json:"job,omitempty"`
+	Node           string               `json:"node,omitempty"`
+	Request        uint32               `json:"request,omitempty"`
+	Record         uint32               `json:"record,omitempty"`
+	StartTime      utils.Timestamp      `json:"start_time"`
+	FinishTime     utils.Timestamp      `json:"finish_time"`
+	UpdateTime     utils.Timestamp      `json:"update_time,omitempty"`
+	StatusList     *queue.PriorityQueue `json:"status_list,omitempty"`
+	StopReason     string               `json:"stop_reason,omitempty"`
 }
 
 func (t *Task) WithStatus(status pkg.TaskStatus) pkg.StatisticsTask {
@@ -82,10 +85,23 @@ func (t *Task) WithFinishTime(finishTime time.Time) pkg.StatisticsTask {
 	}
 	return t
 }
+func (t *Task) WithUpdateTime(updateTime time.Time) pkg.StatisticsTask {
+	t.FinishTime = utils.Timestamp{
+		Time: updateTime,
+	}
+	return t
+}
 func (t *Task) Marshal() (bytes []byte, err error) {
 	bytes, err = json.Marshal(t)
 	if err != nil {
 		return
 	}
 	return
+}
+func (t *Task) GetStopReason() string {
+	return t.StopReason
+}
+func (t *Task) WithStopReason(stopReason string) pkg.StatisticsTask {
+	t.StopReason = stopReason
+	return t
 }

@@ -1113,7 +1113,6 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * request with ctx
 * stat->crawler
 * test refer cookie
-* task context
 * request context
 * item context
 * total
