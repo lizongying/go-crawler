@@ -12,7 +12,7 @@ type DumpMiddleware struct {
 
 func (m *DumpMiddleware) ProcessRequest(ctx pkg.Context, request pkg.Request) (err error) {
 	bs, _ := request.Marshal()
-	m.logger.Info(m.GetSpider().Name(), ctx.GetTaskId(), ctx.GetRequestId(), "request:", string(bs))
+	m.logger.Info(m.GetSpider().Name(), ctx.GetTask().GetId(), ctx.GetRequest().GetId(), "request:", string(bs))
 	return
 }
 

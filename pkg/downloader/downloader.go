@@ -117,10 +117,10 @@ func (d *Downloader) processResponse(ctx pkg.Context, response pkg.Response) (er
 	return
 }
 func (d *Downloader) spiderClosed(ctx pkg.Context) (err error) {
-	if ctx.GetSpiderName() != d.spider.Name() {
+	if ctx.GetSpider().GetName() != d.spider.Name() {
 		return
 	}
-	if ctx.GetSpiderStatus() != pkg.SpiderStatusStopped {
+	if ctx.GetSpider().GetStatus() != pkg.SpiderStatusStopped {
 		return
 	}
 	d.browserManager.Close()

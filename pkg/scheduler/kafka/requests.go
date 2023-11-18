@@ -46,80 +46,86 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 	slot := "*"
 	value, _ := s.spider.RequestSlotLoad(slot)
 	requestSlot := value.(*rate.Limiter)
-
+out:
 	for {
-		req, err := s.kafkaReader.FetchMessage(ctx.GetTaskContext())
-		if err != nil {
-			s.logger.Warn(err)
-			continue
-		}
-		if len(req.Value) == 0 {
-			err = errors.New("req is empty")
-			s.logger.Warn(err)
-			continue
-		}
-
-		s.logger.Debugf("request: %s", req)
-		request := new(request2.Request)
-		if err = request.Unmarshal(req.Value); err != nil {
-			s.logger.Warn(err)
-			continue
-		}
-
-		c := request.Context
-		s.logger.Debugf("request: %+v", request)
-		if err != nil {
-			s.logger.Warn(err)
-			continue
-		}
-		slot = request.GetSlot()
-		if slot == "" {
-			slot = "*"
-		}
-		slotValue, ok := s.spider.RequestSlotLoad(slot)
-		if !ok {
-			concurrency := uint8(1)
-			if request.GetConcurrency() != nil {
-				concurrency = *request.GetConcurrency()
+		select {
+		case <-ctx.GetTask().GetContext().Done():
+			s.logger.Error(ctx.GetTask().GetContext().Err())
+			break out
+		default:
+			req, err := s.kafkaReader.FetchMessage(ctx.GetTask().GetContext())
+			if err != nil {
+				s.logger.Warn(err)
+				continue
 			}
-			if concurrency < 1 {
-				concurrency = 1
-			}
-			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
-			s.spider.RequestSlotStore(slot, requestSlot)
-		}
-
-		requestSlot = slotValue.(*rate.Limiter)
-
-		err = requestSlot.Wait(ctx.GetTaskContext())
-		if err != nil {
-			s.logger.Error(err)
-		}
-		go func(c pkg.Context, request pkg.Request) {
-			response, e := s.Request(c, request)
-			if e != nil {
-				s.task.StopRequest()
-				return
+			if len(req.Value) == 0 {
+				err = errors.New("req is empty")
+				s.logger.Warn(err)
+				continue
 			}
 
-			go func(ctx pkg.Context, response pkg.Response) {
-				defer func() {
-					if r := recover(); r != nil {
-						buf := make([]byte, 1<<16)
-						runtime.Stack(buf, true)
-						err = errors.New(string(buf))
+			s.logger.Debugf("request: %s", req)
+			request := new(request2.Request)
+			if err = request.Unmarshal(req.Value); err != nil {
+				s.logger.Warn(err)
+				continue
+			}
+
+			c := request.Context
+			s.logger.Debugf("request: %+v", request)
+			if err != nil {
+				s.logger.Warn(err)
+				continue
+			}
+			slot = request.GetSlot()
+			if slot == "" {
+				slot = "*"
+			}
+			slotValue, ok := s.spider.RequestSlotLoad(slot)
+			if !ok {
+				concurrency := uint8(1)
+				if request.GetConcurrency() != nil {
+					concurrency = *request.GetConcurrency()
+				}
+				if concurrency < 1 {
+					concurrency = 1
+				}
+				requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
+				s.spider.RequestSlotStore(slot, requestSlot)
+			}
+
+			requestSlot = slotValue.(*rate.Limiter)
+
+			err = requestSlot.Wait(ctx.GetTask().GetContext())
+			if err != nil {
+				s.logger.Error(err)
+			}
+			go func(c pkg.Context, request pkg.Request) {
+				response, e := s.Request(c, request)
+				if e != nil {
+					s.task.StopRequest()
+					return
+				}
+
+				go func(ctx pkg.Context, response pkg.Response) {
+					defer func() {
+						if r := recover(); r != nil {
+							buf := make([]byte, 1<<16)
+							runtime.Stack(buf, true)
+							err = errors.New(string(buf))
+							s.logger.Error(err)
+							s.HandleError(ctx, response, err, request.GetErrBack())
+						}
+					}()
+
+					if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
 						s.logger.Error(err)
 						s.HandleError(ctx, response, err, request.GetErrBack())
 					}
-				}()
-
-				if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
-					s.logger.Error(err)
-					s.HandleError(ctx, response, err, request.GetErrBack())
-				}
-				s.task.StopRequest()
-			}(c, response)
-		}(c, request)
+					s.task.StopRequest()
+				}(c, response)
+			}(c, request)
+		}
 	}
 }
 

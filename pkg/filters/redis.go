@@ -18,10 +18,10 @@ type RedisFilter struct {
 }
 
 func (f *RedisFilter) SpiderOpened(c pkg.Context) (err error) {
-	if c.GetSpiderName() != f.spider.Name() {
+	if c.GetSpider().GetName() != f.spider.Name() {
 		return
 	}
-	if c.GetSpiderStatus() != pkg.SpiderStatusRunning {
+	if c.GetSpider().GetStatus() != pkg.SpiderStatusRunning {
 		return
 	}
 
@@ -38,7 +38,7 @@ func (f *RedisFilter) SpiderOpened(c pkg.Context) (err error) {
 }
 
 func (f *RedisFilter) IsExist(c pkg.Context, uniqueKey any) (ok bool, err error) {
-	ctx := c.GetRequestContext()
+	ctx := c.GetRequest().GetContext()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -48,7 +48,7 @@ func (f *RedisFilter) IsExist(c pkg.Context, uniqueKey any) (ok bool, err error)
 }
 
 func (f *RedisFilter) Store(c pkg.Context, uniqueKey any) (err error) {
-	ctx := c.GetRequestContext()
+	ctx := c.GetRequest().GetContext()
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -58,7 +58,7 @@ func (f *RedisFilter) Store(c pkg.Context, uniqueKey any) (err error) {
 }
 
 func (f *RedisFilter) Clean(c pkg.Context) (err error) {
-	ctx := c.GetRequestContext()
+	ctx := c.GetRequest().GetContext()
 	if ctx == nil {
 		ctx = context.Background()
 	}

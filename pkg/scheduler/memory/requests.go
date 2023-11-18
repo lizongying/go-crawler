@@ -42,57 +42,64 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 	value, _ := s.spider.RequestSlotLoad(slot)
 	requestSlot := value.(*rate.Limiter)
 
+out:
 	for request := range s.requestChan {
-		slot = request.GetSlot()
-		if slot == "" {
-			slot = "*"
-		}
-		slotValue, ok := s.spider.RequestSlotLoad(slot)
-		if !ok {
-			concurrency := uint8(1)
-			if request.GetConcurrency() != nil {
-				concurrency = *request.GetConcurrency()
+		select {
+		case <-ctx.GetTask().GetContext().Done():
+			s.logger.Error(ctx.GetTask().GetContext().Err())
+			break out
+		default:
+			slot = request.GetSlot()
+			if slot == "" {
+				slot = "*"
 			}
-			if concurrency < 1 {
-				concurrency = 1
-			}
-			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
-			s.spider.RequestSlotStore(slot, requestSlot)
-		}
-
-		requestSlot = slotValue.(*rate.Limiter)
-
-		err := requestSlot.Wait(ctx.GetTaskContext())
-		if err != nil {
-			s.logger.Error(err, time.Now(), ctx)
-		}
-		go func(request pkg.Request) {
-			c := request.GetContext()
-
-			response, e := s.Request(c, request.GetRequest())
-			if e != nil {
-				s.task.StopRequest()
-				return
+			slotValue, ok := s.spider.RequestSlotLoad(slot)
+			if !ok {
+				concurrency := uint8(1)
+				if request.GetConcurrency() != nil {
+					concurrency = *request.GetConcurrency()
+				}
+				if concurrency < 1 {
+					concurrency = 1
+				}
+				requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
+				s.spider.RequestSlotStore(slot, requestSlot)
 			}
 
-			go func(ctx pkg.Context, response pkg.Response) {
-				defer func() {
-					if r := recover(); r != nil {
-						buf := make([]byte, 1<<16)
-						runtime.Stack(buf, true)
-						err = errors.New(string(buf))
-						//s.logger.Error(err)
+			requestSlot = slotValue.(*rate.Limiter)
+
+			err := requestSlot.Wait(ctx.GetTask().GetContext())
+			if err != nil {
+				s.logger.Error(err, time.Now(), ctx)
+			}
+			go func(request pkg.Request) {
+				c := request.GetContext()
+
+				response, e := s.Request(c, request.GetRequest())
+				if e != nil {
+					s.task.StopRequest()
+					return
+				}
+
+				go func(ctx pkg.Context, response pkg.Response) {
+					defer func() {
+						if r := recover(); r != nil {
+							buf := make([]byte, 1<<16)
+							runtime.Stack(buf, true)
+							err = errors.New(string(buf))
+							//s.logger.Error(err)
+							s.HandleError(ctx, response, err, request.GetErrBack())
+						}
+					}()
+
+					if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
+						s.logger.Error(err)
 						s.HandleError(ctx, response, err, request.GetErrBack())
 					}
-				}()
-
-				if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
-					s.logger.Error(err)
-					s.HandleError(ctx, response, err, request.GetErrBack())
-				}
-				s.task.StopRequest()
-			}(c, response)
-		}(request)
+					s.task.StopRequest()
+				}(c, response)
+			}(request)
+		}
 	}
 
 	return

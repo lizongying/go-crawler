@@ -1,7 +1,6 @@
 package spider
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
@@ -50,7 +49,7 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 			WithJob(ctx.GetJob()).
 			WithTask(new(crawlerContext.Task).
 				WithTask(t).
-				WithContext(context.Background()).
+				WithContext(ctx.GetJob().GetContext()).
 				WithId(id).
 				WithJobSubId(ctx.GetJob().GetSubId()).
 				WithStatus(pkg.TaskStatusPending).
@@ -67,6 +66,16 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 	}
 
 	go func() {
+		select {
+		case <-t.context.GetTask().GetContext().Done():
+			if t.context.GetTask().GetStatus() < pkg.TaskStatusSuccess {
+				t.stop(t.context.GetTask().GetContext().Err())
+			}
+			return
+		}
+	}()
+
+	go func() {
 
 		defer func() {
 			//if r := recover(); r != nil {
@@ -76,24 +85,24 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 
 		params := []reflect.Value{
 			reflect.ValueOf(t.context),
-			reflect.ValueOf(t.context.GetJobArgs()),
+			reflect.ValueOf(t.context.GetJob().GetArgs()),
 		}
-		caller := reflect.ValueOf(t.spider).MethodByName(t.context.GetJobFunc())
+		caller := reflect.ValueOf(t.spider).MethodByName(t.context.GetJob().GetFunc())
 		if !caller.IsValid() {
-			err = errors.New(fmt.Sprintf("schedule func is invalid: %s", t.context.GetJobFunc()))
+			err = errors.New(fmt.Sprintf("schedule func is invalid: %s", t.context.GetJob().GetFunc()))
 			t.logger.Error(err)
 			return
 		}
 
 		res := caller.Call(params)
 		if len(res) != 1 {
-			err = errors.New(fmt.Sprintf("%s has too many return values", t.context.GetJobFunc()))
+			err = errors.New(fmt.Sprintf("%s has too many return values", t.context.GetJob().GetFunc()))
 			t.logger.Error(err)
 			return
 		}
 
 		if res[0].Type().Name() != "error" {
-			err = errors.New(fmt.Sprintf("%s should return an error", t.context.GetJobFunc()))
+			err = errors.New(fmt.Sprintf("%s should return an error", t.context.GetJob().GetFunc()))
 			t.logger.Error(err)
 			return
 		}
@@ -107,18 +116,17 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 
 	return
 }
-func (t *Task) stop() (err error) {
-	if err = t.StopScheduler(t.context); err != nil {
-		t.logger.Error(err)
-		return
-	}
+func (t *Task) stop(err error) {
+	_ = t.StopScheduler(t.context)
 
-	stopTime := time.Now()
-	t.context.WithTaskStatus(pkg.TaskStatusSuccess)
-	t.context.WithTaskStopTime(stopTime)
+	if err != nil {
+		t.context.GetTask().WithStopReason(err.Error())
+		t.context.GetTask().WithStatus(pkg.TaskStatusError)
+	} else {
+		t.context.GetTask().WithStatus(pkg.TaskStatusSuccess)
+	}
 	t.crawler.GetSignal().TaskChanged(t.context)
-	t.logger.Info(t.spider.Name(), t.context.GetTaskId(), "task finished. spend time:", stopTime.Sub(t.context.GetTaskStartTime()))
-	t.job.TaskStopped(t.context, nil)
+	t.job.TaskStopped(t.context, err)
 	return
 }
 func (t *Task) ReadyRequest() {
@@ -155,9 +163,7 @@ func (t *Task) FromSpider(spider pkg.Spider) *Task {
 	t.requestAndItem = pkg.NewMultiState(t.request, t.item)
 
 	t.requestAndItem.RegisterIsReadyAndIsZero(func() {
-		if err := t.stop(); err != nil {
-			t.logger.Error(err)
-		}
+		t.stop(nil)
 	})
 
 	config := spider.GetConfig()

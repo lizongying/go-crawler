@@ -44,118 +44,124 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 	slot := "*"
 	value, _ := s.spider.RequestSlotLoad(slot)
 	requestSlot := value.(*rate.Limiter)
-
+out:
 	for {
-		var req string
-		var err error
-		if s.enablePriorityQueue {
-			r, e := s.redis.Do(ctx.GetTaskContext(), "EVALSHA", s.requestKeySha, 1, s.requestKey, s.batch).Result()
-			if e != nil {
-				s.logger.Warn(e)
-				time.Sleep(1 * time.Second)
+		select {
+		case <-ctx.GetTask().GetContext().Done():
+			s.logger.Error(ctx.GetTask().GetContext().Err())
+			break out
+		default:
+			var req string
+			var err error
+			if s.enablePriorityQueue {
+				r, e := s.redis.Do(ctx.GetTask().GetContext(), "EVALSHA", s.requestKeySha, 1, s.requestKey, s.batch).Result()
+				if e != nil {
+					s.logger.Warn(e)
+					time.Sleep(1 * time.Second)
+					continue
+				}
+				rs, ok := r.([]interface{})
+				if !ok {
+					err = errors.New("req is empty")
+					s.logger.Warn(err)
+					time.Sleep(1 * time.Second)
+					continue
+				}
+				if len(rs) == 0 {
+					err = errors.New("req is empty")
+					s.logger.Debug(err)
+					time.Sleep(1 * time.Second)
+					continue
+				}
+				for _, v := range rs {
+					req = v.(string)
+					break
+				}
+				s.logger.Debug("req", req)
+			} else {
+				r, e := s.redis.BLPop(ctx.GetTask().GetContext(), 0, s.requestKey).Result()
+				if e != nil {
+					s.logger.Warn(e)
+					continue
+				}
+				if len(r) == 0 {
+					err = errors.New("req is empty")
+					s.logger.Warn(err)
+					time.Sleep(1 * time.Second)
+					continue
+				}
+				req = r[1]
+			}
+
+			err = s.redis.ZRem(ctx.GetTask().GetContext(), s.requestKey, req).Err()
+			if err != nil {
+				s.logger.Warn(err)
 				continue
 			}
-			rs, ok := r.([]interface{})
+
+			s.logger.Debugf("request: %s", req)
+			request := new(request2.Request)
+			if err = request.Unmarshal([]byte(req)); err != nil {
+				s.logger.Warn(err)
+				continue
+			}
+
+			c := request.Context
+			s.logger.Debugf("request: %+v", request)
+			if err != nil {
+				s.logger.Warn(err)
+				continue
+			}
+			slot = request.GetSlot()
+			if slot == "" {
+				slot = "*"
+			}
+			slotValue, ok := s.spider.RequestSlotLoad(slot)
 			if !ok {
-				err = errors.New("req is empty")
-				s.logger.Warn(err)
-				time.Sleep(1 * time.Second)
-				continue
-			}
-			if len(rs) == 0 {
-				err = errors.New("req is empty")
-				s.logger.Debug(err)
-				time.Sleep(1 * time.Second)
-				continue
-			}
-			for _, v := range rs {
-				req = v.(string)
-				break
-			}
-			s.logger.Debug("req", req)
-		} else {
-			r, e := s.redis.BLPop(ctx.GetTaskContext(), 0, s.requestKey).Result()
-			if e != nil {
-				s.logger.Warn(e)
-				continue
-			}
-			if len(r) == 0 {
-				err = errors.New("req is empty")
-				s.logger.Warn(err)
-				time.Sleep(1 * time.Second)
-				continue
-			}
-			req = r[1]
-		}
-
-		err = s.redis.ZRem(ctx.GetTaskContext(), s.requestKey, req).Err()
-		if err != nil {
-			s.logger.Warn(err)
-			continue
-		}
-
-		s.logger.Debugf("request: %s", req)
-		request := new(request2.Request)
-		if err = request.Unmarshal([]byte(req)); err != nil {
-			s.logger.Warn(err)
-			continue
-		}
-
-		c := request.Context
-		s.logger.Debugf("request: %+v", request)
-		if err != nil {
-			s.logger.Warn(err)
-			continue
-		}
-		slot = request.GetSlot()
-		if slot == "" {
-			slot = "*"
-		}
-		slotValue, ok := s.spider.RequestSlotLoad(slot)
-		if !ok {
-			concurrency := uint8(1)
-			if request.GetConcurrency() != nil {
-				concurrency = *request.GetConcurrency()
-			}
-			if concurrency < 1 {
-				concurrency = 1
-			}
-			requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
-			s.spider.RequestSlotStore(slot, requestSlot)
-		}
-
-		requestSlot = slotValue.(*rate.Limiter)
-
-		err = requestSlot.Wait(ctx.GetTaskContext())
-		if err != nil {
-			s.logger.Error(err)
-		}
-		go func(c pkg.Context, request pkg.Request) {
-			response, e := s.Request(c, request)
-			if e != nil {
-				s.task.StopRequest()
-				return
+				concurrency := uint8(1)
+				if request.GetConcurrency() != nil {
+					concurrency = *request.GetConcurrency()
+				}
+				if concurrency < 1 {
+					concurrency = 1
+				}
+				requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
+				s.spider.RequestSlotStore(slot, requestSlot)
 			}
 
-			go func(ctx pkg.Context, response pkg.Response) {
-				defer func() {
-					if r := recover(); r != nil {
-						s.logger.Error(r)
-						buf := make([]byte, 1<<16)
-						runtime.Stack(buf, true)
-						err = errors.New(string(buf))
-						//s.logger.Error(err)
+			requestSlot = slotValue.(*rate.Limiter)
+
+			err = requestSlot.Wait(ctx.GetTask().GetContext())
+			if err != nil {
+				s.logger.Error(err)
+			}
+			go func(c pkg.Context, request pkg.Request) {
+				response, e := s.Request(c, request)
+				if e != nil {
+					s.task.StopRequest()
+					return
+				}
+
+				go func(ctx pkg.Context, response pkg.Response) {
+					defer func() {
+						if r := recover(); r != nil {
+							s.logger.Error(r)
+							buf := make([]byte, 1<<16)
+							runtime.Stack(buf, true)
+							err = errors.New(string(buf))
+							//s.logger.Error(err)
+							s.HandleError(ctx, response, err, request.GetErrBack())
+						}
+					}()
+
+					if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
+						s.logger.Error(err)
 						s.HandleError(ctx, response, err, request.GetErrBack())
 					}
-				}()
-
-				if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
-					s.logger.Error(err)
-					s.HandleError(ctx, response, err, request.GetErrBack())
-				}
-				s.task.StopRequest()
-			}(c, response)
-		}(c, request)
+					s.task.StopRequest()
+				}(c, response)
+			}(c, request)
+		}
 	}
 }
 

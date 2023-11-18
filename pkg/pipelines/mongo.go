@@ -56,7 +56,7 @@ func (m *MongoPipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	item.GetContext().WithItemProcessed(true)
+	item.GetContext().GetItem().WithSaved(true)
 
 	bs, err := bson.Marshal(data)
 	if err != nil {
@@ -92,7 +92,7 @@ func (m *MongoPipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	item.GetContext().WithItemStatus(pkg.ItemStatusSuccess)
+	item.GetContext().GetItem().WithStatus(pkg.ItemStatusSuccess)
 	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return

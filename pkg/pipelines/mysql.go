@@ -58,7 +58,7 @@ func (m *MysqlPipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	item.GetContext().WithItemProcessed(true)
+	item.GetContext().GetItem().WithSaved(true)
 
 	if m.env == "dev" {
 		m.logger.Debug("current mode don't need save")
@@ -142,7 +142,7 @@ func (m *MysqlPipeline) ProcessItem(item pkg.Item) (err error) {
 		m.logger.Info(itemMysql.GetTable(), "insert success", id)
 	}
 
-	item.GetContext().WithItemStatus(pkg.ItemStatusSuccess)
+	item.GetContext().GetItem().WithStatus(pkg.ItemStatusSuccess)
 	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return

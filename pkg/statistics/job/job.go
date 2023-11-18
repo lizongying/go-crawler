@@ -26,6 +26,7 @@ type Job struct {
 	FinishTime    utils.Timestamp      `json:"finish_time,omitempty"`
 	UpdateTime    utils.Timestamp      `json:"update_time,omitempty"`
 	StatusList    *queue.PriorityQueue `json:"status_list,omitempty"`
+	StopReason    string               `json:"stop_reason,omitempty"`
 }
 
 func (s *Job) WithStatusAndTime(status pkg.JobStatus, t time.Time) pkg.StatisticsJob {
@@ -114,4 +115,11 @@ func (s *Job) Marshal() (bytes []byte, err error) {
 		return
 	}
 	return
+}
+func (s *Job) GetStopReason() string {
+	return s.StopReason
+}
+func (s *Job) WithStopReason(stopReason string) pkg.StatisticsJob {
+	s.StopReason = stopReason
+	return s
 }

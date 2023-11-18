@@ -8,15 +8,17 @@ import (
 )
 
 type Task struct {
-	pkg.Task  `json:"-"`
-	pkg.Stats `json:"stats,omitempty"`
-	Context   context.Context     `json:"-"`
-	Id        string              `json:"id,omitempty"`
-	JobSubId  uint64              `json:"job_sub_id,omitempty"`
-	Status    pkg.TaskStatus      `json:"status,omitempty"`
-	StartTime utils.Timestamp     `json:"start_time,omitempty"`
-	StopTime  utils.Timestamp     `json:"stop_time,omitempty"`
-	Deadline  utils.TimestampNano `json:"deadline,omitempty"`
+	pkg.Task   `json:"-"`
+	pkg.Stats  `json:"stats,omitempty"`
+	Context    context.Context     `json:"-"`
+	Id         string              `json:"id,omitempty"`
+	JobSubId   uint64              `json:"job_sub_id,omitempty"`
+	Status     pkg.TaskStatus      `json:"status,omitempty"`
+	StartTime  utils.Timestamp     `json:"start_time,omitempty"`
+	StopTime   utils.Timestamp     `json:"stop_time,omitempty"`
+	UpdateTime utils.Timestamp     `json:"update_time,omitempty"`
+	Deadline   utils.TimestampNano `json:"deadline,omitempty"`
+	StopReason string              `json:"stop_reason,omitempty"`
 }
 
 func (c *Task) GetTask() pkg.Task {
@@ -59,6 +61,17 @@ func (c *Task) GetStatus() pkg.TaskStatus {
 }
 func (c *Task) WithStatus(status pkg.TaskStatus) pkg.ContextTask {
 	c.Status = status
+	t := time.Now()
+	c.WithUpdateTime(t)
+	switch status {
+	case pkg.TaskStatusRunning:
+		c.WithStartTime(t)
+	case pkg.TaskStatusSuccess:
+		c.WithStopTime(t)
+	case pkg.TaskStatusError:
+		c.WithStopTime(t)
+	}
+
 	return c
 }
 func (c *Task) GetStartTime() time.Time {
@@ -75,10 +88,24 @@ func (c *Task) WithStopTime(stopTime time.Time) pkg.ContextTask {
 	c.StopTime = utils.Timestamp{Time: stopTime}
 	return c
 }
+func (c *Task) GetUpdateTime() time.Time {
+	return c.UpdateTime.Time
+}
+func (c *Task) WithUpdateTime(t time.Time) pkg.ContextTask {
+	c.UpdateTime = utils.Timestamp{Time: t}
+	return c
+}
 func (c *Task) GetDeadline() time.Time {
 	return c.Deadline.Time
 }
 func (c *Task) WithDeadline(deadline time.Time) pkg.ContextTask {
 	c.Deadline = utils.TimestampNano{Time: deadline}
+	return c
+}
+func (c *Task) GetStopReason() string {
+	return c.StopReason
+}
+func (c *Task) WithStopReason(stopReason string) pkg.ContextTask {
+	c.StopReason = stopReason
 	return c
 }

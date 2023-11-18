@@ -56,7 +56,7 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	item.GetContext().WithItemProcessed(true)
+	item.GetContext().GetItem().WithSaved(true)
 
 	refType := reflect.TypeOf(data)
 	refValue := reflect.ValueOf(data)
@@ -72,11 +72,11 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 
 	m.mutex.Lock()
 
-	files, ok := m.files[item.GetContext().GetTaskId()]
+	files, ok := m.files[item.GetContext().GetTask().GetId()]
 	if !ok {
 		fs := make(map[string]*os.File)
 		files = &fs
-		m.files[item.GetContext().GetTaskId()] = files
+		m.files[item.GetContext().GetTask().GetId()] = files
 	}
 
 	file, ok := (*files)[filename]
@@ -149,7 +149,7 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 
 	m.logger.Info("item saved:", filename)
-	item.GetContext().WithItemStatus(pkg.ItemStatusSuccess)
+	item.GetContext().GetItem().WithStatus(pkg.ItemStatusSuccess)
 	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return
@@ -158,7 +158,7 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 func (m *CsvPipeline) taskStopped(ctx pkg.Context) (err error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	files, ok := m.files[ctx.GetTaskId()]
+	files, ok := m.files[ctx.GetTask().GetId()]
 	if !ok {
 		return
 	}

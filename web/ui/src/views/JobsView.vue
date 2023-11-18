@@ -389,6 +389,24 @@ const columns = computed(() => {
       },
     },
     {
+      title: 'Stop Reason',
+      dataIndex: 'stop_reason',
+      sorter: (a, b) => sortStr(a.stop_reason, b.stop_reason),
+      width: 200,
+      ellipsis: true,
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.stop_reason || null,
+      onFilter: (value, record) =>
+          record.stop_reason.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
+    },
+    {
       title: 'Task',
       dataIndex: 'task',
       sorter: (a, b) => sortInt(a.task, b.task),
