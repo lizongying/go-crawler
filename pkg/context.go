@@ -7,103 +7,24 @@ import (
 
 type Context interface {
 	GetContext() Context
+
 	GetCrawler() ContextCrawler
 	WithCrawler(ContextCrawler) Context
-	GetCrawlerContext() context.Context
-	WithCrawlerContext(context.Context) Context
-	GetCrawlerId() string
-	WithCrawlerId(string) Context
-	GetCrawlerStatus() CrawlerStatus
-	WithCrawlerStatus(CrawlerStatus) Context
-	GetCrawlerStartTime() time.Time
-	GetCrawlerStopTime() time.Time
-	GetCrawlerUpdateTime() time.Time
 
 	GetSpider() ContextSpider
 	WithSpider(ContextSpider) Context
-	GetSpiderContext() context.Context
-	WithSpiderContext(context.Context) Context
-	GetSpiderName() string
-	WithSpiderName(string) Context
-	GetSpiderStatus() SpiderStatus
-	WithSpiderStatus(SpiderStatus) Context
-	GetSpiderStartTime() time.Time
-	GetSpiderStopTime() time.Time
-	GetSpiderUpdateTime() time.Time
 
 	GetJob() ContextJob
 	WithJob(ContextJob) Context
-	GetJobContext() context.Context
-	WithJobContext(context.Context) Context
-	GetJobId() string
-	WithJobId(string) Context
-	GetJobSubId() uint64
-	WithJobSubId(uint64) Context
-	GetJobStatus() JobStatus
-	WithJobStatus(JobStatus) Context
-	GetJobEnable() bool
-	WithJobEnable(bool) Context
-	GetJobStartTime() time.Time
-	GetJobStopTime() time.Time
-	GetJobUpdateTime() time.Time
-	GetJobFunc() string
-	WithJobFunc(string) Context
-	GetJobArgs() string
-	WithJobArgs(string) Context
-	GetJobMode() JobMode
-	WithJobMode(JobMode) Context
-	GetJobSpec() string
-	WithJobSpec(string) Context
-	GetJobOnlyOneTask() bool
-	WithJobOnlyOneTask(bool) Context
 
 	GetTask() ContextTask
 	WithTask(ContextTask) Context
-	GetTaskId() string
-	WithTaskId(string) Context
-	GetTaskContext() context.Context
-	WithTaskContext(context.Context) Context
-	GetTaskStatus() TaskStatus
-	WithTaskStatus(TaskStatus) Context
-	GetTaskStartTime() time.Time
-	WithTaskStartTime(time.Time) Context
-	GetTaskStopTime() time.Time
-	WithTaskStopTime(time.Time) Context
-	GetTaskDeadline() time.Time
-	WithTaskDeadline(time.Time) Context
 
 	GetRequest() ContextRequest
 	WithRequest(ContextRequest) Context
-	GetRequestId() string
-	WithRequestId(string) Context
-	GetRequestContext() context.Context
-	WithRequestContext(context.Context) Context
-	GetRequestStatus() RequestStatus
-	WithRequestStatus(RequestStatus) Context
-	GetRequestStartTime() time.Time
-	WithRequestStartTime(time.Time) Context
-	GetRequestStopTime() time.Time
-	WithRequestStopTime(time.Time) Context
-	GetRequestDeadline() time.Time
-	WithRequestDeadline(time.Time) Context
-	GetRequestCookies() map[string]string
-	WithRequestCookies(map[string]string) Context
-	GetRequestReferrer() string
-	WithRequestReferrer(string) Context
 
 	GetItem() ContextItem
 	WithItem(ContextItem) Context
-	GetItemId() string
-	WithItemId(string) Context
-	GetItemContext() context.Context
-	WithItemContext(context.Context) Context
-	GetItemStatus() ItemStatus
-	WithItemStatus(ItemStatus) Context
-	GetItemStartTime() time.Time
-	GetItemStopTime() time.Time
-	GetItemUpdateTime() time.Time
-	GetItemProcessed() bool
-	WithItemProcessed(bool) Context
 }
 
 type ContextCrawler interface {
@@ -158,6 +79,8 @@ type ContextJob interface {
 	WithSpec(string) ContextJob
 	GetOnlyOneTask() bool
 	WithOnlyOneTask(bool) ContextJob
+	GetStopReason() string
+	WithStopReason(stopReason string) ContextJob
 }
 
 type ContextTask interface {
@@ -166,7 +89,7 @@ type ContextTask interface {
 	GetId() string
 	WithId(string) ContextTask
 	GetJobSubId() uint64
-	WithJobSubId(uint64) ContextTask
+	WithJobSubId(id uint64) ContextTask
 	GetContext() context.Context
 	WithContext(context.Context) ContextTask
 	GetStatus() TaskStatus

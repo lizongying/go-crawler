@@ -39,9 +39,6 @@ export const useSpidersStore = defineStore('spiders', () => {
         if (spider === null) {
             return
         }
-        console.log(spider.funcs.map(v => {
-            return {value: v, label: v}
-        }))
         return spider.funcs.map(v => {
             return {value: v, label: v}
         })

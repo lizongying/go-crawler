@@ -21,10 +21,10 @@ type RobotsTxtMiddleware struct {
 }
 
 func (m *RobotsTxtMiddleware) SpiderStarted(c pkg.Context) (err error) {
-	if c.GetSpiderName() != m.spider.Name() {
+	if c.GetSpider().GetName() != m.spider.Name() {
 		return
 	}
-	if c.GetSpiderStatus() != pkg.SpiderStatusRunning {
+	if c.GetSpider().GetStatus() != pkg.SpiderStatusRunning {
 		return
 	}
 	host := m.spider.GetHost()

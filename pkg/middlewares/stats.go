@@ -16,7 +16,7 @@ func (m *StatsMiddleware) taskStopped(c pkg.Context) (err error) {
 	task := c.GetTask()
 
 	var sl []any
-	sl = append(sl, c.GetSpiderName(), c.GetTaskId())
+	sl = append(sl, c.GetSpider().GetName(), c.GetTask().GetId())
 	keys := make([]string, 0)
 	kv := task.GetStats().GetMap()
 	for k := range kv {

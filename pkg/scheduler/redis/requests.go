@@ -49,7 +49,7 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 		var req string
 		var err error
 		if s.enablePriorityQueue {
-			r, e := s.redis.Do(ctx.GetTaskContext(), "EVALSHA", s.requestKeySha, 1, s.requestKey, s.batch).Result()
+			r, e := s.redis.Do(ctx.GetTask().GetContext(), "EVALSHA", s.requestKeySha, 1, s.requestKey, s.batch).Result()
 			if e != nil {
 				s.logger.Warn(e)
 				time.Sleep(1 * time.Second)
@@ -74,7 +74,7 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 			}
 			s.logger.Debug("req", req)
 		} else {
-			r, e := s.redis.BLPop(ctx.GetTaskContext(), 0, s.requestKey).Result()
+			r, e := s.redis.BLPop(ctx.GetTask().GetContext(), 0, s.requestKey).Result()
 			if e != nil {
 				s.logger.Warn(e)
 				continue
@@ -88,7 +88,7 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 			req = r[1]
 		}
 
-		err = s.redis.ZRem(ctx.GetTaskContext(), s.requestKey, req).Err()
+		err = s.redis.ZRem(ctx.GetTask().GetContext(), s.requestKey, req).Err()
 		if err != nil {
 			s.logger.Warn(err)
 			continue
@@ -126,7 +126,7 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 
 		requestSlot = slotValue.(*rate.Limiter)
 
-		err = requestSlot.Wait(ctx.GetTaskContext())
+		err = requestSlot.Wait(ctx.GetTask().GetContext())
 		if err != nil {
 			s.logger.Error(err)
 		}

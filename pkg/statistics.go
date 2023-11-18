@@ -53,6 +53,7 @@ type StatisticsJob interface {
 	IncRecord()
 	DecRecord()
 	WithEnable(enable bool) StatisticsJob
+	WithStopReason(stopReason string) StatisticsJob
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsTask interface {

@@ -362,10 +362,10 @@ func (s *BaseSpider) SetRequestRate(slot string, interval time.Duration, concurr
 func (s *BaseSpider) Start(c pkg.Context) (err error) {
 	ctx := context.Background()
 
-	s.context.WithSpiderStatus(pkg.SpiderStatusRunning)
+	s.context.GetSpider().WithStatus(pkg.SpiderStatusRunning)
 	s.Crawler.GetSignal().SpiderChanged(s.GetContext())
 
-	s.logger.Info("spiderName", s.context.GetSpiderName())
+	s.logger.Info("spiderName", s.context.GetSpider().GetName())
 	s.logger.Info("allowedDomains", s.GetAllowedDomains())
 	s.logger.Info("okHttpCodes", s.OkHttpCodes())
 	s.logger.Info("platforms", s.GetPlatforms())
@@ -393,7 +393,7 @@ func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode 
 		return
 	}
 
-	s.context.WithSpiderContext(ctx)
+	s.context.GetSpider().WithContext(ctx)
 
 	s.jobsMutex.Lock()
 	defer s.jobsMutex.Unlock()
@@ -404,7 +404,7 @@ func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode 
 		return
 	}
 
-	id = job.context.GetJobId()
+	id = job.context.GetJob().GetId()
 	s.jobs[id] = job
 
 	if err = job.run(ctx); err != nil {
@@ -424,7 +424,7 @@ func (s *BaseSpider) RerunJob(ctx context.Context, jobId string) (err error) {
 		err = errors.New("job is not exists")
 		return
 	}
-	if job.GetContext().GetJobStatus() != pkg.JobStatusStopped {
+	if job.GetContext().GetJob().GetStatus() != pkg.JobStatusStopped {
 		err = errors.New("job is not stopped")
 		return
 	}
@@ -440,7 +440,7 @@ func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 		err = errors.New("the job is not exists")
 		return
 	}
-	if !utils.InSlice(job.context.GetJobStatus(), []pkg.JobStatus{
+	if !utils.InSlice(job.context.GetJob().GetStatus(), []pkg.JobStatus{
 		pkg.SpiderStatusReady,
 		pkg.JobStatusRunning,
 	}) {
@@ -452,9 +452,9 @@ func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 }
 func (s *BaseSpider) JobStopped(ctx pkg.Context, err error) {
 	if err != nil {
-		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "job finished with an error:", err, "spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
+		s.logger.Info(s.spider.Name(), ctx.GetJob().GetId(), "job finished with an error:", err, "spend time:", ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()))
 	} else {
-		s.logger.Info(s.spider.Name(), ctx.GetJobId(), "job finished. spend time:", ctx.GetJobStopTime().Sub(ctx.GetJobStartTime()))
+		s.logger.Info(s.spider.Name(), ctx.GetJob().GetId(), "job finished. spend time:", ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()))
 	}
 
 	s.job.Out()
@@ -480,12 +480,12 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 		return
 	}
 
-	if s.context.GetSpiderStatus() == pkg.SpiderStatusStopping {
+	if s.context.GetSpider().GetStatus() == pkg.SpiderStatusStopping {
 		s.logger.Debug("spider unimplemented Stop")
 		return
 	}
 
-	s.context.WithSpiderStatus(pkg.SpiderStatusIdle)
+	s.context.GetSpider().WithStatus(pkg.SpiderStatusIdle)
 	s.Crawler.GetSignal().SpiderChanged(s.context)
 	s.logger.Debug("spider has idle")
 
@@ -494,7 +494,7 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 		return
 	}
 
-	s.context.WithSpiderStatus(pkg.SpiderStatusStopping)
+	s.context.GetSpider().WithStatus(pkg.SpiderStatusStopping)
 	s.Crawler.GetSignal().SpiderChanged(s.context)
 	s.logger.Debug("spider wait for stop")
 
@@ -506,10 +506,10 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 		}
 
 		stopTime := time.Now()
-		s.context.WithSpiderStatus(pkg.SpiderStatusStopped)
+		s.context.GetSpider().WithStatus(pkg.SpiderStatusStopped)
 		s.Crawler.GetSignal().SpiderChanged(s.context)
 
-		spendTime := stopTime.Sub(s.context.GetSpiderStartTime())
+		spendTime := stopTime.Sub(s.context.GetSpider().GetStartTime())
 		s.logger.Info(s.spider.Name(), s.context.GetSpider().GetId(), "spider finished. spend time:", spendTime)
 		s.Crawler.SpiderStopped(s.context, err)
 	}()

@@ -61,7 +61,7 @@ for _, v in ipairs(r) do
 end
 return r
 `
-		r, err := s.redis.Do(ctx.GetTaskContext(), "SCRIPT", "LOAD", script).Result()
+		r, err := s.redis.Do(ctx.GetTask().GetContext(), "SCRIPT", "LOAD", script).Result()
 		if err != nil {
 			s.logger.Error(err)
 			return
@@ -77,7 +77,7 @@ return r
 
 	s.logger.Debug("request key", s.requestKey)
 	if s.env == "dev" {
-		err := s.redis.Del(ctx.GetTaskContext(), s.requestKey).Err()
+		err := s.redis.Del(ctx.GetTask().GetContext(), s.requestKey).Err()
 		if err != nil {
 			s.logger.Error(err)
 			return

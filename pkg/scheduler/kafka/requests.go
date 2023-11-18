@@ -48,7 +48,7 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 	requestSlot := value.(*rate.Limiter)
 
 	for {
-		req, err := s.kafkaReader.FetchMessage(ctx.GetTaskContext())
+		req, err := s.kafkaReader.FetchMessage(ctx.GetTask().GetContext())
 		if err != nil {
 			s.logger.Warn(err)
 			continue
@@ -91,7 +91,7 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 
 		requestSlot = slotValue.(*rate.Limiter)
 
-		err = requestSlot.Wait(ctx.GetTaskContext())
+		err = requestSlot.Wait(ctx.GetTask().GetContext())
 		if err != nil {
 			s.logger.Error(err)
 		}

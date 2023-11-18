@@ -21,7 +21,7 @@ func (m *NonePipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	if item.GetContext().GetItemProcessed() {
+	if item.GetContext().GetItem().GetSaved() {
 		return
 	}
 
@@ -33,7 +33,7 @@ func (m *NonePipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	item.GetContext().WithItemStatus(pkg.ItemStatusSuccess)
+	item.GetContext().GetItem().WithStatus(pkg.ItemStatusSuccess)
 	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return

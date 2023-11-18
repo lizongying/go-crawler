@@ -21,6 +21,7 @@ type Job struct {
 	Mode        pkg.JobMode     `json:"mode,omitempty"`
 	Spec        string          `json:"spec,omitempty"`
 	OnlyOneTask bool            `json:"only_one_task,omitempty"`
+	StopReason  string          `json:"stop_reason,omitempty"`
 }
 
 func (c *Job) GetId() string {
@@ -121,5 +122,12 @@ func (c *Job) GetOnlyOneTask() bool {
 }
 func (c *Job) WithOnlyOneTask(onlyOneTask bool) pkg.ContextJob {
 	c.OnlyOneTask = onlyOneTask
+	return c
+}
+func (c *Job) GetStopReason() string {
+	return c.StopReason
+}
+func (c *Job) WithStopReason(stopReason string) pkg.ContextJob {
+	c.StopReason = stopReason
 	return c
 }

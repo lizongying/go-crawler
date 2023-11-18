@@ -62,7 +62,7 @@ func (s *Scheduler) handleRequest(ctx pkg.Context) {
 
 		requestSlot = slotValue.(*rate.Limiter)
 
-		err := requestSlot.Wait(ctx.GetTaskContext())
+		err := requestSlot.Wait(ctx.GetTask().GetContext())
 		if err != nil {
 			s.logger.Error(err, time.Now(), ctx)
 		}

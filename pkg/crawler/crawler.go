@@ -170,7 +170,7 @@ func (c *Crawler) RunJob(ctx context.Context, spiderName string, startFunc strin
 		return
 	}
 
-	if spider.GetContext().GetSpiderStatus() == pkg.SpiderStatusReady {
+	if spider.GetContext().GetSpider().GetStatus() == pkg.SpiderStatusReady {
 		if err = spider.Start(c.context); err != nil {
 			c.logger.Error(err)
 			return
@@ -238,12 +238,12 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	c.WithContext(new(crawlerContext.Context).
 		WithCrawler(new(crawlerContext.Crawler).
 			WithId(c.NextId())))
-	c.context.WithCrawlerStatus(pkg.CrawlerStatusReady)
+	c.context.GetCrawler().WithStatus(pkg.CrawlerStatusReady)
 	c.Signal.CrawlerChanged(c.context)
 
-	c.context.WithCrawlerContext(ctx)
+	c.context.GetCrawler().WithContext(ctx)
 
-	c.context.WithCrawlerStatus(pkg.CrawlerStatusStarting)
+	c.context.GetCrawler().WithStatus(pkg.CrawlerStatusStarting)
 	c.Signal.CrawlerChanged(c.context)
 
 	for _, v := range c.spiders {
@@ -252,10 +252,10 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 		c.logger.Info("spider", v.Name(), "loaded")
 	}
 
-	c.context.WithCrawlerStatus(pkg.CrawlerStatusRunning)
+	c.context.GetCrawler().WithStatus(pkg.CrawlerStatusRunning)
 	c.Signal.CrawlerChanged(c.context)
 
-	c.logger.Info("crawler is running", c.context.GetCrawlerId())
+	c.logger.Info("crawler is running", c.context.GetCrawler().GetId())
 	c.logger.Info("referrerPolicy", c.config.GetReferrerPolicy())
 	c.logger.Info("urlLengthLimit", c.config.GetUrlLengthLimit())
 
@@ -293,7 +293,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 }
 
 func (c *Crawler) Stop(ctx pkg.Context) (err error) {
-	c.context.WithCrawlerStatus(pkg.CrawlerStatusIdle)
+	c.context.GetCrawler().WithStatus(pkg.CrawlerStatusIdle)
 	c.Signal.CrawlerChanged(ctx)
 	c.logger.Debug("crawler has idle")
 
@@ -302,23 +302,23 @@ func (c *Crawler) Stop(ctx pkg.Context) (err error) {
 		return
 	}
 
-	c.context.WithCrawlerStatus(pkg.CrawlerStatusStopping)
+	c.context.GetCrawler().WithStatus(pkg.CrawlerStatusStopping)
 	c.Signal.CrawlerChanged(ctx)
 	c.logger.Debug("crawler wait for stop")
 
 	for _, v := range c.spiders {
-		if !utils.InSlice(v.GetContext().GetSpiderStatus(), []pkg.SpiderStatus{
+		if !utils.InSlice(v.GetContext().GetSpider().GetStatus(), []pkg.SpiderStatus{
 			pkg.SpiderStatusReady,
 			pkg.SpiderStatusStopped,
 		}) {
-			c.logger.Warn("crawler has a spider that need to stop", v.GetContext().GetSpiderStatus().String())
+			c.logger.Warn("crawler has a spider that need to stop", v.GetContext().GetSpider().GetStatus().String())
 			return
 		}
 	}
 
-	c.context.WithCrawlerStatus(pkg.CrawlerStatusStopped)
+	c.context.GetCrawler().WithStatus(pkg.CrawlerStatusStopped)
 	c.Signal.CrawlerChanged(ctx)
-	c.logger.Info("crawler finished. spend time:", ctx.GetCrawlerStopTime().Sub(ctx.GetCrawlerStartTime()), ctx.GetCrawlerId())
+	c.logger.Info("crawler finished. spend time:", ctx.GetCrawler().GetStopTime().Sub(ctx.GetCrawler().GetStartTime()), ctx.GetCrawler().GetId())
 	c.stop <- struct{}{}
 	return
 }

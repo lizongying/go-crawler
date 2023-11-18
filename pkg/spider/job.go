@@ -46,7 +46,7 @@ func (j *Job) start(ctx pkg.Context, jobFunc string, args string, mode pkg.JobMo
 			WithSpec(spec).
 			WithOnlyOneTask(onlyOneTask))
 
-	j.context.WithJobStatus(pkg.JobStatusReady)
+	j.context.GetJob().WithStatus(pkg.JobStatusReady)
 	j.crawler.GetSignal().JobChanged(j.context)
 
 	j.task.RegisterIsReadyAndIsZero(func() {
@@ -61,7 +61,7 @@ func (j *Job) kill(_ context.Context) (err error) {
 		return
 	}
 
-	if !utils.InSlice(j.context.GetJobStatus(), []pkg.JobStatus{
+	if !utils.InSlice(j.context.GetJob().GetStatus(), []pkg.JobStatus{
 		pkg.JobStatusRunning,
 	}) {
 		err = errors.New("the job can be killed in the running state")
@@ -69,7 +69,7 @@ func (j *Job) kill(_ context.Context) (err error) {
 		return
 	}
 
-	j.context.WithJobStatus(pkg.JobStatusStopping)
+	j.context.GetJob().WithStatus(pkg.JobStatusStopping)
 	j.crawler.GetSignal().JobChanged(j.context)
 
 	j.cancel()
@@ -82,7 +82,7 @@ func (j *Job) run(ctx context.Context) (err error) {
 		return
 	}
 
-	if !utils.InSlice(j.context.GetJobStatus(), []pkg.JobStatus{
+	if !utils.InSlice(j.context.GetJob().GetStatus(), []pkg.JobStatus{
 		pkg.JobStatusReady,
 		pkg.JobStatusStopped,
 	}) {
@@ -91,46 +91,46 @@ func (j *Job) run(ctx context.Context) (err error) {
 		return
 	}
 
-	j.context.WithJobStatus(pkg.JobStatusStarting)
+	j.context.GetJob().WithStatus(pkg.JobStatusStarting)
 	j.crawler.GetSignal().JobChanged(j.context)
 
 	j.task.Clear()
 
-	ctx, j.cancel = context.WithCancel(context.Background())
-	j.context.WithJobContext(ctx)
-	j.context.WithJobSubId(j.crawler.GenUid())
+	ctx, j.cancel = context.WithCancel(ctx)
+	j.context.GetJob().WithContext(ctx)
+	j.context.GetJob().WithSubId(j.crawler.GenUid())
 
 	go func() {
 		select {
-		case <-j.context.GetJobContext().Done():
-			if j.context.GetJobStatus() != pkg.JobStatusStopped {
+		case <-j.context.GetJob().GetContext().Done():
+			if j.context.GetJob().GetStatus() != pkg.JobStatusStopped {
 				j.stop(ctx.Err())
 			}
 			return
 		case <-ctx.Done():
-			if j.context.GetJobStatus() != pkg.JobStatusStopped {
+			if j.context.GetJob().GetStatus() != pkg.JobStatusStopped {
 				j.stop(ctx.Err())
 			}
 			return
 		}
 	}()
 
-	switch j.context.GetJobMode() {
+	switch j.context.GetJob().GetMode() {
 	case pkg.JobModeOnce:
 		go j.startTask()
 	case pkg.JobModeLoop:
 		go j.startTask()
 	case pkg.JobModeCron:
 		j.cronJob = make(chan struct{}, 1)
-		if j.context.GetJobOnlyOneTask() {
+		if j.context.GetJob().GetOnlyOneTask() {
 			j.cronJob <- struct{}{}
 		}
 		j.cron = cron.New(cron.WithLogger(j.logger))
 		j.cron.MustStart()
 		job := new(cron.Job).
-			MustEverySpec(j.context.GetJobSpec()).
+			MustEverySpec(j.context.GetJob().GetSpec()).
 			Callback(func() {
-				if j.context.GetJobOnlyOneTask() {
+				if j.context.GetJob().GetOnlyOneTask() {
 					<-j.cronJob
 					if _, ok := <-j.cronJob; ok {
 						return
@@ -146,7 +146,7 @@ func (j *Job) run(ctx context.Context) (err error) {
 }
 
 func (j *Job) stop(err error) {
-	if j.context.GetJobStatus() == pkg.JobStatusStopped {
+	if j.context.GetJob().GetStatus() == pkg.JobStatusStopped {
 		err = errors.New("job has been finished")
 		j.logger.Error(err)
 		return
@@ -156,11 +156,12 @@ func (j *Job) stop(err error) {
 	j.crawler.GetSignal().JobChanged(j.context)
 
 	if err != nil {
-		if j.context.GetJobMode() == pkg.JobModeCron {
+		if j.context.GetJob().GetMode() == pkg.JobModeCron {
 			close(j.cronJob)
 			j.cron.MustStop()
 		}
 
+		j.context.GetJob().WithStopReason(err.Error())
 		j.context.GetJob().WithStatus(pkg.JobStatusStopped)
 		j.crawler.GetSignal().JobChanged(j.context)
 
@@ -168,7 +169,7 @@ func (j *Job) stop(err error) {
 		return
 	}
 
-	switch j.context.GetJobMode() {
+	switch j.context.GetJob().GetMode() {
 	case pkg.JobModeOnce:
 		j.context.GetJob().WithStatus(pkg.JobStatusStopped)
 		j.crawler.GetSignal().JobChanged(j.context)
@@ -177,7 +178,7 @@ func (j *Job) stop(err error) {
 	case pkg.JobModeLoop:
 		j.startTask()
 	case pkg.JobModeCron:
-		if j.context.GetJobOnlyOneTask() {
+		if j.context.GetJob().GetOnlyOneTask() {
 			j.cronJob <- struct{}{}
 		}
 	default:
@@ -187,15 +188,15 @@ func (j *Job) stop(err error) {
 }
 func (j *Job) startTask() {
 	// idle when job stopped
-	if j.context.GetJobStatus() != pkg.JobStatusRunning {
-		j.context.WithJobStatus(pkg.JobStatusRunning)
+	if j.context.GetJob().GetStatus() != pkg.JobStatusRunning {
+		j.context.GetJob().WithStatus(pkg.JobStatusRunning)
 		j.crawler.GetSignal().JobChanged(j.context)
 	}
 	_, _ = new(Task).FromSpider(j.spider).WithJob(j).start(j.context)
 	j.task.In()
 }
 func (j *Job) TaskStopped(ctx pkg.Context, _ error) {
-	if ctx.GetTask().GetJobSubId() == j.context.GetJobSubId() {
+	if ctx.GetTask().GetJobSubId() == j.context.GetJob().GetSubId() {
 		j.task.Out()
 	}
 }

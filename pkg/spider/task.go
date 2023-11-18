@@ -76,24 +76,24 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 
 		params := []reflect.Value{
 			reflect.ValueOf(t.context),
-			reflect.ValueOf(t.context.GetJobArgs()),
+			reflect.ValueOf(t.context.GetJob().GetArgs()),
 		}
-		caller := reflect.ValueOf(t.spider).MethodByName(t.context.GetJobFunc())
+		caller := reflect.ValueOf(t.spider).MethodByName(t.context.GetJob().GetFunc())
 		if !caller.IsValid() {
-			err = errors.New(fmt.Sprintf("schedule func is invalid: %s", t.context.GetJobFunc()))
+			err = errors.New(fmt.Sprintf("schedule func is invalid: %s", t.context.GetJob().GetFunc()))
 			t.logger.Error(err)
 			return
 		}
 
 		res := caller.Call(params)
 		if len(res) != 1 {
-			err = errors.New(fmt.Sprintf("%s has too many return values", t.context.GetJobFunc()))
+			err = errors.New(fmt.Sprintf("%s has too many return values", t.context.GetJob().GetFunc()))
 			t.logger.Error(err)
 			return
 		}
 
 		if res[0].Type().Name() != "error" {
-			err = errors.New(fmt.Sprintf("%s should return an error", t.context.GetJobFunc()))
+			err = errors.New(fmt.Sprintf("%s should return an error", t.context.GetJob().GetFunc()))
 			t.logger.Error(err)
 			return
 		}
@@ -114,10 +114,10 @@ func (t *Task) stop() (err error) {
 	}
 
 	stopTime := time.Now()
-	t.context.WithTaskStatus(pkg.TaskStatusSuccess)
-	t.context.WithTaskStopTime(stopTime)
+	t.context.GetTask().WithStatus(pkg.TaskStatusSuccess)
+	t.context.GetTask().WithStopTime(stopTime)
 	t.crawler.GetSignal().TaskChanged(t.context)
-	t.logger.Info(t.spider.Name(), t.context.GetTaskId(), "task finished. spend time:", stopTime.Sub(t.context.GetTaskStartTime()))
+	t.logger.Info(t.spider.Name(), t.context.GetTask().GetId(), "task finished. spend time:", stopTime.Sub(t.context.GetTask().GetStartTime()))
 	t.job.TaskStopped(t.context, nil)
 	return
 }

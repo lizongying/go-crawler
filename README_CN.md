@@ -969,9 +969,9 @@ make web_server
 
 * 其他
 
-  * 升级go-crawl
-  * 清理缓存
-  
+    * 升级go-crawl
+    * 清理缓存
+
 ## 示例
 
 example_spider.go
@@ -1113,6 +1113,12 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * request with ctx
 * stat->crawler
 * test refer cookie
+* task context
+* request context
+* item context
+* total
+* requests
+* log
 
 ```shell
 go get -u github.com/lizongying/go-css@latest
