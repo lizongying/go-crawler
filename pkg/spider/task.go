@@ -54,7 +54,7 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 				WithJobSubId(ctx.GetJob().GetSubId()).
 				WithStatus(pkg.TaskStatusPending).
 				WithStartTime(time.Now()).
-				WithStats(&stats.MediaStats{})))
+				WithStats(new(stats.MediaStats))))
 		t.crawler.GetSignal().TaskChanged(t.context)
 
 		t.logger.Info(t.spider.Name(), id, "task started")
@@ -121,7 +121,7 @@ func (t *Task) stop(err error) {
 
 	if err != nil {
 		t.context.GetTask().WithStopReason(err.Error())
-		t.context.GetTask().WithStatus(pkg.TaskStatusError)
+		t.context.GetTask().WithStatus(pkg.TaskStatusFailure)
 	} else {
 		t.context.GetTask().WithStatus(pkg.TaskStatusSuccess)
 	}
@@ -129,22 +129,30 @@ func (t *Task) stop(err error) {
 	t.job.TaskStopped(t.context, err)
 	return
 }
-func (t *Task) ReadyRequest() {
+func (t *Task) RequestPending(_ pkg.Context, _ error) {
 	t.request.BeReady()
 }
-func (t *Task) StartRequest() {
+func (t *Task) RequestRunning(_ pkg.Context, err error) {
+	if err != nil {
+		return
+	}
 	t.request.In()
 }
-func (t *Task) StopRequest() {
+func (t *Task) RequestStopped(_ pkg.Context, _ error) {
 	t.request.Out()
 }
-func (t *Task) ReadyItem() {
+func (t *Task) ItemPending(_ pkg.Context, _ error) {
 	t.item.BeReady()
 }
-func (t *Task) StartItem() {
+func (t *Task) ItemRunning(ctx pkg.Context, err error) {
+	if err != nil {
+		return
+	}
 	t.item.In()
 }
-func (t *Task) StopItem() {
+func (t *Task) ItemStopped(_ pkg.Context, _ error) {
+	//item := ctx.GetItem()
+	//item.WithContext()
 	t.item.Out()
 }
 func (t *Task) WithJob(job *Job) *Task {

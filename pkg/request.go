@@ -168,21 +168,21 @@ type RequestStatus uint8
 const (
 	RequestStatusUnknown = iota
 	RequestStatusPending
-	RequestStatusDoing
+	RequestStatusRunning
 	RequestStatusSuccess
-	RequestStatusError
+	RequestStatusFailure
 )
 
-func (s *RequestStatus) String() string {
-	switch *s {
+func (s RequestStatus) String() string {
+	switch s {
 	case 1:
 		return "pending"
 	case 2:
-		return "doing"
+		return "running"
 	case 3:
 		return "success"
 	case 4:
-		return "error"
+		return "failure"
 	default:
 		return "unknown"
 	}

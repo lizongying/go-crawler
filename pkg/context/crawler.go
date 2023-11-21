@@ -14,6 +14,7 @@ type Crawler struct {
 	StartTime  utils.Timestamp   `json:"start_time,omitempty"`
 	StopTime   utils.Timestamp   `json:"stop_time,omitempty"`
 	UpdateTime utils.Timestamp   `json:"update_time,omitempty"`
+	StopReason string            `json:"stop_reason,omitempty"`
 }
 
 func (c *Crawler) GetId() string {

@@ -8,14 +8,16 @@ import (
 )
 
 type Request struct {
-	Context   context.Context     `json:"-"`
-	Id        string              `json:"id,omitempty"`
-	Status    pkg.RequestStatus   `json:"status,omitempty"`
-	StartTime utils.Timestamp     `json:"start_time,omitempty"`
-	StopTime  utils.Timestamp     `json:"stop_time,omitempty"`
-	Deadline  utils.TimestampNano `json:"deadline,omitempty"`
-	Cookies   map[string]string   `json:"cookies,omitempty"`
-	Referrer  string              `json:"referrer,omitempty"`
+	Context    context.Context     `json:"-"`
+	Id         string              `json:"id,omitempty"`
+	Status     pkg.RequestStatus   `json:"status,omitempty"`
+	StartTime  utils.Timestamp     `json:"start_time,omitempty"`
+	StopTime   utils.Timestamp     `json:"stop_time,omitempty"`
+	UpdateTime utils.Timestamp     `json:"update_time,omitempty"`
+	Deadline   utils.TimestampNano `json:"deadline,omitempty"`
+	Cookies    map[string]string   `json:"cookies,omitempty"`
+	Referrer   string              `json:"referrer,omitempty"`
+	StopReason string              `json:"stop_reason,omitempty"`
 }
 
 func (c *Request) GetId() string {
@@ -37,6 +39,17 @@ func (c *Request) GetStatus() pkg.RequestStatus {
 }
 func (c *Request) WithStatus(status pkg.RequestStatus) pkg.ContextRequest {
 	c.Status = status
+	t := time.Now()
+	c.withUpdateTime(t)
+	switch status {
+	case pkg.RequestStatusRunning:
+		c.WithStartTime(t)
+	case pkg.RequestStatusSuccess:
+		c.WithStopTime(t)
+	case pkg.RequestStatusFailure:
+		c.WithStopTime(t)
+	}
+
 	return c
 }
 func (c *Request) GetStartTime() time.Time {
@@ -51,6 +64,13 @@ func (c *Request) GetStopTime() time.Time {
 }
 func (c *Request) WithStopTime(stopTime time.Time) pkg.ContextRequest {
 	c.StopTime = utils.Timestamp{Time: stopTime}
+	return c
+}
+func (c *Request) GetUpdateTime() time.Time {
+	return c.UpdateTime.Time
+}
+func (c *Request) withUpdateTime(t time.Time) pkg.ContextRequest {
+	c.UpdateTime = utils.Timestamp{Time: t}
 	return c
 }
 func (c *Request) GetDeadline() time.Time {
@@ -72,5 +92,12 @@ func (c *Request) GetReferrer() string {
 }
 func (c *Request) WithReferrer(referrer string) pkg.ContextRequest {
 	c.Referrer = referrer
+	return c
+}
+func (c *Request) GetStopReason() string {
+	return c.StopReason
+}
+func (c *Request) WithStopReason(stopReason string) pkg.ContextRequest {
+	c.StopReason = stopReason
 	return c
 }

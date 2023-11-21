@@ -1,14 +1,14 @@
 <template>
   <a-page-header
-      title="Records"
-      :sub-title="'Total: '+recordsStore.Count"
+      title="Requests"
+      :sub-title="'Total: '+requestsStore.Count"
   >
     <template #extra>
       <a-switch v-model:checked="checked1" checked-children="auto" un-checked-children="close" @change="changeSwitch"/>
       <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
     </template>
   </a-page-header>
-  <a-table :columns="columns" :data-source="recordsStore.records" :scroll="{ x: '100%' }">
+  <a-table :columns="columns" :data-source="requestsStore.requests" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
         <span style="font-weight: bold">
@@ -68,8 +68,14 @@
           {{ record.task }}
         </RouterLink>
       </template>
-      <template v-else-if="column.dataIndex === 'save_time'">
-        {{ formattedDate(record.save_time) }}
+      <template v-else-if="column.dataIndex === 'start_time'">
+        {{ formattedDate(record.start_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'finish_time'">
+        {{ formattedDate(record.finish_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'duration'">
+        {{ formatDuration(record.finish_time - record.start_time) }}
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
@@ -110,8 +116,8 @@
 <script setup>
 import {RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
 import {RouterLink, useRoute} from "vue-router";
-import {formattedDate} from "@/utils/time";
-import {useRecordsStore} from "@/stores/records";
+import {formatDuration, formattedDate} from "@/utils/time";
+import {useRequestsStore} from "@/stores/requests";
 import {computed, onBeforeUnmount, reactive, ref} from "vue";
 import {sortBigInt, sortStr} from "@/utils/sort";
 
@@ -216,16 +222,63 @@ const columns = computed(() => {
       },
     },
     {
-      title: 'Meta',
+      title: 'Extra',
       dataIndex: 'meta',
       width: 200,
       ellipsis: true,
     },
     {
-      title: 'Save Time',
-      dataIndex: 'save_time',
+      title: 'Start Time',
+      dataIndex: 'start_time',
       width: 200,
-      sorter: (a, b) => a.save_time - b.save_time,
+      sorter: (a, b) => a.start_time - b.start_time,
+    },
+    {
+      title: 'Finish Time',
+      dataIndex: 'finish_time',
+      width: 200,
+      sorter: (a, b) => {
+        if (a.finish_time === b.finish_time) {
+          return 0
+        }
+        const a_finish_time = a.finish_time !== 0 ? a.finish_time : Math.floor(Date.now() / 1000)
+        const b_finish_time = b.finish_time !== 0 ? b.finish_time : Math.floor(Date.now() / 1000)
+        return a_finish_time - b_finish_time
+      },
+    },
+    {
+      title: 'Duration',
+      dataIndex: 'duration',
+      width: 150,
+      sorter: (a, b) => {
+        let a_finish_time = a.finish_time
+        if (a.start_time === 0 && a.finish_time === 0) {
+          a_finish_time = Math.floor(Date.now() / 1000)
+        }
+        let b_finish_time = b.finish_time
+        if (b.start_time === 0 && b.finish_time === 0) {
+          b_finish_time = Math.floor(Date.now() / 1000)
+        }
+        return (a_finish_time - a.start_time) - (b_finish_time - b.start_time)
+      },
+    },
+    {
+      title: 'Stop Reason',
+      dataIndex: 'stop_reason',
+      sorter: (a, b) => sortStr(a.stop_reason, b.stop_reason),
+      width: 200,
+      ellipsis: true,
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.stop_reason || null,
+      onFilter: (value, record) =>
+          record.stop_reason.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
     },
     {
       title: 'Action',
@@ -236,13 +289,15 @@ const columns = computed(() => {
   ];
 });
 
-const recordsStore = useRecordsStore();
+const requestsStore = useRequestsStore();
 
 const open = ref(false);
 const more = reactive({})
 const showDrawer = record => {
+  const data = JSON.parse(record.data)
+  delete data.context
   open.value = true;
-  more.data = JSON.stringify(JSON.parse(record.data), null, 2)
+  more.data = JSON.stringify(data, null, 2)
 };
 const activeKey = ref('1');
 
@@ -251,7 +306,7 @@ const checked1 = ref(true)
 const checked1Disable = ref(true)
 let interval = 0
 const refresh = () => {
-  recordsStore.GetRecords()
+  requestsStore.GetRequests()
 }
 refresh()
 if (checked1.value) {

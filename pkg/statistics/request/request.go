@@ -1,4 +1,4 @@
-package record
+package request
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type Record struct {
+type Request struct {
 	Id         string               `json:"id,omitempty"`
 	UniqueKey  string               `json:"unique_key,omitempty"`
 	Node       string               `json:"node,omitempty"`
@@ -17,7 +17,7 @@ type Record struct {
 	Task       string               `json:"task,omitempty"`
 	Meta       string               `json:"meta,omitempty"`
 	Data       string               `json:"data,omitempty"`
-	Status     pkg.ItemStatus       `json:"status,omitempty"`
+	Status     pkg.RequestStatus    `json:"status,omitempty"`
 	StartTime  utils.Timestamp      `json:"start_time,omitempty"`
 	FinishTime utils.Timestamp      `json:"finish_time,omitempty"`
 	UpdateTime utils.Timestamp      `json:"update_time,omitempty"`
@@ -25,75 +25,75 @@ type Record struct {
 	StopReason string               `json:"stop_reason,omitempty"`
 }
 
-func (r *Record) WithId(id string) *Record {
+func (r *Request) WithId(id string) *Request {
 	r.Id = id
 	return r
 }
-func (r *Record) WithUniqueKey(uniqueKey string) *Record {
+func (r *Request) WithUniqueKey(uniqueKey string) *Request {
 	r.UniqueKey = uniqueKey
 	return r
 }
-func (r *Record) WithNode(node string) *Record {
+func (r *Request) WithNode(node string) *Request {
 	r.Node = node
 	return r
 }
-func (r *Record) WithSpider(spider string) *Record {
+func (r *Request) WithSpider(spider string) *Request {
 	r.Spider = spider
 	return r
 }
-func (r *Record) WithJob(job string) *Record {
+func (r *Request) WithJob(job string) *Request {
 	r.Job = job
 	return r
 }
-func (r *Record) WithTask(task string) *Record {
+func (r *Request) WithTask(task string) *Request {
 	r.Task = task
 	return r
 }
-func (r *Record) WithMeta(meta string) *Record {
+func (r *Request) WithMeta(meta string) *Request {
 	r.Meta = meta
 	return r
 }
-func (r *Record) WithData(data string) *Record {
+func (r *Request) WithData(data string) *Request {
 	r.Data = data
 	return r
 }
-func (r *Record) GetStatus() pkg.ItemStatus {
+func (r *Request) GetStatus() pkg.RequestStatus {
 	return r.Status
 }
-func (r *Record) WithStatus(status pkg.ItemStatus) *Record {
+func (r *Request) WithStatus(status pkg.RequestStatus) *Request {
 	r.Status = status
 	return r
 }
-func (r *Record) WithStartTime(t time.Time) *Record {
+func (r *Request) WithStartTime(t time.Time) *Request {
 	r.StartTime = utils.Timestamp{
 		Time: t,
 	}
 	return r
 }
-func (r *Record) WithFinishTime(t time.Time) *Record {
+func (r *Request) WithFinishTime(t time.Time) *Request {
 	r.FinishTime = utils.Timestamp{
 		Time: t,
 	}
 	return r
 }
-func (r *Record) WithUpdateTime(t time.Time) *Record {
+func (r *Request) WithUpdateTime(t time.Time) *Request {
 	r.UpdateTime = utils.Timestamp{
 		Time: t,
 	}
 	return r
 }
-func (r *Record) AddStatusList(status pkg.SpiderStatus, t time.Time) *Record {
+func (r *Request) AddStatusList(status pkg.SpiderStatus, t time.Time) *Request {
 	if r.StatusList == nil {
 		r.StatusList = queue.NewPriorityQueue(10)
 	}
 	r.StatusList.Push(queue.NewItem(status, t.UnixNano()))
 	return r
 }
-func (r *Record) WithStopReason(stopReason string) *Record {
+func (r *Request) WithStopReason(stopReason string) *Request {
 	r.StopReason = stopReason
 	return r
 }
-func (r *Record) Marshal() (bytes []byte, err error) {
+func (r *Request) Marshal() (bytes []byte, err error) {
 	bytes, err = json.Marshal(r)
 	if err != nil {
 		return

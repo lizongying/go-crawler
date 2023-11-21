@@ -1109,10 +1109,6 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * statistics
 * panic stop
 * extra速率限制
-* 没请求完，ctx退出
-* request with ctx
-* stat->crawler
-* test refer cookie
 * request context
 * item context
 * total

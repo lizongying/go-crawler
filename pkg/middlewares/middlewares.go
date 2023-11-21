@@ -38,7 +38,7 @@ func (m *Middlewares) SetMiddleware(middleware pkg.Middleware, order uint8) {
 	middleware.SetName(name)
 	middleware.SetOrder(order)
 	for k, v := range m.middlewares {
-		if v.Name() == name && v.Order() != order {
+		if v.Name() == name {
 			m.DelMiddleware(k)
 			break
 		}

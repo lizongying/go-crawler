@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	request2 "github.com/lizongying/go-crawler/pkg/request"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/time/rate"
@@ -14,31 +15,6 @@ import (
 	"runtime"
 	"time"
 )
-
-func (s *Scheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
-	if request == nil {
-		err = errors.New("nil request")
-		return
-	}
-
-	s.logger.Debugf("request: %+v", request)
-
-	response, err = s.spider.Download(ctx, request)
-	if err != nil {
-		if errors.Is(err, pkg.ErrIgnoreRequest) {
-			s.logger.Info(err)
-			err = nil
-			return
-		}
-
-		s.HandleError(ctx, response, err, request.GetErrBack())
-		return
-	}
-
-	s.logger.Debugf("request %+v", request)
-	ctx.GetTask().ReadyRequest()
-	return
-}
 
 func (s *Scheduler) handleRequest(ctx pkg.Context) {
 	slot := "*"
@@ -93,8 +69,7 @@ out:
 				req = r[1]
 			}
 
-			err = s.redis.ZRem(ctx.GetTask().GetContext(), s.requestKey, req).Err()
-			if err != nil {
+			if err = s.redis.ZRem(ctx.GetTask().GetContext(), s.requestKey, req).Err(); err != nil {
 				s.logger.Warn(err)
 				continue
 			}
@@ -106,7 +81,7 @@ out:
 				continue
 			}
 
-			c := request.Context
+			ctx = request.Context
 			s.logger.Debugf("request: %+v", request)
 			if err != nil {
 				s.logger.Warn(err)
@@ -131,14 +106,19 @@ out:
 
 			requestSlot = slotValue.(*rate.Limiter)
 
-			err = requestSlot.Wait(ctx.GetTask().GetContext())
-			if err != nil {
+			if err = requestSlot.Wait(ctx.GetTask().GetContext()); err != nil {
 				s.logger.Error(err)
 			}
+			ctx.GetRequest().WithStatus(pkg.RequestStatusRunning)
+			s.crawler.GetSignal().RequestChanged(request)
+			s.task.RequestRunning(ctx, nil)
 			go func(c pkg.Context, request pkg.Request) {
-				response, e := s.Request(c, request)
-				if e != nil {
-					s.task.StopRequest()
+				var response pkg.Response
+				response, err = s.Request(c, request)
+				if err != nil {
+					ctx.GetRequest().WithStatus(pkg.RequestStatusFailure).WithStopReason(err.Error())
+					s.crawler.GetSignal().RequestChanged(request)
+					s.task.RequestStopped(ctx, err)
 					return
 				}
 
@@ -157,10 +137,16 @@ out:
 					if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
 						s.logger.Error(err)
 						s.HandleError(ctx, response, err, request.GetErrBack())
+						ctx.GetRequest().WithStatus(pkg.RequestStatusFailure).WithStopReason(err.Error())
+						s.crawler.GetSignal().RequestChanged(request)
+						s.task.RequestStopped(ctx, err)
+						return
 					}
-					s.task.StopRequest()
+					ctx.GetRequest().WithStatus(pkg.RequestStatusSuccess)
+					s.crawler.GetSignal().RequestChanged(request)
+					s.task.RequestStopped(ctx, nil)
 				}(c, response)
-			}(c, request)
+			}(ctx, request)
 		}
 	}
 }
@@ -202,7 +188,18 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		}
 	}
 
+	ctx = new(crawlerContext.Context).
+		WithCrawler(ctx.GetCrawler()).
+		WithSpider(ctx.GetSpider()).
+		WithJob(ctx.GetJob()).
+		WithTask(ctx.GetTask()).
+		WithRequest(new(crawlerContext.Request).
+			WithContext(context.Background()).
+			WithId(s.crawler.NextId()).
+			WithStatus(pkg.RequestStatusPending))
+
 	request.WithContext(ctx)
+
 	bs, err := request.Marshal()
 	if err != nil {
 		s.logger.Error(err)
@@ -223,18 +220,14 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		var res int64
 		res, err = s.redis.ZAdd(c, s.requestKey, z).Result()
 		if res == 1 {
-			ctx.GetTask().StartRequest()
+			s.crawler.GetSignal().RequestChanged(request)
+			ctx.GetTask().RequestPending(ctx, err)
 		}
 	} else {
 		err = s.redis.RPush(c, s.requestKey, bs).Err()
-		ctx.GetTask().StartRequest()
+		s.crawler.GetSignal().RequestChanged(request)
+		ctx.GetTask().RequestPending(ctx, err)
 	}
-
-	if err != nil {
-		s.logger.Error(err)
-		return
-	}
-
 	return
 }
 
@@ -252,6 +245,7 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 	bs, err := json.Marshal(extra)
 	if err != nil {
 		s.logger.Error(err)
+		c.GetTask().RequestPending(c, err)
 		return
 	}
 
@@ -269,28 +263,30 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 		res, err = s.redis.ZAdd(ctx, extraKey, z).Result()
 		if err != nil {
 			s.logger.Error(err)
+			c.GetTask().RequestPending(c, err)
 			return
 		}
 
 		if res == 1 {
-			c.GetTask().StartRequest()
+			c.GetTask().RequestRunning(c, nil)
 		}
 	} else {
 		extraKey := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), name, spider.Name())
 		if err = s.redis.RPush(ctx, extraKey, bs).Err(); err != nil {
 			s.logger.Error(err)
+			c.GetTask().RequestPending(c, err)
 			return
 		}
 
-		c.GetTask().StartRequest()
+		c.GetTask().RequestPending(c, nil)
 	}
 
 	return
 }
 
-func (s *Scheduler) GetExtra(_ pkg.Context, extra any) (err error) {
+func (s *Scheduler) GetExtra(c pkg.Context, extra any) (err error) {
 	defer func() {
-		s.task.StopRequest()
+		s.task.RequestStopped(c, nil)
 	}()
 
 	extraValue := reflect.ValueOf(extra)

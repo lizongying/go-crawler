@@ -185,9 +185,9 @@ type ItemStatus uint8
 const (
 	ItemStatusUnknown = iota
 	ItemStatusPending
-	ItemStatusDoing
+	ItemStatusRunning
 	ItemStatusSuccess
-	ItemStatusError
+	ItemStatusFailure
 )
 
 func (s *ItemStatus) String() string {
@@ -195,11 +195,11 @@ func (s *ItemStatus) String() string {
 	case 1:
 		return "pending"
 	case 2:
-		return "doing"
+		return "running"
 	case 3:
 		return "success"
 	case 4:
-		return "error"
+		return "failure"
 	default:
 		return "unknown"
 	}

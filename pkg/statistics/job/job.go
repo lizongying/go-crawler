@@ -109,17 +109,17 @@ func (s *Job) withUpdateTime(t time.Time) pkg.StatisticsJob {
 	}
 	return s
 }
-func (s *Job) Marshal() (bytes []byte, err error) {
-	bytes, err = json.Marshal(s)
-	if err != nil {
-		return
-	}
-	return
-}
 func (s *Job) GetStopReason() string {
 	return s.StopReason
 }
 func (s *Job) WithStopReason(stopReason string) pkg.StatisticsJob {
 	s.StopReason = stopReason
 	return s
+}
+func (s *Job) Marshal() (bytes []byte, err error) {
+	bytes, err = json.Marshal(s)
+	if err != nil {
+		return
+	}
+	return
 }

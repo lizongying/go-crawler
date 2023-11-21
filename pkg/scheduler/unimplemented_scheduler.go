@@ -1,7 +1,6 @@
 package scheduler
 
 import (
-	"context"
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
@@ -42,7 +41,13 @@ out:
 	for item := range s.itemChan {
 		select {
 		case <-ctx.GetTask().GetContext().Done():
-			s.logger.Error(ctx.GetTask().GetContext().Err())
+			err := ctx.GetTask().GetContext().Err()
+			s.logger.Error(err)
+			item.GetContext().GetItem().
+				WithStatus(pkg.ItemStatusFailure).
+				WithStopReason(err.Error())
+			s.crawler.GetSignal().ItemChanged(item)
+			s.task.ItemPending(item.GetContext(), nil)
 			break out
 		default:
 			itemDelay := s.crawler.GetItemDelay()
@@ -55,12 +60,27 @@ out:
 			go func(item pkg.Item) {
 				defer func() {
 					s.crawler.ItemConcurrencyChan() <- struct{}{}
-					s.task.StopItem()
 				}()
 
-				if err := s.spider.Export(item); err != nil {
+				contextItem := item.GetContext().GetItem()
+
+				contextItem.
+					WithStatus(pkg.ItemStatusRunning)
+				s.crawler.GetSignal().ItemChanged(item)
+				s.task.ItemRunning(item.GetContext(), nil)
+
+				err := s.spider.Export(item)
+				if err != nil {
 					s.logger.Error(err)
+					contextItem.
+						WithStatus(pkg.ItemStatusFailure).
+						WithStopReason(err.Error())
+				} else {
+					contextItem.
+						WithStatus(pkg.ItemStatusSuccess)
 				}
+				s.crawler.GetSignal().ItemChanged(item)
+				s.task.ItemStopped(item.GetContext(), err)
 			}(item)
 
 			if itemDelay > 0 {
@@ -104,15 +124,14 @@ func (s *UnimplementedScheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err 
 		WithJob(ctx.GetJob()).
 		WithTask(ctx.GetTask()).
 		WithItem(new(crawlerContext.Item).
-			WithContext(context.Background()).
+			WithContext(ctx.GetTask().GetContext()).
 			WithId(s.crawler.NextId()).
 			WithStatus(pkg.ItemStatusPending))
-	//s.crawler.GetSignal().ItemChanged(c)
 
 	item.WithContext(c)
+	s.crawler.GetSignal().ItemChanged(item)
+	s.task.ItemPending(c, nil)
 	s.itemChan <- item
-
-	s.task.StartItem()
 	return
 }
 func (s *UnimplementedScheduler) HandleError(ctx pkg.Context, response pkg.Response, err error, errBackName string) {
@@ -130,4 +149,34 @@ func (s *UnimplementedScheduler) HandleError(ctx pkg.Context, response pkg.Respo
 	}
 	s.spider.ErrBack(errBackName)(ctx, response, err)
 	ctx.GetTask().IncRequestError()
+}
+func (s *UnimplementedScheduler) SyncRequest(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
+	if request == nil {
+		err = errors.New("nil request")
+		return
+	}
+
+	s.logger.Debugf("request: %+v", request)
+
+	response, err = s.spider.Download(ctx, request)
+	if err != nil {
+		if errors.Is(err, pkg.ErrIgnoreRequest) {
+			s.logger.Info(err)
+			err = nil
+			return
+		}
+
+		s.HandleError(ctx, response, err, request.GetErrBack())
+		return
+	}
+
+	s.logger.Debugf("request %+v", request)
+	return
+}
+func (s *UnimplementedScheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
+	ctx.GetTask().RequestPending(ctx, nil)
+	ctx.GetTask().RequestRunning(ctx, nil)
+	response, err = s.SyncRequest(ctx, request)
+	s.task.RequestStopped(ctx, err)
+	return
 }

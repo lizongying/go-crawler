@@ -10,8 +10,9 @@ import (
 )
 
 type WithRecords struct {
-	Task    pkg.StatisticsTask
-	Records *queue.GroupQueue
+	Task     pkg.StatisticsTask
+	Requests *queue.GroupQueue
+	Records  *queue.GroupQueue
 }
 
 type Task struct {
