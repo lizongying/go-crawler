@@ -83,7 +83,7 @@
               :key="record.status"
               :color="record.status === NodeStatusStopped ? 'volcano' : record.status === NodeStatusRunning ? 'green' : 'geekblue'"
           >
-                   {{ nodeStatusName(record.status) }}
+                   {{ NodeStatusName(record.status) }}
           </a-tag>
         </span>
       </template>
@@ -135,6 +135,7 @@ import {RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
 import {RouterLink, useRoute} from "vue-router";
 import {
   NodeStatusIdle,
+  NodeStatusName,
   NodeStatusReady,
   NodeStatusRunning,
   NodeStatusStarting,
@@ -329,30 +330,11 @@ onBeforeUnmount(() => {
   clearInterval(interval)
 })
 
-const nodeStatusName = (status) => {
-  switch (status) {
-    case NodeStatusReady:
-      return 'ready'
-    case NodeStatusStarting:
-      return 'starting'
-    case NodeStatusRunning:
-      return 'running'
-    case NodeStatusIdle:
-      return 'idle'
-    case NodeStatusStopping:
-      return 'stopping'
-    case NodeStatusStopped:
-      return 'stopped'
-    default:
-      return 'unknown'
-  }
-}
-
 const open = ref(false);
 const more = reactive({})
 const showDrawer = record => {
   open.value = true;
-  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${nodeStatusName(v)}`).reverse();
+  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${NodeStatusName(v)}`).reverse();
 };
 // status list
 const activeKey = ref('1');

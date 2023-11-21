@@ -54,9 +54,13 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 	pipeline.SetName(name)
 	pipeline.SetOrder(order)
 	for k, v := range e.pipelines {
-		if v.Name() == name && v.Order() != order {
-			e.DelPipeline(k)
-			break
+		if v.Name() == name {
+			if v.Order() == order {
+				return
+			} else {
+				e.DelPipeline(k)
+				break
+			}
 		}
 	}
 

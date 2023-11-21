@@ -132,10 +132,10 @@ func (d *Downloader) FromSpider(spider pkg.Spider) pkg.Downloader {
 	}
 
 	d.spider = spider
+	d.logger = spider.GetLogger()
 	d.httpClient = new(http_client.HttpClient).FromSpider(spider)
 	d.browserManager = new(browser.Manager).FromSpider(spider)
 	d.middlewares = new(middlewares.Middlewares).FromSpider(spider)
-	d.logger = spider.GetLogger()
 
 	spider.GetCrawler().GetSignal().RegisterSpiderChanged(d.spiderClosed)
 	return d

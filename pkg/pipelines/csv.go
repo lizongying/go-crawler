@@ -21,7 +21,6 @@ type CsvPipeline struct {
 }
 
 func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
-	spider := m.Spider()
 	task := item.GetContext().GetTask()
 	if item == nil {
 		err = errors.New("nil item")
@@ -149,8 +148,6 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 
 	m.logger.Info("item saved:", filename)
-	item.GetContext().GetItem().WithStatus(pkg.ItemStatusSuccess)
-	spider.GetCrawler().GetSignal().ItemChanged(item)
 	task.IncItemSuccess()
 	return
 }

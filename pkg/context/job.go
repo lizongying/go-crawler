@@ -55,7 +55,9 @@ func (c *Job) WithStatus(status pkg.JobStatus) pkg.ContextJob {
 	switch status {
 	case pkg.JobStatusRunning:
 		c.withStartTime(t)
-	case pkg.JobStatusStopped:
+	case pkg.JobStatusSuccess:
+		c.withStopTime(t)
+	case pkg.JobStatusFailure:
 		c.withStopTime(t)
 	}
 

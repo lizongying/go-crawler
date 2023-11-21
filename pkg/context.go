@@ -119,12 +119,15 @@ type ContextRequest interface {
 	WithStartTime(time.Time) ContextRequest
 	GetStopTime() time.Time
 	WithStopTime(time.Time) ContextRequest
+	GetUpdateTime() time.Time
 	GetDeadline() time.Time
 	WithDeadline(time.Time) ContextRequest
 	GetCookies() map[string]string
 	WithCookies(map[string]string) ContextRequest
 	GetReferrer() string
 	WithReferrer(string) ContextRequest
+	GetStopReason() string
+	WithStopReason(stopReason string) ContextRequest
 }
 
 type ContextItem interface {
@@ -139,4 +142,6 @@ type ContextItem interface {
 	GetUpdateTime() time.Time
 	GetSaved() bool
 	WithSaved(bool) ContextItem
+	GetStopReason() string
+	WithStopReason(stopReason string) ContextItem
 }

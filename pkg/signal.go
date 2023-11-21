@@ -4,7 +4,7 @@ type FnCrawlerChanged func(Context) error
 type FnSpiderChanged func(Context) error
 type FnJobChanged func(Context) error
 type FnTaskChanged func(Context) error
-type FnRequestChanged func(Context) error
+type FnRequestChanged func(Request) error
 type FnItemChanged func(Item) error
 
 type Signal interface {
@@ -18,7 +18,7 @@ type Signal interface {
 	SpiderChanged(Context)
 	JobChanged(Context)
 	TaskChanged(Context)
-	RequestChanged(Context)
+	RequestChanged(Request)
 	ItemChanged(Item)
 	FromCrawler(crawler Crawler) Signal
 }

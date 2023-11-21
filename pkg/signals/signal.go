@@ -40,32 +40,32 @@ func (s *Signal) RegisterItemChanged(fn pkg.FnItemChanged) {
 }
 func (s *Signal) CrawlerChanged(ctx pkg.Context) {
 	for _, v := range s.crawlerChanged {
-		v(ctx)
+		_ = v(ctx)
 	}
 }
 func (s *Signal) SpiderChanged(ctx pkg.Context) {
 	for _, v := range s.spiderChanged {
-		v(ctx)
+		_ = v(ctx)
 	}
 }
 func (s *Signal) JobChanged(ctx pkg.Context) {
 	for _, v := range s.jobChanged {
-		v(ctx)
+		_ = v(ctx)
 	}
 }
 func (s *Signal) TaskChanged(ctx pkg.Context) {
 	for _, v := range s.taskChanged {
-		v(ctx)
+		_ = v(ctx)
 	}
 }
-func (s *Signal) RequestChanged(ctx pkg.Context) {
+func (s *Signal) RequestChanged(ctx pkg.Request) {
 	for _, v := range s.requestChanged {
-		v(ctx)
+		_ = v(ctx)
 	}
 }
 func (s *Signal) ItemChanged(item pkg.Item) {
 	for _, v := range s.itemChanged {
-		v(item)
+		_ = v(item)
 	}
 }
 func (s *Signal) FromCrawler(crawler pkg.Crawler) pkg.Signal {

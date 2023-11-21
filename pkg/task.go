@@ -4,12 +4,12 @@ type Task interface {
 	Scheduler
 	GetScheduler() Scheduler
 	WithScheduler(Scheduler) Task
-	ReadyRequest()
-	StartRequest()
-	StopRequest()
-	ReadyItem()
-	StartItem()
-	StopItem()
+	RequestPending(ctx Context, err error)
+	RequestRunning(ctx Context, err error)
+	RequestStopped(ctx Context, err error)
+	ItemPending(ctx Context, err error)
+	ItemRunning(ctx Context, err error)
+	ItemStopped(ctx Context, err error)
 }
 
 type TaskStatus uint8
@@ -19,19 +19,19 @@ const (
 	TaskStatusPending
 	TaskStatusRunning
 	TaskStatusSuccess
-	TaskStatusError
+	TaskStatusFailure
 )
 
-func (s *TaskStatus) String() string {
-	switch *s {
-	case 1:
+func (s TaskStatus) String() string {
+	switch s {
+	case TaskStatusPending:
 		return "pending"
-	case 2:
+	case TaskStatusRunning:
 		return "running"
-	case 3:
+	case TaskStatusSuccess:
 		return "success"
-	case 4:
-		return "error"
+	case TaskStatusFailure:
+		return "failure"
 	default:
 		return "unknown"
 	}

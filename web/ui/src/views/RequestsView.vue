@@ -1,17 +1,16 @@
 <template>
   <a-page-header
-      title="Spiders"
-      :sub-title="'Total: '+spidersStore.Count"
+      title="Requests"
+      :sub-title="'Total: '+requestsStore.Count"
   >
     <template #extra>
       <a-switch v-model:checked="checked1" checked-children="auto" un-checked-children="close" @change="changeSwitch"/>
       <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
     </template>
   </a-page-header>
-  <a-table :columns="columns" :data-source="spidersStore.spiders" :scroll="{ x: '100%' }">
+  <a-table :columns="columns" :data-source="requestsStore.requests" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
-      <template
-          v-if="column.dataIndex !== ''">
+      <template v-if="column.dataIndex !== ''">
         <span style="font-weight: bold">
           {{ column.title }}
         </span>
@@ -49,50 +48,35 @@
       <search-outlined :style="{ color: filtered ? '#108ee9' : undefined }"/>
     </template>
     <template #bodyCell="{ text, column, record }">
-      <template v-if="column.key === 'spider'">
-        <a>
+      <template v-if="column.dataIndex === 'node'">
+        <RouterLink :to="'/nodes?id='+record.node">
+          {{ record.node }}
+        </RouterLink>
+      </template>
+      <template v-if="column.dataIndex === 'spider'">
+        <RouterLink :to="'/spiders?name='+record.spider">
           {{ record.spider }}
-        </a>
+        </RouterLink>
+      </template>
+      <template v-else-if="column.dataIndex === 'job'">
+        <RouterLink :to="'/jobs?id='+record.job">
+          {{ record.job }}
+        </RouterLink>
+      </template>
+      <template v-else-if="column.dataIndex === 'task'">
+        <RouterLink :to="'/tasks?id='+record.task">
+          {{ record.task }}
+        </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'status'">
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === SpiderStatusStopped ? 'volcano' : record.status===SpiderStatusRunning ? 'green' : 'geekblue'"
+              :color="record.status === RequestStatusFailure ? 'volcano' : record.status===RequestStatusSuccess ? 'green' : 'geekblue'"
           >
-            {{ SpiderStatusName(record.status) }}
+            {{ RequestStatusName(record.status) }}
           </a-tag>
         </span>
-      </template>
-      <template v-else-if="column.dataIndex === 'last_task_status'">
-        <span>
-          <a-tag
-              :key="record.last_task_status"
-              :color="record.last_task_status === TaskStatusFailure ? 'volcano' : record.last_task_status===TaskStatusRunning ? 'green' : 'geekblue'"
-          >
-            {{ TaskStatusName(record.last_task_status) }}
-          </a-tag>
-        </span>
-      </template>
-      <template v-else-if="column.dataIndex === 'node'">
-        <RouterLink :to="'/nodes?id='+record.node">
-          {{ record.node }}
-        </RouterLink>
-      </template>
-      <template v-else-if="column.dataIndex === 'job'">
-        <RouterLink :to="'/jobs?spider='+record.spider">
-          {{ record.job }}
-        </RouterLink>
-      </template>
-      <template v-else-if="column.dataIndex === 'task'">
-        <RouterLink :to="'/tasks?spider='+record.spider">
-          {{ record.task }}
-        </RouterLink>
-      </template>
-      <template v-else-if="column.dataIndex === 'record'">
-        <RouterLink :to="'/records?spider='+record.spider">
-          {{ record.record }}
-        </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'start_time'">
         {{ formattedDate(record.start_time) }}
@@ -103,18 +87,8 @@
       <template v-else-if="column.dataIndex === 'duration'">
         {{ formatDuration(record.finish_time - record.start_time) }}
       </template>
-      <template v-else-if="column.dataIndex === 'last_task_start_time'">
-        {{ formattedDate(record.last_task_start_time) }}
-      </template>
-      <template v-else-if="column.dataIndex === 'last_task_finish_time'">
-        {{ formattedDate(record.last_task_finish_time) }}
-      </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
-          <template v-if="record.status === SpiderStatusStopped">
-          <a>Run</a>
-          <a-divider type="vertical"/>
-          </template>
           <a class="ant-dropdown-link" @click="showDrawer(record)">
             More
             <RightOutlined/>
@@ -143,12 +117,8 @@
             :closable="false"
             size="large">
     <a-tabs v-model:activeKey="activeKey">
-      <a-tab-pane key="1" tab="Status List">
-        <a-list size="small" bordered :data-source="more.status_list">
-          <template #renderItem="{ item }">
-            <a-list-item>{{ item }}</a-list-item>
-          </template>
-        </a-list>
+      <a-tab-pane key="1" tab="Data">
+        <pre v-html="more.data"></pre>
       </a-tab-pane>
     </a-tabs>
   </a-drawer>
@@ -156,26 +126,17 @@
 <script setup>
 import {RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
 import {RouterLink, useRoute} from "vue-router";
-import {
-  SpiderStatusIdle,
-  SpiderStatusName,
-  SpiderStatusReady,
-  SpiderStatusRunning,
-  SpiderStatusStarting,
-  SpiderStatusStopped,
-  SpiderStatusStopping,
-  useSpidersStore
-} from "@/stores/spiders";
 import {formatDuration, formattedDate} from "@/utils/time";
-import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
-import {computed, onBeforeUnmount, reactive, ref} from "vue";
 import {
-  TaskStatusFailure,
-  TaskStatusName,
-  TaskStatusPending,
-  TaskStatusRunning,
-  TaskStatusSuccess
-} from "@/stores/tasks";
+  RequestStatusFailure,
+  RequestStatusName,
+  RequestStatusPending,
+  RequestStatusRunning,
+  RequestStatusSuccess,
+  useRequestsStore
+} from "@/stores/requests";
+import {computed, onBeforeUnmount, reactive, ref} from "vue";
+import {sortBigInt, sortStr} from "@/utils/sort";
 
 const filteredInfo = reactive({});
 const {query} = useRoute();
@@ -203,10 +164,11 @@ const columns = computed(() => {
       },
     },
     {
-      title: 'Name',
-      dataIndex: 'spider',
+      title: 'Unique Key',
+      dataIndex: 'unique_key',
       width: 200,
-      sorter: (a, b) => sortStr(a.spider, b.spider),
+      sorter: (a, b) => sortStr(a.unique_key, b.unique_key),
+      ellipsis: true,
     },
     {
       title: 'Node',
@@ -226,33 +188,82 @@ const columns = computed(() => {
       },
     },
     {
+      title: 'Spider',
+      dataIndex: 'spider',
+      width: 200,
+      sorter: (a, b) => sortStr(a.spider, b.spider),
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.spider || null,
+      onFilter: (value, record) =>
+          record.spider.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
+    },
+    {
+      title: 'Job',
+      dataIndex: 'job',
+      width: 200,
+      sorter: (a, b) => sortStr(a.job, b.job),
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.job || null,
+      onFilter: (value, record) =>
+          record.job.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
+    },
+    {
+      title: 'Task',
+      dataIndex: 'task',
+      width: 200,
+      sorter: (a, b) => sortBigInt(a.task, b.task),
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.task || null,
+      onFilter: (value, record) =>
+          record.task.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
+    },
+    {
+      title: 'Extra',
+      dataIndex: 'meta',
+      width: 200,
+      ellipsis: true,
+    },
+    {
       title: 'Status',
       dataIndex: 'status',
       width: 100,
       filters: [
         {
-          text: 'ready',
-          value: SpiderStatusReady,
-        },
-        {
-          text: 'starting',
-          value: SpiderStatusStarting,
+          text: 'pending',
+          value: RequestStatusPending,
         },
         {
           text: 'running',
-          value: SpiderStatusRunning,
+          value: RequestStatusRunning,
         },
         {
-          text: 'idle',
-          value: SpiderStatusIdle,
+          text: 'success',
+          value: RequestStatusSuccess,
         },
         {
-          text: 'stopping',
-          value: SpiderStatusStopping,
-        },
-        {
-          text: 'stopped',
-          value: SpiderStatusStopped,
+          text: 'failure',
+          value: RequestStatusFailure,
         },
       ],
       onFilter: (value, record) => record.status === value,
@@ -294,66 +305,22 @@ const columns = computed(() => {
       },
     },
     {
-      title: 'Last Task Status',
-      dataIndex: 'last_task_status',
+      title: 'Stop Reason',
+      dataIndex: 'stop_reason',
+      sorter: (a, b) => sortStr(a.stop_reason, b.stop_reason),
       width: 200,
-      filters: [
-        {
-          text: 'pending',
-          value: TaskStatusPending,
-        },
-        {
-          text: 'running',
-          value: TaskStatusRunning,
-        },
-        {
-          text: 'success',
-          value: TaskStatusSuccess,
-        },
-        {
-          text: 'failure',
-          value: TaskStatusFailure,
-        },
-      ],
-      onFilter: (value, record) => record.last_task_status === value,
-      filteredValue: null,
-    },
-    {
-      title: 'Last Task Start Time',
-      dataIndex: 'last_task_start_time',
-      width: 200,
-      sorter: (a, b) => a.last_task_start_time - b.last_task_start_time,
-    },
-    {
-      title: 'Last Task Finish Time',
-      dataIndex: 'last_task_finish_time',
-      width: 200,
-      sorter: (a, b) => {
-        if (a.last_task_finish_time === b.last_task_finish_time) {
-          return 0
+      ellipsis: true,
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.stop_reason || null,
+      onFilter: (value, record) =>
+          record.stop_reason.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
         }
-        const a_finish_time = a.last_task_finish_time !== 0 ? a.last_task_finish_time : Math.floor(Date.now() / 1000)
-        const b_finish_time = b.last_task_finish_time !== 0 ? b.last_task_finish_time : Math.floor(Date.now() / 1000)
-        return a_finish_time - b_finish_time
       },
-    },
-    {
-      title: 'Job',
-      dataIndex: 'job',
-      width: 100,
-      sorter: (a, b) => sortInt(a.job, b.job),
-    },
-    {
-      title: 'Task',
-      dataIndex: 'task',
-      width: 100,
-      sorter: (a, b) => sortInt(a.task, b.task),
-    },
-    {
-      title: 'Record',
-      dataIndex: 'record',
-      width: 100,
-      sorter: (a, b) => sortInt(a.record, b.record),
     },
     {
       title: 'Action',
@@ -364,14 +331,24 @@ const columns = computed(() => {
   ];
 });
 
-const spidersStore = useSpidersStore();
+const requestsStore = useRequestsStore();
+
+const open = ref(false);
+const more = reactive({})
+const showDrawer = record => {
+  const data = JSON.parse(record.data)
+  delete data.context
+  open.value = true;
+  more.data = JSON.stringify(data, null, 2)
+};
+const activeKey = ref('1');
 
 // auto refresh
 const checked1 = ref(true)
 const checked1Disable = ref(true)
 let interval = 0
 const refresh = () => {
-  spidersStore.GetSpiders()
+  requestsStore.GetRequests()
 }
 refresh()
 if (checked1.value) {
@@ -389,15 +366,6 @@ const changeSwitch = () => {
 onBeforeUnmount(() => {
   clearInterval(interval)
 })
-
-const open = ref(false);
-const more = reactive({})
-const showDrawer = record => {
-  open.value = true;
-  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${SpiderStatusName(v)}`).reverse();
-};
-// status list
-const activeKey = ref('1');
 
 // search
 const state = reactive({
@@ -422,4 +390,23 @@ const handleReset = clearFilters => {
 };
 </script>
 <style>
+.key {
+  color: blue;
+}
+
+.string {
+  color: green;
+}
+
+.number {
+  color: orange;
+}
+
+.boolean {
+  color: purple;
+}
+
+.null {
+  color: rgb(128, 128, 128);
+}
 </style>

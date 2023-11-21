@@ -35,7 +35,9 @@ func (s *Job) WithStatusAndTime(status pkg.JobStatus, t time.Time) pkg.Statistic
 	switch status {
 	case pkg.JobStatusRunning:
 		s.withStartTime(t)
-	case pkg.JobStatusStopped:
+	case pkg.JobStatusSuccess:
+		s.withFinishTime(t)
+	case pkg.JobStatusFailure:
 		s.withFinishTime(t)
 	}
 
@@ -109,17 +111,17 @@ func (s *Job) withUpdateTime(t time.Time) pkg.StatisticsJob {
 	}
 	return s
 }
-func (s *Job) Marshal() (bytes []byte, err error) {
-	bytes, err = json.Marshal(s)
-	if err != nil {
-		return
-	}
-	return
-}
 func (s *Job) GetStopReason() string {
 	return s.StopReason
 }
 func (s *Job) WithStopReason(stopReason string) pkg.StatisticsJob {
 	s.StopReason = stopReason
 	return s
+}
+func (s *Job) Marshal() (bytes []byte, err error) {
+	bytes, err = json.Marshal(s)
+	if err != nil {
+		return
+	}
+	return
 }

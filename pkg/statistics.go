@@ -76,6 +76,9 @@ type StatisticsTask interface {
 	WithStopReason(stopReason string) StatisticsTask
 	Marshal() (bytes []byte, err error)
 }
+type StatisticsRequest interface {
+	Marshal() (bytes []byte, err error)
+}
 type StatisticsRecord interface {
 	Marshal() (bytes []byte, err error)
 }
@@ -84,5 +87,6 @@ type Statistics interface {
 	GetSpiders() []StatisticsSpider
 	GetJobs() []StatisticsJob
 	GetTasks() []StatisticsTask
+	GetRequests() []StatisticsRequest
 	GetRecords() []StatisticsRecord
 }

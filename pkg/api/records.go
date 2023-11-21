@@ -18,17 +18,8 @@ func (h *RouteRecords) Pattern() string {
 	return UrlRecords
 }
 
-func (h *RouteRecords) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *RouteRecords) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	records := h.crawler.GetStatistics().GetRecords()
-	//for _, v := range nodes {
-	//	fmt.Println(v)
-	//	bs, err := v.Marshal()
-	//	if err != nil {
-	//		h.OutJson(w, 1, err.Error(), nil)
-	//		return
-	//	}
-	//
-	//}
 	h.OutJson(w, 0, "", records)
 }
 

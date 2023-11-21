@@ -27,6 +27,7 @@ type Spider struct {
 	LastTaskFinishTime utils.Timestamp      `json:"last_task_finish_time,omitempty"`
 	UpdateTime         utils.Timestamp      `json:"update_time,omitempty"`
 	StatusList         *queue.PriorityQueue `json:"status_list,omitempty"`
+	StopReason         string               `json:"stop_reason,omitempty"`
 }
 
 func (s *Spider) WithStatusAndTime(status pkg.SpiderStatus, t time.Time) pkg.StatisticsSpider {

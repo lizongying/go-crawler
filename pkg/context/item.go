@@ -18,6 +18,7 @@ type Item struct {
 	Cookies    map[string]string   `json:"cookies,omitempty"`
 	Referrer   string              `json:"referrer,omitempty"`
 	Saved      bool                `json:"saved,omitempty"`
+	StopReason string              `json:"stop_reason,omitempty"`
 }
 
 func (c *Item) GetId() string {
@@ -42,11 +43,11 @@ func (c *Item) WithStatus(status pkg.ItemStatus) pkg.ContextItem {
 	t := time.Now()
 	c.withUpdateTime(t)
 	switch status {
-	case pkg.ItemStatusPending:
+	case pkg.ItemStatusRunning:
 		c.withStartTime(t)
 	case pkg.ItemStatusSuccess:
 		c.withStopTime(t)
-	case pkg.ItemStatusError:
+	case pkg.ItemStatusFailure:
 		c.withStopTime(t)
 	}
 
@@ -78,5 +79,12 @@ func (c *Item) GetSaved() bool {
 }
 func (c *Item) WithSaved(saved bool) pkg.ContextItem {
 	c.Saved = saved
+	return c
+}
+func (c *Item) GetStopReason() string {
+	return c.StopReason
+}
+func (c *Item) WithStopReason(stopReason string) pkg.ContextItem {
+	c.StopReason = stopReason
 	return c
 }

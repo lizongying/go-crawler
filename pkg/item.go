@@ -185,21 +185,21 @@ type ItemStatus uint8
 const (
 	ItemStatusUnknown = iota
 	ItemStatusPending
-	ItemStatusDoing
+	ItemStatusRunning
 	ItemStatusSuccess
-	ItemStatusError
+	ItemStatusFailure
 )
 
-func (s *ItemStatus) String() string {
-	switch *s {
-	case 1:
+func (s ItemStatus) String() string {
+	switch s {
+	case ItemStatusPending:
 		return "pending"
-	case 2:
-		return "doing"
-	case 3:
+	case ItemStatusRunning:
+		return "running"
+	case ItemStatusSuccess:
 		return "success"
-	case 4:
-		return "error"
+	case ItemStatusFailure:
+		return "failure"
 	default:
 		return "unknown"
 	}

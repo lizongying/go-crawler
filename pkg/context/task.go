@@ -68,7 +68,7 @@ func (c *Task) WithStatus(status pkg.TaskStatus) pkg.ContextTask {
 		c.WithStartTime(t)
 	case pkg.TaskStatusSuccess:
 		c.WithStopTime(t)
-	case pkg.TaskStatusError:
+	case pkg.TaskStatusFailure:
 		c.WithStopTime(t)
 	}
 

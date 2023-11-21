@@ -3,6 +3,7 @@ package middlewares
 import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/http"
 	"sort"
 )
@@ -14,6 +15,15 @@ type StatsMiddleware struct {
 
 func (m *StatsMiddleware) taskStopped(c pkg.Context) (err error) {
 	task := c.GetTask()
+	if c.GetSpider().GetId() != m.GetSpider().GetContext().GetSpider().GetId() {
+		return
+	}
+	if !utils.InSlice(task.GetStatus(), []pkg.TaskStatus{
+		pkg.TaskStatusSuccess,
+		pkg.TaskStatusFailure,
+	}) {
+		return
+	}
 
 	var sl []any
 	sl = append(sl, c.GetSpider().GetName(), c.GetTask().GetId())

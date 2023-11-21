@@ -83,7 +83,7 @@
 <script lang='jsx' setup>
 import {h, reactive, ref, watch} from 'vue';
 import {
-  BarsOutlined,
+  BarsOutlined, CloudDownloadOutlined,
   ClusterOutlined,
   DatabaseOutlined,
   DownOutlined,
@@ -136,8 +136,11 @@ router.beforeEach((to, from, next) => {
     case 'tasks':
       state.selectedKeys = ['5']
       break
-    case 'records':
+    case 'requests':
       state.selectedKeys = ['6']
+      break
+    case 'records':
+      state.selectedKeys = ['7']
       break
     default:
       state.selectedKeys = []
@@ -185,6 +188,12 @@ const items = reactive([
   },
   {
     key: '6',
+    icon: () => h(CloudDownloadOutlined),
+    label: <RouterLink to="/requests">Requests</RouterLink>,
+    title: 'Requests',
+  },
+  {
+    key: '7',
     icon: () => h(DatabaseOutlined),
     label: <RouterLink to="/records">Records</RouterLink>,
     title: 'Records',
