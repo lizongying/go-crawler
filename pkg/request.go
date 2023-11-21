@@ -175,13 +175,13 @@ const (
 
 func (s RequestStatus) String() string {
 	switch s {
-	case 1:
+	case RequestStatusPending:
 		return "pending"
-	case 2:
+	case RequestStatusRunning:
 		return "running"
-	case 3:
+	case RequestStatusSuccess:
 		return "success"
-	case 4:
+	case RequestStatusFailure:
 		return "failure"
 	default:
 		return "unknown"

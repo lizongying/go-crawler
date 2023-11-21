@@ -60,7 +60,7 @@
               :key="record.status"
               :color="record.status === SpiderStatusStopped ? 'volcano' : record.status===SpiderStatusRunning ? 'green' : 'geekblue'"
           >
-            {{ spiderStatusName(record.status) }}
+            {{ SpiderStatusName(record.status) }}
           </a-tag>
         </span>
       </template>
@@ -68,9 +68,9 @@
         <span>
           <a-tag
               :key="record.last_task_status"
-              :color="record.last_task_status === TaskStatusError ? 'volcano' : record.last_task_status===TaskStatusRunning ? 'green' : 'geekblue'"
+              :color="record.last_task_status === TaskStatusFailure ? 'volcano' : record.last_task_status===TaskStatusRunning ? 'green' : 'geekblue'"
           >
-            {{ taskStatusName(record.last_task_status) }}
+            {{ TaskStatusName(record.last_task_status) }}
           </a-tag>
         </span>
       </template>
@@ -158,6 +158,7 @@ import {RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
 import {RouterLink, useRoute} from "vue-router";
 import {
   SpiderStatusIdle,
+  SpiderStatusName,
   SpiderStatusReady,
   SpiderStatusRunning,
   SpiderStatusStarting,
@@ -168,8 +169,13 @@ import {
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 import {computed, onBeforeUnmount, reactive, ref} from "vue";
-import {TaskStatusError, TaskStatusPending, TaskStatusRunning, TaskStatusSuccess} from "@/stores/tasks";
-import {useNodesStore} from "@/stores/nodes";
+import {
+  TaskStatusFailure,
+  TaskStatusName,
+  TaskStatusPending,
+  TaskStatusRunning,
+  TaskStatusSuccess
+} from "@/stores/tasks";
 
 const filteredInfo = reactive({});
 const {query} = useRoute();
@@ -305,8 +311,8 @@ const columns = computed(() => {
           value: TaskStatusSuccess,
         },
         {
-          text: 'error',
-          value: TaskStatusError,
+          text: 'failure',
+          value: TaskStatusFailure,
         },
       ],
       onFilter: (value, record) => record.last_task_status === value,
@@ -360,40 +366,6 @@ const columns = computed(() => {
 
 const spidersStore = useSpidersStore();
 
-const spiderStatusName = (status) => {
-  switch (status) {
-    case 1:
-      return 'ready'
-    case 2:
-      return 'starting'
-    case 3:
-      return 'started'
-    case 4:
-      return 'idle'
-    case 5:
-      return 'stopping'
-    case 6:
-      return 'stopped'
-    default:
-      return 'unknown'
-  }
-}
-
-const taskStatusName = (status) => {
-  switch (status) {
-    case 1:
-      return 'pending'
-    case 2:
-      return 'running'
-    case 3:
-      return 'success'
-    case 4:
-      return 'error'
-    default:
-      return 'unknown'
-  }
-}
-
 // auto refresh
 const checked1 = ref(true)
 const checked1Disable = ref(true)
@@ -422,7 +394,7 @@ const open = ref(false);
 const more = reactive({})
 const showDrawer = record => {
   open.value = true;
-  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${spiderStatusName(v)}`).reverse();
+  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${SpiderStatusName(v)}`).reverse();
 };
 // status list
 const activeKey = ref('1');

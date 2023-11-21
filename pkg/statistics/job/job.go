@@ -35,7 +35,9 @@ func (s *Job) WithStatusAndTime(status pkg.JobStatus, t time.Time) pkg.Statistic
 	switch status {
 	case pkg.JobStatusRunning:
 		s.withStartTime(t)
-	case pkg.JobStatusStopped:
+	case pkg.JobStatusSuccess:
+		s.withFinishTime(t)
+	case pkg.JobStatusFailure:
 		s.withFinishTime(t)
 	}
 

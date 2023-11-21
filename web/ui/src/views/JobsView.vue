@@ -63,9 +63,9 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === JobStatusStopped ? 'volcano' : record.status === JobStatusRunning ? 'green' : 'geekblue'"
+              :color="record.status === JobStatusFailure ? 'volcano' : record.status === JobStatusSuccess ? 'green' : 'geekblue'"
           >
-            {{ jobStatusName(record.status) }}
+            {{ JobStatusName(record.status) }}
           </a-tag>
         </span>
       </template>
@@ -90,7 +90,8 @@
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
-          <a v-if="record.status === JobStatusStopped" @click="rerun(record.spider, record.id)">Rerun</a>
+          <a v-if="record.status === JobStatusSuccess||record.status === JobStatusFailure"
+             @click="rerun(record.spider, record.id)">Rerun</a>
           <a v-if="record.status === JobStatusRunning" @click="stop(record.spider, record.id)">Stop</a>
           <a-divider type="vertical"/>
           <a class="ant-dropdown-link" @click="showDrawer(record)">
@@ -234,12 +235,14 @@
 import {ExclamationCircleOutlined, RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
 import {RouterLink, useRoute} from "vue-router";
 import {
+  JobStatusFailure,
   JobStatusIdle,
+  JobStatusName,
   JobStatusReady,
   JobStatusRunning,
   JobStatusStarting,
-  JobStatusStopped,
   JobStatusStopping,
+  JobStatusSuccess,
   useJobsStore
 } from "@/stores/jobs";
 import {formatDuration, formattedDate} from "@/utils/time";
@@ -247,7 +250,6 @@ import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 import {computed, createVNode, onBeforeUnmount, reactive, ref} from "vue";
 import {message, Modal} from "ant-design-vue";
 import {useSpidersStore} from "@/stores/spiders";
-import {useNodesStore} from "@/stores/nodes";
 
 const filteredInfo = reactive({});
 const {query} = useRoute();
@@ -346,8 +348,12 @@ const columns = computed(() => {
           value: JobStatusStopping,
         },
         {
-          text: 'stopped',
-          value: JobStatusStopped,
+          text: 'success',
+          value: JobStatusSuccess,
+        },
+        {
+          text: 'failure',
+          value: JobStatusFailure,
         },
       ],
       onFilter: (value, record) => record.status === value,
@@ -429,25 +435,6 @@ const columns = computed(() => {
 
 const jobsStore = useJobsStore()
 
-const jobStatusName = (status) => {
-  switch (status) {
-    case JobStatusReady:
-      return 'ready'
-    case JobStatusStarting:
-      return 'starting'
-    case JobStatusRunning:
-      return 'running'
-    case JobStatusIdle:
-      return 'idle'
-    case JobStatusStopping:
-      return 'stopping'
-    case JobStatusStopped:
-      return 'stopped'
-    default:
-      return 'unknown'
-  }
-}
-
 // auto refresh
 const checked1 = ref(true)
 const checked1Disable = ref(true)
@@ -515,7 +502,7 @@ const open = ref(false);
 const more = reactive({})
 const showDrawer = record => {
   open.value = true;
-  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${jobStatusName(v)}`).reverse();
+  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${JobStatusName(v)}`).reverse();
 };
 // status list
 const activeKey = ref('1');

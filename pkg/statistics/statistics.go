@@ -139,7 +139,7 @@ func (s *Statistics) jobChanged(ctx pkg.Context) (err error) {
 
 	switch j.GetStatus() {
 	case pkg.JobStatusRunning:
-	case pkg.JobStatusStopped:
+	case pkg.JobStatusFailure:
 		s.Jobs[id].WithStopReason(j.GetStopReason())
 	}
 	return

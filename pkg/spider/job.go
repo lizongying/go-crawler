@@ -84,7 +84,8 @@ func (j *Job) run(ctx context.Context) (err error) {
 
 	if !utils.InSlice(j.context.GetJob().GetStatus(), []pkg.JobStatus{
 		pkg.JobStatusReady,
-		pkg.JobStatusStopped,
+		pkg.JobStatusSuccess,
+		pkg.JobStatusFailure,
 	}) {
 		err = errors.New("the job can be started in the ready or stopped state")
 		j.logger.Error(err)
@@ -103,12 +104,18 @@ func (j *Job) run(ctx context.Context) (err error) {
 	go func() {
 		select {
 		case <-j.context.GetJob().GetContext().Done():
-			if j.context.GetJob().GetStatus() != pkg.JobStatusStopped {
+			if !utils.InSlice(j.context.GetJob().GetStatus(), []pkg.JobStatus{
+				pkg.JobStatusSuccess,
+				pkg.JobStatusFailure,
+			}) {
 				j.stop(ctx.Err())
 			}
 			return
 		case <-ctx.Done():
-			if j.context.GetJob().GetStatus() != pkg.JobStatusStopped {
+			if !utils.InSlice(j.context.GetJob().GetStatus(), []pkg.JobStatus{
+				pkg.JobStatusSuccess,
+				pkg.JobStatusFailure,
+			}) {
 				j.stop(ctx.Err())
 			}
 			return
@@ -146,7 +153,10 @@ func (j *Job) run(ctx context.Context) (err error) {
 }
 
 func (j *Job) stop(err error) {
-	if j.context.GetJob().GetStatus() == pkg.JobStatusStopped {
+	if !utils.InSlice(j.context.GetJob().GetStatus(), []pkg.JobStatus{
+		pkg.JobStatusSuccess,
+		pkg.JobStatusFailure,
+	}) {
 		err = errors.New("job has been finished")
 		j.logger.Error(err)
 		return
@@ -162,7 +172,7 @@ func (j *Job) stop(err error) {
 		}
 
 		j.context.GetJob().WithStopReason(err.Error())
-		j.context.GetJob().WithStatus(pkg.JobStatusStopped)
+		j.context.GetJob().WithStatus(pkg.JobStatusFailure)
 		j.crawler.GetSignal().JobChanged(j.context)
 
 		j.spider.JobStopped(j.context, err)
@@ -171,7 +181,7 @@ func (j *Job) stop(err error) {
 
 	switch j.context.GetJob().GetMode() {
 	case pkg.JobModeOnce:
-		j.context.GetJob().WithStatus(pkg.JobStatusStopped)
+		j.context.GetJob().WithStatus(pkg.JobStatusSuccess)
 		j.crawler.GetSignal().JobChanged(j.context)
 
 		j.spider.JobStopped(j.context, nil)

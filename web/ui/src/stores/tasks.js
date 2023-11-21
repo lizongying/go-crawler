@@ -6,7 +6,22 @@ export const TaskStatusUnknown = 0
 export const TaskStatusPending = 1
 export const TaskStatusRunning = 2
 export const TaskStatusSuccess = 3
-export const TaskStatusError = 4
+export const TaskStatusFailure = 4
+
+export const TaskStatusName = (status) => {
+    switch (status) {
+        case TaskStatusPending:
+            return 'pending'
+        case TaskStatusRunning:
+            return 'running'
+        case TaskStatusSuccess:
+            return 'success'
+        case TaskStatusFailure:
+            return 'failure'
+        default:
+            return 'unknown'
+    }
+}
 
 export const useTasksStore = defineStore('tasks', () => {
     const tasks = reactive([])
@@ -27,9 +42,5 @@ export const useTasksStore = defineStore('tasks', () => {
         return tasks.length
     })
 
-    const CountError = computed(() => {
-        return tasks.filter(v => v.status === 4).length
-    })
-
-    return {tasks, GetTasks, Count, CountError}
+    return {tasks, GetTasks, Count}
 })

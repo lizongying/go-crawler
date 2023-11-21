@@ -8,7 +8,29 @@ export const JobStatusStarting = 2
 export const JobStatusRunning = 3
 export const JobStatusIdle = 4
 export const JobStatusStopping = 5
-export const JobStatusStopped = 6
+export const JobStatusSuccess = 6
+export const JobStatusFailure = 7
+
+export const JobStatusName = (status) => {
+    switch (status) {
+        case JobStatusReady:
+            return 'ready'
+        case JobStatusStarting:
+            return 'starting'
+        case JobStatusRunning:
+            return 'running'
+        case JobStatusIdle:
+            return 'idle'
+        case JobStatusStopping:
+            return 'stopping'
+        case JobStatusSuccess:
+            return 'success'
+        case JobStatusFailure:
+            return 'failure'
+        default:
+            return 'unknown'
+    }
+}
 
 export const useJobsStore = defineStore('jobs', () => {
     const jobs = reactive([])

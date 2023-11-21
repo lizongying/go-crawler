@@ -14,23 +14,26 @@ const (
 	JobStatusRunning
 	JobStatusIdle
 	JobStatusStopping
-	JobStatusStopped
+	JobStatusSuccess
+	JobStatusFailure
 )
 
-func (s *JobStatus) String() string {
-	switch *s {
-	case 1:
+func (s JobStatus) String() string {
+	switch s {
+	case JobStatusReady:
 		return "ready"
-	case 2:
+	case JobStatusStarting:
 		return "starting"
-	case 3:
+	case JobStatusRunning:
 		return "running"
-	case 4:
+	case JobStatusIdle:
 		return "idle"
-	case 5:
+	case JobStatusStopping:
 		return "stopping"
-	case 6:
-		return "stopped"
+	case JobStatusSuccess:
+		return "success"
+	case JobStatusFailure:
+		return "failure"
 	default:
 		return "unknown"
 	}

@@ -67,9 +67,9 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === TaskStatusError ? 'volcano' : record.status===TaskStatusSuccess ? 'green' : 'geekblue'"
+              :color="record.status === TaskStatusFailure ? 'volcano' : record.status===TaskStatusSuccess ? 'green' : 'geekblue'"
           >
-            {{ taskStatusName(record.status) }}
+            {{ TaskStatusName(record.status) }}
           </a-tag>
         </span>
       </template>
@@ -125,7 +125,14 @@
 import {RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
 import {computed, onBeforeUnmount, reactive, ref} from "vue";
 import {RouterLink, useRoute} from "vue-router";
-import {TaskStatusError, TaskStatusPending, TaskStatusRunning, TaskStatusSuccess, useTasksStore} from "@/stores/tasks";
+import {
+  TaskStatusFailure,
+  TaskStatusName,
+  TaskStatusPending,
+  TaskStatusRunning,
+  TaskStatusSuccess,
+  useTasksStore
+} from "@/stores/tasks";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 import {useNodesStore} from "@/stores/nodes";
@@ -224,8 +231,8 @@ const columns = computed(() => {
           value: TaskStatusSuccess,
         },
         {
-          text: 'error',
-          value: TaskStatusError,
+          text: 'failure',
+          value: TaskStatusFailure,
         },
       ],
       onFilter: (value, record) => record.status === value,
@@ -306,21 +313,6 @@ const showDrawer = () => {
   open.value = true;
 };
 const activeKey = ref('1');
-
-const taskStatusName = (status) => {
-  switch (status) {
-    case 1:
-      return 'pending'
-    case 2:
-      return 'running'
-    case 3:
-      return 'success'
-    case 4:
-      return 'error'
-    default:
-      return 'unknown'
-  }
-}
 
 // auto refresh
 const checked1 = ref(true)

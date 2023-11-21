@@ -9,6 +9,24 @@ export const NodeStatusRunning = 3
 export const NodeStatusIdle = 4
 export const NodeStatusStopping = 5
 export const NodeStatusStopped = 6
+export const NodeStatusName = (status) => {
+    switch (status) {
+        case NodeStatusReady:
+            return 'ready'
+        case NodeStatusStarting:
+            return 'starting'
+        case NodeStatusRunning:
+            return 'running'
+        case NodeStatusIdle:
+            return 'idle'
+        case NodeStatusStopping:
+            return 'stopping'
+        case NodeStatusStopped:
+            return 'stopped'
+        default:
+            return 'unknown'
+    }
+}
 
 export const useNodesStore = defineStore('nodes', () => {
     const nodes = reactive([])

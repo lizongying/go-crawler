@@ -190,15 +190,15 @@ const (
 	ItemStatusFailure
 )
 
-func (s *ItemStatus) String() string {
-	switch *s {
-	case 1:
+func (s ItemStatus) String() string {
+	switch s {
+	case ItemStatusPending:
 		return "pending"
-	case 2:
+	case ItemStatusRunning:
 		return "running"
-	case 3:
+	case ItemStatusSuccess:
 		return "success"
-	case 4:
+	case ItemStatusFailure:
 		return "failure"
 	default:
 		return "unknown"

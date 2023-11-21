@@ -68,8 +68,24 @@
           {{ record.task }}
         </RouterLink>
       </template>
-      <template v-else-if="column.dataIndex === 'save_time'">
-        {{ formattedDate(record.save_time) }}
+      <template v-else-if="column.dataIndex === 'status'">
+        <span>
+          <a-tag
+              :key="record.status"
+              :color="record.status === ItemStatusFailure ? 'volcano' : record.status===ItemStatusSuccess ? 'green' : 'geekblue'"
+          >
+            {{ ItemStatusName(record.status) }}
+          </a-tag>
+        </span>
+      </template>
+      <template v-else-if="column.dataIndex === 'start_time'">
+        {{ formattedDate(record.start_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'finish_time'">
+        {{ formattedDate(record.finish_time) }}
+      </template>
+      <template v-else-if="column.dataIndex === 'duration'">
+        {{ formatDuration(record.finish_time - record.start_time) }}
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
@@ -110,8 +126,15 @@
 <script setup>
 import {RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
 import {RouterLink, useRoute} from "vue-router";
-import {formattedDate} from "@/utils/time";
-import {useRecordsStore} from "@/stores/records";
+import {formatDuration, formattedDate} from "@/utils/time";
+import {
+  ItemStatusFailure,
+  ItemStatusName,
+  ItemStatusPending,
+  ItemStatusRunning,
+  ItemStatusSuccess,
+  useRecordsStore
+} from "@/stores/records";
 import {computed, onBeforeUnmount, reactive, ref} from "vue";
 import {sortBigInt, sortStr} from "@/utils/sort";
 
@@ -222,10 +245,82 @@ const columns = computed(() => {
       ellipsis: true,
     },
     {
-      title: 'Save Time',
-      dataIndex: 'save_time',
+      title: 'Status',
+      dataIndex: 'status',
+      width: 100,
+      filters: [
+        {
+          text: 'pending',
+          value: ItemStatusPending,
+        },
+        {
+          text: 'running',
+          value: ItemStatusRunning,
+        },
+        {
+          text: 'success',
+          value: ItemStatusSuccess,
+        },
+        {
+          text: 'failure',
+          value: ItemStatusFailure,
+        },
+      ],
+      onFilter: (value, record) => record.status === value,
+      filteredValue: null,
+    },
+    {
+      title: 'Start Time',
+      dataIndex: 'start_time',
       width: 200,
-      sorter: (a, b) => a.save_time - b.save_time,
+      sorter: (a, b) => a.start_time - b.start_time,
+    },
+    {
+      title: 'Finish Time',
+      dataIndex: 'finish_time',
+      width: 200,
+      sorter: (a, b) => {
+        if (a.finish_time === b.finish_time) {
+          return 0
+        }
+        const a_finish_time = a.finish_time !== 0 ? a.finish_time : Math.floor(Date.now() / 1000)
+        const b_finish_time = b.finish_time !== 0 ? b.finish_time : Math.floor(Date.now() / 1000)
+        return a_finish_time - b_finish_time
+      },
+    },
+    {
+      title: 'Duration',
+      dataIndex: 'duration',
+      width: 150,
+      sorter: (a, b) => {
+        let a_finish_time = a.finish_time
+        if (a.start_time === 0 && a.finish_time === 0) {
+          a_finish_time = Math.floor(Date.now() / 1000)
+        }
+        let b_finish_time = b.finish_time
+        if (b.start_time === 0 && b.finish_time === 0) {
+          b_finish_time = Math.floor(Date.now() / 1000)
+        }
+        return (a_finish_time - a.start_time) - (b_finish_time - b.start_time)
+      },
+    },
+    {
+      title: 'Stop Reason',
+      dataIndex: 'stop_reason',
+      sorter: (a, b) => sortStr(a.stop_reason, b.stop_reason),
+      width: 200,
+      ellipsis: true,
+      customFilterDropdown: true,
+      filteredValue: filteredInfo.stop_reason || null,
+      onFilter: (value, record) =>
+          record.stop_reason.toString().toLowerCase().includes(value.toLowerCase()),
+      onFilterDropdownOpenChange: visible => {
+        if (visible) {
+          setTimeout(() => {
+            searchInput.value.focus();
+          }, 100);
+        }
+      },
     },
     {
       title: 'Action',

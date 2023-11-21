@@ -83,7 +83,7 @@
 <script lang='jsx' setup>
 import {h, reactive, ref, watch} from 'vue';
 import {
-  BarsOutlined,
+  BarsOutlined, CloudDownloadOutlined,
   ClusterOutlined,
   DatabaseOutlined,
   DownOutlined,
@@ -188,7 +188,7 @@ const items = reactive([
   },
   {
     key: '6',
-    icon: () => h(DatabaseOutlined),
+    icon: () => h(CloudDownloadOutlined),
     label: <RouterLink to="/requests">Requests</RouterLink>,
     title: 'Requests',
   },

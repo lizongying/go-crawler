@@ -424,7 +424,10 @@ func (s *BaseSpider) RerunJob(ctx context.Context, jobId string) (err error) {
 		err = errors.New("job is not exists")
 		return
 	}
-	if job.GetContext().GetJob().GetStatus() != pkg.JobStatusStopped {
+	if !utils.InSlice(job.GetContext().GetJob().GetStatus(), []pkg.JobStatus{
+		pkg.JobStatusSuccess,
+		pkg.JobStatusFailure,
+	}) {
 		err = errors.New("job is not stopped")
 		return
 	}

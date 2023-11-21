@@ -9,6 +9,24 @@ export const SpiderStatusRunning = 3
 export const SpiderStatusIdle = 4
 export const SpiderStatusStopping = 5
 export const SpiderStatusStopped = 6
+export const SpiderStatusName = (status) => {
+    switch (status) {
+        case SpiderStatusReady:
+            return 'ready'
+        case SpiderStatusStarting:
+            return 'starting'
+        case SpiderStatusRunning:
+            return 'running'
+        case SpiderStatusIdle:
+            return 'idle'
+        case SpiderStatusStopping:
+            return 'stopping'
+        case SpiderStatusStopped:
+            return 'stopped'
+        default:
+            return 'unknown'
+    }
+}
 
 export const useSpidersStore = defineStore('spiders', () => {
     const spiders = reactive([])

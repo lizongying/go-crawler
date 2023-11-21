@@ -68,6 +68,16 @@
           {{ record.task }}
         </RouterLink>
       </template>
+      <template v-else-if="column.dataIndex === 'status'">
+        <span>
+          <a-tag
+              :key="record.status"
+              :color="record.status === RequestStatusFailure ? 'volcano' : record.status===RequestStatusSuccess ? 'green' : 'geekblue'"
+          >
+            {{ RequestStatusName(record.status) }}
+          </a-tag>
+        </span>
+      </template>
       <template v-else-if="column.dataIndex === 'start_time'">
         {{ formattedDate(record.start_time) }}
       </template>
@@ -117,7 +127,14 @@
 import {RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
 import {RouterLink, useRoute} from "vue-router";
 import {formatDuration, formattedDate} from "@/utils/time";
-import {useRequestsStore} from "@/stores/requests";
+import {
+  RequestStatusFailure,
+  RequestStatusName,
+  RequestStatusPending,
+  RequestStatusRunning,
+  RequestStatusSuccess,
+  useRequestsStore
+} from "@/stores/requests";
 import {computed, onBeforeUnmount, reactive, ref} from "vue";
 import {sortBigInt, sortStr} from "@/utils/sort";
 
@@ -226,6 +243,31 @@ const columns = computed(() => {
       dataIndex: 'meta',
       width: 200,
       ellipsis: true,
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      width: 100,
+      filters: [
+        {
+          text: 'pending',
+          value: RequestStatusPending,
+        },
+        {
+          text: 'running',
+          value: RequestStatusRunning,
+        },
+        {
+          text: 'success',
+          value: RequestStatusSuccess,
+        },
+        {
+          text: 'failure',
+          value: RequestStatusFailure,
+        },
+      ],
+      onFilter: (value, record) => record.status === value,
+      filteredValue: null,
     },
     {
       title: 'Start Time',

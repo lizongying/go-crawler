@@ -24,13 +24,13 @@ const (
 
 func (s TaskStatus) String() string {
 	switch s {
-	case 1:
+	case TaskStatusPending:
 		return "pending"
-	case 2:
+	case TaskStatusRunning:
 		return "running"
-	case 3:
+	case TaskStatusSuccess:
 		return "success"
-	case 4:
+	case TaskStatusFailure:
 		return "failure"
 	default:
 		return "unknown"
