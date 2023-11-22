@@ -34,28 +34,27 @@ func (m *RetryMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) 
 	if len(request.GetOkHttpCodes()) > 0 {
 		okHttpCodes = request.GetOkHttpCodes()
 	}
-	if retryMaxTimes > 0 && response.GetResponse() == nil {
+
+	if response.GetResponse() == nil {
 		if request.GetRetryTimes() < retryMaxTimes {
 			request.SetRetryTimes(request.GetRetryTimes() + 1)
-			m.logger.Info(request.GetUniqueKey(), "retry times:", request.GetRetryTimes(), "SpendTime:", request.GetSpendTime())
+			m.logger.Infof("retry times: %d/%d, response nil, SpendTime: %v, UniqueKey: %s\n", request.GetRetryTimes(), retryMaxTimes, request.GetSpendTime(), request.GetUniqueKey())
 			err = pkg.ErrNeedRetry
 			return
 		}
 		err = fmt.Errorf("response nil")
-		m.logger.Error(request.GetUniqueKey(), err, request.GetRetryTimes(), retryMaxTimes)
 		return
 	}
 
-	if retryMaxTimes > 0 && !utils.InSlice(response.StatusCode(), okHttpCodes) {
+	if !utils.InSlice(response.StatusCode(), okHttpCodes) {
 		if request.GetRetryTimes() < retryMaxTimes {
 			request.SetRetryTimes(request.GetRetryTimes() + 1)
-			m.logger.Info(request.GetUniqueKey(), "retry times:", request.GetRetryTimes(), "SpendTime:", request.GetSpendTime())
+			m.logger.Infof("retry times: %d/%d, status code: %d, SpendTime: %v, UniqueKey: %s\n", request.GetRetryTimes(), retryMaxTimes, response.StatusCode(), request.GetSpendTime(), request.GetUniqueKey())
 			err = pkg.ErrNeedRetry
 			return
 		}
 
 		err = fmt.Errorf("status code error: %d", response.StatusCode())
-		m.logger.Error(request.GetUniqueKey(), err, request.GetRetryTimes(), retryMaxTimes)
 		return
 	}
 

@@ -12,7 +12,6 @@ import (
 	"golang.org/x/time/rate"
 	"net/http"
 	"reflect"
-	"runtime"
 	"time"
 )
 
@@ -111,14 +110,13 @@ out:
 			}
 			ctx.GetRequest().WithStatus(pkg.RequestStatusRunning)
 			s.crawler.GetSignal().RequestChanged(request)
-			s.task.RequestRunning(ctx, nil)
 			go func(c pkg.Context, request pkg.Request) {
 				var response pkg.Response
 				response, err = s.Request(c, request)
 				if err != nil {
 					ctx.GetRequest().WithStatus(pkg.RequestStatusFailure).WithStopReason(err.Error())
 					s.crawler.GetSignal().RequestChanged(request)
-					s.task.RequestStopped(ctx, err)
+					s.task.RequestOut()
 					return
 				}
 
@@ -126,25 +124,23 @@ out:
 					defer func() {
 						if r := recover(); r != nil {
 							s.logger.Error(r)
-							buf := make([]byte, 1<<16)
-							runtime.Stack(buf, true)
-							err = errors.New(string(buf))
-							//s.logger.Error(err)
+							err = errors.New("panic")
 							s.HandleError(ctx, response, err, request.GetErrBack())
 						}
+						s.task.MethodOut()
+						s.task.RequestOut()
 					}()
 
+					s.task.MethodIn()
 					if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
 						s.logger.Error(err)
 						s.HandleError(ctx, response, err, request.GetErrBack())
 						ctx.GetRequest().WithStatus(pkg.RequestStatusFailure).WithStopReason(err.Error())
 						s.crawler.GetSignal().RequestChanged(request)
-						s.task.RequestStopped(ctx, err)
 						return
 					}
 					ctx.GetRequest().WithStatus(pkg.RequestStatusSuccess)
 					s.crawler.GetSignal().RequestChanged(request)
-					s.task.RequestStopped(ctx, nil)
 				}(c, response)
 			}(ctx, request)
 		}
@@ -221,12 +217,12 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		res, err = s.redis.ZAdd(c, s.requestKey, z).Result()
 		if res == 1 {
 			s.crawler.GetSignal().RequestChanged(request)
-			ctx.GetTask().RequestPending(ctx, err)
+			ctx.GetTask().RequestIn()
 		}
 	} else {
 		err = s.redis.RPush(c, s.requestKey, bs).Err()
 		s.crawler.GetSignal().RequestChanged(request)
-		ctx.GetTask().RequestPending(ctx, err)
+		ctx.GetTask().RequestIn()
 	}
 	return
 }
@@ -245,7 +241,6 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 	bs, err := json.Marshal(extra)
 	if err != nil {
 		s.logger.Error(err)
-		c.GetTask().RequestPending(c, err)
 		return
 	}
 
@@ -263,22 +258,20 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 		res, err = s.redis.ZAdd(ctx, extraKey, z).Result()
 		if err != nil {
 			s.logger.Error(err)
-			c.GetTask().RequestPending(c, err)
 			return
 		}
 
 		if res == 1 {
-			c.GetTask().RequestRunning(c, nil)
+			c.GetTask().RequestIn()
 		}
 	} else {
 		extraKey := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), name, spider.Name())
 		if err = s.redis.RPush(ctx, extraKey, bs).Err(); err != nil {
 			s.logger.Error(err)
-			c.GetTask().RequestPending(c, err)
 			return
 		}
 
-		c.GetTask().RequestPending(c, nil)
+		c.GetTask().RequestIn()
 	}
 
 	return
@@ -286,7 +279,7 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 
 func (s *Scheduler) GetExtra(c pkg.Context, extra any) (err error) {
 	defer func() {
-		s.task.RequestStopped(c, nil)
+		s.task.RequestOut()
 	}()
 
 	extraValue := reflect.ValueOf(extra)

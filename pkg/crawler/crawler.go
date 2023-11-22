@@ -255,7 +255,7 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	c.context.GetCrawler().WithStatus(pkg.CrawlerStatusRunning)
 	c.Signal.CrawlerChanged(c.context)
 
-	c.logger.Info("crawler is running", c.context.GetCrawler().GetId())
+	c.logger.Info("crawler is running. id:", c.context.GetCrawler().GetId())
 	c.logger.Info("referrerPolicy", c.config.GetReferrerPolicy())
 	c.logger.Info("urlLengthLimit", c.config.GetUrlLengthLimit())
 
@@ -327,7 +327,7 @@ func (c *Crawler) SpiderStopped(_ pkg.Context, _ error) {
 }
 
 func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, sqlite pkg.Sqlite, store pkg.Store, mockServer pkg.MockServer, httpApi *api.Api) (crawler pkg.Crawler, err error) {
-	spider := pkg.NewState()
+	spider := pkg.NewState("spider")
 	spider.RegisterIsReadyAndIsZero(func() {
 		_ = crawler.Stop(crawler.GetContext())
 	})

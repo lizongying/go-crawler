@@ -145,7 +145,7 @@ type Config struct {
 	EnableJa3                   *bool   `yaml:"enable_ja3,omitempty" json:"enable_ja3"`
 	EnablePriorityQueue         *bool   `yaml:"enable_priority_queue,omitempty" json:"enable_priority_queue"`
 	EnableReferrerMiddleware    *bool   `yaml:"enable_referrer_middleware,omitempty" json:"enable_referrer_middleware"`
-	ReferrerPolicy              *string `yaml:"referrer_policy_middleware,omitempty" json:"referrer_policy_middleware"`
+	ReferrerPolicy              *string `yaml:"referrer_policy,omitempty" json:"referrer_policy"`
 	EnableHttpAuthMiddleware    *bool   `yaml:"enable_http_auth_middleware,omitempty" json:"enable_http_auth_middleware"`
 	EnableCookieMiddleware      *bool   `yaml:"enable_cookie_middleware,omitempty" json:"enable_cookie_middleware"`
 	EnableStatsMiddleware       *bool   `yaml:"enable_stats_middleware,omitempty" json:"enable_stats_middleware"`
@@ -318,18 +318,11 @@ func (c *Config) GetEnablePriorityQueue() bool {
 }
 func (c *Config) GetReferrerPolicy() pkg.ReferrerPolicy {
 	if c.ReferrerPolicy == nil {
-		referrerPolicy := string(pkg.DefaultReferrerPolicy)
+		referrerPolicy := pkg.DefaultReferrerPolicy.String()
 		c.ReferrerPolicy = &referrerPolicy
 	}
 	if *c.ReferrerPolicy != "" {
-		switch pkg.ReferrerPolicy(*c.ReferrerPolicy) {
-		case pkg.DefaultReferrerPolicy:
-			return pkg.DefaultReferrerPolicy
-		case pkg.NoReferrerPolicy:
-			return pkg.NoReferrerPolicy
-		default:
-			return pkg.DefaultReferrerPolicy
-		}
+		return pkg.ReferrerPolicyFromString(*c.ReferrerPolicy)
 	}
 
 	return pkg.DefaultReferrerPolicy

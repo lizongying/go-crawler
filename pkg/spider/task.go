@@ -15,6 +15,7 @@ import (
 
 type Task struct {
 	context        pkg.Context
+	method         *pkg.State
 	request        *pkg.State
 	item           *pkg.State
 	requestAndItem *pkg.MultiState
@@ -56,8 +57,6 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 				WithStartTime(time.Now()).
 				WithStats(new(stats.MediaStats))))
 		t.crawler.GetSignal().TaskChanged(t.context)
-
-		t.logger.Info(t.spider.Name(), id, "task started")
 	}
 
 	if err = t.StartScheduler(t.context); err != nil {
@@ -76,13 +75,14 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 	}()
 
 	go func() {
-
 		defer func() {
-			//if r := recover(); r != nil {
-			//	s.logger.Error(r)
-			//}
+			if r := recover(); r != nil {
+				t.logger.Error(r)
+			}
+			t.MethodOut()
 		}()
 
+		t.MethodIn()
 		params := []reflect.Value{
 			reflect.ValueOf(t.context),
 			reflect.ValueOf(t.context.GetJob().GetArgs()),
@@ -129,30 +129,31 @@ func (t *Task) stop(err error) {
 	t.job.TaskStopped(t.context, err)
 	return
 }
-func (t *Task) RequestPending(_ pkg.Context, _ error) {
-	t.request.BeReady()
+func (t *Task) MethodIn() {
+	if !t.method.IsReady() {
+		t.method.BeReady()
+	}
+	t.method.In()
 }
-func (t *Task) RequestRunning(_ pkg.Context, err error) {
-	if err != nil {
-		return
+func (t *Task) MethodOut() {
+	t.method.Out()
+}
+func (t *Task) RequestIn() {
+	if !t.request.IsReady() {
+		t.request.BeReady()
 	}
 	t.request.In()
 }
-func (t *Task) RequestStopped(_ pkg.Context, _ error) {
+func (t *Task) RequestOut() {
 	t.request.Out()
 }
-func (t *Task) ItemPending(_ pkg.Context, _ error) {
-	t.item.BeReady()
-}
-func (t *Task) ItemRunning(ctx pkg.Context, err error) {
-	if err != nil {
-		return
+func (t *Task) ItemIn() {
+	if !t.item.IsReady() {
+		t.item.BeReady()
 	}
 	t.item.In()
 }
-func (t *Task) ItemStopped(_ pkg.Context, _ error) {
-	//item := ctx.GetItem()
-	//item.WithContext()
+func (t *Task) ItemOut() {
 	t.item.Out()
 }
 func (t *Task) WithJob(job *Job) *Task {
@@ -164,11 +165,12 @@ func (t *Task) FromSpider(spider pkg.Spider) *Task {
 		crawler: spider.GetCrawler(),
 		spider:  spider,
 		logger:  spider.GetLogger(),
-		request: pkg.NewState(),
-		item:    pkg.NewState(),
+		method:  pkg.NewState("method"),
+		request: pkg.NewState("request"),
+		item:    pkg.NewState("item"),
 	}
 
-	t.requestAndItem = pkg.NewMultiState(t.request, t.item)
+	t.requestAndItem = pkg.NewMultiState(t.request, t.item, t.method)
 
 	t.requestAndItem.RegisterIsReadyAndIsZero(func() {
 		t.stop(nil)

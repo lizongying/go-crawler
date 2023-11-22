@@ -47,7 +47,6 @@ out:
 				WithStatus(pkg.ItemStatusFailure).
 				WithStopReason(err.Error())
 			s.crawler.GetSignal().ItemChanged(item)
-			s.task.ItemPending(item.GetContext(), nil)
 			break out
 		default:
 			itemDelay := s.crawler.GetItemDelay()
@@ -60,6 +59,7 @@ out:
 			go func(item pkg.Item) {
 				defer func() {
 					s.crawler.ItemConcurrencyChan() <- struct{}{}
+					s.task.ItemOut()
 				}()
 
 				contextItem := item.GetContext().GetItem()
@@ -67,7 +67,6 @@ out:
 				contextItem.
 					WithStatus(pkg.ItemStatusRunning)
 				s.crawler.GetSignal().ItemChanged(item)
-				s.task.ItemRunning(item.GetContext(), nil)
 
 				err := s.spider.Export(item)
 				if err != nil {
@@ -80,7 +79,6 @@ out:
 						WithStatus(pkg.ItemStatusSuccess)
 				}
 				s.crawler.GetSignal().ItemChanged(item)
-				s.task.ItemStopped(item.GetContext(), err)
 			}(item)
 
 			if itemDelay > 0 {
@@ -130,8 +128,8 @@ func (s *UnimplementedScheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err 
 
 	item.WithContext(c)
 	s.crawler.GetSignal().ItemChanged(item)
-	s.task.ItemPending(c, nil)
 	s.itemChan <- item
+	s.task.ItemIn()
 	return
 }
 func (s *UnimplementedScheduler) HandleError(ctx pkg.Context, response pkg.Response, err error, errBackName string) {
@@ -174,9 +172,8 @@ func (s *UnimplementedScheduler) SyncRequest(ctx pkg.Context, request pkg.Reques
 	return
 }
 func (s *UnimplementedScheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
-	ctx.GetTask().RequestPending(ctx, nil)
-	ctx.GetTask().RequestRunning(ctx, nil)
+	ctx.GetTask().RequestIn()
 	response, err = s.SyncRequest(ctx, request)
-	s.task.RequestStopped(ctx, err)
+	s.task.RequestOut()
 	return
 }

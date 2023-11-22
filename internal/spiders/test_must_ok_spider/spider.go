@@ -23,7 +23,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 		}))
 
 	if extra.Count > 0 {
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Second * 5)
 		s.logger.Info("manual stop")
 		return
 	}

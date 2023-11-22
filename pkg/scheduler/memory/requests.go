@@ -48,7 +48,6 @@ out:
 			}
 			ctx.GetRequest().WithStatus(pkg.RequestStatusRunning)
 			s.crawler.GetSignal().RequestChanged(request)
-			s.task.RequestRunning(ctx, nil)
 			go func(request pkg.Request) {
 				c := request.GetContext()
 				var err error
@@ -58,32 +57,31 @@ out:
 				if err != nil {
 					ctx.GetRequest().WithStatus(pkg.RequestStatusFailure).WithStopReason(err.Error())
 					s.crawler.GetSignal().RequestChanged(request)
-					s.task.RequestStopped(ctx, err)
+					s.task.RequestOut()
 					return
 				}
 
 				go func(ctx pkg.Context, response pkg.Response) {
 					defer func() {
-						//if r := recover(); r != nil {
-						//	buf := make([]byte, 1<<16)
-						//	runtime.Stack(buf, true)
-						//	err = errors.New(string(buf))
-						//	//s.logger.Error(err)
-						//	s.HandleError(ctx, response, err, request.GetErrBack())
-						//}
+						if r := recover(); r != nil {
+							s.logger.Error(r)
+							err = errors.New("panic")
+							s.HandleError(ctx, response, err, request.GetErrBack())
+						}
+						s.task.MethodOut()
+						s.task.RequestOut()
 					}()
 
+					s.task.MethodIn()
 					if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
 						s.logger.Error(err)
 						s.HandleError(ctx, response, err, request.GetErrBack())
 						ctx.GetRequest().WithStatus(pkg.RequestStatusFailure).WithStopReason(err.Error())
 						s.crawler.GetSignal().RequestChanged(request)
-						s.task.RequestStopped(ctx, err)
 						return
 					}
 					ctx.GetRequest().WithStatus(pkg.RequestStatusSuccess)
 					s.crawler.GetSignal().RequestChanged(request)
-					s.task.RequestStopped(ctx, nil)
 				}(c, response)
 			}(request)
 		}
@@ -129,8 +127,8 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 
 	request.WithContext(ctx)
 	s.crawler.GetSignal().RequestChanged(request)
-	ctx.GetTask().RequestPending(ctx, nil)
 	s.requestChan <- request
+	ctx.GetTask().RequestIn()
 	return
 }
 
@@ -151,13 +149,13 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 		extraChan.(chan any) <- extra
 	}
 
-	c.GetTask().RequestPending(c, nil)
+	c.GetTask().RequestIn()
 	return
 }
 
 func (s *Scheduler) GetExtra(ctx pkg.Context, extra any) (err error) {
 	defer func() {
-		s.task.RequestStopped(ctx, nil)
+		s.task.RequestOut()
 	}()
 
 	extraValue := reflect.ValueOf(extra)

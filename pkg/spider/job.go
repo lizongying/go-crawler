@@ -138,8 +138,8 @@ func (j *Job) run(ctx context.Context) (err error) {
 			MustEverySpec(j.context.GetJob().GetSpec()).
 			Callback(func() {
 				if j.context.GetJob().GetOnlyOneTask() {
-					<-j.cronJob
-					if _, ok := <-j.cronJob; ok {
+					if _, ok := <-j.cronJob; !ok {
+						// closed
 						return
 					}
 				}
@@ -153,7 +153,7 @@ func (j *Job) run(ctx context.Context) (err error) {
 }
 
 func (j *Job) stop(err error) {
-	if !utils.InSlice(j.context.GetJob().GetStatus(), []pkg.JobStatus{
+	if utils.InSlice(j.context.GetJob().GetStatus(), []pkg.JobStatus{
 		pkg.JobStatusSuccess,
 		pkg.JobStatusFailure,
 	}) {
@@ -218,7 +218,7 @@ func (j *Job) TaskStopped(ctx pkg.Context, err error) {
 
 func (j *Job) FromSpider(spider pkg.Spider) *Job {
 	*j = Job{
-		task:    pkg.NewState(),
+		task:    pkg.NewState("task"),
 		crawler: spider.GetCrawler(),
 		spider:  spider,
 		logger:  spider.GetLogger(),
