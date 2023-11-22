@@ -6,6 +6,7 @@ import (
 
 // State represents a state with ready and count properties.
 type State struct {
+	name               string
 	isReady            bool
 	count              atomic.Uint32
 	fnIsReady          []func()
@@ -14,8 +15,8 @@ type State struct {
 }
 
 // NewState creates a new State instance.
-func NewState() *State {
-	return &State{}
+func NewState(name string) *State {
+	return &State{name: name}
 }
 
 // RegisterIsReady registers functions to be called when the state is ready.
@@ -83,6 +84,10 @@ func (s *State) IsReadyAndIsZero() bool {
 func (s *State) Clear() {
 	s.isReady = false
 	s.count.Store(0)
+}
+
+func (s *State) Count() uint32 {
+	return s.count.Load()
 }
 
 // MultiState represents a collection of states.

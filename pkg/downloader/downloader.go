@@ -63,12 +63,11 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 		response.SetRequest(request)
 	}
 
-	err = d.processResponse(ctx, response)
-	if err != nil {
-		d.logger.Error(err)
+	if err = d.processResponse(ctx, response); err != nil {
 		if errors.Is(err, pkg.ErrNeedRetry) {
 			return d.Download(ctx, request)
 		}
+		d.logger.Error(err)
 		return
 	}
 

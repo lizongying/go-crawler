@@ -365,24 +365,26 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 	s.context.GetSpider().WithStatus(pkg.SpiderStatusRunning)
 	s.Crawler.GetSignal().SpiderChanged(s.GetContext())
 
-	s.logger.Info("spiderName", s.context.GetSpider().GetName())
-	s.logger.Info("allowedDomains", s.GetAllowedDomains())
-	s.logger.Info("okHttpCodes", s.OkHttpCodes())
-	s.logger.Info("platforms", s.GetPlatforms())
-	s.logger.Info("browsers", s.GetBrowsers())
-	s.logger.Info("retryMaxTimes", s.retryMaxTimes)
-	s.logger.Info("redirectMaxTimes", s.redirectMaxTimes)
+	s.logger.Info("spiderName:", s.context.GetSpider().GetName())
+	s.logger.Info("allowedDomains:", s.GetAllowedDomains())
+	s.logger.Info("okHttpCodes:", s.OkHttpCodes())
+	s.logger.Info("platforms:", s.GetPlatforms())
+	s.logger.Info("browsers:", s.GetBrowsers())
+	s.logger.Info("retryMaxTimes:", s.retryMaxTimes)
+	s.logger.Info("redirectMaxTimes:", s.redirectMaxTimes)
 
 	//s.logger.Info("filter", s.GetFilter())
 
-	s.logger.Info("pipelines", s.PipelineNames())
+	for _, v := range s.Pipelines() {
+		s.logger.Info(v.Name(), "loaded. order:", v.Order())
+	}
 
 	for _, v := range s.GetMiddlewares().Middlewares() {
 		if err = v.Start(ctx, s.spider); err != nil {
 			s.logger.Error(err)
 			return
 		}
-		s.logger.Info(v.Name(), "loaded")
+		s.logger.Info(v.Name(), "loaded. order:", v.Order())
 	}
 	return
 }
@@ -588,7 +590,7 @@ func NewBaseSpider(logger pkg.Logger) (pkg.Spider, error) {
 		jobs:                  make(map[string]*Job),
 	}
 
-	s.job = pkg.NewState()
+	s.job = pkg.NewState("job")
 	s.job.RegisterIsReadyAndIsZero(func() {
 		_ = s.Stop(s.GetContext())
 	})

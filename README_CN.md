@@ -1110,10 +1110,9 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * panic stop
 * extra速率限制
 * request context
-* item context
 * total
-* requests
 * log
+* status
 
 ```shell
 go get -u github.com/lizongying/go-css@latest

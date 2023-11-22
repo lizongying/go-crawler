@@ -4,12 +4,12 @@ type Task interface {
 	Scheduler
 	GetScheduler() Scheduler
 	WithScheduler(Scheduler) Task
-	RequestPending(ctx Context, err error)
-	RequestRunning(ctx Context, err error)
-	RequestStopped(ctx Context, err error)
-	ItemPending(ctx Context, err error)
-	ItemRunning(ctx Context, err error)
-	ItemStopped(ctx Context, err error)
+	RequestIn()
+	RequestOut()
+	ItemIn()
+	ItemOut()
+	MethodIn()
+	MethodOut()
 }
 
 type TaskStatus uint8
