@@ -8,7 +8,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-css/css"
 	"github.com/lizongying/go-json/gjson"
-	"github.com/lizongying/go-query/query"
 	"github.com/lizongying/go-re/re"
 	"github.com/lizongying/go-xpath/xpath"
 	"io"
@@ -395,7 +394,7 @@ func (r *Response) BodyText() (body string) {
 		return
 	}
 
-	sel, err := query.NewSelectorFromBytes(r.bodyBytes)
+	sel, err := css.NewSelectorFromBytes(r.bodyBytes)
 	if err != nil {
 		return
 	}
