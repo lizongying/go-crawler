@@ -89,7 +89,7 @@
       </template>
       <template v-else-if="column.dataIndex === 'action'">
         <span>
-          <a class="ant-dropdown-link" @click="showDrawer">
+          <a class="ant-dropdown-link" @click="showDrawer(record)">
             More
             <RightOutlined/>
           </a>
@@ -117,7 +117,9 @@
             :closable="false"
             size="large">
     <a-tabs v-model:activeKey="activeKey">
-      <a-tab-pane key="1" tab="Log"></a-tab-pane>
+      <a-tab-pane key="1" tab="Log">
+        <Log :taskId="taskId"></Log>
+      </a-tab-pane>
     </a-tabs>
   </a-drawer>
 </template>
@@ -135,7 +137,7 @@ import {
 } from "@/stores/tasks";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
-import {useNodesStore} from "@/stores/nodes";
+import Log from "@/components/Log.vue";
 
 const filteredInfo = reactive({});
 const {query} = useRoute();
@@ -309,8 +311,11 @@ const columns = computed(() => {
 const tasksStore = useTasksStore();
 
 const open = ref(false);
-const showDrawer = () => {
+
+const taskId = ref('')
+const showDrawer = (record) => {
   open.value = true;
+  taskId.value = record.id
 };
 const activeKey = ref('1');
 
@@ -327,7 +332,9 @@ if (checked1.value) {
 }
 const changeSwitch = () => {
   if (checked1.value) {
-    interval = setInterval(refresh, 1000)
+    if (!checked1Disable.value) {
+      interval = setInterval(refresh, 1000)
+    }
     checked1Disable.value = true
   } else {
     clearInterval(interval)

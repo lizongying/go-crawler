@@ -53,6 +53,8 @@ type Crawler interface {
 	GenUid() uint64
 
 	StartFromCLI() bool
+
+	GetStream() Stream
 }
 
 type CrawlOption func(Crawler)

@@ -28,7 +28,11 @@ func (a *Api) loggingMiddleware(next http.Handler) http.Handler {
 
 func (a *Api) keyAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" && r.URL.Path != "/user" && r.Header.Get("X-API-Key") != a.accessKey {
+		token := r.Header.Get("X-API-Key")
+		if token == "" {
+			token = r.URL.Query().Get("X-API-Key")
+		}
+		if r.URL.Path != "/" && r.URL.Path != "/user" && token != a.accessKey {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

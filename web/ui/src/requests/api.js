@@ -16,6 +16,12 @@ const api = async () => {
         }
     }
 }
+
+const getLog = async data => {
+    const {host, config} = await api()
+    return new EventSource(`${host}/log?X-API-Key=${config.headers['X-API-Key']}&task_id=${data}`);
+};
+
 const getUser = async data => {
     const {host, config} = await api()
     return axios.post(host + '/user', data, config);
@@ -71,4 +77,17 @@ const getSpider = async data => {
     return axios.post(host + '/spider', data, config);
 };
 
-export {getUser, getNodes, getSpiders, getJobs, runJob, rerunJob, stopJob, getTasks, getRequests, getRecords, getSpider}
+export {
+    getLog,
+    getUser,
+    getNodes,
+    getSpiders,
+    getJobs,
+    runJob,
+    rerunJob,
+    stopJob,
+    getTasks,
+    getRequests,
+    getRecords,
+    getSpider
+}
