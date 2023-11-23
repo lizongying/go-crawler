@@ -1,23 +1,23 @@
 package loggers
 
 type Ch struct {
-	Name    string
+	Id      uint32
 	Channel chan []byte
 }
 
 type Stream struct {
-	channels   map[string]chan []byte
+	channels   map[uint32]chan []byte
 	register   chan Ch
-	unregister chan string
+	unregister chan uint32
 	channel    chan []byte
 }
 
 func NewStream() (s *Stream) {
 	s = &Stream{
-		channels:   make(map[string]chan []byte),
+		channels:   make(map[uint32]chan []byte),
 		register:   make(chan Ch),
-		unregister: make(chan string),
-		channel:    make(chan []byte, 10),
+		unregister: make(chan uint32),
+		channel:    make(chan []byte, 8),
 	}
 	go func() {
 		for msg := range s.channel {
@@ -35,7 +35,7 @@ func NewStream() (s *Stream) {
 		for {
 			select {
 			case ch := <-s.register:
-				s.channels[ch.Name] = ch.Channel
+				s.channels[ch.Id] = ch.Channel
 			case chName := <-s.unregister:
 				delete(s.channels, chName)
 			}
@@ -55,13 +55,13 @@ func (s *Stream) Write(p []byte) (n int, err error) {
 	return
 }
 
-func (s *Stream) Register(name string, channel chan []byte) {
+func (s *Stream) Register(id uint32, channel chan []byte) {
 	s.register <- Ch{
-		Name:    name,
+		Id:      id,
 		Channel: channel,
 	}
 }
 
-func (s *Stream) Unregister(name string) {
-	s.unregister <- name
+func (s *Stream) Unregister(id uint32) {
+	s.unregister <- id
 }

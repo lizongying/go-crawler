@@ -96,7 +96,7 @@ export const useJobsStore = defineStore('jobs', () => {
 
             const jobIdx = jobs.findIndex(v => v.id === data.job_id)
             if (jobIdx > -1) {
-                jobs[jobIdx].status = JobStatusStopped
+                jobs[jobIdx].status = JobStatusSuccess
             }
             return resp.data.data
         }).catch(e => {

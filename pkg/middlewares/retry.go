@@ -38,7 +38,7 @@ func (m *RetryMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) 
 	if response.GetResponse() == nil {
 		if request.GetRetryTimes() < retryMaxTimes {
 			request.SetRetryTimes(request.GetRetryTimes() + 1)
-			m.logger.Infof("retry times: %d/%d, response nil, SpendTime: %v, UniqueKey: %s\n", request.GetRetryTimes(), retryMaxTimes, request.GetSpendTime(), request.GetUniqueKey())
+			m.logger.Infof("retry times: %d/%d, response nil, SpendTime: %v, UniqueKey: %s", request.GetRetryTimes(), retryMaxTimes, request.GetSpendTime(), request.GetUniqueKey())
 			err = pkg.ErrNeedRetry
 			return
 		}
@@ -49,7 +49,7 @@ func (m *RetryMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) 
 	if !utils.InSlice(response.StatusCode(), okHttpCodes) {
 		if request.GetRetryTimes() < retryMaxTimes {
 			request.SetRetryTimes(request.GetRetryTimes() + 1)
-			m.logger.Infof("retry times: %d/%d, status code: %d, SpendTime: %v, UniqueKey: %s\n", request.GetRetryTimes(), retryMaxTimes, response.StatusCode(), request.GetSpendTime(), request.GetUniqueKey())
+			m.logger.Infof("retry times: %d/%d, status code: %d, SpendTime: %v, UniqueKey: %s", request.GetRetryTimes(), retryMaxTimes, response.StatusCode(), request.GetSpendTime(), request.GetUniqueKey())
 			err = pkg.ErrNeedRetry
 			return
 		}

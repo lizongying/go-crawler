@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"net/http"
+	"sync/atomic"
 )
 
 const UrlLog = "/log"
@@ -14,6 +15,7 @@ type RouteLog struct {
 	crawler pkg.Crawler
 	logger  pkg.Logger
 	stream  pkg.Stream
+	id      atomic.Uint32
 }
 
 func (h *RouteLog) Pattern() string {
@@ -36,10 +38,11 @@ func (h *RouteLog) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logChannel := make(chan []byte, 100)
-	h.stream.Register("", logChannel)
+	logChannel := make(chan []byte, 256)
+	id := h.id.Add(1)
+	h.stream.Register(id, logChannel)
 	defer func() {
-		h.stream.Unregister("")
+		h.stream.Unregister(id)
 		close(logChannel)
 	}()
 
@@ -63,8 +66,8 @@ func (h *RouteLog) FromCrawler(crawler pkg.Crawler) pkg.Route {
 		return new(RouteLog).FromCrawler(crawler)
 	}
 
-	h.logger = crawler.GetLogger()
 	h.crawler = crawler
+	h.logger = crawler.GetLogger()
 	h.stream = crawler.GetStream()
 	return h
 }

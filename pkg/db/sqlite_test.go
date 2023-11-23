@@ -30,7 +30,7 @@ func TestNewSqlite(t *testing.T) {
 		),
 		fx.Invoke(func(logger pkg.Logger, sqlite pkg.Sqlite, shutdowner fx.Shutdowner) {
 			var err error
-			logger.Infof("Client %+v\n", sqlite.Client())
+			logger.Infof("Client %+v", sqlite.Client())
 			db := sqlite.Client()
 			_, err = db.Exec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, NAME TEXT)")
 			_, err = db.Exec("INSERT INTO users (name) VALUES (?)", "John Doe")

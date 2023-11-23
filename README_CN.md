@@ -1111,7 +1111,6 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * extra
 * request context
 * total
-* log
 * status
 
 ```shell

@@ -41,6 +41,5 @@ export const useRecordsStore = defineStore('records', () => {
         return records.length
     })
 
-
     return {records, GetRecords, Count}
 })
