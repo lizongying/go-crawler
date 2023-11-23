@@ -15,6 +15,7 @@ const sortBigInt16 = (a, b) => {
     const b1 = b === undefined ? '0' : b.slice(0, 20)
     return BigInt(`0x${a1}`) - BigInt(`0x${b1}`) > 0 ? 1 : -1
 }
+
 const sortBigInt = (a, b) => {
     if (a === b) {
         return 0

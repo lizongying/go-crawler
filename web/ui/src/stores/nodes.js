@@ -47,10 +47,6 @@ export const useNodesStore = defineStore('nodes', () => {
         return nodes.length
     })
 
-    const CountActive = computed(() => {
-        return nodes.filter(v => v.status === 1).length
-    })
-
     const CountSpider = computed(() => {
         if (nodes.length === 0) {
             return 0
@@ -83,5 +79,5 @@ export const useNodesStore = defineStore('nodes', () => {
         return nodes.filter(v => v.record).map(v => v.record).reduce((a, b) => a + b, 0)
     })
 
-    return {nodes, GetNodes, Count, CountActive, CountSpider, CountJob, CountTask, CountRecord}
+    return {nodes, GetNodes, Count, CountSpider, CountJob, CountTask, CountRecord}
 })

@@ -10,10 +10,6 @@ type CustomMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *CustomMiddleware) Name() string {
-	return "custom"
-}
-
 func (m *CustomMiddleware) Start(ctx context.Context, spider pkg.Spider) (err error) {
 	err = m.UnimplementedMiddleware.Start(ctx, spider)
 	m.logger.Debug("start")

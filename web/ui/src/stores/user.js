@@ -50,7 +50,6 @@ export const useUserStore = defineStore('user', () => {
             username: user.username,
             password: user.password,
         }).then(resp => {
-            console.log(resp.data.data)
             if (resp.data.data === null) {
                 return
             }

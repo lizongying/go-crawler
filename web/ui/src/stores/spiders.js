@@ -66,9 +66,5 @@ export const useSpidersStore = defineStore('spiders', () => {
         return spiders.length
     })
 
-    const CountActive = computed(() => {
-        return spiders.length
-    })
-
-    return {spiders, GetSpiders, SpiderNames, SpiderFuncs, Count, CountActive}
+    return {spiders, GetSpiders, SpiderNames, SpiderFuncs, Count}
 })

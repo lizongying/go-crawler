@@ -23,7 +23,7 @@ func (m *DumpMiddleware) ProcessResponse(_ pkg.Context, response pkg.Response) (
 	}
 
 	b, _ := httputil.DumpResponse(response.GetResponse(), false)
-	m.logger.Debugf("response: \n%s", string(b))
+	m.logger.Debugf("response: %s", string(b))
 	return
 }
 

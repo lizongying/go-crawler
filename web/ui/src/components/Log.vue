@@ -1,10 +1,15 @@
 <template>
-  <div ref="logDiv" style="height: calc(100vh - 110px); overflow: auto;">
+  <div ref="logDiv" style="height: calc(100vh - 144px); overflow: auto;">
     <a-typography-paragraph v-for="log in logs" :key="log.key" :class="wrap ? '' : 'break'">{{
         log.data
       }}
     </a-typography-paragraph>
   </div>
+  <a-space direction="horizontal" style="margin-top:10px;">
+    <a-switch v-model:checked="keepBottom" checked-children="keep bottom open"
+              un-checked-children="keep bottom close"/>
+    <a-switch v-model:checked="wrap" checked-children="word wrap open" un-checked-children="word wrap close"/>
+  </a-space>
 </template>
 
 <script setup>
@@ -32,6 +37,9 @@ let eventSource = null
 
 const logDiv = ref(null);
 
+const wrap = ref(true);
+const keepBottom = ref(true);
+
 onMounted(async () => {
   eventSource = await getLog(props.taskId);
   let index = 0
@@ -50,6 +58,9 @@ onMounted(async () => {
 
   let scrollElem = logDiv.value;
   watch(logs, _ => {
+    if (!keepBottom.value) {
+      return
+    }
     nextTick(() => {
       scrollElem.scrollTo({top: scrollElem.scrollHeight, behavior: "smooth"});
     })

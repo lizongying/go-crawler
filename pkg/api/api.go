@@ -27,7 +27,7 @@ func (a *Api) Run() (err error) {
 		a.logger.Info("access key", a.accessKey)
 		a.logger.Info("api routes", a.GetRoutes())
 		if !a.https {
-			a.logger.Infof("api at http://%s%s http://%s%s http://%s%s\n", "localhost", a.srv.Addr, utils.LanIp(), a.srv.Addr, utils.InternetIp(), a.srv.Addr)
+			a.logger.Infof("api at http://%s%s http://%s%s http://%s%s", "localhost", a.srv.Addr, utils.LanIp(), a.srv.Addr, utils.InternetIp(), a.srv.Addr)
 			if err = a.srv.ListenAndServe(); err != nil {
 				if err.Error() == "http: Server closed" {
 					return
@@ -37,7 +37,7 @@ func (a *Api) Run() (err error) {
 				return
 			}
 		} else {
-			a.logger.Infof("api at https://%s%s https://%s%s https://%s%s\n", "localhost", a.srv.Addr, utils.LanIp(), a.srv.Addr, utils.InternetIp(), a.srv.Addr)
+			a.logger.Infof("api at https://%s%s https://%s%s https://%s%s", "localhost", a.srv.Addr, utils.LanIp(), a.srv.Addr, utils.InternetIp(), a.srv.Addr)
 			if err = a.srv.ListenAndServeTLS("", ""); err != nil {
 				if err.Error() == "http: Server closed" {
 					return
