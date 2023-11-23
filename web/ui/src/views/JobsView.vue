@@ -447,11 +447,13 @@ if (checked1.value) {
   interval = setInterval(refresh, 1000)
 }
 const changeSwitch = () => {
+  clearInterval(interval)
   if (checked1.value) {
-    interval = setInterval(refresh, 1000)
+    if (!checked1Disable.value) {
+      interval = setInterval(refresh, 1000)
+    }
     checked1Disable.value = true
   } else {
-    clearInterval(interval)
     checked1Disable.value = false
   }
 }

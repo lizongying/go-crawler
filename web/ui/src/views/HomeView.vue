@@ -44,7 +44,9 @@ if (checked1.value) {
 }
 const changeSwitch = () => {
   if (checked1.value) {
-    interval = setInterval(refresh, 1000)
+    if (!checked1Disable.value) {
+      interval = setInterval(refresh, 1000)
+    }
     checked1Disable.value = true
   } else {
     clearInterval(interval)

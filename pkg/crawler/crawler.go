@@ -10,6 +10,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
+	"github.com/lizongying/go-crawler/pkg/loggers"
 	"github.com/lizongying/go-crawler/pkg/signals"
 	"github.com/lizongying/go-crawler/pkg/statistics"
 	"github.com/lizongying/go-crawler/pkg/utils"
@@ -51,8 +52,13 @@ type Crawler struct {
 	itemConcurrencyChan chan struct{}
 	itemTimer           *time.Timer
 	ug                  *uid.Uid
+
+	stream pkg.Stream
 }
 
+func (c *Crawler) GetStream() pkg.Stream {
+	return c.stream
+}
 func (c *Crawler) GenUid() uint64 {
 	return c.ug.Gen()
 }
@@ -326,7 +332,7 @@ func (c *Crawler) SpiderStopped(_ pkg.Context, _ error) {
 	c.spider.Out()
 }
 
-func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, sqlite pkg.Sqlite, store pkg.Store, mockServer pkg.MockServer, httpApi *api.Api) (crawler pkg.Crawler, err error) {
+func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, sqlite pkg.Sqlite, store pkg.Store, mockServer pkg.MockServer, httpApi *api.Api, stream *loggers.Stream) (crawler pkg.Crawler, err error) {
 	spider := pkg.NewState("spider")
 	spider.RegisterIsReadyAndIsZero(func() {
 		_ = crawler.Stop(crawler.GetContext())
@@ -355,6 +361,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		stop:        make(chan struct{}),
 		ug:          ug,
 		spiders:     spiders,
+		stream:      stream,
 	}
 
 	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))
@@ -370,6 +377,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 	httpApi.AddRoutes(new(api.RouteRequests).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteRecords).FromCrawler(crawler))
 	httpApi.AddRoutes(new(api.RouteUser).FromCrawler(crawler))
+	httpApi.AddRoutes(new(api.RouteLog).FromCrawler(crawler))
 
 	crawler.SetSignal(new(signals.Signal).FromCrawler(crawler))
 	crawler.SetStatistics(new(statistics.Statistics).FromCrawler(crawler))

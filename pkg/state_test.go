@@ -9,7 +9,7 @@ func TestState_RegisterIsReady(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	state := NewState()
+	state := NewState("")
 	state.RegisterIsReady(func() {
 		wg.Done()
 	})
@@ -25,7 +25,7 @@ func TestState_RegisterIsZero(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	state := NewState()
+	state := NewState("")
 	state.RegisterIsZero(func() {
 		wg.Done()
 	})
@@ -42,7 +42,7 @@ func TestState_RegisterIsReadyAndIsZero(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	state := NewState()
+	state := NewState("")
 	state.RegisterIsReadyAndIsZero(func() {
 		wg.Done()
 	})
@@ -57,7 +57,7 @@ func TestState_RegisterIsReadyAndIsZero(t *testing.T) {
 }
 
 func TestState_BeReady(t *testing.T) {
-	state := NewState()
+	state := NewState("")
 	state.BeReady()
 
 	if !state.IsReady() {
@@ -66,7 +66,7 @@ func TestState_BeReady(t *testing.T) {
 }
 
 func TestState_In(t *testing.T) {
-	state := NewState()
+	state := NewState("")
 	state.In()
 
 	if !state.IsReady() {
@@ -79,7 +79,7 @@ func TestState_In(t *testing.T) {
 }
 
 func TestState_Out(t *testing.T) {
-	state := NewState()
+	state := NewState("")
 	state.In()
 	state.Out()
 
@@ -93,7 +93,7 @@ func TestState_Out(t *testing.T) {
 }
 
 func TestState_IsReady(t *testing.T) {
-	state := NewState()
+	state := NewState("")
 
 	if state.IsReady() {
 		t.Errorf("Expected state to not be ready")
@@ -107,7 +107,7 @@ func TestState_IsReady(t *testing.T) {
 }
 
 func TestState_IsZero(t *testing.T) {
-	state := NewState()
+	state := NewState("")
 
 	if !state.IsZero() {
 		t.Errorf("Expected state to be zero")
@@ -130,8 +130,8 @@ func TestMultiState_RegisterIsReady(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	state1 := NewState()
-	state2 := NewState()
+	state1 := NewState("")
+	state2 := NewState("")
 
 	multiState := NewMultiState(state1, state2)
 	multiState.RegisterIsReady(func() {
@@ -150,8 +150,8 @@ func TestMultiState_RegisterIsZero(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	state1 := NewState()
-	state2 := NewState()
+	state1 := NewState("")
+	state2 := NewState("")
 
 	multiState := NewMultiState(state1, state2)
 	multiState.RegisterIsZero(func() {
@@ -172,8 +172,8 @@ func TestMultiState_RegisterIsReadyAndIsZero(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	state1 := NewState()
-	state2 := NewState()
+	state1 := NewState("")
+	state2 := NewState("")
 
 	multiState := NewMultiState(state1, state2)
 	multiState.RegisterIsReadyAndIsZero(func() {
@@ -193,8 +193,8 @@ func TestMultiState_RegisterIsReadyAndIsZero(t *testing.T) {
 }
 
 func TestMultiState_IsReady(t *testing.T) {
-	state1 := NewState()
-	state2 := NewState()
+	state1 := NewState("")
+	state2 := NewState("")
 
 	multiState := NewMultiState(state1, state2)
 
@@ -216,8 +216,8 @@ func TestMultiState_IsReady(t *testing.T) {
 }
 
 func TestMultiState_IsZero(t *testing.T) {
-	state1 := NewState()
-	state2 := NewState()
+	state1 := NewState("")
+	state2 := NewState("")
 
 	multiState := NewMultiState(state1, state2)
 
@@ -251,8 +251,8 @@ func TestMultiState_IsZero(t *testing.T) {
 }
 
 func TestMultiState_IsReadyAndIsZero(t *testing.T) {
-	state1 := NewState()
-	state2 := NewState()
+	state1 := NewState("")
+	state2 := NewState("")
 
 	multiState := NewMultiState(state1, state2)
 
