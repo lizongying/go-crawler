@@ -12,7 +12,7 @@ const api = async () => {
                 'Content-Type': 'application/json',
                 'X-API-Key': userStore.useUserStore().user.token,
             },
-            timeout: 5000
+            timeout: 10000
         }
     }
 }

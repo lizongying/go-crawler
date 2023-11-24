@@ -32,6 +32,7 @@ func (q *GroupQueue) Enqueue(key string, value any, priority int64) {
 func (q *GroupQueue) Get(key string) (items []*Item) {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
+
 	if key == "" {
 		for _, v := range q.data {
 			item, _ := v.GetItemN(-1)
@@ -47,6 +48,7 @@ func (q *GroupQueue) Get(key string) (items []*Item) {
 func (q *GroupQueue) Size(key string) int {
 	q.mutex.RLock()
 	defer q.mutex.RUnlock()
+
 	if key == "" {
 		var l int
 		for _, v := range q.data {
