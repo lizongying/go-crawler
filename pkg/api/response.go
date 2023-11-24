@@ -1,6 +1,7 @@
 package api
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"net/http"
 )
@@ -21,6 +22,16 @@ func (r *Response) OutJson(w http.ResponseWriter, code int, msg string, data any
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	_, _ = w.Write(jsonData)
+
+	//w.Header().Set("Content-Type", "application/json")
+	//_, _ = w.Write(jsonData)
+
+	w.Header().Set("Content-Encoding", "gzip")
+
+	gw := gzip.NewWriter(w)
+	defer func() {
+		_ = gw.Close()
+	}()
+
+	_, _ = gw.Write(jsonData)
 }
