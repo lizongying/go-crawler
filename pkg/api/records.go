@@ -20,7 +20,7 @@ func (h *RouteRecords) Pattern() string {
 
 func (h *RouteRecords) ServeHTTP(w http.ResponseWriter, _ *http.Request) {
 	records := h.crawler.GetStatistics().GetRecords()
-	h.OutJson(w, 0, "", records)
+	h.OutJsonGzip(w, 0, "", records)
 }
 
 func (h *RouteRecords) FromCrawler(crawler pkg.Crawler) pkg.Route {
