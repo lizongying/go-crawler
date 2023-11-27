@@ -54,6 +54,16 @@ type Crawler struct {
 	ug                  *uid.Uid
 
 	stream pkg.Stream
+
+	cdp bool
+}
+
+func (c *Crawler) GetCDP() bool {
+	return c.cdp
+}
+func (c *Crawler) WithCDP(cdp bool) pkg.Crawler {
+	c.cdp = cdp
+	return c
 }
 
 func (c *Crawler) GetStream() pkg.Stream {

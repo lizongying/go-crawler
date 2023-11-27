@@ -55,6 +55,9 @@ type Crawler interface {
 	StartFromCLI() bool
 
 	GetStream() Stream
+
+	GetCDP() bool
+	WithCDP(bool) Crawler
 }
 
 type CrawlOption func(Crawler)
@@ -86,6 +89,11 @@ func WithItemConcurrency(concurrency uint8) CrawlOption {
 		crawler.WithItemConcurrency(concurrency)
 	}
 }
+func WithCDP(cdp bool) CrawlOption {
+	return func(crawler Crawler) {
+		crawler.WithCDP(cdp)
+	}
+}
 
 type CrawlerStatus uint8
 
@@ -99,19 +107,19 @@ const (
 	CrawlerStatusStopped
 )
 
-func (c *CrawlerStatus) String() string {
-	switch *c {
-	case 1:
+func (c CrawlerStatus) String() string {
+	switch c {
+	case CrawlerStatusReady:
 		return "ready"
-	case 2:
+	case CrawlerStatusStarting:
 		return "starting"
-	case 3:
+	case CrawlerStatusRunning:
 		return "running"
-	case 4:
+	case CrawlerStatusIdle:
 		return "idle"
-	case 5:
+	case CrawlerStatusStopping:
 		return "stopping"
-	case 6:
+	case CrawlerStatusStopped:
 		return "stopped"
 	default:
 		return "unknown"

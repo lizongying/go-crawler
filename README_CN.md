@@ -222,6 +222,7 @@ crawler选项
 * `WithMockServerRoutes` 设置模拟服务Route，包括内置或自定义的。不需要配置`mock_server.enable: true`
 * `WithItemDelay` 设置数据保存间隔。
 * `WithItemConcurrency` 设置数据保存并行数量。
+* `WithCDP` 初始浏览器。
 
 ### 存储
 

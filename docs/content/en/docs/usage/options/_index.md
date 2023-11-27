@@ -70,3 +70,4 @@ Options refer to items that can be configured in the code.
   set `mock_server.enable: true` to enable the mock Server.
 * `WithItemDelay` sets the data saving interval.
 * `WithItemConcurrency` sets the data saving parallelism.
+* `WithCDP` initial browser.

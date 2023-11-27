@@ -234,6 +234,7 @@ Crawler Options
   set `mock_server.enable: true` to enable the mock Server.
 * `WithItemDelay` sets the data saving interval.
 * `WithItemConcurrency` sets the data saving parallelism.
+* `WithCDP` initial browser.
 
 ### Item
 
