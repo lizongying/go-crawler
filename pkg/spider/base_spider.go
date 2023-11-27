@@ -3,7 +3,6 @@ package spider
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"github.com/lizongying/go-crawler/pkg/downloader"
@@ -12,23 +11,10 @@ import (
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"golang.org/x/time/rate"
-	"log"
 	"reflect"
-	"runtime"
 	"sync"
 	"time"
 )
-
-var (
-	buildBranch string
-	buildCommit string
-	buildTime   string
-)
-
-func init() {
-	info := fmt.Sprintf("Branch: %s, Commit: %s, Time: %s, GOVersion: %s, OS: %s, ARCH: %s", buildBranch, buildCommit, buildTime, runtime.Version(), runtime.GOOS, runtime.GOARCH)
-	log.Println(info)
-}
 
 type BaseSpider struct {
 	context pkg.Context

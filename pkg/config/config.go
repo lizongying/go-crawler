@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"gopkg.in/yaml.v3"
@@ -713,9 +714,8 @@ func NewConfig(cli *cli.Cli) (config *Config, err error) {
 	configFile := cli.ConfigFile
 	if configFile != "" {
 		err = config.LoadConfig(configFile)
-		if err != nil {
-			log.Panicln(err)
-		}
+	} else {
+		err = errors.New("config file is a must")
 	}
 
 	return
