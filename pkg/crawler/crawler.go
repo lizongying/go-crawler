@@ -18,8 +18,27 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
+	"runtime"
 	"time"
 )
+
+var (
+	buildBranch string
+	buildCommit string
+	buildTime   string
+)
+
+func init() {
+	if buildTime != "" {
+		str2Int64, err := utils.Str2Int64(buildTime)
+		if err == nil {
+			buildTime = time.Unix(str2Int64, 0).Format(time.DateTime)
+		}
+	}
+	info := fmt.Sprintf("Branch: %s, Commit: %s, Time: %s, GOVersion: %s, OS: %s, ARCH: %s", buildBranch, buildCommit, buildTime, runtime.Version(), runtime.GOOS, runtime.GOARCH)
+	log.Println(info)
+}
 
 type Crawler struct {
 	context     pkg.Context
