@@ -355,17 +355,17 @@ const (
 
 func (s SpiderStatus) String() string {
 	switch s {
-	case 1:
+	case SpiderStatusReady:
 		return "ready"
-	case 2:
+	case SpiderStatusStarting:
 		return "starting"
-	case 3:
+	case SpiderStatusRunning:
 		return "running"
-	case 4:
+	case SpiderStatusIdle:
 		return "idle"
-	case 5:
+	case SpiderStatusStopping:
 		return "stopping"
-	case 6:
+	case SpiderStatusStopped:
 		return "stopped"
 	default:
 		return "unknown"
