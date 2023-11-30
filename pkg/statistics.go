@@ -2,9 +2,9 @@ package pkg
 
 import "time"
 
-type StatisticsNode interface {
-	WithStatusAndTime(status CrawlerStatus, t time.Time) StatisticsNode
-	WithId(string) StatisticsNode
+type StatisticsCrawler interface {
+	WithStatusAndTime(status CrawlerStatus, t time.Time) StatisticsCrawler
+	WithId(string) StatisticsCrawler
 	IncSpider()
 	DecSpider()
 	IncJob()
@@ -13,8 +13,8 @@ type StatisticsNode interface {
 	DecTask()
 	IncRequest()
 	DecRequest()
-	IncRecord()
-	DecRecord()
+	IncItem()
+	DecItem()
 	Marshal() (bytes []byte, err error)
 }
 type StatisticsSpider interface {
@@ -23,15 +23,15 @@ type StatisticsSpider interface {
 	GetSpider() string
 	WithSpider(spider string) StatisticsSpider
 	WithFuncs(funcs []string) StatisticsSpider
-	WithNode(node string) StatisticsSpider
+	WithCrawler(crawler string) StatisticsSpider
 	IncJob()
 	DecJob()
 	IncTask()
 	DecTask()
 	IncRequest()
 	DecRequest()
-	IncRecord()
-	DecRecord()
+	IncItem()
+	DecItem()
 	GetLastTaskId() string
 	WithLastTaskId(string) StatisticsSpider
 	WithLastTaskStatus(TaskStatus) StatisticsSpider
@@ -44,14 +44,14 @@ type StatisticsJob interface {
 	WithId(id string) StatisticsJob
 	WithSchedule(schedule string) StatisticsJob
 	WithCommand(command string) StatisticsJob
-	WithNode(node string) StatisticsJob
+	WithCrawler(crawler string) StatisticsJob
 	WithSpider(spider string) StatisticsJob
 	IncTask()
 	DecTask()
 	IncRequest()
 	DecRequest()
-	IncRecord()
-	DecRecord()
+	IncItem()
+	DecItem()
 	WithEnable(enable bool) StatisticsJob
 	WithStopReason(stopReason string) StatisticsJob
 	Marshal() (bytes []byte, err error)
@@ -62,10 +62,10 @@ type StatisticsTask interface {
 	WithId(id string) StatisticsTask
 	IncRequest()
 	DecRequest()
-	IncRecord()
-	DecRecord()
-	GetNode() string
-	WithNode(string) StatisticsTask
+	IncItem()
+	DecItem()
+	GetCrawler() string
+	WithCrawler(string) StatisticsTask
 	GetSpider() string
 	WithSpider(string) StatisticsTask
 	GetJob() string
@@ -79,14 +79,14 @@ type StatisticsTask interface {
 type StatisticsRequest interface {
 	Marshal() (bytes []byte, err error)
 }
-type StatisticsRecord interface {
+type StatisticsItem interface {
 	Marshal() (bytes []byte, err error)
 }
 type Statistics interface {
-	GetNodes() []StatisticsNode
+	GetCrawlers() []StatisticsCrawler
 	GetSpiders() []StatisticsSpider
 	GetJobs() []StatisticsJob
 	GetTasks() []StatisticsTask
 	GetRequests() []StatisticsRequest
-	GetRecords() []StatisticsRecord
+	GetItems() []StatisticsItem
 }

@@ -9,9 +9,9 @@ const router = createRouter({
             component: () => import('@/views/HomeView.vue')
         },
         {
-            path: '/nodes',
-            name: 'nodes',
-            component: () => import('@/views/NodesView.vue')
+            path: '/crawlers',
+            name: 'crawlers',
+            component: () => import('@/views/CrawlersView.vue')
         },
         {
             path: '/spiders',
@@ -34,9 +34,9 @@ const router = createRouter({
             component: () => import('@/views/RequestsView.vue')
         },
         {
-            path: '/records',
-            name: 'records',
-            component: () => import('@/views/RecordsView.vue')
+            path: '/items',
+            name: 'items',
+            component: () => import('@/views/ItemsView.vue')
         },
         {
             path: '/login',

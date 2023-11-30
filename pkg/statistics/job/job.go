@@ -16,11 +16,11 @@ type Job struct {
 	Id            string               `json:"id,omitempty"`
 	Schedule      string               `json:"schedule,omitempty"`
 	Command       string               `json:"command,omitempty"`
-	Node          string               `json:"node,omitempty"`
+	Crawler       string               `json:"crawler,omitempty"`
 	Spider        string               `json:"spider,omitempty"`
 	Task          uint32               `json:"task,omitempty"`
 	Request       uint32               `json:"request,omitempty"`
-	Record        uint32               `json:"record,omitempty"`
+	Item          uint32               `json:"item,omitempty"`
 	Enable        bool                 `json:"enable,omitempty"`
 	StartTime     utils.Timestamp      `json:"start_time,omitempty"`
 	FinishTime    utils.Timestamp      `json:"finish_time,omitempty"`
@@ -63,8 +63,8 @@ func (s *Job) WithCommand(command string) pkg.StatisticsJob {
 	s.Command = command
 	return s
 }
-func (s *Job) WithNode(node string) pkg.StatisticsJob {
-	s.Node = node
+func (s *Job) WithCrawler(crawler string) pkg.StatisticsJob {
+	s.Crawler = crawler
 	return s
 }
 func (s *Job) WithSpider(spider string) pkg.StatisticsJob {
@@ -83,11 +83,11 @@ func (s *Job) IncRequest() {
 func (s *Job) DecRequest() {
 	atomic.AddUint32(&s.Request, ^uint32(0))
 }
-func (s *Job) IncRecord() {
-	atomic.AddUint32(&s.Record, 1)
+func (s *Job) IncItem() {
+	atomic.AddUint32(&s.Item, 1)
 }
-func (s *Job) DecRecord() {
-	atomic.AddUint32(&s.Record, ^uint32(0))
+func (s *Job) DecItem() {
+	atomic.AddUint32(&s.Item, ^uint32(0))
 }
 func (s *Job) WithEnable(enable bool) pkg.StatisticsJob {
 	s.Enable = enable

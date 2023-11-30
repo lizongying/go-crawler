@@ -8,16 +8,15 @@ import (
 )
 
 type Request struct {
-	Context    context.Context     `json:"-"`
-	Id         string              `json:"id,omitempty"`
-	Status     pkg.RequestStatus   `json:"status,omitempty"`
-	StartTime  utils.Timestamp     `json:"start_time,omitempty"`
-	StopTime   utils.Timestamp     `json:"stop_time,omitempty"`
-	UpdateTime utils.Timestamp     `json:"update_time,omitempty"`
-	Deadline   utils.TimestampNano `json:"deadline,omitempty"`
-	Cookies    map[string]string   `json:"cookies,omitempty"`
-	Referrer   string              `json:"referrer,omitempty"`
-	StopReason string              `json:"stop_reason,omitempty"`
+	Context    context.Context   `json:"-"`
+	Id         string            `json:"id,omitempty"`
+	Status     pkg.RequestStatus `json:"status,omitempty"`
+	StartTime  utils.Timestamp   `json:"start_time,omitempty"`
+	StopTime   utils.Timestamp   `json:"stop_time,omitempty"`
+	UpdateTime utils.Timestamp   `json:"update_time,omitempty"`
+	Cookies    map[string]string `json:"cookies,omitempty"`
+	Referrer   string            `json:"referrer,omitempty"`
+	StopReason string            `json:"stop_reason,omitempty"`
 }
 
 func (c *Request) GetId() string {
@@ -71,13 +70,6 @@ func (c *Request) GetUpdateTime() time.Time {
 }
 func (c *Request) withUpdateTime(t time.Time) pkg.ContextRequest {
 	c.UpdateTime = utils.Timestamp{Time: t}
-	return c
-}
-func (c *Request) GetDeadline() time.Time {
-	return c.Deadline.Time
-}
-func (c *Request) WithDeadline(deadline time.Time) pkg.ContextRequest {
-	c.Deadline = utils.TimestampNano{Time: deadline}
 	return c
 }
 func (c *Request) GetCookies() map[string]string {

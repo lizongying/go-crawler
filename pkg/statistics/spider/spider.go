@@ -12,13 +12,13 @@ import (
 type Spider struct {
 	pkg.SpiderStatus   `json:"status,omitempty"`
 	Id                 *utils.Uint64        `json:"id,omitempty"`
-	Node               string               `json:"node,omitempty"`
+	Crawler            string               `json:"crawler,omitempty"`
 	Spider             string               `json:"spider,omitempty"`
 	Funcs              []string             `json:"funcs,omitempty"`
 	Job                uint32               `json:"job,omitempty"`
 	Task               uint32               `json:"task,omitempty"`
 	Request            uint32               `json:"request,omitempty"`
-	Record             uint32               `json:"record,omitempty"`
+	Item               uint32               `json:"item,omitempty"`
 	StartTime          utils.Timestamp      `json:"start_time,omitempty"`
 	FinishTime         utils.Timestamp      `json:"finish_time,omitempty"`
 	LastTaskId         string               `json:"last_task_id,omitempty"`
@@ -67,11 +67,11 @@ func (s *Spider) WithFuncs(funcs []string) pkg.StatisticsSpider {
 	s.Funcs = funcs
 	return s
 }
-func (s *Spider) GetNode() string {
-	return s.Node
+func (s *Spider) GetCrawler() string {
+	return s.Crawler
 }
-func (s *Spider) WithNode(node string) pkg.StatisticsSpider {
-	s.Node = node
+func (s *Spider) WithCrawler(crawler string) pkg.StatisticsSpider {
+	s.Crawler = crawler
 	return s
 }
 func (s *Spider) IncJob() {
@@ -92,11 +92,11 @@ func (s *Spider) IncRequest() {
 func (s *Spider) DecRequest() {
 	atomic.AddUint32(&s.Request, ^uint32(0))
 }
-func (s *Spider) IncRecord() {
-	atomic.AddUint32(&s.Record, 1)
+func (s *Spider) IncItem() {
+	atomic.AddUint32(&s.Item, 1)
 }
-func (s *Spider) DecRecord() {
-	atomic.AddUint32(&s.Record, ^uint32(0))
+func (s *Spider) DecItem() {
+	atomic.AddUint32(&s.Item, ^uint32(0))
 }
 func (s *Spider) GetStatus() pkg.SpiderStatus {
 	return s.SpiderStatus

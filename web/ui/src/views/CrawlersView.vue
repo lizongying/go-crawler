@@ -1,14 +1,14 @@
 <template>
   <a-page-header
-      title="Nodes"
-      :sub-title="'Total: '+nodesStore.Count"
+      title="Crawlers"
+      :sub-title="'Total: '+crawlersStore.Count"
   >
     <template #extra>
       <a-switch v-model:checked="checked1" checked-children="auto" un-checked-children="close" @change="changeSwitch"/>
       <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
     </template>
   </a-page-header>
-  <a-table :columns="columns" :data-source="nodesStore.nodes" :scroll="{ x: '100%' }">
+  <a-table :columns="columns" :data-source="crawlersStore.crawlers" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
         <span style="font-weight: bold">
@@ -49,23 +49,23 @@
     </template>
     <template #bodyCell="{ text, column, record }">
       <template v-if="column.dataIndex === 'spider'">
-        <RouterLink :to="'/spiders?node='+record.id">
+        <RouterLink :to="'/spiders?crawler='+record.id">
           {{ record.spider }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'job'">
-        <RouterLink :to="'/jobs?node='+record.id">
+        <RouterLink :to="'/jobs?crawler='+record.id">
           {{ record.job }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'task'">
-        <RouterLink :to="'/tasks?node='+record.id">
+        <RouterLink :to="'/tasks?crawler='+record.id">
           {{ record.task }}
         </RouterLink>
       </template>
-      <template v-else-if="column.dataIndex === 'record'">
-        <RouterLink :to="'/records?node='+record.id">
-          {{ record.record }}
+      <template v-else-if="column.dataIndex === 'item'">
+        <RouterLink :to="'/items?crawler='+record.id">
+          {{ record.item }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'start_time'">
@@ -81,9 +81,9 @@
         <span>
           <a-tag
               :key="record.status"
-              :color="record.status === NodeStatusStopped ? 'volcano' : record.status === NodeStatusRunning ? 'green' : 'geekblue'"
+              :color="record.status === CrawlerStatusStopped ? 'volcano' : record.status === CrawlerStatusRunning ? 'green' : 'geekblue'"
           >
-                   {{ NodeStatusName(record.status) }}
+                   {{ CrawlerStatusName(record.status) }}
           </a-tag>
         </span>
       </template>
@@ -134,15 +134,15 @@
 import {RightOutlined, SearchOutlined} from "@ant-design/icons-vue";
 import {RouterLink, useRoute} from "vue-router";
 import {
-  NodeStatusIdle,
-  NodeStatusName,
-  NodeStatusReady,
-  NodeStatusRunning,
-  NodeStatusStarting,
-  NodeStatusStopped,
-  NodeStatusStopping,
-  useNodesStore
-} from "@/stores/nodes";
+  CrawlerStatusIdle,
+  CrawlerStatusName,
+  CrawlerStatusReady,
+  CrawlerStatusRunning,
+  CrawlerStatusStarting,
+  CrawlerStatusStopped,
+  CrawlerStatusStopping,
+  useCrawlersStore
+} from "@/stores/crawlers";
 import {formatDuration, formattedDate} from "@/utils/time";
 import {sortBigInt, sortInt, sortStr} from "@/utils/sort";
 import {computed, onBeforeUnmount, reactive, ref} from "vue";
@@ -245,27 +245,27 @@ const columns = computed(() => {
       filters: [
         {
           text: 'ready',
-          value: NodeStatusReady,
+          value: CrawlerStatusReady,
         },
         {
           text: 'starting',
-          value: NodeStatusStarting,
+          value: CrawlerStatusStarting,
         },
         {
           text: 'running',
-          value: NodeStatusRunning,
+          value: CrawlerStatusRunning,
         },
         {
           text: 'idle',
-          value: NodeStatusIdle,
+          value: CrawlerStatusIdle,
         },
         {
           text: 'stopping',
-          value: NodeStatusStopping,
+          value: CrawlerStatusStopping,
         },
         {
           text: 'stopped',
-          value: NodeStatusStopped,
+          value: CrawlerStatusStopped,
         },
       ],
       onFilter: (value, record) => record.status === value,
@@ -290,10 +290,10 @@ const columns = computed(() => {
       sorter: (a, b) => sortInt(a.task, b.task),
     },
     {
-      title: 'Record',
-      dataIndex: 'record',
+      title: 'Item',
+      dataIndex: 'item',
       width: 100,
-      sorter: (a, b) => sortInt(a.record, b.record),
+      sorter: (a, b) => sortInt(a.item, b.item),
     },
     {
       title: 'Action',
@@ -304,14 +304,14 @@ const columns = computed(() => {
   ];
 });
 
-const nodesStore = useNodesStore();
+const crawlersStore = useCrawlersStore();
 
 // auto refresh
 const checked1 = ref(true)
 const checked1Disable = ref(true)
 let interval = 0
 const refresh = () => {
-  nodesStore.GetNodes()
+  crawlersStore.GetCrawlers()
 }
 refresh()
 if (checked1.value) {
@@ -336,7 +336,7 @@ const open = ref(false);
 const more = reactive({})
 const showDrawer = record => {
   open.value = true;
-  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${NodeStatusName(v)}`).reverse();
+  more.status_list = Object.entries(record.status_list).map(([k, v]) => `${formattedDate(k / 1000000000)} ${CrawlerStatusName(v)}`).reverse();
 };
 // status list
 const activeKey = ref('1');

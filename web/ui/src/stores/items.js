@@ -1,6 +1,6 @@
 import {defineStore} from 'pinia'
 import {computed, reactive} from 'vue';
-import {getRecords} from "@/requests/api";
+import {getItems} from "@/requests/api";
 
 export const ItemStatusUnknown = 0
 export const ItemStatusPending = 1
@@ -22,24 +22,24 @@ export const ItemStatusName = (status) => {
             return 'unknown'
     }
 }
-export const useRecordsStore = defineStore('records', () => {
-    const records = reactive([])
+export const useItemsStore = defineStore('items', () => {
+    const items = reactive([])
 
-    const GetRecords = () => {
-        getRecords().then(resp => {
+    const GetItems = () => {
+        getItems().then(resp => {
             if (resp.data.data === null) {
-                records.splice(0, records.length)
+                items.splice(0, items.length)
                 return
             }
-            records.splice(0, records.length, ...resp.data.data)
+            items.splice(0, items.length, ...resp.data.data)
         }).catch(e => {
             console.log(e);
         })
     }
 
     const Count = computed(() => {
-        return records.length
+        return items.length
     })
 
-    return {records, GetRecords, Count}
+    return {items, GetItems, Count}
 })

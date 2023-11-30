@@ -27,9 +27,9 @@ const getUser = async data => {
     return axios.post(host + '/user', data, config);
 };
 
-const getNodes = async data => {
+const getCrawlers = async data => {
     const {host, config} = await api()
-    return axios.post(host + '/nodes', data, config);
+    return axios.post(host + '/crawlers', data, config);
 };
 
 const getSpiders = async data => {
@@ -67,9 +67,9 @@ const getRequests = async data => {
     return axios.post(host + '/requests', data, config);
 };
 
-const getRecords = async data => {
+const getItems = async data => {
     const {host, config} = await api()
-    return axios.post(host + '/records', data, config);
+    return axios.post(host + '/items', data, config);
 };
 
 const getSpider = async data => {
@@ -80,7 +80,7 @@ const getSpider = async data => {
 export {
     getLog,
     getUser,
-    getNodes,
+    getCrawlers,
     getSpiders,
     getJobs,
     runJob,
@@ -88,6 +88,6 @@ export {
     stopJob,
     getTasks,
     getRequests,
-    getRecords,
+    getItems,
     getSpider
 }

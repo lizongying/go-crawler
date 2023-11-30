@@ -48,9 +48,9 @@
       <search-outlined :style="{ color: filtered ? '#108ee9' : undefined }"/>
     </template>
     <template #bodyCell="{ text, column, record }">
-      <template v-if="column.dataIndex === 'node'">
-        <RouterLink :to="'/nodes?id='+record.node">
-          {{ record.node }}
+      <template v-if="column.dataIndex === 'crawler'">
+        <RouterLink :to="'/crawlers?id='+record.crawler">
+          {{ record.crawler }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'spider'">
@@ -82,9 +82,9 @@
       <template v-else-if="column.dataIndex === 'duration'">
         {{ formatDuration(record.finish_time - record.start_time) }}
       </template>
-      <template v-else-if="column.dataIndex === 'record'">
-        <RouterLink :to="'/records?task='+record.id">
-          {{ record.record }}
+      <template v-else-if="column.dataIndex === 'item'">
+        <RouterLink :to="'/items?task='+record.id">
+          {{ record.item }}
         </RouterLink>
       </template>
       <template v-else-if="column.dataIndex === 'action'">
@@ -165,14 +165,14 @@ const columns = computed(() => {
       },
     },
     {
-      title: 'Node',
-      dataIndex: 'node',
+      title: 'Crawler',
+      dataIndex: 'crawler',
       width: 200,
-      sorter: (a, b) => sortBigInt(a.node, b.node),
+      sorter: (a, b) => sortBigInt(a.crawler, b.crawler),
       customFilterDropdown: true,
-      filteredValue: filteredInfo.node || null,
+      filteredValue: filteredInfo.crawler || null,
       onFilter: (value, record) =>
-          record.node.toString().toLowerCase().includes(value.toLowerCase()),
+          record.crawler.toString().toLowerCase().includes(value.toLowerCase()),
       onFilterDropdownOpenChange: visible => {
         if (visible) {
           setTimeout(() => {
@@ -294,10 +294,10 @@ const columns = computed(() => {
       },
     },
     {
-      title: 'Record',
-      dataIndex: 'record',
+      title: 'Item',
+      dataIndex: 'item',
       width: 100,
-      sorter: (a, b) => sortInt(a.record, b.record),
+      sorter: (a, b) => sortInt(a.item, b.item),
     },
     {
       title: 'Action',

@@ -9,34 +9,34 @@
   </a-page-header>
   <a-row style="margin: 15px">
     <a-col :span="4">
-      <a-statistic :value="nodesStore.Count" title="Total Nodes"/>
+      <a-statistic :value="crawlersStore.Count" title="Total Crawlers"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic :value="nodesStore.CountSpider" title="Total Spiders"/>
+      <a-statistic :value="crawlersStore.CountSpider" title="Total Spiders"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic :value="nodesStore.CountJob" title="Total Jobs"/>
+      <a-statistic :value="crawlersStore.CountJob" title="Total Jobs"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic :value="nodesStore.CountTask" title="Total Tasks"/>
+      <a-statistic :value="crawlersStore.CountTask" title="Total Tasks"/>
     </a-col>
     <a-col :span="4">
-      <a-statistic :value="nodesStore.CountRecord" title="Total Record"/>
+      <a-statistic :value="crawlersStore.CountItem" title="Total Item"/>
     </a-col>
   </a-row>
 </template>
 <script setup>
-import {useNodesStore} from "@/stores/nodes";
+import {useCrawlersStore} from "@/stores/crawlers";
 import {onBeforeUnmount, ref} from "vue";
 
-const nodesStore = useNodesStore()
+const crawlersStore = useCrawlersStore()
 
 // auto refresh
 const checked1 = ref(true)
 const checked1Disable = ref(true)
 let interval = 0
 const refresh = () => {
-  nodesStore.GetNodes()
+  crawlersStore.GetCrawlers()
 }
 refresh()
 if (checked1.value) {

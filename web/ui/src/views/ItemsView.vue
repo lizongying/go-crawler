@@ -1,14 +1,14 @@
 <template>
   <a-page-header
-      title="Records"
-      :sub-title="'Total: '+recordsStore.Count"
+      title="Items"
+      :sub-title="'Total: '+itemsStore.Count"
   >
     <template #extra>
       <a-switch v-model:checked="checked1" checked-children="auto" un-checked-children="close" @change="changeSwitch"/>
       <a-button key="2" @click="refresh" :disabled="checked1Disable">Refresh</a-button>
     </template>
   </a-page-header>
-  <a-table :columns="columns" :data-source="recordsStore.records" :scroll="{ x: '100%' }">
+  <a-table :columns="columns" :data-source="itemsStore.items" :scroll="{ x: '100%' }">
     <template #headerCell="{ column }">
       <template v-if="column.dataIndex !== ''">
         <span style="font-weight: bold">
@@ -48,9 +48,9 @@
       <search-outlined :style="{ color: filtered ? '#108ee9' : undefined }"/>
     </template>
     <template #bodyCell="{ text, column, record }">
-      <template v-if="column.dataIndex === 'node'">
-        <RouterLink :to="'/nodes?id='+record.node">
-          {{ record.node }}
+      <template v-if="column.dataIndex === 'crawler'">
+        <RouterLink :to="'/crawlers?id='+record.crawler">
+          {{ record.crawler }}
         </RouterLink>
       </template>
       <template v-if="column.dataIndex === 'spider'">
@@ -133,8 +133,8 @@ import {
   ItemStatusPending,
   ItemStatusRunning,
   ItemStatusSuccess,
-  useRecordsStore
-} from "@/stores/records";
+  useItemsStore
+} from "@/stores/items";
 import {computed, onBeforeUnmount, reactive, ref} from "vue";
 import {sortBigInt, sortStr} from "@/utils/sort";
 
@@ -171,14 +171,14 @@ const columns = computed(() => {
       ellipsis: true,
     },
     {
-      title: 'Node',
-      dataIndex: 'node',
+      title: 'Crawler',
+      dataIndex: 'crawler',
       width: 200,
-      sorter: (a, b) => sortBigInt(a.node, b.node),
+      sorter: (a, b) => sortBigInt(a.crawler, b.crawler),
       customFilterDropdown: true,
-      filteredValue: filteredInfo.node || null,
+      filteredValue: filteredInfo.crawler || null,
       onFilter: (value, record) =>
-          record.node.toString().toLowerCase().includes(value.toLowerCase()),
+          record.crawler.toString().toLowerCase().includes(value.toLowerCase()),
       onFilterDropdownOpenChange: visible => {
         if (visible) {
           setTimeout(() => {
@@ -331,7 +331,7 @@ const columns = computed(() => {
   ];
 });
 
-const recordsStore = useRecordsStore();
+const itemsStore = useItemsStore();
 
 const open = ref(false);
 const more = reactive({})
@@ -346,7 +346,7 @@ const checked1 = ref(true)
 const checked1Disable = ref(true)
 let interval = 0
 const refresh = () => {
-  recordsStore.GetRecords()
+  itemsStore.GetItems()
 }
 refresh()
 if (checked1.value) {
