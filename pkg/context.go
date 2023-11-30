@@ -120,8 +120,6 @@ type ContextRequest interface {
 	GetStopTime() time.Time
 	WithStopTime(time.Time) ContextRequest
 	GetUpdateTime() time.Time
-	GetDeadline() time.Time
-	WithDeadline(time.Time) ContextRequest
 	GetCookies() map[string]string
 	WithCookies(map[string]string) ContextRequest
 	GetReferrer() string

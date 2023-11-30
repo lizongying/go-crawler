@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-type WithRecords struct {
+type WithItems struct {
 	Task     pkg.StatisticsTask
 	Requests *queue.GroupQueue
-	Records  *queue.GroupQueue
+	Items    *queue.GroupQueue
 }
 
 type Task struct {
@@ -20,9 +20,9 @@ type Task struct {
 	Id             string               `json:"id,omitempty"`
 	Spider         string               `json:"spider,omitempty"`
 	Job            string               `json:"job,omitempty"`
-	Node           string               `json:"node,omitempty"`
+	Crawler        string               `json:"crawler,omitempty"`
 	Request        uint32               `json:"request,omitempty"`
-	Record         uint32               `json:"record,omitempty"`
+	Item           uint32               `json:"item,omitempty"`
 	StartTime      utils.Timestamp      `json:"start_time"`
 	FinishTime     utils.Timestamp      `json:"finish_time"`
 	UpdateTime     utils.Timestamp      `json:"update_time,omitempty"`
@@ -41,11 +41,11 @@ func (t *Task) WithId(id string) pkg.StatisticsTask {
 	t.Id = id
 	return t
 }
-func (t *Task) GetNode() string {
-	return t.Node
+func (t *Task) GetCrawler() string {
+	return t.Crawler
 }
-func (t *Task) WithNode(node string) pkg.StatisticsTask {
-	t.Node = node
+func (t *Task) WithCrawler(crawler string) pkg.StatisticsTask {
+	t.Crawler = crawler
 	return t
 }
 func (t *Task) GetSpider() string {
@@ -68,11 +68,11 @@ func (t *Task) IncRequest() {
 func (t *Task) DecRequest() {
 	atomic.AddUint32(&t.Request, ^uint32(0))
 }
-func (t *Task) IncRecord() {
-	atomic.AddUint32(&t.Record, 1)
+func (t *Task) IncItem() {
+	atomic.AddUint32(&t.Item, 1)
 }
-func (t *Task) DecRecord() {
-	atomic.AddUint32(&t.Record, ^uint32(0))
+func (t *Task) DecItem() {
+	atomic.AddUint32(&t.Item, ^uint32(0))
 }
 func (t *Task) WithStartTime(startTime time.Time) pkg.StatisticsTask {
 	t.StartTime = utils.Timestamp{

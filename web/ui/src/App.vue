@@ -124,7 +124,7 @@ router.beforeEach((to, from, next) => {
     case '':
       state.selectedKeys = ['1']
       break
-    case 'nodes':
+    case 'crawlers':
       state.selectedKeys = ['2']
       break
     case 'spiders':
@@ -139,7 +139,7 @@ router.beforeEach((to, from, next) => {
     case 'requests':
       state.selectedKeys = ['6']
       break
-    case 'records':
+    case 'items':
       state.selectedKeys = ['7']
       break
     default:
@@ -165,8 +165,8 @@ const items = reactive([
   {
     key: '2',
     icon: () => h(ClusterOutlined),
-    label: <RouterLink to="/nodes">Nodes</RouterLink>,
-    title: 'Nodes',
+    label: <RouterLink to="/crawlers">Crawlers</RouterLink>,
+    title: 'Crawlers',
   },
   {
     key: '3',
@@ -195,8 +195,8 @@ const items = reactive([
   {
     key: '7',
     icon: () => h(DatabaseOutlined),
-    label: <RouterLink to="/records">Records</RouterLink>,
-    title: 'Records',
+    label: <RouterLink to="/items">Items</RouterLink>,
+    title: 'Items',
   }
 ]);
 watch(

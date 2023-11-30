@@ -11,7 +11,7 @@ import (
 type Request struct {
 	Id         string               `json:"id,omitempty"`
 	UniqueKey  string               `json:"unique_key,omitempty"`
-	Node       string               `json:"node,omitempty"`
+	Crawler    string               `json:"crawler,omitempty"`
 	Spider     string               `json:"spider,omitempty"`
 	Job        string               `json:"job,omitempty"`
 	Task       string               `json:"task,omitempty"`
@@ -33,8 +33,8 @@ func (r *Request) WithUniqueKey(uniqueKey string) *Request {
 	r.UniqueKey = uniqueKey
 	return r
 }
-func (r *Request) WithNode(node string) *Request {
-	r.Node = node
+func (r *Request) WithCrawler(crawler string) *Request {
+	r.Crawler = crawler
 	return r
 }
 func (r *Request) WithSpider(spider string) *Request {

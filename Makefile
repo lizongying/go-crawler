@@ -8,7 +8,7 @@ branch := $(shell git rev-parse --abbrev-ref HEAD)
 commit := $(shell git rev-parse --short HEAD)
 commit_time := $(shell git log -1 --format=%ct)
 
-shell:
+info:
 	@echo 'SHELL='$(SHELL)
 	@echo 'branch='$(branch)
 	@echo 'commit='$(commit)
@@ -64,3 +64,8 @@ web_ui:
 web_server:
 	go vet ./tools/web_server
 	go build -ldflags "-s -w" -o ./releases/web_server ./tools/web_server
+
+protoc_gen_go:
+	protoc --go_out=./ --go_opt=paths=source_relative \
+        --go-grpc_out=./ --go-grpc_opt=paths=source_relative \
+        ./pkg/api/proto/statistics.proto

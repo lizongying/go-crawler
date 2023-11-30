@@ -8,17 +8,14 @@ import (
 )
 
 type Item struct {
-	Context    context.Context     `json:"-"`
-	Id         string              `json:"id,omitempty"`
-	Status     pkg.ItemStatus      `json:"status,omitempty"`
-	StartTime  utils.Timestamp     `json:"start_time,omitempty"`
-	StopTime   utils.Timestamp     `json:"stop_time,omitempty"`
-	UpdateTime utils.Timestamp     `json:"update_time,omitempty"`
-	Deadline   utils.TimestampNano `json:"deadline,omitempty"`
-	Cookies    map[string]string   `json:"cookies,omitempty"`
-	Referrer   string              `json:"referrer,omitempty"`
-	Saved      bool                `json:"saved,omitempty"`
-	StopReason string              `json:"stop_reason,omitempty"`
+	Context    context.Context `json:"-"`
+	Id         string          `json:"id,omitempty"`
+	Status     pkg.ItemStatus  `json:"status,omitempty"`
+	StartTime  utils.Timestamp `json:"start_time,omitempty"`
+	StopTime   utils.Timestamp `json:"stop_time,omitempty"`
+	UpdateTime utils.Timestamp `json:"update_time,omitempty"`
+	Saved      bool            `json:"saved,omitempty"`
+	StopReason string          `json:"stop_reason,omitempty"`
 }
 
 func (c *Item) GetId() string {

@@ -1,4 +1,4 @@
-package node
+package crawler
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type Node struct {
+type Crawler struct {
 	pkg.CrawlerStatus `json:"status,omitempty"`
 	Id                string               `json:"id,omitempty"`
 	Hostname          string               `json:"hostname,omitempty"`
@@ -19,14 +19,14 @@ type Node struct {
 	Job               uint32               `json:"job,omitempty"`
 	Task              uint32               `json:"task,omitempty"`
 	Request           uint32               `json:"request,omitempty"`
-	Record            uint32               `json:"record,omitempty"`
+	Item              uint32               `json:"item,omitempty"`
 	StartTime         utils.Timestamp      `json:"start_time"`
 	FinishTime        utils.Timestamp      `json:"finish_time"`
 	UpdateTime        utils.Timestamp      `json:"update_time,omitempty"`
 	StatusList        *queue.PriorityQueue `json:"status_list,omitempty"`
 }
 
-func (n *Node) WithStatusAndTime(status pkg.CrawlerStatus, t time.Time) pkg.StatisticsNode {
+func (n *Crawler) WithStatusAndTime(status pkg.CrawlerStatus, t time.Time) pkg.StatisticsCrawler {
 	n.withStatus(status)
 	n.withUpdateTime(t)
 	switch status {
@@ -42,67 +42,67 @@ func (n *Node) WithStatusAndTime(status pkg.CrawlerStatus, t time.Time) pkg.Stat
 	n.StatusList.Push(queue.NewItem(status, t.UnixNano()))
 	return n
 }
-func (n *Node) WithId(id string) pkg.StatisticsNode {
+func (n *Crawler) WithId(id string) pkg.StatisticsCrawler {
 	n.Id = id
 	return n
 }
-func (n *Node) withStatus(status pkg.CrawlerStatus) *Node {
+func (n *Crawler) withStatus(status pkg.CrawlerStatus) *Crawler {
 	n.CrawlerStatus = status
 	return n
 }
-func (n *Node) WithEnable(enable bool) *Node {
+func (n *Crawler) WithEnable(enable bool) *Crawler {
 	n.Enable = enable
 	return n
 }
-func (n *Node) IncSpider() {
+func (n *Crawler) IncSpider() {
 	atomic.AddUint32(&n.Spider, 1)
 }
-func (n *Node) DecSpider() {
+func (n *Crawler) DecSpider() {
 	atomic.AddUint32(&n.Spider, ^uint32(0))
 }
-func (n *Node) IncJob() {
+func (n *Crawler) IncJob() {
 	atomic.AddUint32(&n.Job, 1)
 }
-func (n *Node) DecJob() {
+func (n *Crawler) DecJob() {
 	atomic.AddUint32(&n.Job, ^uint32(0))
 }
-func (n *Node) IncTask() {
+func (n *Crawler) IncTask() {
 	atomic.AddUint32(&n.Task, 1)
 }
-func (n *Node) DecTask() {
+func (n *Crawler) DecTask() {
 	atomic.AddUint32(&n.Task, ^uint32(0))
 }
-func (n *Node) IncRequest() {
+func (n *Crawler) IncRequest() {
 	atomic.AddUint32(&n.Request, 1)
 }
-func (n *Node) DecRequest() {
+func (n *Crawler) DecRequest() {
 	atomic.AddUint32(&n.Request, ^uint32(0))
 }
-func (n *Node) IncRecord() {
-	atomic.AddUint32(&n.Record, 1)
+func (n *Crawler) IncItem() {
+	atomic.AddUint32(&n.Item, 1)
 }
-func (n *Node) DecRecord() {
-	atomic.AddUint32(&n.Record, ^uint32(0))
+func (n *Crawler) DecItem() {
+	atomic.AddUint32(&n.Item, ^uint32(0))
 }
-func (n *Node) withStartTime(t time.Time) *Node {
+func (n *Crawler) withStartTime(t time.Time) *Crawler {
 	n.StartTime = utils.Timestamp{
 		Time: t,
 	}
 	return n
 }
-func (n *Node) withFinishTime(t time.Time) *Node {
+func (n *Crawler) withFinishTime(t time.Time) *Crawler {
 	n.FinishTime = utils.Timestamp{
 		Time: t,
 	}
 	return n
 }
-func (n *Node) withUpdateTime(t time.Time) *Node {
+func (n *Crawler) withUpdateTime(t time.Time) *Crawler {
 	n.UpdateTime = utils.Timestamp{
 		Time: t,
 	}
 	return n
 }
-func (n *Node) Marshal() (bytes []byte, err error) {
+func (n *Crawler) Marshal() (bytes []byte, err error) {
 	bytes, err = json.Marshal(n)
 	if err != nil {
 		return

@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+option go_package = "github.com/lizongying/go-crawler/proto/api";
+
+package api;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+service Statistics {
+  rpc CrawlerChanged (Crawler) returns (Response) {}
+  rpc SpiderChanged (Spider) returns (Response) {}
+  rpc JobChanged (Job) returns (Response) {}
+  rpc TaskChanged (Task) returns (Response) {}
+  rpc RequestChanged (Request) returns (Response) {}
+  rpc ItemChanged (Item) returns (Response) {}
+}
+
+message Context {
+  Crawler crawler = 1;
+  Spider spider = 2;
+  Job job = 3;
+  Task task = 4;
+  Request request = 5;
+  Item item = 6;
+}
+
+enum CrawlerStatus {
+  CrawlerStatusUnknown = 0;
+  CrawlerStatusReady = 1;
+  CrawlerStatusStarting = 2;
+  CrawlerStatusRunning = 3;
+  CrawlerStatusIdle = 4;
+  CrawlerStatusStopping = 5;
+  CrawlerStatusStopped = 6;
+}
+
+message Crawler {
+  Context Context = 1;
+  string Id = 2;
+  CrawlerStatus Status = 3;
+  google.protobuf.Timestamp StartTime = 4;
+  google.protobuf.Timestamp StopTime = 5;
+  google.protobuf.Timestamp UpdateTime = 6;
+  string StopReason = 7;
+}
+
+enum SpiderStatus {
+  SpiderStatusUnknown = 0;
+  SpiderStatusReady = 1;
+  SpiderStatusStarting = 2;
+  SpiderStatusRunning = 3;
+  SpiderStatusIdle = 4;
+  SpiderStatusStopping = 5;
+  SpiderStatusStopped = 6;
+}
+
+message Spider {
+  Context Context = 1;
+  uint64 Id = 2;
+  string Name = 3;
+  SpiderStatus Status = 4;
+  google.protobuf.Timestamp StartTime = 5;
+  google.protobuf.Timestamp StopTime = 6;
+  google.protobuf.Timestamp UpdateTime = 7;
+  string StopReason = 8;
+}
+
+enum JobStatus {
+  JobStatusUnknown = 0;
+  JobStatusReady = 1;
+  JobStatusStarting = 2;
+  JobStatusRunning = 3;
+  JobStatusIdle = 4;
+  JobStatusStopping = 5;
+  JobStatusSuccess = 6;
+  JobStatusFailure = 7;
+}
+
+enum JobMode {
+  JobModeUnknown = 0;
+  JobModeOnce = 1;
+  JobModeLoop = 2;
+  JobModeCron = 3;
+}
+
+message Job {
+  Context Context = 1;
+  string Id = 2;
+  uint64 SubId = 3;
+  JobStatus Status = 4;
+  google.protobuf.Timestamp StartTime = 5;
+  google.protobuf.Timestamp StopTime = 6;
+  google.protobuf.Timestamp UpdateTime = 7;
+  bool Enable = 8;
+  string Func = 9;
+  string Args = 10;
+  JobMode Mode = 11;
+  string Spec = 12;
+  bool OnlyOneTask = 13;
+  string StopReason = 14;
+}
+
+enum TaskStatus {
+  TaskStatusUnknown = 0;
+  TaskStatusPending = 1;
+  TaskStatusRunning = 2;
+  TaskStatusSuccess = 3;
+  TaskStatusFailure = 4;
+}
+
+message Task {
+  Context Context = 1;
+  string Id = 2;
+  uint64 JobSubId = 3;
+  TaskStatus Status = 4;
+  google.protobuf.Timestamp StartTime = 5;
+  google.protobuf.Timestamp StopTime = 6;
+  google.protobuf.Timestamp UpdateTime = 7;
+  string StopReason = 8;
+}
+
+enum RequestStatus {
+  RequestStatusUnknown = 0;
+  RequestStatusPending = 1;
+  RequestStatusRunning = 2;
+  RequestStatusSuccess = 3;
+  RequestStatusFailure = 4;
+}
+
+message Request {
+  Context context = 1;
+  string id = 2;
+  string uniqueKey = 3;
+  string extra = 4;
+  string data = 5;
+  RequestStatus status = 6;
+  google.protobuf.Timestamp startTime = 7;
+  google.protobuf.Timestamp stopTime = 8;
+  google.protobuf.Timestamp updateTime = 9;
+  map<string, string> cookies = 10;
+  string referrer = 11;
+  string stopReason = 12;
+}
+
+enum ItemStatus {
+  ItemStatusUnknown = 0;
+  ItemStatusPending = 1;
+  ItemStatusRunning = 2;
+  ItemStatusSuccess = 3;
+  ItemStatusFailure = 4;
+}
+
+message Item {
+  Context context = 1;
+  string id = 2;
+  ItemStatus  status = 3;
+  google.protobuf.Timestamp startTime = 4;
+  google.protobuf.Timestamp stopTime = 5;
+  google.protobuf.Timestamp updateTime = 6;
+  bool saved = 7;
+  string stopReason = 8;
+  string name = 9;
+  string referrer = 10;
+  string uniqueKey = 11;
+  google.protobuf.Any dataId = 12;
+  string meta = 13;
+  string data = 14;
+}
+
+message Response {
+  string message = 1;
+}
