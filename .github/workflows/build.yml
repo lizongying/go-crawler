@@ -42,6 +42,9 @@ jobs:
       - name: Build Docs
         run: hugo build --source docs --noBuildLock --destination ../static/dist/docs
 
+      - name: List files
+        run: ls -R ./static
+
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
