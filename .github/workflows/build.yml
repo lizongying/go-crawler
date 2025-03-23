@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-node@v3
 
       - name: Install dependencies
-        run: npm install --prefix ./web/ui
+        run: npm install --prefix ./web/ui --legacy-peer-deps
 
       - name: Build UI
         run: npm run build-github --prefix ./web/ui
