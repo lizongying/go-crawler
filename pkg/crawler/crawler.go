@@ -14,7 +14,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/signals"
 	"github.com/lizongying/go-crawler/pkg/statistics"
 	"github.com/lizongying/go-crawler/pkg/utils"
-	"github.com/lizongying/go-uid/uid"
+	uidv1 "github.com/lizongying/go-uid/v1"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -70,7 +70,7 @@ type Crawler struct {
 	itemConcurrency     uint8
 	itemConcurrencyChan chan struct{}
 	itemTimer           *time.Timer
-	ug                  *uid.Uid
+	ug                  *uidv1.Uid
 
 	stream pkg.Stream
 
@@ -367,7 +367,7 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 		_ = crawler.Stop(crawler.GetContext())
 	})
 
-	ug, _ := uid.NewUid(1)
+	ug := uidv1.NewUid(1, nil)
 
 	crawler = &Crawler{
 		spiderName:  cli.SpiderName,

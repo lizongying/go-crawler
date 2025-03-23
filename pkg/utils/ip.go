@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"fmt"
+	"encoding/json"
 	"io"
+	"log"
 	"net"
 	"net/http"
 )
@@ -29,12 +30,31 @@ func LanIp() (ip string) {
 }
 
 func InternetIp() (ip string) {
-	resp, err := http.Get("https://api64.ipify.org?format=text")
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(resp.Body)
-	if err == nil {
-		_, _ = fmt.Fscanf(resp.Body, "%s", &ip)
+	var err error
+	resp, err := http.Get("https://ipinfo.io")
+	if err != nil {
+		log.Println(err)
+		return
 	}
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	ipBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var result struct {
+		Ip string `json:"ip"`
+	}
+	if err = json.Unmarshal(ipBytes, &result); err != nil {
+		log.Println(err)
+		return
+	}
+
+	ip = result.Ip
 	return
 }
