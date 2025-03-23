@@ -40,7 +40,7 @@ jobs:
           hugo-version: '0.145.0'
 
       - name: Build Docs
-        run: pwd && ls -l && hugo --source docs --noBuildLock --destination ../static/dist/docs && ls -l ../static/dist/docs
+        run: pwd && ls -l && hugo --source docs --noBuildLock --destination ./static/dist/docs && ls -l ./static/dist/docs
 
       - name: Setup Pages
         uses: actions/configure-pages@v3
