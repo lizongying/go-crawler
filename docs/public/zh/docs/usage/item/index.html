@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="zh" dir="ltr">
+<head><script src="/go-crawler/docs/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=go-crawler/docs/livereload" data-no-instant defer></script>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+  存储
+  #
+
+Item用于存储需要导出的数据和一些其他辅助信息。
+框架里内置的Item涵盖了主要文件、数据库、消息队列等存储方式。
+pkg.Item是一个接口，不能直接使用。pkg.ItemUnimplemented实现了pkg.Item的所有方法。
+如果Item需要实现pkg.Item，可以组合pkg.ItemUnimplemented。 如：
+type ItemNone struct {
+pkg.ItemUnimplemented
+}
+Item有一些通用方法：
+
+
+Name() pkg.ItemName
+获取Item的具体类型，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、pkg.ItemMysql、pkg.ItemKafka等，用于Item反序列化到具体Item实现。
+
+
+SetReferrer(string) 设置referrer，可以用于记录请求的来源，一般不需要自己设置，由ReferrerMiddleware自动设置。
+
+
+Referrer() string 获取referrer。
+
+
+SetUniqueKey(string) 设置uniqueKey，可以用于过滤和其他唯一用途。
+
+
+UniqueKey() string 获取uniqueKey。
+
+
+SetId(any) 设置id，主要用于保存数据时的主键，和uniqueKey的一个区别是，id可能是在Response中产生，请求时不一定能获得。
+
+
+Id() any 获取id。
+
+
+SetData(any) 设置data，这是要存储的完整数据。为了规范化，强制要求指针类型。存储到不同的目标时，data需要设置不同的格式。
+
+
+Data() any 获取data。
+
+
+DataJson() string 获取data json字符串。
+
+
+SetFilesRequest([]pkg.Request) 设置文件的请求。这是一个slice，可以下载多个文件。
+
+
+FilesRequest() []pkg.Request 获取文件的请求。
+
+
+SetFiles([]pkg.File) 设置文件。下载后的文件通过这个方法设置到Item中。
+
+
+Files() []pkg.File 获取文件。
+
+
+SetImagesRequest([]pkg.Request) 设置图片的请求。这是一个slice，可以下载多个图片。
+
+
+ImagesRequest() []pkg.Request 获取图片的请求。
+
+
+SetImages([]pkg.Image) 设置图片。下载后的图片通过这个方法设置到Item中。
+
+
+Images() []pkg.Image 获取图片。
+
+
+内置Item实现：框架提供了一些内置的Item实现，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、
+pkg.ItemMysql、pkg.ItemKafka等。
+您可以根据需要，返回Item，并开启相应的Pipeline。如：
+err = s.YieldItem(ctx, items.NewItemMongo(s.collection, true).
+SetUniqueKey(extra.Keyword).
+SetId(extra.Keyword).
+SetData(&amp;data))
+spider.WithOptions(pkg.WithMongoPipeline())
+
+pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
+
+items.NewItemNone()
+
+
+pkg.ItemCsv 保存到csv中。
+
+items.NewItemCsv(filename string)
+filename：存储的文件名，不包括拓展名
+
+
+pkg.ItemJsonl 保存到jsonl中。
+
+items.NewItemJsonl(filename string)
+filename：存储的文件名，不包括拓展名
+
+
+pkg.ItemMongo 保存到mongo中。
+
+items.NewItemMongo(collection string, update bool)
+collection：mongo collection
+update：如果数据已存在mongo中，是否更新
+
+
+pkg.ItemSqlite 保存到Sqlite中。
+
+items.NewItemSqlite(table string, update bool)
+table：sqlite table
+update：如果数据已存在mongo中，是否更新
+
+
+pkg.ItemMysql 保存到mysql中。
+
+items.NewItemMysql(table string, update bool)
+table：mysql table
+update：如果数据已存在mongo中，是否更新
+
+
+pkg.ItemKafka 保存到kafka中。
+
+items.NewItemKafka(topic string)
+topic：kafka topic
+
+
+
+
+">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/go-crawler/docs/zh/docs/usage/item/">
+  <meta property="og:site_name" content="Go Crawler">
+  <meta property="og:title" content="存储">
+  <meta property="og:description" content="存储 # Item用于存储需要导出的数据和一些其他辅助信息。 框架里内置的Item涵盖了主要文件、数据库、消息队列等存储方式。 pkg.Item是一个接口，不能直接使用。pkg.ItemUnimplemented实现了pkg.Item的所有方法。 如果Item需要实现pkg.Item，可以组合pkg.ItemUnimplemented。 如：
+type ItemNone struct { pkg.ItemUnimplemented } Item有一些通用方法：
+Name() pkg.ItemName 获取Item的具体类型，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、pkg.ItemMysql、pkg.ItemKafka等，用于Item反序列化到具体Item实现。
+SetReferrer(string) 设置referrer，可以用于记录请求的来源，一般不需要自己设置，由ReferrerMiddleware自动设置。
+Referrer() string 获取referrer。
+SetUniqueKey(string) 设置uniqueKey，可以用于过滤和其他唯一用途。
+UniqueKey() string 获取uniqueKey。
+SetId(any) 设置id，主要用于保存数据时的主键，和uniqueKey的一个区别是，id可能是在Response中产生，请求时不一定能获得。
+Id() any 获取id。
+SetData(any) 设置data，这是要存储的完整数据。为了规范化，强制要求指针类型。存储到不同的目标时，data需要设置不同的格式。
+Data() any 获取data。
+DataJson() string 获取data json字符串。
+SetFilesRequest([]pkg.Request) 设置文件的请求。这是一个slice，可以下载多个文件。
+FilesRequest() []pkg.Request 获取文件的请求。
+SetFiles([]pkg.File) 设置文件。下载后的文件通过这个方法设置到Item中。
+Files() []pkg.File 获取文件。
+SetImagesRequest([]pkg.Request) 设置图片的请求。这是一个slice，可以下载多个图片。
+ImagesRequest() []pkg.Request 获取图片的请求。
+SetImages([]pkg.Image) 设置图片。下载后的图片通过这个方法设置到Item中。
+Images() []pkg.Image 获取图片。
+内置Item实现：框架提供了一些内置的Item实现，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、 pkg.ItemMysql、pkg.ItemKafka等。 您可以根据需要，返回Item，并开启相应的Pipeline。如：
+err = s.YieldItem(ctx, items.NewItemMongo(s.collection, true). SetUniqueKey(extra.Keyword). SetId(extra.Keyword). SetData(&amp;data)) spider.WithOptions(pkg.WithMongoPipeline()) pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。 items.NewItemNone() pkg.ItemCsv 保存到csv中。 items.NewItemCsv(filename string) filename：存储的文件名，不包括拓展名 pkg.ItemJsonl 保存到jsonl中。 items.NewItemJsonl(filename string) filename：存储的文件名，不包括拓展名 pkg.ItemMongo 保存到mongo中。 items.NewItemMongo(collection string, update bool) collection：mongo collection update：如果数据已存在mongo中，是否更新 pkg.ItemSqlite 保存到Sqlite中。 items.NewItemSqlite(table string, update bool) table：sqlite table update：如果数据已存在mongo中，是否更新 pkg.ItemMysql 保存到mysql中。 items.NewItemMysql(table string, update bool) table：mysql table update：如果数据已存在mongo中，是否更新 pkg.ItemKafka 保存到kafka中。 items.NewItemKafka(topic string) topic：kafka topic">
+  <meta property="og:locale" content="zh">
+  <meta property="og:type" content="website">
+<title>存储 | Go Crawler</title>
+<link rel="icon" href="/go-crawler/docs/favicon.png" >
+<link rel="manifest" href="/go-crawler/docs/manifest.json">
+<link rel="canonical" href="http://localhost:1313/go-crawler/docs/zh/docs/usage/item/">
+  <link rel="alternate" hreflang="en" href="http://localhost:1313/go-crawler/docs/docs/usage/item/" title="Item">
+<link rel="stylesheet" href="/go-crawler/docs/book.min.6c8b9d2a1fc95075ed7da46ca81060b39add8fff6741ac51259f768929281e2c.css" integrity="sha256-bIudKh/JUHXtfaRsqBBgs5rdj/9nQaxRJZ92iSkoHiw=" crossorigin="anonymous">
+  <script defer src="/go-crawler/docs/fuse.min.js"></script>
+  <script defer src="/go-crawler/docs/zh.search.min.7ecfb16fa3a3cb9f912fccea1a3fe67701ac41faffe9f340d0f03ecbddb9cb31.js" integrity="sha256-fs&#43;xb6Ojy5&#43;RL8zqGj/mdwGsQfr/6fNA0PA&#43;y925yzE=" crossorigin="anonymous"></script>
+
+  <script defer src="/go-crawler/docs/sw.min.8f5f8d39ce37f8232a7f0317a8026655f90799b045d8556ccd203097bfcc6627.js" integrity="sha256-j1&#43;NOc43&#43;CMqfwMXqAJmVfkHmbBF2FVszSAwl7/MZic=" crossorigin="anonymous"></script>
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/go-crawler/docs/zh/docs/usage/item/index.xml" title="Go Crawler" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/go-crawler/docs/zh/"><span>Go Crawler</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="搜索" aria-label="搜索" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+  
+
+
+
+  
+    
+  
+
+
+  
+
+
+<ul class="book-languages">
+  <li>
+    <input type="checkbox" id="languages" class="toggle" />
+    <label for="languages" class="flex justify-between">
+      <a role="button" class="flex align-center">
+        <img src="/go-crawler/docs/svg/translate.svg" class="book-icon" alt="Languages" />
+        Chinese
+      </a>
+    </label>
+
+    <ul>
+      
+      <li>
+        <a href="/go-crawler/docs/docs/usage/item/">
+          English
+        </a>
+      </li>
+      
+    </ul>
+  </li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Docs</span>
+  
+
+          
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/introduction/" class="">介绍</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/" class="">使用</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/architecture/" class="">基本架构</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/options/" class="">选项</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/item/" class="active">存储</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/tools/" class="">工具</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/middleware/" class="">中间件</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/pipeline/" class="">数据管道</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/request/" class="">请求</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/response/" class="">响应</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/signals/" class="">信号</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/proxy/" class="">代理</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/download/" class="">媒体下载</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/mock_server/" class="">模拟服务</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/configuration/" class="">配置</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/startup/" class="">启动</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/parse/" class="">基于字段标签的网页解析</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/question/" class="">问答</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/example/" class="">示例代码</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/" class="">Admin</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/api/" class="">Api</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/ui/" class="">界面</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <span>Todo</span>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/lizongying/go-crawler"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://lizongying.github.io/go-crawler/"  target="_blank" rel="noopener">
+        Go Crawler Admin
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/go-crawler/docs/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>存储</h3>
+
+  <label for="toc-control">
+    
+    <img src="/go-crawler/docs/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li>
+          <ul>
+            <li><a href="#存储">存储</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h3 id="存储">
+  存储
+  <a class="anchor" href="#%e5%ad%98%e5%82%a8">#</a>
+</h3>
+<p>Item用于存储需要导出的数据和一些其他辅助信息。
+框架里内置的Item涵盖了主要文件、数据库、消息队列等存储方式。
+pkg.Item是一个接口，不能直接使用。pkg.ItemUnimplemented实现了pkg.Item的所有方法。
+如果Item需要实现pkg.Item，可以组合pkg.ItemUnimplemented。 如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">ItemNone</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">pkg</span>.<span style="color:#a6e22e">ItemUnimplemented</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Item有一些通用方法：</p>
+<ul>
+<li>
+<p><code>Name() pkg.ItemName</code>
+获取Item的具体类型，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、pkg.ItemMysql、pkg.ItemKafka等，用于Item反序列化到具体Item实现。</p>
+</li>
+<li>
+<p><code>SetReferrer(string)</code> 设置referrer，可以用于记录请求的来源，一般不需要自己设置，由ReferrerMiddleware自动设置。</p>
+</li>
+<li>
+<p><code>Referrer() string</code> 获取referrer。</p>
+</li>
+<li>
+<p><code>SetUniqueKey(string)</code> 设置uniqueKey，可以用于过滤和其他唯一用途。</p>
+</li>
+<li>
+<p><code>UniqueKey() string</code> 获取uniqueKey。</p>
+</li>
+<li>
+<p><code>SetId(any)</code> 设置id，主要用于保存数据时的主键，和uniqueKey的一个区别是，id可能是在Response中产生，请求时不一定能获得。</p>
+</li>
+<li>
+<p><code>Id() any</code> 获取id。</p>
+</li>
+<li>
+<p><code>SetData(any)</code> 设置data，这是要存储的完整数据。为了规范化，强制要求指针类型。存储到不同的目标时，data需要设置不同的格式。</p>
+</li>
+<li>
+<p><code>Data() any</code> 获取data。</p>
+</li>
+<li>
+<p><code>DataJson() string</code> 获取data json字符串。</p>
+</li>
+<li>
+<p><code>SetFilesRequest([]pkg.Request)</code> 设置文件的请求。这是一个slice，可以下载多个文件。</p>
+</li>
+<li>
+<p><code>FilesRequest() []pkg.Request</code> 获取文件的请求。</p>
+</li>
+<li>
+<p><code>SetFiles([]pkg.File)</code> 设置文件。下载后的文件通过这个方法设置到Item中。</p>
+</li>
+<li>
+<p><code>Files() []pkg.File</code> 获取文件。</p>
+</li>
+<li>
+<p><code>SetImagesRequest([]pkg.Request)</code> 设置图片的请求。这是一个slice，可以下载多个图片。</p>
+</li>
+<li>
+<p><code>ImagesRequest() []pkg.Request</code> 获取图片的请求。</p>
+</li>
+<li>
+<p><code>SetImages([]pkg.Image)</code> 设置图片。下载后的图片通过这个方法设置到Item中。</p>
+</li>
+<li>
+<p><code>Images() []pkg.Image</code> 获取图片。</p>
+</li>
+<li>
+<p>内置Item实现：框架提供了一些内置的Item实现，如pkg.ItemNone、pkg.ItemCsv、pkg.ItemJsonl、pkg.ItemMongo、pkg.ItemSqlite、
+pkg.ItemMysql、pkg.ItemKafka等。
+您可以根据需要，返回Item，并开启相应的Pipeline。如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">YieldItem</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">items</span>.<span style="color:#a6e22e">NewItemMongo</span>(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">collection</span>, <span style="color:#66d9ef">true</span>).
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">SetUniqueKey</span>(<span style="color:#a6e22e">extra</span>.<span style="color:#a6e22e">Keyword</span>).
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">SetId</span>(<span style="color:#a6e22e">extra</span>.<span style="color:#a6e22e">Keyword</span>).
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">SetData</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">data</span>))
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">spider</span>.<span style="color:#a6e22e">WithOptions</span>(<span style="color:#a6e22e">pkg</span>.<span style="color:#a6e22e">WithMongoPipeline</span>())
+</span></span></code></pre></div><ul>
+<li>pkg.ItemNone 这个Item没有实现任何其他方法，主要用于调试。
+<ul>
+<li><code>items.NewItemNone()</code></li>
+</ul>
+</li>
+<li>pkg.ItemCsv 保存到csv中。
+<ul>
+<li><code>items.NewItemCsv(filename string)</code></li>
+<li>filename：存储的文件名，不包括拓展名</li>
+</ul>
+</li>
+<li>pkg.ItemJsonl 保存到jsonl中。
+<ul>
+<li><code>items.NewItemJsonl(filename string)</code></li>
+<li>filename：存储的文件名，不包括拓展名</li>
+</ul>
+</li>
+<li>pkg.ItemMongo 保存到mongo中。
+<ul>
+<li><code>items.NewItemMongo(collection string, update bool)</code></li>
+<li>collection：mongo collection</li>
+<li>update：如果数据已存在mongo中，是否更新</li>
+</ul>
+</li>
+<li>pkg.ItemSqlite 保存到Sqlite中。
+<ul>
+<li><code>items.NewItemSqlite(table string, update bool)</code></li>
+<li>table：sqlite table</li>
+<li>update：如果数据已存在mongo中，是否更新</li>
+</ul>
+</li>
+<li>pkg.ItemMysql 保存到mysql中。
+<ul>
+<li><code>items.NewItemMysql(table string, update bool)</code></li>
+<li>table：mysql table</li>
+<li>update：如果数据已存在mongo中，是否更新</li>
+</ul>
+</li>
+<li>pkg.ItemKafka 保存到kafka中。
+<ul>
+<li><code>items.NewItemKafka(topic string)</code></li>
+<li>topic：kafka topic</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/lizongying/go-crawler/commit/0d29a6013d0269c87a1d1b13f41dbe8008281108" title='最后修改者 Li ZongYing | 十一月 8, 2023' target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/calendar.svg" class="book-icon" alt="" />
+      <span>十一月 8, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/lizongying/go-crawler/edit/development/docs/content/zh/docs/usage/item/_index.md" target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/edit.svg" class="book-icon" alt="" />
+      <span>编辑本页</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li>
+          <ul>
+            <li><a href="#存储">存储</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

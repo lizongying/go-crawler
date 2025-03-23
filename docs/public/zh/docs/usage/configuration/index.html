@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh" dir="ltr">
+<head><script src="/go-crawler/docs/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=go-crawler/docs/livereload" data-no-instant defer></script>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+  配置
+  #
+
+在配置文件中的是全局配置，部分配置可以在爬虫中或者具体的请求中进行修改覆盖。
+配置文件需要在启动时通过环境变量或参数指定，以下是配置参数：
+
+env: dev 环境。dev环境下不会写入数据库。
+bot_name: crawler 项目名
+
+数据库配置：
+
+mongo_enable: 是否启用MongoDB。
+mongo.example.uri: MongoDB的URI。
+mongo.example.database: MongoDB的数据库名称。
+mysql_enable: 是否启用MySQL。
+mysql.example.uri: MySQL的URI。
+mysql.example.database: MySQL的数据库名称。
+redis_enable: 是否启用Redis。
+redis.example.addr: Redis的地址。
+redis.example.password: Redis的密码。
+redis.example.db: Redis的数据库。
+sqlite.0.name: sqlite名称，自定义
+sqlite.0.path: sqlite文件地址
+store.0.name: 存储名称，自定义
+store.0.type: 存储方式（如s3、cos、oss、minio、file等）
+store.0.endpoint: 对象存储的地址或者本地文件存储地址如“file://tmp/”
+store.0.region: 对象存储的区域。
+store.0.id: 对象存储的ID。
+store.0.key: 对象存储的密钥。
+store.0.bucket: 对象存储的桶名称。
+kafka_enable: 是否启用Kafka。
+kafka.example.uri: Kafka的URI。
+
+日志配置：
+
+
+log.filename: 日志文件路径。可以使用&quot;{name}&ldquo;的方式替换成-ldflags的参数。
+
+
+log.long_file: 如果设置为true（默认），则记录完整文件路径。
+
+
+log.level: 日志级别，可选DEBUG/INFO/WARN/ERROR。
+
+
+mock_server: 模拟服务
+
+enable: false 是否启用模拟服务
+host: https://localhost:8081 模拟服务的地址。
+client_auth: 0 客户端验证类型，0 不验证。
+
+
+
+中间件和Pipeline配置">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/go-crawler/docs/zh/docs/usage/configuration/">
+  <meta property="og:site_name" content="Go Crawler">
+  <meta property="og:title" content="配置">
+  <meta property="og:description" content="配置 # 在配置文件中的是全局配置，部分配置可以在爬虫中或者具体的请求中进行修改覆盖。 配置文件需要在启动时通过环境变量或参数指定，以下是配置参数：
+env: dev 环境。dev环境下不会写入数据库。 bot_name: crawler 项目名 数据库配置：
+mongo_enable: 是否启用MongoDB。 mongo.example.uri: MongoDB的URI。 mongo.example.database: MongoDB的数据库名称。 mysql_enable: 是否启用MySQL。 mysql.example.uri: MySQL的URI。 mysql.example.database: MySQL的数据库名称。 redis_enable: 是否启用Redis。 redis.example.addr: Redis的地址。 redis.example.password: Redis的密码。 redis.example.db: Redis的数据库。 sqlite.0.name: sqlite名称，自定义 sqlite.0.path: sqlite文件地址 store.0.name: 存储名称，自定义 store.0.type: 存储方式（如s3、cos、oss、minio、file等） store.0.endpoint: 对象存储的地址或者本地文件存储地址如“file://tmp/” store.0.region: 对象存储的区域。 store.0.id: 对象存储的ID。 store.0.key: 对象存储的密钥。 store.0.bucket: 对象存储的桶名称。 kafka_enable: 是否启用Kafka。 kafka.example.uri: Kafka的URI。 日志配置：
+log.filename: 日志文件路径。可以使用&#34;{name}“的方式替换成-ldflags的参数。
+log.long_file: 如果设置为true（默认），则记录完整文件路径。
+log.level: 日志级别，可选DEBUG/INFO/WARN/ERROR。
+mock_server: 模拟服务
+enable: false 是否启用模拟服务 host: https://localhost:8081 模拟服务的地址。 client_auth: 0 客户端验证类型，0 不验证。 中间件和Pipeline配置">
+  <meta property="og:locale" content="zh">
+  <meta property="og:type" content="website">
+<title>配置 | Go Crawler</title>
+<link rel="icon" href="/go-crawler/docs/favicon.png" >
+<link rel="manifest" href="/go-crawler/docs/manifest.json">
+<link rel="canonical" href="http://localhost:1313/go-crawler/docs/zh/docs/usage/configuration/">
+  <link rel="alternate" hreflang="en" href="http://localhost:1313/go-crawler/docs/docs/usage/configuration/" title="Configuration">
+<link rel="stylesheet" href="/go-crawler/docs/book.min.6c8b9d2a1fc95075ed7da46ca81060b39add8fff6741ac51259f768929281e2c.css" integrity="sha256-bIudKh/JUHXtfaRsqBBgs5rdj/9nQaxRJZ92iSkoHiw=" crossorigin="anonymous">
+  <script defer src="/go-crawler/docs/fuse.min.js"></script>
+  <script defer src="/go-crawler/docs/zh.search.min.7ecfb16fa3a3cb9f912fccea1a3fe67701ac41faffe9f340d0f03ecbddb9cb31.js" integrity="sha256-fs&#43;xb6Ojy5&#43;RL8zqGj/mdwGsQfr/6fNA0PA&#43;y925yzE=" crossorigin="anonymous"></script>
+
+  <script defer src="/go-crawler/docs/sw.min.8f5f8d39ce37f8232a7f0317a8026655f90799b045d8556ccd203097bfcc6627.js" integrity="sha256-j1&#43;NOc43&#43;CMqfwMXqAJmVfkHmbBF2FVszSAwl7/MZic=" crossorigin="anonymous"></script>
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/go-crawler/docs/zh/docs/usage/configuration/index.xml" title="Go Crawler" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/go-crawler/docs/zh/"><span>Go Crawler</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="搜索" aria-label="搜索" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+  
+
+
+
+  
+    
+  
+
+
+  
+
+
+<ul class="book-languages">
+  <li>
+    <input type="checkbox" id="languages" class="toggle" />
+    <label for="languages" class="flex justify-between">
+      <a role="button" class="flex align-center">
+        <img src="/go-crawler/docs/svg/translate.svg" class="book-icon" alt="Languages" />
+        Chinese
+      </a>
+    </label>
+
+    <ul>
+      
+      <li>
+        <a href="/go-crawler/docs/docs/usage/configuration/">
+          English
+        </a>
+      </li>
+      
+    </ul>
+  </li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Docs</span>
+  
+
+          
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/introduction/" class="">介绍</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/" class="">使用</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/architecture/" class="">基本架构</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/options/" class="">选项</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/item/" class="">存储</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/tools/" class="">工具</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/middleware/" class="">中间件</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/pipeline/" class="">数据管道</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/request/" class="">请求</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/response/" class="">响应</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/signals/" class="">信号</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/proxy/" class="">代理</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/download/" class="">媒体下载</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/mock_server/" class="">模拟服务</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/configuration/" class="active">配置</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/startup/" class="">启动</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/parse/" class="">基于字段标签的网页解析</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/question/" class="">问答</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/example/" class="">示例代码</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/" class="">Admin</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/api/" class="">Api</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/ui/" class="">界面</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <span>Todo</span>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/lizongying/go-crawler"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://lizongying.github.io/go-crawler/"  target="_blank" rel="noopener">
+        Go Crawler Admin
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/go-crawler/docs/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>配置</h3>
+
+  <label for="toc-control">
+    
+    <img src="/go-crawler/docs/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li>
+          <ul>
+            <li><a href="#配置">配置</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h3 id="配置">
+  配置
+  <a class="anchor" href="#%e9%85%8d%e7%bd%ae">#</a>
+</h3>
+<p>在配置文件中的是全局配置，部分配置可以在爬虫中或者具体的请求中进行修改覆盖。
+配置文件需要在启动时通过环境变量或参数指定，以下是配置参数：</p>
+<ul>
+<li><code>env: dev</code> 环境。dev环境下不会写入数据库。</li>
+<li><code>bot_name: crawler</code> 项目名</li>
+</ul>
+<p>数据库配置：</p>
+<ul>
+<li><code>mongo_enable:</code> 是否启用MongoDB。</li>
+<li><code>mongo.example.uri:</code> MongoDB的URI。</li>
+<li><code>mongo.example.database:</code> MongoDB的数据库名称。</li>
+<li><code>mysql_enable:</code> 是否启用MySQL。</li>
+<li><code>mysql.example.uri:</code> MySQL的URI。</li>
+<li><code>mysql.example.database:</code> MySQL的数据库名称。</li>
+<li><code>redis_enable:</code> 是否启用Redis。</li>
+<li><code>redis.example.addr:</code> Redis的地址。</li>
+<li><code>redis.example.password:</code> Redis的密码。</li>
+<li><code>redis.example.db:</code> Redis的数据库。</li>
+<li><code>sqlite.0.name:</code> sqlite名称，自定义</li>
+<li><code>sqlite.0.path:</code> sqlite文件地址</li>
+<li><code>store.0.name:</code> 存储名称，自定义</li>
+<li><code>store.0.type:</code> 存储方式（如s3、cos、oss、minio、file等）</li>
+<li><code>store.0.endpoint:</code> 对象存储的地址或者本地文件存储地址如“file://tmp/”</li>
+<li><code>store.0.region:</code> 对象存储的区域。</li>
+<li><code>store.0.id:</code> 对象存储的ID。</li>
+<li><code>store.0.key:</code> 对象存储的密钥。</li>
+<li><code>store.0.bucket:</code> 对象存储的桶名称。</li>
+<li><code>kafka_enable:</code> 是否启用Kafka。</li>
+<li><code>kafka.example.uri:</code> Kafka的URI。</li>
+</ul>
+<p>日志配置：</p>
+<ul>
+<li>
+<p><code>log.filename:</code> 日志文件路径。可以使用&quot;{name}&ldquo;的方式替换成<code>-ldflags</code>的参数。</p>
+</li>
+<li>
+<p><code>log.long_file:</code> 如果设置为true（默认），则记录完整文件路径。</p>
+</li>
+<li>
+<p><code>log.level:</code> 日志级别，可选DEBUG/INFO/WARN/ERROR。</p>
+</li>
+<li>
+<p><code>mock_server</code>: 模拟服务</p>
+<ul>
+<li><code>enable: false</code> 是否启用模拟服务</li>
+<li><code>host: https://localhost:8081</code> 模拟服务的地址。</li>
+<li><code>client_auth: 0</code> 客户端验证类型，0 不验证。</li>
+</ul>
+</li>
+</ul>
+<p>中间件和Pipeline配置</p>
+<ul>
+<li><code>enable_stats_middleware:</code> 是否开启统计中间件，默认启用。</li>
+<li><code>enable_dump_middleware:</code> 是否开启打印请求和响应中间件，默认启用。</li>
+<li><code>enable_filter_middleware:</code> 是否开启过滤中间件，默认启用。</li>
+<li><code>enable_file_middleware:</code> 是否开启文件处理中间件，默认启用。</li>
+<li><code>enable_image_middleware:</code> 是否开启图片处理中间件，默认启用。</li>
+<li><code>enable_http_middleware:</code> 是否开启HTTP请求中间件，默认启用。</li>
+<li><code>enable_retry_middleware:</code> 是否开启请求重试中间件，默认启用。</li>
+<li><code>enable_referrer_middleware:</code> 是否开启Referrer中间件，默认启用。</li>
+<li><code>referrer_policy:</code> 设置Referrer策略，可选值为DefaultReferrerPolicy（默认）和NoReferrerPolicy。</li>
+<li><code>enable_http_auth_middleware:</code> 是否开启HTTP认证中间件，默认关闭。</li>
+<li><code>enable_cookie_middleware:</code>  是否开启Cookie中间件，默认启用。</li>
+<li><code>enable_url_middleware:</code> 是否开启URL长度限制中间件，默认启用。</li>
+<li><code>url_length_limit:</code> URL的最大长度限制，默认2083。</li>
+<li><code>enable_compress_middleware:</code> 是否开启响应解压缩中间件（gzip、deflate），默认启用。</li>
+<li><code>enable_decode_middleware:</code> 是否开启中文解码中间件（GBK、GB2312、Big5编码），默认启用。</li>
+<li><code>enable_redirect_middleware:</code> 是否开启重定向中间件，默认启用。</li>
+<li><code>redirect_max_times:</code> 重定向的最大次数，默认10。</li>
+<li><code>enable_chrome_middleware:</code> 是否开启Chrome模拟中间件，默认启用。</li>
+<li><code>enable_device_middleware:</code> 是否开启设备模拟中间件，默认关闭。</li>
+<li><code>enable_proxy_middleware:</code> 是否开启代理中间件，默认启用。</li>
+<li><code>enable_robots_txt_middleware:</code> 是否开启robots.txt支持中间件，默认关闭。</li>
+<li><code>enable_record_error_middleware:</code> 是否开启record_error支持中间件，默认关闭。</li>
+<li><code>enable_dump_pipeline:</code> 是否开启打印Item Pipeline，默认启用。</li>
+<li><code>enable_none_pipeline:</code> 是否开启none Pipeline，默认关闭。</li>
+<li><code>enable_file_pipeline:</code> 是否开启文件下载Pipeline，默认启用。</li>
+<li><code>enable_image_pipeline:</code> 是否开启图片下载Pipeline，默认启用。</li>
+<li><code>enable_filter_pipeline:</code> 是否开启过滤Pipeline，默认启用。</li>
+<li><code>enable_csv_pipeline:</code> 是否开启csv Pipeline，默认关闭。</li>
+<li><code>enable_json_lines_pipeline:</code> 是否开启json lines Pipeline，默认关闭。</li>
+<li><code>enable_mongo_pipeline:</code> 是否开启mongo Pipeline，默认关闭。</li>
+<li><code>enable_sqlite_pipeline:</code> 是否开启sqlite Pipeline，默认关闭。</li>
+<li><code>enable_mysql_pipeline:</code> 是否开启mysql Pipeline，默认关闭。</li>
+<li><code>enable_kafka_pipeline:</code> 是否开启kafka Pipeline，默认关闭。</li>
+<li><code>enable_priority_queue:</code> 是否开启优先级队列，默认开启，目前只支持redis。</li>
+</ul>
+<p>其他配置：</p>
+<ul>
+<li>proxy.example: 代理。</li>
+<li>request.concurrency: 请求并发数。</li>
+<li>request.interval: 请求间隔时间（毫秒）。默认1000毫秒（1秒）。</li>
+<li>request.timeout: 请求超时时间（秒）。默认60秒（1分钟）。</li>
+<li>request.ok_http_codes: 请求正常的HTTP状态码。</li>
+<li>request.retry_max_times: 请求重试的最大次数，默认10。</li>
+<li>request.http_proto: 请求的HTTP协议。默认<code>2.0</code></li>
+<li>enable_ja3: 是否修改/打印JA3指纹。默认关闭。</li>
+<li>scheduler: 调度方式，默认memory（内存调度），可选值memory、redis、kafka。选择redis或kafka后可以实现集群调度。</li>
+<li>filter: 过滤方式，默认memory（内存过滤），可选值memory、redis。选择redis后可以实现集群过滤。</li>
+</ul>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/lizongying/go-crawler/commit/0d29a6013d0269c87a1d1b13f41dbe8008281108" title='最后修改者 Li ZongYing | 十一月 8, 2023' target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/calendar.svg" class="book-icon" alt="" />
+      <span>十一月 8, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/lizongying/go-crawler/edit/development/docs/content/zh/docs/usage/configuration/_index.md" target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/edit.svg" class="book-icon" alt="" />
+      <span>编辑本页</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li>
+          <ul>
+            <li><a href="#配置">配置</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

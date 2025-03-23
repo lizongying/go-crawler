@@ -42,6 +42,9 @@ jobs:
 #      - name: Build Docs
 #        run: hugo --source docs --noBuildLock --destination ../static/dist/docs
 
+      - name: Copy Docs
+        run: copy -R docs/public static/dist/docs
+
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
