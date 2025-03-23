@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+  Middleware
+  #
+
+Middleware and Pipeline include built-in ones, commonly used custom ones (internal/middlewares, internal/pipelines),
+and custom ones defined within the spider&rsquo;s module.
+Please make sure that the order values for different middleware and pipelines are not duplicated.If there are
+duplicate order values, the later middleware or pipeline will replace the earlier ones.
+In the framework, built-in middleware has pre-defined order values that are multiples of 10, such as 10, 20, 30, and
+so on.To avoid conflicts with the order values of built-in middleware, it is recommended to choose
+different order values when defining custom middleware.">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="https://lizongying.github.io/go-crawler/docs/docs/usage/middleware/">
+  <meta property="og:site_name" content="Go Crawler">
+  <meta property="og:title" content="Middleware">
+  <meta property="og:description" content="Middleware # Middleware and Pipeline include built-in ones, commonly used custom ones (internal/middlewares, internal/pipelines), and custom ones defined within the spider’s module. Please make sure that the order values for different middleware and pipelines are not duplicated.If there are duplicate order values, the later middleware or pipeline will replace the earlier ones.
+In the framework, built-in middleware has pre-defined order values that are multiples of 10, such as 10, 20, 30, and so on.To avoid conflicts with the order values of built-in middleware, it is recommended to choose different order values when defining custom middleware.">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="website">
+<title>Middleware | Go Crawler</title>
+<link rel="icon" href="/go-crawler/docs/favicon.png" >
+<link rel="manifest" href="/go-crawler/docs/manifest.json">
+<link rel="canonical" href="https://lizongying.github.io/go-crawler/docs/docs/usage/middleware/">
+  <link rel="alternate" hreflang="zh" href="https://lizongying.github.io/go-crawler/docs/zh/docs/usage/middleware/" title="中间件">
+<link rel="stylesheet" href="/go-crawler/docs/book.min.6c8b9d2a1fc95075ed7da46ca81060b39add8fff6741ac51259f768929281e2c.css" integrity="sha256-bIudKh/JUHXtfaRsqBBgs5rdj/9nQaxRJZ92iSkoHiw=" crossorigin="anonymous">
+  <script defer src="/go-crawler/docs/fuse.min.js"></script>
+  <script defer src="/go-crawler/docs/en.search.min.aca0e7cbd28cf468b1858107f51a7c5782bc901eb4c7187c1f39b137abb168bf.js" integrity="sha256-rKDny9KM9GixhYEH9Rp8V4K8kB60xxh8HzmxN6uxaL8=" crossorigin="anonymous"></script>
+
+  <script defer src="/go-crawler/docs/sw.min.8f5f8d39ce37f8232a7f0317a8026655f90799b045d8556ccd203097bfcc6627.js" integrity="sha256-j1&#43;NOc43&#43;CMqfwMXqAJmVfkHmbBF2FVszSAwl7/MZic=" crossorigin="anonymous"></script>
+<link rel="alternate" type="application/rss+xml" href="https://lizongying.github.io/go-crawler/docs/docs/usage/middleware/index.xml" title="Go Crawler" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/go-crawler/docs/"><span>Go Crawler</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+  
+
+
+
+  
+    
+  
+
+
+  
+
+
+<ul class="book-languages">
+  <li>
+    <input type="checkbox" id="languages" class="toggle" />
+    <label for="languages" class="flex justify-between">
+      <a role="button" class="flex align-center">
+        <img src="/go-crawler/docs/svg/translate.svg" class="book-icon" alt="Languages" />
+        English
+      </a>
+    </label>
+
+    <ul>
+      
+      <li>
+        <a href="/go-crawler/docs/zh/docs/usage/middleware/">
+          Chinese
+        </a>
+      </li>
+      
+    </ul>
+  </li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Docs</span>
+  
+
+          
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/introduction/" class="">Introduction</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/" class="">Usage</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/architecture/" class="">Basic Architecture</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/options/" class="">Options</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/item/" class="">Item</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/tools/" class="">Tools</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/middleware/" class="active">Middleware</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/pipeline/" class="">Pipeline</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/request/" class="">Request</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/response/" class="">Response</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/signals/" class="">Signals</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/proxy/" class="">Proxy</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/download/" class="">Media Downloads</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/mock_server/" class="">Mock Server</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/configuration/" class="">Configuration</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/startup/" class="">Startup</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/parse/" class="">Web Page Parsing Based on Field Tags</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/question/" class="">Q &amp; A</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/example/" class="">Example Code</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/admin/" class="">Admin</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/admin/api/" class="">Api</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/admin/ui/" class="">UI</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <span>Todo</span>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/lizongying/go-crawler"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://lizongying.github.io/go-crawler/"  target="_blank" rel="noopener">
+        Go Crawler Admin
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/go-crawler/docs/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>Middleware</h3>
+
+  <label for="toc-control">
+    
+    <img src="/go-crawler/docs/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#middleware">Middleware</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h2 id="middleware">
+  Middleware
+  <a class="anchor" href="#middleware">#</a>
+</h2>
+<p>Middleware and Pipeline include built-in ones, commonly used custom ones (internal/middlewares, internal/pipelines),
+and custom ones defined within the spider&rsquo;s module.
+Please make sure that the order values for different middleware and pipelines are not duplicated.If there are
+duplicate order values, the later middleware or pipeline will replace the earlier ones.</p>
+<p>In the framework, built-in middleware has pre-defined <code>order</code> values that are multiples of 10, such as 10, 20, 30, and
+so on.To avoid conflicts with the <code>order</code> values of built-in middleware, it is recommended to choose
+different <code>order</code> values when defining custom middleware.</p>
+<p>When customizing middleware, arrange them in the expected execution order based on their functionalities and
+requirements.Make sure that middleware with lower <code>order</code> values is executed first, followed by middleware with
+higher <code>order</code> values.</p>
+<p>Built-in middleware and custom middleware can use the default <code>order</code> values.If you need to change the
+default <code>order</code> value, <code>spider.WithOptions(pkg.WithMiddleware(new(middleware), order)</code> to
+enable the middleware with the specified <code>order</code> value.</p>
+<p>The following are the built-in middleware with their respective <code>order</code> values:</p>
+<ul>
+<li>custom: 10
+<ul>
+<li>Custom middleware.</li>
+<li><code>spider.WithOptions(pkg.WithCustomMiddleware(new(CustomMiddleware))</code></li>
+</ul>
+</li>
+<li>retry: 20
+<ul>
+<li>Request retry middleware used for retrying requests when they fail.</li>
+<li>The default maximum number of retries is 10. You can control whether to enable this middleware by configuring
+the <code>enable_retry_middleware</code> option, which is enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithRetryMiddleware()</code></li>
+</ul>
+</li>
+<li>dump: 30
+<ul>
+<li>Console dump middleware used for printing detailed information of item.data, including request and response
+details.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_dump_middleware</code> option, which is
+enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithDumpMiddleware()</code></li>
+</ul>
+</li>
+<li>proxy: 40
+<ul>
+<li>Proxy switch middleware used for switching proxies for requests.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_proxy_middleware</code> option, which
+is enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithProxyMiddleware()</code></li>
+</ul>
+</li>
+<li>robotsTxt: 50
+<ul>
+<li>Robots.txt support middleware for handling robots.txt files of websites.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_robots_txt_middleware</code> option,
+which is disabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithRobotsTxtMiddleware()</code></li>
+</ul>
+</li>
+<li>filter: 60
+<ul>
+<li>Request deduplication middleware used for filtering duplicate requests.By default, items are added to the
+deduplication queue only after being successfully saved.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_filter_middleware</code> option, which
+is enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithFilterMiddleware()</code></li>
+</ul>
+</li>
+<li>file: 70
+<ul>
+<li>Automatic file information addition middleware used for automatically adding file information to requests.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_file_middleware</code> option, which is
+disabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithFileMiddleware()</code></li>
+</ul>
+</li>
+<li>image: 80
+<ul>
+<li>Automatic image information addition middleware used for automatically adding image information to requests.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_image_middleware</code> option, which
+is disabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithImageMiddleware()</code></li>
+</ul>
+</li>
+<li>url: 90
+<ul>
+<li>URL length limiting middleware used for limiting the length of requests&rsquo; URLs.</li>
+<li>You can control whether to enable this middleware and set the maximum URL length by configuring
+the <code>enable_url_middleware</code> and <code>url_length_limit</code> options, respectively.Both options are enabled and set to
+2083 by default.</li>
+<li><code>spider.WithOptions(pkg.WithUrlMiddleware()</code></li>
+</ul>
+</li>
+<li>referrer: 100
+<ul>
+<li>Automatic referrer addition middleware used for automatically adding the referrer to requests.</li>
+<li>You can choose different referrer policies based on the <code>referrer_policy</code> configuration
+option.<code>DefaultReferrerPolicy</code> includes the request source, while <code>NoReferrerPolicy</code> does not include the
+request source.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_referrer_middleware</code> option,
+which is enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithReferrerMiddleware()</code></li>
+</ul>
+</li>
+<li>cookie: 110
+<ul>
+<li>Automatic cookie addition middleware used for automatically adding cookies returned from previous requests to
+subsequent requests.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_cookie_middleware</code> option, which
+is enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithCookieMiddleware()</code></li>
+</ul>
+</li>
+<li>redirect: 120
+<ul>
+<li>Website redirection middleware used for handling URL redirection.By default, it supports 301 and 302
+redirects.</li>
+<li>You can control whether to enable this middleware and set the maximum number of redirections by
+configuring
+the <code>enable_redirect_middleware</code> and <code>redirect_max_times</code> options, respectively.Both options are enabled
+and set
+to 1 by default.</li>
+<li><code>spider.WithOptions(pkg.WithRedirectMiddleware()</code></li>
+</ul>
+</li>
+<li>chrome: 130
+<ul>
+<li>Chrome simulation middleware used for simulating a Chrome browser.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_chrome_middleware</code> option,
+which is
+enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithChromeMiddleware()</code></li>
+</ul>
+</li>
+<li>httpAuth: 140
+<ul>
+<li>HTTP authentication middleware used for performing HTTP authentication by providing a username and
+password.</li>
+<li>You need to set the username and password in the specific request.You can control whether to enable this
+middleware by configuring the <code>enable_http_auth_middleware</code> option, which is disabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithHttpAuthMiddleware()</code></li>
+</ul>
+</li>
+<li>compress: 150
+<ul>
+<li>Gzip/deflate/br decompression middleware used for handling response compression encoding.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_compress_middleware</code> option,
+which is
+enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithCompressMiddleware()</code></li>
+</ul>
+</li>
+<li>decode: 160
+<ul>
+<li>Chinese decoding middleware used for decoding responses with GBK, GB2312, GB18030,and Big5 encodings.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_decode_middleware</code> option,
+which is
+enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithDecodeMiddleware()</code></li>
+</ul>
+</li>
+<li>device: 170
+<ul>
+<li>Modify request device information middleware used for modifying the device information of requests,
+including
+request headers and TLS information.Currently, only User-Agent random switching is supported.</li>
+<li>You need to set the device range (Platforms) and browser range (Browsers).</li>
+<li>Platforms: Windows/Mac/Android/Iphone/Ipad/Linux</li>
+<li>Browsers: Chrome/Edge/Safari/FireFox</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_device_middleware</code> option,
+which is
+disabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithDeviceMiddleware()</code></li>
+</ul>
+</li>
+<li>http: 200
+<ul>
+<li>Create request middleware used for creating HTTP requests.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_http_middleware</code> option,
+which is
+enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithHttpMiddleware()</code></li>
+</ul>
+</li>
+<li>stats: 210
+<ul>
+<li>Data statistics middleware used for collecting statistics on requests, responses, and processing in the
+spider.</li>
+<li>You can control whether to enable this middleware by configuring the <code>enable_stats_middleware</code> option,
+which is
+enabled by default.</li>
+<li><code>spider.WithOptions(pkg.WithStatsMiddleware()</code></li>
+</ul>
+</li>
+<li>recordError: 220
+<ul>
+<li>Error recording middleware used to log requests and errors occurring during request processing.</li>
+<li>It can be enabled or disabled using the configuration option <code>enable_record_error_middleware</code>, disabled by
+default.</li>
+<li><code>spider.WithOptions(pkg.WithRecordErrorMiddleware()</code></li>
+</ul>
+</li>
+</ul>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/lizongying/go-crawler/commit/0d29a6013d0269c87a1d1b13f41dbe8008281108" title='Last modified by Li ZongYing | November 8, 2023' target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/calendar.svg" class="book-icon" alt="" />
+      <span>November 8, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/lizongying/go-crawler/edit/development/docs/content/en/docs/usage/middleware/_index.md" target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/edit.svg" class="book-icon" alt="" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#middleware">Middleware</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

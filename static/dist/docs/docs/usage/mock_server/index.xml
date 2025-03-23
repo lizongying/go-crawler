@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Mock Server on Go Crawler</title>
+    <link>https://lizongying.github.io/go-crawler/docs/docs/usage/mock_server/</link>
+    <description>Recent content in Mock Server on Go Crawler</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <atom:link href="https://lizongying.github.io/go-crawler/docs/docs/usage/mock_server/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>

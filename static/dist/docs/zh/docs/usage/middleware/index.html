@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="zh" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+  中间件
+  #
+
+middleware/pipeline包括框架内置、公共自定义（internal/middlewares，internal/pipelines）和爬虫内自定义（和爬虫同module）。
+请确保不同中间件和Pipeline的order值不重复。如果有重复的order值，后面的中间件或Pipeline将替换前面的中间件或Pipeline。
+在框架中，内置的中间件具有预定义的order值，这些order值是10的倍数，例如10、20、30等。
+为了避免与内置中间件的order冲突，建议自定义中间件时选择不同的order值。
+当您自定义中间件时，请选择避开内置中间件的order值。
+根据中间件的功能和需求，按照预期的执行顺序进行配置。确保较低order值的中间件先执行，然后依次执行较高order值的中间件。
+内置的中间件和自定义中间件使用默认的order值即可。
+如果需要改变默认的order值，需要spider.WithOptions(pkg.WithMiddleware(new(middleware), order)启用该中间件并应用该order值。
+
+custom: 10
+
+自定义中间件
+spider.WithOptions(pkg.WithCustomMiddleware(new(CustomMiddleware))
+
+
+retry: 20
+
+请求重试中间件，用于在请求失败时进行重试。
+默认最大重试次数为10。可以通过配置项enable_retry_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithRetryMiddleware()
+
+
+dump: 30
+
+控制台打印item.data中间件，用于打印请求和响应的详细信息。
+可以通过配置项enable_dump_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithDumpMiddleware()
+
+
+proxy: 40
+
+用于切换请求使用的代理。
+可以通过配置项enable_proxy_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithProxyMiddleware()
+
+
+robotsTxt: 50
+
+robots.txt支持中间件，用于支持爬取网站的robots.txt文件。
+可以通过配置项enable_robots_txt_middleware来启用或禁用，默认禁用。
+spider.WithOptions(pkg.WithRobotsTxtMiddleware()
+
+
+filter: 60
+
+过滤重复请求中间件，用于过滤重复的请求。默认只有在Item保存成功后才会进入去重队列。
+可以通过配置项enable_filter_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithFilterMiddleware()
+
+
+file: 70
+
+自动添加文件信息中间件，用于自动添加文件信息到请求中。
+可以通过配置项enable_file_middleware来启用或禁用，默认禁用。
+spider.WithOptions(pkg.WithFileMiddleware()
+
+
+image: 80
+
+自动添加图片的宽高等信息中间件
+用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。
+spider.WithOptions(pkg.WithImageMiddleware()
+
+
+url: 90
+
+限制URL长度中间件，用于限制请求的URL长度。
+可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。
+spider.WithOptions(pkg.WithUrlMiddleware()
+
+
+referrer: 100
+
+自动添加Referrer中间件，用于自动添加Referrer到请求中。
+可以根据referrer_policy配置项选择不同的Referrer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源
+配置 enable_referrer_middleware: true 是否开启自动添加referrer，默认启用。
+spider.WithOptions(pkg.WithReferrerMiddleware()
+
+
+cookie: 110
+
+自动添加Cookie中间件，用于自动添加之前请求返回的Cookie到后续请求中。
+可以通过配置项enable_cookie_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithCookieMiddleware()
+
+
+redirect: 120
+
+网址重定向中间件，用于处理网址重定向，默认支持301和302重定向。
+可以通过配置项enable_redirect_middleware和redirect_max_times来启用和设置最大重定向次数，默认启用和最大次数为1。
+spider.WithOptions(pkg.WithRedirectMiddleware()
+
+
+chrome: 130
+
+模拟Chrome中间件，用于模拟Chrome浏览器。
+可以通过配置项enable_chrome_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithChromeMiddleware()
+
+
+httpAuth: 140
+
+HTTP认证中间件，通过提供用户名（username）和密码（password）进行HTTP认证。
+需要在具体的请求中设置用户名和密码。可以通过配置项enable_http_auth_middleware来启用或禁用，默认禁用。
+spider.WithOptions(pkg.WithHttpAuthMiddleware()
+
+
+compress: 150
+
+支持gzip/deflate/br解压缩中间件，用于处理响应的压缩编码。
+可以通过配置项enable_compress_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithCompressMiddleware()
+
+
+decode: 160
+
+中文解码中间件，支持对响应中的GBK、GB2312、GB18030和Big5编码进行解码。
+可以通过配置项enable_decode_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithDecodeMiddleware()
+
+
+device: 170
+
+修改请求设备信息中间件，用于修改请求的设备信息，包括请求头（header）和TLS信息。目前只支持User-Agent随机切换。
+需要设置设备范围（Platforms）和浏览器范围（Browsers）。
+Platforms: Windows/Mac/Android/Iphone/Ipad/Linux
+Browsers: Chrome/Edge/Safari/FireFox
+可以通过配置项enable_device_middleware来启用或禁用，默认禁用。
+spider.WithOptions(pkg.WithDeviceMiddleware()
+
+
+http: 200
+
+创建请求中间件，用于创建HTTP请求。
+可以通过配置项enable_http_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithHttpMiddleware()
+
+
+stats: 210
+
+数据统计中间件，用于统计爬虫的请求、响应和处理情况。
+可以通过配置项enable_stats_middleware来启用或禁用，默认启用。
+spider.WithOptions(pkg.WithStatsMiddleware()
+
+
+recordError: 220
+
+错误记录中间件，用于记录请求，以及请求和解析中出现的错误。
+可以通过配置项enable_record_error_middleware来启用或禁用，默认禁用。
+spider.WithOptions(pkg.WithRecordErrorMiddleware())
+
+
+">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="https://lizongying.github.io/go-crawler/docs/zh/docs/usage/middleware/">
+  <meta property="og:site_name" content="Go Crawler">
+  <meta property="og:title" content="中间件">
+  <meta property="og:description" content="中间件 # middleware/pipeline包括框架内置、公共自定义（internal/middlewares，internal/pipelines）和爬虫内自定义（和爬虫同module）。 请确保不同中间件和Pipeline的order值不重复。如果有重复的order值，后面的中间件或Pipeline将替换前面的中间件或Pipeline。
+在框架中，内置的中间件具有预定义的order值，这些order值是10的倍数，例如10、20、30等。 为了避免与内置中间件的order冲突，建议自定义中间件时选择不同的order值。 当您自定义中间件时，请选择避开内置中间件的order值。 根据中间件的功能和需求，按照预期的执行顺序进行配置。确保较低order值的中间件先执行，然后依次执行较高order值的中间件。 内置的中间件和自定义中间件使用默认的order值即可。 如果需要改变默认的order值，需要spider.WithOptions(pkg.WithMiddleware(new(middleware), order)启用该中间件并应用该order值。
+custom: 10 自定义中间件 spider.WithOptions(pkg.WithCustomMiddleware(new(CustomMiddleware)) retry: 20 请求重试中间件，用于在请求失败时进行重试。 默认最大重试次数为10。可以通过配置项enable_retry_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithRetryMiddleware() dump: 30 控制台打印item.data中间件，用于打印请求和响应的详细信息。 可以通过配置项enable_dump_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithDumpMiddleware() proxy: 40 用于切换请求使用的代理。 可以通过配置项enable_proxy_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithProxyMiddleware() robotsTxt: 50 robots.txt支持中间件，用于支持爬取网站的robots.txt文件。 可以通过配置项enable_robots_txt_middleware来启用或禁用，默认禁用。 spider.WithOptions(pkg.WithRobotsTxtMiddleware() filter: 60 过滤重复请求中间件，用于过滤重复的请求。默认只有在Item保存成功后才会进入去重队列。 可以通过配置项enable_filter_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithFilterMiddleware() file: 70 自动添加文件信息中间件，用于自动添加文件信息到请求中。 可以通过配置项enable_file_middleware来启用或禁用，默认禁用。 spider.WithOptions(pkg.WithFileMiddleware() image: 80 自动添加图片的宽高等信息中间件 用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。 spider.WithOptions(pkg.WithImageMiddleware() url: 90 限制URL长度中间件，用于限制请求的URL长度。 可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。 spider.WithOptions(pkg.WithUrlMiddleware() referrer: 100 自动添加Referrer中间件，用于自动添加Referrer到请求中。 可以根据referrer_policy配置项选择不同的Referrer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源 配置 enable_referrer_middleware: true 是否开启自动添加referrer，默认启用。 spider.WithOptions(pkg.WithReferrerMiddleware() cookie: 110 自动添加Cookie中间件，用于自动添加之前请求返回的Cookie到后续请求中。 可以通过配置项enable_cookie_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithCookieMiddleware() redirect: 120 网址重定向中间件，用于处理网址重定向，默认支持301和302重定向。 可以通过配置项enable_redirect_middleware和redirect_max_times来启用和设置最大重定向次数，默认启用和最大次数为1。 spider.WithOptions(pkg.WithRedirectMiddleware() chrome: 130 模拟Chrome中间件，用于模拟Chrome浏览器。 可以通过配置项enable_chrome_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithChromeMiddleware() httpAuth: 140 HTTP认证中间件，通过提供用户名（username）和密码（password）进行HTTP认证。 需要在具体的请求中设置用户名和密码。可以通过配置项enable_http_auth_middleware来启用或禁用，默认禁用。 spider.WithOptions(pkg.WithHttpAuthMiddleware() compress: 150 支持gzip/deflate/br解压缩中间件，用于处理响应的压缩编码。 可以通过配置项enable_compress_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithCompressMiddleware() decode: 160 中文解码中间件，支持对响应中的GBK、GB2312、GB18030和Big5编码进行解码。 可以通过配置项enable_decode_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithDecodeMiddleware() device: 170 修改请求设备信息中间件，用于修改请求的设备信息，包括请求头（header）和TLS信息。目前只支持User-Agent随机切换。 需要设置设备范围（Platforms）和浏览器范围（Browsers）。 Platforms: Windows/Mac/Android/Iphone/Ipad/Linux Browsers: Chrome/Edge/Safari/FireFox 可以通过配置项enable_device_middleware来启用或禁用，默认禁用。 spider.WithOptions(pkg.WithDeviceMiddleware() http: 200 创建请求中间件，用于创建HTTP请求。 可以通过配置项enable_http_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithHttpMiddleware() stats: 210 数据统计中间件，用于统计爬虫的请求、响应和处理情况。 可以通过配置项enable_stats_middleware来启用或禁用，默认启用。 spider.WithOptions(pkg.WithStatsMiddleware() recordError: 220 错误记录中间件，用于记录请求，以及请求和解析中出现的错误。 可以通过配置项enable_record_error_middleware来启用或禁用，默认禁用。 spider.WithOptions(pkg.WithRecordErrorMiddleware())">
+  <meta property="og:locale" content="zh">
+  <meta property="og:type" content="website">
+<title>中间件 | Go Crawler</title>
+<link rel="icon" href="/go-crawler/docs/favicon.png" >
+<link rel="manifest" href="/go-crawler/docs/manifest.json">
+<link rel="canonical" href="https://lizongying.github.io/go-crawler/docs/zh/docs/usage/middleware/">
+  <link rel="alternate" hreflang="en" href="https://lizongying.github.io/go-crawler/docs/docs/usage/middleware/" title="Middleware">
+<link rel="stylesheet" href="/go-crawler/docs/book.min.6c8b9d2a1fc95075ed7da46ca81060b39add8fff6741ac51259f768929281e2c.css" integrity="sha256-bIudKh/JUHXtfaRsqBBgs5rdj/9nQaxRJZ92iSkoHiw=" crossorigin="anonymous">
+  <script defer src="/go-crawler/docs/fuse.min.js"></script>
+  <script defer src="/go-crawler/docs/zh.search.min.7ecfb16fa3a3cb9f912fccea1a3fe67701ac41faffe9f340d0f03ecbddb9cb31.js" integrity="sha256-fs&#43;xb6Ojy5&#43;RL8zqGj/mdwGsQfr/6fNA0PA&#43;y925yzE=" crossorigin="anonymous"></script>
+
+  <script defer src="/go-crawler/docs/sw.min.8f5f8d39ce37f8232a7f0317a8026655f90799b045d8556ccd203097bfcc6627.js" integrity="sha256-j1&#43;NOc43&#43;CMqfwMXqAJmVfkHmbBF2FVszSAwl7/MZic=" crossorigin="anonymous"></script>
+<link rel="alternate" type="application/rss+xml" href="https://lizongying.github.io/go-crawler/docs/zh/docs/usage/middleware/index.xml" title="Go Crawler" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/go-crawler/docs/zh/"><span>Go Crawler</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="搜索" aria-label="搜索" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+  
+
+
+
+  
+    
+  
+
+
+  
+
+
+<ul class="book-languages">
+  <li>
+    <input type="checkbox" id="languages" class="toggle" />
+    <label for="languages" class="flex justify-between">
+      <a role="button" class="flex align-center">
+        <img src="/go-crawler/docs/svg/translate.svg" class="book-icon" alt="Languages" />
+        Chinese
+      </a>
+    </label>
+
+    <ul>
+      
+      <li>
+        <a href="/go-crawler/docs/docs/usage/middleware/">
+          English
+        </a>
+      </li>
+      
+    </ul>
+  </li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Docs</span>
+  
+
+          
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/introduction/" class="">介绍</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/" class="">使用</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/architecture/" class="">基本架构</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/options/" class="">选项</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/item/" class="">存储</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/tools/" class="">工具</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/middleware/" class="active">中间件</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/pipeline/" class="">数据管道</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/request/" class="">请求</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/response/" class="">响应</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/signals/" class="">信号</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/proxy/" class="">代理</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/download/" class="">媒体下载</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/mock_server/" class="">模拟服务</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/configuration/" class="">配置</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/startup/" class="">启动</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/parse/" class="">基于字段标签的网页解析</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/question/" class="">问答</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/example/" class="">示例代码</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/" class="">Admin</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/api/" class="">Api</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/ui/" class="">界面</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <span>Todo</span>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/lizongying/go-crawler"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://lizongying.github.io/go-crawler/"  target="_blank" rel="noopener">
+        Go Crawler Admin
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/go-crawler/docs/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>中间件</h3>
+
+  <label for="toc-control">
+    
+    <img src="/go-crawler/docs/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li>
+          <ul>
+            <li><a href="#中间件">中间件</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h3 id="中间件">
+  中间件
+  <a class="anchor" href="#%e4%b8%ad%e9%97%b4%e4%bb%b6">#</a>
+</h3>
+<p>middleware/pipeline包括框架内置、公共自定义（internal/middlewares，internal/pipelines）和爬虫内自定义（和爬虫同module）。
+请确保不同中间件和Pipeline的order值不重复。如果有重复的order值，后面的中间件或Pipeline将替换前面的中间件或Pipeline。</p>
+<p>在框架中，内置的中间件具有预定义的order值，这些order值是10的倍数，例如10、20、30等。
+为了避免与内置中间件的order冲突，建议自定义中间件时选择不同的order值。
+当您自定义中间件时，请选择避开内置中间件的order值。
+根据中间件的功能和需求，按照预期的执行顺序进行配置。确保较低order值的中间件先执行，然后依次执行较高order值的中间件。
+内置的中间件和自定义中间件使用默认的order值即可。
+如果需要改变默认的order值，需要<code>spider.WithOptions(pkg.WithMiddleware(new(middleware), order)</code>启用该中间件并应用该order值。</p>
+<ul>
+<li>custom: 10
+<ul>
+<li>自定义中间件</li>
+<li><code>spider.WithOptions(pkg.WithCustomMiddleware(new(CustomMiddleware))</code></li>
+</ul>
+</li>
+<li>retry: 20
+<ul>
+<li>请求重试中间件，用于在请求失败时进行重试。</li>
+<li>默认最大重试次数为10。可以通过配置项enable_retry_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithRetryMiddleware()</code></li>
+</ul>
+</li>
+<li>dump: 30
+<ul>
+<li>控制台打印item.data中间件，用于打印请求和响应的详细信息。</li>
+<li>可以通过配置项enable_dump_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithDumpMiddleware()</code></li>
+</ul>
+</li>
+<li>proxy: 40
+<ul>
+<li>用于切换请求使用的代理。</li>
+<li>可以通过配置项enable_proxy_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithProxyMiddleware()</code></li>
+</ul>
+</li>
+<li>robotsTxt: 50
+<ul>
+<li>robots.txt支持中间件，用于支持爬取网站的robots.txt文件。</li>
+<li>可以通过配置项enable_robots_txt_middleware来启用或禁用，默认禁用。</li>
+<li><code>spider.WithOptions(pkg.WithRobotsTxtMiddleware()</code></li>
+</ul>
+</li>
+<li>filter: 60
+<ul>
+<li>过滤重复请求中间件，用于过滤重复的请求。默认只有在Item保存成功后才会进入去重队列。</li>
+<li>可以通过配置项enable_filter_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithFilterMiddleware()</code></li>
+</ul>
+</li>
+<li>file: 70
+<ul>
+<li>自动添加文件信息中间件，用于自动添加文件信息到请求中。</li>
+<li>可以通过配置项enable_file_middleware来启用或禁用，默认禁用。</li>
+<li><code>spider.WithOptions(pkg.WithFileMiddleware()</code></li>
+</ul>
+</li>
+<li>image: 80
+<ul>
+<li>自动添加图片的宽高等信息中间件</li>
+<li>用于自动添加图片信息到请求中。可以通过配置项enable_image_middleware来启用或禁用，默认禁用。</li>
+<li><code>spider.WithOptions(pkg.WithImageMiddleware()</code></li>
+</ul>
+</li>
+<li>url: 90
+<ul>
+<li>限制URL长度中间件，用于限制请求的URL长度。</li>
+<li>可以通过配置项enable_url_middleware和url_length_limit来启用和设置最长URL长度，默认启用和最长长度为2083。</li>
+<li><code>spider.WithOptions(pkg.WithUrlMiddleware()</code></li>
+</ul>
+</li>
+<li>referrer: 100
+<ul>
+<li>自动添加Referrer中间件，用于自动添加Referrer到请求中。</li>
+<li>可以根据referrer_policy配置项选择不同的Referrer策略，DefaultReferrerPolicy会加入请求来源，NoReferrerPolicy不加入请求来源</li>
+<li>配置 enable_referrer_middleware: true 是否开启自动添加referrer，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithReferrerMiddleware()</code></li>
+</ul>
+</li>
+<li>cookie: 110
+<ul>
+<li>自动添加Cookie中间件，用于自动添加之前请求返回的Cookie到后续请求中。</li>
+<li>可以通过配置项enable_cookie_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithCookieMiddleware()</code></li>
+</ul>
+</li>
+<li>redirect: 120
+<ul>
+<li>网址重定向中间件，用于处理网址重定向，默认支持301和302重定向。</li>
+<li>可以通过配置项enable_redirect_middleware和redirect_max_times来启用和设置最大重定向次数，默认启用和最大次数为1。</li>
+<li><code>spider.WithOptions(pkg.WithRedirectMiddleware()</code></li>
+</ul>
+</li>
+<li>chrome: 130
+<ul>
+<li>模拟Chrome中间件，用于模拟Chrome浏览器。</li>
+<li>可以通过配置项enable_chrome_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithChromeMiddleware()</code></li>
+</ul>
+</li>
+<li>httpAuth: 140
+<ul>
+<li>HTTP认证中间件，通过提供用户名（username）和密码（password）进行HTTP认证。</li>
+<li>需要在具体的请求中设置用户名和密码。可以通过配置项enable_http_auth_middleware来启用或禁用，默认禁用。</li>
+<li><code>spider.WithOptions(pkg.WithHttpAuthMiddleware()</code></li>
+</ul>
+</li>
+<li>compress: 150
+<ul>
+<li>支持gzip/deflate/br解压缩中间件，用于处理响应的压缩编码。</li>
+<li>可以通过配置项enable_compress_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithCompressMiddleware()</code></li>
+</ul>
+</li>
+<li>decode: 160
+<ul>
+<li>中文解码中间件，支持对响应中的GBK、GB2312、GB18030和Big5编码进行解码。</li>
+<li>可以通过配置项enable_decode_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithDecodeMiddleware()</code></li>
+</ul>
+</li>
+<li>device: 170
+<ul>
+<li>修改请求设备信息中间件，用于修改请求的设备信息，包括请求头（header）和TLS信息。目前只支持User-Agent随机切换。</li>
+<li>需要设置设备范围（Platforms）和浏览器范围（Browsers）。</li>
+<li>Platforms: Windows/Mac/Android/Iphone/Ipad/Linux</li>
+<li>Browsers: Chrome/Edge/Safari/FireFox</li>
+<li>可以通过配置项enable_device_middleware来启用或禁用，默认禁用。</li>
+<li><code>spider.WithOptions(pkg.WithDeviceMiddleware()</code></li>
+</ul>
+</li>
+<li>http: 200
+<ul>
+<li>创建请求中间件，用于创建HTTP请求。</li>
+<li>可以通过配置项enable_http_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithHttpMiddleware()</code></li>
+</ul>
+</li>
+<li>stats: 210
+<ul>
+<li>数据统计中间件，用于统计爬虫的请求、响应和处理情况。</li>
+<li>可以通过配置项enable_stats_middleware来启用或禁用，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithStatsMiddleware()</code></li>
+</ul>
+</li>
+<li>recordError: 220
+<ul>
+<li>错误记录中间件，用于记录请求，以及请求和解析中出现的错误。</li>
+<li>可以通过配置项enable_record_error_middleware来启用或禁用，默认禁用。</li>
+<li><code>spider.WithOptions(pkg.WithRecordErrorMiddleware())</code></li>
+</ul>
+</li>
+</ul>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/lizongying/go-crawler/commit/0d29a6013d0269c87a1d1b13f41dbe8008281108" title='最后修改者 Li ZongYing | 十一月 8, 2023' target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/calendar.svg" class="book-icon" alt="" />
+      <span>十一月 8, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/lizongying/go-crawler/edit/development/docs/content/zh/docs/usage/middleware/_index.md" target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/edit.svg" class="book-icon" alt="" />
+      <span>编辑本页</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li>
+          <ul>
+            <li><a href="#中间件">中间件</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

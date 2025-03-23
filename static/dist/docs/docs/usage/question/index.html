@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+  Question
+  #
+
+
+
+In some frameworks, there is a presence of start_urls. How is it set up in this framework?
+In this framework, this approach has been removed. It&rsquo;s possible to explicitly create requests within the initial
+method and perform additional processing on those requests, which can actually be more convenient.
+startUrls := []string{&#34;/a.html&#34;, &#34;/b.html&#34;}
+for _, v:=range startUrls {
+	if err = s.YieldRequest(ctx, request.NewRequest().
+        SetUrl(fmt.Sprintf(&#34;https://a.com%s&#34;, v)).
+        SetCallBack(s.Parse)); err != nil {
+        s.logger.Error(err)
+    }
+}
+
+
+What are the ways to improve spider performance?">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="https://lizongying.github.io/go-crawler/docs/docs/usage/question/">
+  <meta property="og:site_name" content="Go Crawler">
+  <meta property="og:title" content="Q & A">
+  <meta property="og:description" content="Question # In some frameworks, there is a presence of start_urls. How is it set up in this framework?
+In this framework, this approach has been removed. It’s possible to explicitly create requests within the initial method and perform additional processing on those requests, which can actually be more convenient.
+startUrls := []string{&#34;/a.html&#34;, &#34;/b.html&#34;} for _, v:=range startUrls { if err = s.YieldRequest(ctx, request.NewRequest(). SetUrl(fmt.Sprintf(&#34;https://a.com%s&#34;, v)). SetCallBack(s.Parse)); err != nil { s.logger.Error(err) } } What are the ways to improve spider performance?">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="website">
+<title>Q &amp; A | Go Crawler</title>
+<link rel="icon" href="/go-crawler/docs/favicon.png" >
+<link rel="manifest" href="/go-crawler/docs/manifest.json">
+<link rel="canonical" href="https://lizongying.github.io/go-crawler/docs/docs/usage/question/">
+  <link rel="alternate" hreflang="zh" href="https://lizongying.github.io/go-crawler/docs/zh/docs/usage/question/" title="问答">
+<link rel="stylesheet" href="/go-crawler/docs/book.min.6c8b9d2a1fc95075ed7da46ca81060b39add8fff6741ac51259f768929281e2c.css" integrity="sha256-bIudKh/JUHXtfaRsqBBgs5rdj/9nQaxRJZ92iSkoHiw=" crossorigin="anonymous">
+  <script defer src="/go-crawler/docs/fuse.min.js"></script>
+  <script defer src="/go-crawler/docs/en.search.min.aca0e7cbd28cf468b1858107f51a7c5782bc901eb4c7187c1f39b137abb168bf.js" integrity="sha256-rKDny9KM9GixhYEH9Rp8V4K8kB60xxh8HzmxN6uxaL8=" crossorigin="anonymous"></script>
+
+  <script defer src="/go-crawler/docs/sw.min.8f5f8d39ce37f8232a7f0317a8026655f90799b045d8556ccd203097bfcc6627.js" integrity="sha256-j1&#43;NOc43&#43;CMqfwMXqAJmVfkHmbBF2FVszSAwl7/MZic=" crossorigin="anonymous"></script>
+<link rel="alternate" type="application/rss+xml" href="https://lizongying.github.io/go-crawler/docs/docs/usage/question/index.xml" title="Go Crawler" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/go-crawler/docs/"><span>Go Crawler</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="Search" aria-label="Search" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+  
+
+
+
+  
+    
+  
+
+
+  
+
+
+<ul class="book-languages">
+  <li>
+    <input type="checkbox" id="languages" class="toggle" />
+    <label for="languages" class="flex justify-between">
+      <a role="button" class="flex align-center">
+        <img src="/go-crawler/docs/svg/translate.svg" class="book-icon" alt="Languages" />
+        English
+      </a>
+    </label>
+
+    <ul>
+      
+      <li>
+        <a href="/go-crawler/docs/zh/docs/usage/question/">
+          Chinese
+        </a>
+      </li>
+      
+    </ul>
+  </li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Docs</span>
+  
+
+          
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/introduction/" class="">Introduction</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/" class="">Usage</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/architecture/" class="">Basic Architecture</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/options/" class="">Options</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/item/" class="">Item</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/tools/" class="">Tools</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/middleware/" class="">Middleware</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/pipeline/" class="">Pipeline</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/request/" class="">Request</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/response/" class="">Response</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/signals/" class="">Signals</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/proxy/" class="">Proxy</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/download/" class="">Media Downloads</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/mock_server/" class="">Mock Server</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/configuration/" class="">Configuration</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/startup/" class="">Startup</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/parse/" class="">Web Page Parsing Based on Field Tags</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/question/" class="active">Q &amp; A</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/usage/example/" class="">Example Code</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/admin/" class="">Admin</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/admin/api/" class="">Api</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/docs/admin/ui/" class="">UI</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <span>Todo</span>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/lizongying/go-crawler"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://lizongying.github.io/go-crawler/"  target="_blank" rel="noopener">
+        Go Crawler Admin
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/go-crawler/docs/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>Q &amp; A</h3>
+
+  <label for="toc-control">
+    
+    <img src="/go-crawler/docs/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#question">Question</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h2 id="question">
+  Question
+  <a class="anchor" href="#question">#</a>
+</h2>
+<ul>
+<li>
+<p>In some frameworks, there is a presence of <code>start_urls</code>. How is it set up in this framework?</p>
+<p>In this framework, this approach has been removed. It&rsquo;s possible to explicitly create requests within the initial
+method and perform additional processing on those requests, which can actually be more convenient.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">startUrls</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;/a.html&#34;</span>, <span style="color:#e6db74">&#34;/b.html&#34;</span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">v</span><span style="color:#f92672">:=</span><span style="color:#66d9ef">range</span> <span style="color:#a6e22e">startUrls</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">YieldRequest</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">NewRequest</span>().
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">SetUrl</span>(<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;https://a.com%s&#34;</span>, <span style="color:#a6e22e">v</span>)).
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">SetCallBack</span>(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Parse</span>)); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Error</span>(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
+<li>
+<p>What are the ways to improve spider performance?</p>
+<p>To improve the performance of the spider, you can consider disabling some unused middleware or pipelines to reduce
+unnecessary processing and resource consumption. Before disabling any middleware or pipeline, please assess its actual
+impact on the spider&rsquo;s performance. Ensure that disabling any part will not have a negative impact on the
+functionality.</p>
+</li>
+<li>
+<p>Why isn&rsquo;t item implemented as a distributed queue?</p>
+<p>The crawler processes its own items, and there is no need to handle items from other crawlers.
+Therefore, while the framework has reserved the architecture for distributed queues, it does not use external queues
+to replace the in-memory queue used by the program.
+If there are performance issues with processing, it is recommended to output the results to a queue.</p>
+</li>
+<li>
+<p>How to Set the Request Priority?</p>
+<p>Priorities are allowed to range from 0 to 2147483647.
+Priority 0 is the highest and will be processed first.
+Currently, only Redis-based priority queues are supported.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">SetPriority</span>(<span style="color:#ae81ff">0</span>)
+</span></span></code></pre></div></li>
+<li>
+<p>When will the crawler end?</p>
+<p>The crawler will end and the program will close when the following conditions are met under normal circumstances:</p>
+<ol>
+<li>All requests and parsing methods have been executed.</li>
+<li>The item queue is empty.</li>
+<li>The request queue is empty.</li>
+</ol>
+<p>When these conditions are fulfilled, the crawler has completed its tasks and will terminate.</p>
+</li>
+<li>
+<p>How to prevent the spider from stopping?</p>
+<p>Simply return <code>pkg.DontStopErr</code> in the <code>Stop</code> method.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;github.com/lizongying/go-crawler/pkg&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Spider</span>) <span style="color:#a6e22e">Stop</span>(<span style="color:#a6e22e">_</span> <span style="color:#a6e22e">pkg</span>.<span style="color:#a6e22e">Context</span>) (<span style="color:#a6e22e">err</span> <span style="color:#66d9ef">error</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">pkg</span>.<span style="color:#a6e22e">DontStopErr</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
+<li>
+<p>Which should be used in the task queue: <code>request</code>, <code>extra</code>, or <code>unique_key</code>?</p>
+<p>Firstly, it should be noted that these three terms are concepts within this framework:</p>
+<ul>
+<li><code>request</code> contains all the fields of a request, including URL, method, headers, and may have undergone middleware
+processing. The drawback is that it occupies more space, making it somewhat wasteful as a queue value.</li>
+<li><code>extra</code> is a structured field within the request and, in the framework&rsquo;s design, it contains information that can
+construct a unique request (in most cases). For instance, a list page under a category may include the category ID
+and page number. Similarly, a detail page may include a detail ID. To ensure compatibility with various languages,
+the storage format in the queue is JSON, which is more space-efficient. It&rsquo;s recommended to use this option.</li>
+<li><code>unique_key</code> is a unique identifier for a request within the framework and is a string. While it can represent
+uniqueness in some cases, it can become cumbersome when requiring a combination of multiple fields to be unique –
+such as in the case of list pages or detail pages involving both a category and an ID. If memory is constrained (
+e.g., in Redis usage), it can be used. However, for greater generality, using <code>extra</code> might be more convenient.</li>
+</ul>
+<p>Enqueuing:</p>
+<ul>
+<li><code>YieldExtra</code> or <code>MustYieldExtra</code></li>
+</ul>
+<p>Dequeuing:</p>
+<ul>
+<li><code>GetExtra</code> or <code>MustGetExtra</code></li>
+</ul>
+</li>
+<li>
+<p>Whether to use <code>Must[method]</code>, such as <code>MustYieldRequest</code>?</p>
+<p><code>Must[method]</code> is more concise, but it might be less convenient for troubleshooting errors. Whether to use it depends
+on the individual style of the user.
+If there&rsquo;s a need for specific error handling, then regular methods like <code>YieldRequest</code> should be used.</p>
+</li>
+<li>
+<p>Other</p>
+<ul>
+<li>Upgrade go-crawl</li>
+<li>Clean up cache</li>
+</ul>
+</li>
+</ul>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/lizongying/go-crawler/commit/843e0c500773c1651d127f36208231f4603b63a2" title='Last modified by Li ZongYing | November 17, 2023' target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/calendar.svg" class="book-icon" alt="" />
+      <span>November 17, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/lizongying/go-crawler/edit/development/docs/content/en/docs/usage/question/_index.md" target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/edit.svg" class="book-icon" alt="" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#question">Question</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
