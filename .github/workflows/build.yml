@@ -40,7 +40,7 @@ jobs:
           hugo-version: '0.145.0'
 
       - name: Build Docs
-        run: hugo mod clean && hugo build --source docs --noBuildLock --destination ../static/dist/docs
+        run: hugo mod clean && hugo --logLevel debug --source docs --noBuildLock --destination ../static/dist/docs
 
       - name: List files
         run: ls -R ./static

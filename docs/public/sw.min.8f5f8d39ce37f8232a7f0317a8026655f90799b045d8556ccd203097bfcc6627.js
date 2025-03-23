@@ -1,1 +1,0 @@
-navigator.serviceWorker&&navigator.serviceWorker.register("/go-crawler/docs/sw.js",{scope:"/go-crawler/docs/"})
