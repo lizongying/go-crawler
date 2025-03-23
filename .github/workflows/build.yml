@@ -34,9 +34,10 @@ jobs:
         run: npm run build-github --prefix ./web/ui
 
       - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
+        uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: 'latest'
+#          hugo-version: 'latest'
+          hugo-version: '0.134.3'
 
       - name: Build Docs
         run: hugo --source docs --noBuildLock --destination ../static/dist/docs
