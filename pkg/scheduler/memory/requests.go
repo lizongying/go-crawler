@@ -128,7 +128,7 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 	request.WithContext(ctx)
 	s.crawler.GetSignal().RequestChanged(request)
 	s.requestChan <- request
-	ctx.GetTask().RequestIn()
+	s.task.RequestIn()
 	return
 }
 
@@ -149,7 +149,7 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 		extraChan.(chan any) <- extra
 	}
 
-	c.GetTask().RequestIn()
+	s.task.RequestIn()
 	return
 }
 

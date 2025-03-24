@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Media Downloads on Go Crawler</title>
+    <link>http://localhost:1313/go-crawler/docs/docs/usage/download/</link>
+    <description>Recent content in Media Downloads on Go Crawler</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <atom:link href="http://localhost:1313/go-crawler/docs/docs/usage/download/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>

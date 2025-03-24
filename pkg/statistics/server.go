@@ -16,24 +16,73 @@ import (
 	"google.golang.org/grpc/metadata"
 	"log"
 	"os"
+	"sync"
 )
 
 type Server struct {
 	pb.UnimplementedStatisticsServer
-	statistics *Statistics
+	Crawlers map[string]pkg.StatisticsCrawler
+	Spiders  map[string]pkg.StatisticsSpider
+	Jobs     map[string]pkg.StatisticsJob
+	Tasks    *queue.GroupQueue
+
+	mutex sync.RWMutex
 }
 
+//	func (s *Server) GetCrawlers() (nodes []pkg.StatisticsCrawler) {
+//		for _, v := range s.Crawlers {
+//			nodes = append(nodes, v)
+//		}
+//		return
+//	}
+//func (s *Server) GetSpiders() (spiders []pkg.StatisticsSpider) {
+//	for _, v := range s.Spiders {
+//		spiders = append(spiders, v)
+//	}
+//	return
+//}
+//func (s *Server) GetJobs() (schedules []pkg.StatisticsJob) {
+//	for _, v := range s.Jobs {
+//		schedules = append(schedules, v)
+//	}
+//	return
+//}
+
+//	func (s *Server) GetTasks() (tasks []pkg.StatisticsTask) {
+//		for _, v := range s.Tasks.Get("") {
+//			tasks = append(tasks, v.Value().(statisticsTask.WithItems).Task)
+//		}
+//		return
+//	}
+//
+//	func (s *Server) GetRequests() (records []pkg.StatisticsRequest) {
+//		for _, v := range s.Tasks.Get("") {
+//			for _, v1 := range v.Value().(statisticsTask.WithItems).Requests.Get("") {
+//				records = append(records, v1.Value().(pkg.StatisticsRequest))
+//			}
+//		}
+//		return
+//	}
+//
+//	func (s *Server) GetItems() (records []pkg.StatisticsItem) {
+//		for _, v := range s.Tasks.Get("") {
+//			for _, v1 := range v.Value().(statisticsTask.WithItems).Items.Get("") {
+//				records = append(records, v1.Value().(pkg.StatisticsItem))
+//			}
+//		}
+//		return
+//	}
 func (s *Server) CrawlerChanged(ctx context.Context, crawler *pb.Crawler) (response *pb.Response, err error) {
-	if _, ok := s.statistics.Crawlers[crawler.GetId()]; !ok {
+	if _, ok := s.Crawlers[crawler.GetId()]; !ok {
 		hostname, _ := os.Hostname()
-		s.statistics.Crawlers[crawler.GetId()] = &statisticsCrawler.Crawler{
+		s.Crawlers[crawler.GetId()] = &statisticsCrawler.Crawler{
 			Hostname: hostname,
 			Ip:       utils.LanIp(),
 			Enable:   true,
 		}
-		s.statistics.Crawlers[crawler.GetId()].WithId(crawler.GetId())
+		s.Crawlers[crawler.GetId()].WithId(crawler.GetId())
 	}
-	s.statistics.Crawlers[crawler.GetId()].
+	s.Crawlers[crawler.GetId()].
 		WithStatusAndTime(pkg.CrawlerStatus(crawler.GetStatus()), crawler.GetUpdateTime().AsTime())
 
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -50,10 +99,10 @@ func (s *Server) jobChanged(_ context.Context, job *pb.Job) (response *pb.Respon
 
 	ctx := job.GetContext()
 
-	_, ok := s.statistics.Jobs[id]
+	_, ok := s.Jobs[id]
 	if !ok {
-		s.statistics.Crawlers[ctx.GetCrawler().GetId()].IncJob()
-		s.statistics.Spiders[ctx.GetSpider().GetName()].IncJob()
+		s.Crawlers[ctx.GetCrawler().GetId()].IncJob()
+		s.Spiders[ctx.GetSpider().GetName()].IncJob()
 
 		var spec string
 		mode := job.GetMode()
@@ -73,7 +122,7 @@ func (s *Server) jobChanged(_ context.Context, job *pb.Job) (response *pb.Respon
 			job.GetSpec(),
 			job.GetArgs(),
 		)
-		s.statistics.Jobs[id] = new(statisticsJob.Job).
+		s.Jobs[id] = new(statisticsJob.Job).
 			WithCrawler(ctx.GetCrawler().GetId()).
 			WithSpider(ctx.GetSpider().GetName()).
 			WithId(id).
@@ -82,30 +131,30 @@ func (s *Server) jobChanged(_ context.Context, job *pb.Job) (response *pb.Respon
 			WithCommand(command)
 	}
 
-	s.statistics.Jobs[id].
+	s.Jobs[id].
 		WithStatusAndTime(pkg.JobStatus(job.GetStatus()), job.GetUpdateTime().AsTime())
 
 	switch job.GetStatus() {
 	case pb.JobStatus_JobStatusRunning:
 	case pb.JobStatus_JobStatusFailure:
-		s.statistics.Jobs[id].WithStopReason(job.GetStopReason())
+		s.Jobs[id].WithStopReason(job.GetStopReason())
 	}
 	return
 }
 
 func (s *Server) taskChanged(_ context.Context, task *pb.Task) (response *pb.Response, err error) {
-	defer s.statistics.mutex.Unlock()
-	s.statistics.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.mutex.Lock()
 
 	ctx := task.GetContext()
 
 	if task.GetStatus() == pkg.TaskStatusPending {
-		s.statistics.Crawlers[ctx.GetCrawler().GetId()].IncTask()
-		s.statistics.Spiders[ctx.GetSpider().GetName()].IncTask()
-		s.statistics.Jobs[ctx.GetJob().GetId()].IncTask()
+		s.Crawlers[ctx.GetCrawler().GetId()].IncTask()
+		s.Spiders[ctx.GetSpider().GetName()].IncTask()
+		s.Jobs[ctx.GetJob().GetId()].IncTask()
 
 		// task
-		s.statistics.Tasks.Enqueue(ctx.GetJob().GetId(),
+		s.Tasks.Enqueue(ctx.GetJob().GetId(),
 			statisticsTask.WithItems{
 				Task: new(statisticsTask.Task).
 					WithCrawler(ctx.GetCrawler().GetId()).
@@ -120,7 +169,7 @@ func (s *Server) taskChanged(_ context.Context, task *pb.Task) (response *pb.Res
 			task.GetStartTime().AsTime().UnixNano())
 
 		// spider
-		s.statistics.Spiders[ctx.GetSpider().GetName()].
+		s.Spiders[ctx.GetSpider().GetName()].
 			WithLastTaskId(task.GetId()).
 			WithLastTaskStatus(pkg.TaskStatus(task.GetStatus())).
 			WithLastTaskStartTime(task.GetStartTime().AsTime())
@@ -129,7 +178,7 @@ func (s *Server) taskChanged(_ context.Context, task *pb.Task) (response *pb.Res
 	}
 
 	// task
-	for _, v := range s.statistics.Tasks.Get(ctx.GetJob().GetId()) {
+	for _, v := range s.Tasks.Get(ctx.GetJob().GetId()) {
 		t := v.Value().(statisticsTask.WithItems).Task
 		if task.GetId() == t.GetId() {
 			t.WithStatus(pkg.TaskStatus(task.GetStatus()))
@@ -147,7 +196,7 @@ func (s *Server) taskChanged(_ context.Context, task *pb.Task) (response *pb.Res
 	}
 
 	// spider
-	spider := s.statistics.Spiders[ctx.GetSpider().GetName()]
+	spider := s.Spiders[ctx.GetSpider().GetName()]
 	if task.GetId() == spider.GetLastTaskId() {
 		spider.
 			WithLastTaskStatus(pkg.TaskStatus(task.GetStatus())).
@@ -157,13 +206,13 @@ func (s *Server) taskChanged(_ context.Context, task *pb.Task) (response *pb.Res
 }
 
 func (s *Server) requestChanged(_ context.Context, request *pb.Request) (response *pb.Response, err error) {
-	defer s.statistics.mutex.Unlock()
-	s.statistics.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.mutex.Lock()
 
 	ctx := request.GetContext()
 
 	// task
-	for _, v := range s.statistics.Tasks.Get(ctx.GetJob().GetId()) {
+	for _, v := range s.Tasks.Get(ctx.GetJob().GetId()) {
 		t := v.Value().(statisticsTask.WithItems)
 		if ctx.GetTask().GetId() == t.Task.GetId() {
 			var sr *statisticsRequest.Request
@@ -176,9 +225,9 @@ func (s *Server) requestChanged(_ context.Context, request *pb.Request) (respons
 			}
 
 			if sr == nil {
-				s.statistics.Crawlers[ctx.GetCrawler().GetId()].IncRequest()
-				s.statistics.Spiders[ctx.GetSpider().GetName()].IncRequest()
-				s.statistics.Jobs[ctx.GetJob().GetId()].IncRequest()
+				s.Crawlers[ctx.GetCrawler().GetId()].IncRequest()
+				s.Spiders[ctx.GetSpider().GetName()].IncRequest()
+				s.Jobs[ctx.GetJob().GetId()].IncRequest()
 
 				// task
 				t.Task.IncRequest()
@@ -215,13 +264,13 @@ func (s *Server) requestChanged(_ context.Context, request *pb.Request) (respons
 	return
 }
 func (s *Server) itemChanged(_ context.Context, item *pb.Item) (response *pb.Response, err error) {
-	defer s.statistics.mutex.Unlock()
-	s.statistics.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.mutex.Lock()
 
 	ctx := item.GetContext()
 
 	// task
-	for _, v := range s.statistics.Tasks.Get(ctx.GetJob().GetId()) {
+	for _, v := range s.Tasks.Get(ctx.GetJob().GetId()) {
 		t := v.Value().(statisticsTask.WithItems)
 		if ctx.GetTask().GetId() == t.Task.GetId() {
 			var statisticsRecord *statisticsItem.Item
@@ -234,9 +283,9 @@ func (s *Server) itemChanged(_ context.Context, item *pb.Item) (response *pb.Res
 			}
 
 			if statisticsRecord == nil {
-				s.statistics.Crawlers[ctx.GetCrawler().GetId()].IncItem()
-				s.statistics.Spiders[ctx.GetSpider().GetName()].IncItem()
-				s.statistics.Jobs[ctx.GetJob().GetId()].IncItem()
+				s.Crawlers[ctx.GetCrawler().GetId()].IncItem()
+				s.Spiders[ctx.GetSpider().GetName()].IncItem()
+				s.Jobs[ctx.GetJob().GetId()].IncItem()
 
 				// task
 				t.Task.IncItem()
@@ -273,10 +322,33 @@ func (s *Server) itemChanged(_ context.Context, item *pb.Item) (response *pb.Res
 	return
 }
 
-func NewServer(server *grpc.Server) (statisticsServer *Server) {
-	statisticsServer = &Server{
-		statistics: &Statistics{},
-	}
-	pb.RegisterStatisticsServer(server, statisticsServer)
+func (s *Server) GetTasks(_ context.Context, request *pb.RequestTasks) (tasks *pb.ResponseTasks, err error) {
+	return
+}
+
+func (s *Server) GetCrawlers(_ context.Context, request *pb.RequestCrawlers) (crawlers *pb.ResponseCrawlers, err error) {
+	return
+}
+
+func (s *Server) GetRequests(_ context.Context, request *pb.RequestRequests) (requests *pb.ResponseRequests, err error) {
+	return
+}
+
+func (s *Server) GetSpiders(_ context.Context, request *pb.RequestSpiders) (spiders *pb.ResponseSpiders, err error) {
+	return
+}
+
+func (s *Server) GetItems(_ context.Context, request *pb.RequestItems) (items *pb.ResponseItems, err error) {
+	return
+}
+
+func NewServer(server *grpc.Server) (s *Server) {
+	s = &Server{}
+	s.Crawlers = make(map[string]pkg.StatisticsCrawler)
+	s.Spiders = make(map[string]pkg.StatisticsSpider)
+	s.Jobs = make(map[string]pkg.StatisticsJob)
+	s.Tasks = queue.NewGroupQueue(10)
+
+	pb.RegisterStatisticsServer(server, s)
 	return
 }

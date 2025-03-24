@@ -11,6 +11,7 @@ require (
 	github.com/go-rod/stealth v0.4.9
 	github.com/go-sql-driver/mysql v1.9.1
 	github.com/google/uuid v1.6.0
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3
 	github.com/lizongying/cron v1.0.0
 	github.com/lizongying/go-css v0.0.0-20230906104236-b58497123e0f
 	github.com/lizongying/go-gua64 v0.1.3
@@ -31,6 +32,7 @@ require (
 	golang.org/x/crypto v0.36.0
 	golang.org/x/text v0.23.0
 	golang.org/x/time v0.11.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20250313205543-e70fdf4c4cb4
 	google.golang.org/grpc v1.71.0
 	google.golang.org/protobuf v1.36.5
 	gopkg.in/yaml.v3 v3.0.1
@@ -58,10 +60,10 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
@@ -80,5 +82,4 @@ require (
 	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )

@@ -2,6 +2,8 @@ package pkg
 
 type Task interface {
 	Scheduler
+	GetContext() Context
+	WithContext(Context) Task
 	GetScheduler() Scheduler
 	WithScheduler(Scheduler) Task
 	RequestIn()

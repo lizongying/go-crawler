@@ -582,7 +582,11 @@ func (r *Request) MustUnmarshalExtra(v any) {
 }
 func (r *Request) Marshal() ([]byte, error) {
 	r.Method = r.Request.Method
-	r.Url = r.URL.String()
+	if r.URL != nil {
+		r.Url = r.URL.String()
+	} else {
+		r.Url = ""
+	}
 	r.Header = r.Request.Header
 	return json.Marshal(r)
 }

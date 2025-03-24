@@ -22,7 +22,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, _ pkg.Response) (err error) {
 	return
 }
 
-// TestOk go run cmd/testFileSpider/*.go -c example.yml -n test-file -f TestOk -m once
+// TestOk go run cmd/test_file_spider/*.go -c example.yml -n test-file -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 
 	// mock a page

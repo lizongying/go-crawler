@@ -172,7 +172,7 @@ func (s *UnimplementedScheduler) SyncRequest(ctx pkg.Context, request pkg.Reques
 	return
 }
 func (s *UnimplementedScheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
-	ctx.GetTask().RequestIn()
+	s.task.RequestIn()
 	response, err = s.SyncRequest(ctx, request)
 	s.task.RequestOut()
 	return

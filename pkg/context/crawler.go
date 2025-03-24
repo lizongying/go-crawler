@@ -8,6 +8,7 @@ import (
 )
 
 type Crawler struct {
+	Crawler    pkg.Crawler       `json:"-"`
 	Context    context.Context   `json:"-"`
 	Id         string            `json:"id,omitempty"`
 	Status     pkg.CrawlerStatus `json:"status,omitempty"`
@@ -17,11 +18,11 @@ type Crawler struct {
 	StopReason string            `json:"stop_reason,omitempty"`
 }
 
-func (c *Crawler) GetId() string {
-	return c.Id
+func (c *Crawler) GetCrawler() pkg.Crawler {
+	return c.Crawler
 }
-func (c *Crawler) WithId(id string) pkg.ContextCrawler {
-	c.Id = id
+func (c *Crawler) WithCrawler(crawler pkg.Crawler) pkg.ContextCrawler {
+	c.Crawler = crawler
 	return c
 }
 func (c *Crawler) GetContext() context.Context {
@@ -29,6 +30,13 @@ func (c *Crawler) GetContext() context.Context {
 }
 func (c *Crawler) WithContext(ctx context.Context) pkg.ContextCrawler {
 	c.Context = ctx
+	return c
+}
+func (c *Crawler) GetId() string {
+	return c.Id
+}
+func (c *Crawler) WithId(id string) pkg.ContextCrawler {
+	c.Id = id
 	return c
 }
 func (c *Crawler) GetStatus() pkg.CrawlerStatus {

@@ -6,8 +6,9 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"fmt"
+	"errors"
 	"github.com/lizongying/go-crawler/static"
+	"log"
 	"math/big"
 	"net"
 	"os"
@@ -15,14 +16,11 @@ import (
 )
 
 func CreateCa() (caPrivateKey *rsa.PrivateKey, caCert *x509.Certificate, err error) {
-	// 生成CA私钥
 	caPrivateKey, err = rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		fmt.Println("无法生成CA私钥：", err)
-		return
+		log.Panicln("Unable to generate ca private key.", err)
 	}
 
-	// 保存ca私钥到文件
 	caKeyBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(caPrivateKey)}
 	for _, i := range []string{
 		"static/tls/ca.key",
@@ -31,19 +29,17 @@ func CreateCa() (caPrivateKey *rsa.PrivateKey, caCert *x509.Certificate, err err
 		var out *os.File
 		out, err = os.Create(i)
 		if err != nil {
-			fmt.Println("无法创建服务器私钥文件：", err)
-			return
+			log.Panicln("Unable to generate private key file.", err)
 		}
 		_ = pem.Encode(out, &caKeyBlock)
 		_ = out.Close()
-		fmt.Println("CA私钥已保存到", i)
+		log.Println("The ca certificate has been saved to", i)
 	}
 
-	// 创建自签名CA证书模板
 	caCert = &x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			CommonName: "GO-MITM",
+			CommonName: "ZONGYING",
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(10, 0, 0), // 有效期10年
@@ -52,15 +48,12 @@ func CreateCa() (caPrivateKey *rsa.PrivateKey, caCert *x509.Certificate, err err
 		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 	}
 
-	// 使用CA私钥自签名CA证书
 	var caCertDER []byte
 	caCertDER, err = x509.CreateCertificate(rand.Reader, caCert, caCert, &caPrivateKey.PublicKey, caPrivateKey)
 	if err != nil {
-		fmt.Println("无法生成CA证书：", err)
-		return
+		log.Panicln("Unable to create ca certificate.", err)
 	}
 
-	// 保存CA证书到文件
 	caCertBlock := pem.Block{Type: "CERTIFICATE", Bytes: caCertDER}
 	for _, i := range []string{
 		"static/tls/ca.crt",
@@ -69,17 +62,21 @@ func CreateCa() (caPrivateKey *rsa.PrivateKey, caCert *x509.Certificate, err err
 		var out *os.File
 		out, err = os.Create(i)
 		if err != nil {
-			fmt.Println("无法创建服务器证书文件：", err)
-			return
+			log.Panicln("Unable to create ca certificate file.", err)
 		}
 		_ = pem.Encode(out, &caCertBlock)
 		_ = out.Close()
-		fmt.Println("CA证书已保存到", i)
+		log.Println("The ca certificate has been saved to", i)
 	}
 	return
 }
 
-func CaSigned(ca bool, ip []string, hostname []string) {
+func CaSigned(ca bool, ip []string, hostnames []string) {
+	hostname := "localhost"
+	if len(hostnames) > 0 {
+		hostname = hostnames[0]
+	}
+
 	var caPrivateKey *rsa.PrivateKey
 	var caCert *x509.Certificate
 	var err error
@@ -87,37 +84,35 @@ func CaSigned(ca bool, ip []string, hostname []string) {
 	if ca {
 		caPrivateKey, caCert, err = CreateCa()
 		if err != nil {
-			fmt.Println("create ca error")
-			return
+			log.Panicln("create ca error", err)
 		}
 	} else {
 		block, _ := pem.Decode(static.CaKey)
 		if block == nil {
-			return
+			err = errors.New("block nil")
+			log.Panicln(err)
 		}
 		caPrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
 		if err != nil {
-			return
+			log.Panicln(err)
 		}
 
 		block, _ = pem.Decode(static.CaCert)
 		if block == nil {
-			return
+			err = errors.New("block nil")
+			log.Panicln(err)
 		}
 		caCert, err = x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			return
+			log.Panicln(err)
 		}
 	}
 
-	// 生成服务器私钥
 	serverPrivateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		fmt.Println("无法生成服务器私钥：", err)
-		return
+		log.Panicln("Unable to create server certificate key.", err)
 	}
 
-	// 保存服务器私钥到文件
 	serverKeyBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(serverPrivateKey)}
 	for _, i := range []string{
 		"static/tls/server.key",
@@ -126,25 +121,22 @@ func CaSigned(ca bool, ip []string, hostname []string) {
 		var out *os.File
 		out, err = os.Create(i)
 		if err != nil {
-			fmt.Println("无法创建服务器私钥文件：", err)
-			return
+			log.Panicln("Unable to create server certificate key file.", err)
 		}
 		_ = pem.Encode(out, &serverKeyBlock)
 		_ = out.Close()
-		fmt.Println("服务器私钥已保存到", i)
+		log.Println("The server certificate key has been saved to", i)
 	}
 
-	// 创建服务器证书模板
 	serverCert := &x509.Certificate{
 		SerialNumber: big.NewInt(2),
-		Subject:      pkix.Name{CommonName: "localhost"},
+		Subject:      pkix.Name{CommonName: hostname},
 		NotBefore:    time.Now(),
-		NotAfter:     time.Now().AddDate(1, 0, 0), // 有效期一年
+		NotAfter:     time.Now().AddDate(1, 0, 0),
 		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 	}
 
-	// 添加IP地址和域名到证书模板中
 	serverCert.IPAddresses = append(serverCert.IPAddresses,
 		net.ParseIP("127.0.0.1"),
 		net.ParseIP("::1"),
@@ -157,20 +149,17 @@ func CaSigned(ca bool, ip []string, hostname []string) {
 		}
 	}
 	serverCert.DNSNames = append(serverCert.DNSNames, "localhost")
-	if len(hostname) > 0 {
-		for _, v := range hostname {
+	if len(hostnames) > 0 {
+		for _, v := range hostnames {
 			serverCert.DNSNames = append(serverCert.DNSNames, v)
 		}
 	}
 
-	// 使用CA证书签发服务器证书
 	serverCertDER, err := x509.CreateCertificate(rand.Reader, serverCert, caCert, &serverPrivateKey.PublicKey, caPrivateKey)
 	if err != nil {
-		fmt.Println("无法生成服务器证书：", err)
-		return
+		log.Panicln("Unable to generate server certificate.", err)
 	}
 
-	// 保存服务器证书到文件
 	serverCertBlock := pem.Block{Type: "CERTIFICATE", Bytes: serverCertDER}
 	for _, i := range []string{
 		"static/tls/server.crt",
@@ -179,11 +168,10 @@ func CaSigned(ca bool, ip []string, hostname []string) {
 		var out *os.File
 		out, err = os.Create(i)
 		if err != nil {
-			fmt.Println("无法创建服务器证书文件：", err)
-			return
+			log.Panicln("Unable to create server certificate file.", err)
 		}
 		_ = pem.Encode(out, &serverCertBlock)
 		_ = out.Close()
-		fmt.Println("服务器证书已保存到", i)
+		log.Println("The server certificate has been saved to", i)
 	}
 }

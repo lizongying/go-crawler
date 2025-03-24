@@ -152,10 +152,11 @@ func (m *CsvPipeline) ProcessItem(item pkg.Item) (err error) {
 	return
 }
 
-func (m *CsvPipeline) taskStopped(ctx pkg.Context) (err error) {
+func (m *CsvPipeline) taskStopped(task pkg.Task) (err error) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
-	files, ok := m.files[ctx.GetTask().GetId()]
+
+	files, ok := m.files[task.GetContext().GetTask().GetId()]
 	if !ok {
 		return
 	}

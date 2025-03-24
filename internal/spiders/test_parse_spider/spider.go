@@ -19,7 +19,7 @@ func (s *Spider) Parse(_ pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestOk go run cmd/testParseSpider/*.go -c example.yml -n test-parse -f TestOk -m once
+// TestOk go run cmd/test_parse_spider/*.go -c example.yml -n test-parse -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.MustYieldRequest(ctx, request.NewRequest().
 		SetUrl("https://localhost:8081"+mock_servers.UrlHtml+"index.html").

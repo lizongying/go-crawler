@@ -17,7 +17,7 @@ func (s *Spider) ParseOk(_ pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestMustOk go run cmd/testFromExtraSpider/*.go -c example.yml -n test-from-extra -f TestMustOk -m once
+// TestMustOk go run cmd/test_from_extra_spider/*.go -c example.yml -n test-from-extra -f TestMustOk -m once
 func (s *Spider) TestMustOk(ctx pkg.Context, _ string) (err error) {
 	for _, extra := range []*ExtraOk{{
 		Count: 1,
@@ -26,12 +26,12 @@ func (s *Spider) TestMustOk(ctx pkg.Context, _ string) (err error) {
 	}, {
 		Count: 1,
 	}} {
-		s.MustYieldExtra(extra)
+		s.MustYieldExtra(ctx, extra)
 	}
 
 	for {
 		var extra ExtraOk
-		s.MustGetExtra(&extra)
+		s.MustGetExtra(ctx, &extra)
 
 		s.MustYieldRequest(ctx, request.NewRequest().
 			SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
@@ -53,7 +53,7 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	}, {
 		Count: 1,
 	}} {
-		if err = s.YieldExtra(extra); err != nil {
+		if err = s.YieldExtra(ctx, extra); err != nil {
 			s.logger.Error(err)
 			return
 		}
@@ -61,7 +61,7 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 
 	for {
 		var extra ExtraOk
-		if err = s.GetExtra(&extra); err != nil {
+		if err = s.GetExtra(ctx, &extra); err != nil {
 			s.logger.Error(err)
 			return
 		}

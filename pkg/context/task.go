@@ -8,7 +8,7 @@ import (
 )
 
 type Task struct {
-	pkg.Task   `json:"-"`
+	Task       pkg.Task `json:"-"`
 	pkg.Stats  `json:"stats,omitempty"`
 	Context    context.Context     `json:"-"`
 	Id         string              `json:"id,omitempty"`
@@ -26,6 +26,13 @@ func (c *Task) GetTask() pkg.Task {
 }
 func (c *Task) WithTask(task pkg.Task) pkg.ContextTask {
 	c.Task = task
+	return c
+}
+func (c *Task) GetContext() context.Context {
+	return c.Context
+}
+func (c *Task) WithContext(ctx context.Context) pkg.ContextTask {
+	c.Context = ctx
 	return c
 }
 func (c *Task) GetStats() pkg.Stats {
@@ -47,13 +54,6 @@ func (c *Task) GetJobSubId() uint64 {
 }
 func (c *Task) WithJobSubId(id uint64) pkg.ContextTask {
 	c.JobSubId = id
-	return c
-}
-func (c *Task) GetContext() context.Context {
-	return c.Context
-}
-func (c *Task) WithContext(ctx context.Context) pkg.ContextTask {
-	c.Context = ctx
 	return c
 }
 func (c *Task) GetStatus() pkg.TaskStatus {

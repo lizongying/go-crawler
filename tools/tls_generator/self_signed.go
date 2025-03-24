@@ -6,74 +6,70 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"fmt"
+	"log"
 	"math/big"
 	"net"
 	"os"
 	"time"
 )
 
-func SelfSigned() {
-	// 生成私钥
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		fmt.Println("无法生成私钥：", err)
-		return
+func SelfSigned(hostnames []string) {
+	hostname := "localhost"
+	if len(hostnames) > 0 {
+		hostname = hostnames[0]
 	}
 
-	// 创建自签名证书模板
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		log.Panicln("Unable to generate private key.", err)
+	}
+
 	template := x509.Certificate{
 		SerialNumber:          big.NewInt(1),
-		Subject:               pkix.Name{CommonName: "localhost"},
+		Subject:               pkix.Name{CommonName: hostname},
 		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(1, 0, 0), // 有效期一年
+		NotAfter:              time.Now().AddDate(1, 0, 0),
 		BasicConstraintsValid: true,
 		IsCA:                  true,
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 	}
 
-	// 添加IP地址和域名到证书模板中
-	template.IPAddresses = append(template.IPAddresses, net.ParseIP("127.0.0.1"))
-	template.IPAddresses = append(template.IPAddresses, net.ParseIP("::1"))
+	template.IPAddresses = append(template.IPAddresses, net.ParseIP("127.0.0.1"), net.ParseIP("::1"))
 	template.DNSNames = append(template.DNSNames, "localhost")
 
-	// 使用模板生成自签名证书
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
 	if err != nil {
-		fmt.Println("无法生成证书：", err)
-		return
+		log.Panicln("Unable to generate certificate.", err)
 	}
 
-	// 将证书保存到文件
 	serverCertBlock := pem.Block{Type: "CERTIFICATE", Bytes: derBytes}
 	for _, i := range []string{
 		"static/tls/server_self.crt",
 		"static/tls/server_self_crt.pem",
 	} {
-		out, err := os.Create(i)
+		var out *os.File
+		out, err = os.Create(i)
 		if err != nil {
-			fmt.Println("无法创建服务器证书文件：", err)
-			return
+			log.Panicln("Unable to create server certificate file.", err)
 		}
 		_ = pem.Encode(out, &serverCertBlock)
 		_ = out.Close()
-		fmt.Println("服务器证书已保存到", i)
+		log.Println("The server certificate has been saved to", i)
 	}
 
-	// 将私钥保存到文件
 	serverKeyBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}
 	for _, i := range []string{
 		"static/tls/server_self.key",
 		"static/tls/server_self_key.pem",
 	} {
-		out, err := os.Create(i)
+		var out *os.File
+		out, err = os.Create(i)
 		if err != nil {
-			fmt.Println("无法创建服务器私钥文件：", err)
-			return
+			log.Panicln("Unable to create server certificate key file.", err)
 		}
 		_ = pem.Encode(out, &serverKeyBlock)
 		_ = out.Close()
-		fmt.Println("服务器私钥已保存到", i)
+		log.Println("The server certificate key has been saved to", i)
 	}
 }

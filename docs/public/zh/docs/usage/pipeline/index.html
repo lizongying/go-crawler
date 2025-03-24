@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh" dir="ltr">
+<head><script src="/go-crawler/docs/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=go-crawler/docs/livereload" data-no-instant defer></script>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="
+  数据管道
+  #
+
+用于流式处理Item，如数据过滤、数据存储等。
+通过配置不同的Pipeline，您可以方便地处理Item并将结果保存到不同的目标，如控制台、文件、数据库或消息队列中。
+内置的Pipeline和自定义Pipeline使用默认的order值即可。
+如果需要改变默认的order值，需要spider.WithOptions(pkg.WithPipeline(new(pipeline), order)启用该Pipeline并应用该order值。
+
+dump: 10
+
+用于在控制台打印Item的详细信息。
+您可以通过配置enable_dump_pipeline来控制是否启用该Pipeline，默认启用。
+spider.WithOptions(pkg.WithDumpPipeline()
+
+
+file: 20
+
+用于下载文件并保存到Item中。
+您可以通过配置enable_file_pipeline来控制是否启用该Pipeline，默认启用。
+spider.WithOptions(pkg.WithFilePipeline()
+
+
+image: 30
+
+用于下载图片并保存到Item中。
+您可以通过配置enable_image_pipeline来控制是否启用该Pipeline，默认启用。
+spider.WithOptions(pkg.WithImagePipeline()
+
+
+filter: 200
+
+用于对Item进行过滤。
+它可用于去重请求，需要在中间件同时启用filter。
+默认情况下，Item只有在成功保存后才会进入去重队列。
+您可以通过配置enable_filter_pipeline来控制是否启用该Pipeline，默认启用。
+spider.WithOptions(pkg.WithFilterPipeline()
+
+
+none: 101
+
+item不做任何处理，但会认为结果已保存。
+您可以通过配置enable_none_pipeline来控制是否启用该Pipeline，默认启用。
+spider.WithOptions(pkg.WithNonePipeline()
+
+
+csv: 102
+
+用于将结果保存到CSV文件中。
+需要在ItemCsv中设置FileName，指定保存的文件名称（不包含.csv扩展名）。
+您可以使用tag column:&quot;&quot;来定义CSV文件的列名。
+您可以通过配置enable_csv_pipeline来控制是否启用该Pipeline，默认关闭。
+spider.WithOptions(pkg.WithCsvPipeline()
+
+
+jsonLines: 103
+
+用于将结果保存到JSON Lines文件中。
+需要在ItemJsonl中设置FileName，指定保存的文件名称（不包含.jsonl扩展名）。
+您可以使用tag json:&quot;&quot;来定义JSON Lines文件的字段。
+您可以通过配置enable_json_lines_pipeline来控制是否启用该Pipeline，默认关闭。
+spider.WithOptions(pkg.WithJsonLinesPipeline()
+
+
+mongo: 104
+
+用于将结果保存到MongoDB中。
+需要在ItemMongo中设置Collection，指定保存的collection名称。
+您可以使用tag bson:&quot;&quot;来定义MongoDB文档的字段。
+您可以通过配置enable_mongo_pipeline来控制是否启用该Pipeline，默认关闭。
+spider.WithOptions(pkg.WithMongoPipeline()
+
+
+sqlite: 105
+
+用于将结果保存到Sqlite中。
+需要在ItemSqlite中设置Table，指定保存的表名。
+您可以使用tag column:&quot;&quot;来定义Sqlite表的列名。
+您可以通过配置enable_sqlite_pipeline来控制是否启用该Pipeline，默认关闭。
+spider.WithOptions(pkg.WithSqlitePipeline()
+
+
+mysql: 106
+
+用于将结果保存到MySQL中。
+需要在ItemMysql中设置Table，指定保存的表名。
+您可以使用tag column:&quot;&quot;来定义MySQL表的列名。
+您可以通过配置enable_mysql_pipeline来控制是否启用该Pipeline，默认关闭。
+spider.WithOptions(pkg.WithMysqlPipeline()
+
+
+kafka: 107
+
+用于将结果保存到Kafka中。
+需要在ItemKafka中设置Topic，指定保存的主题名。
+您可以使用tag json:&quot;&quot;来定义Kafka消息的字段。
+您可以通过配置enable_kafka_pipeline来控制是否启用该Pipeline，默认关闭。
+spider.WithOptions(pkg.WithKafkaPipeline()
+
+
+custom: 110
+
+自定义pipeline
+spider.WithOptions(pkg.WithCustomPipeline(new(CustomPipeline))
+
+
+">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#343a40">
+<meta name="color-scheme" content="light dark"><meta property="og:url" content="http://localhost:1313/go-crawler/docs/zh/docs/usage/pipeline/">
+  <meta property="og:site_name" content="Go Crawler">
+  <meta property="og:title" content="数据管道">
+  <meta property="og:description" content="数据管道 # 用于流式处理Item，如数据过滤、数据存储等。 通过配置不同的Pipeline，您可以方便地处理Item并将结果保存到不同的目标，如控制台、文件、数据库或消息队列中。 内置的Pipeline和自定义Pipeline使用默认的order值即可。 如果需要改变默认的order值，需要spider.WithOptions(pkg.WithPipeline(new(pipeline), order)启用该Pipeline并应用该order值。
+dump: 10 用于在控制台打印Item的详细信息。 您可以通过配置enable_dump_pipeline来控制是否启用该Pipeline，默认启用。 spider.WithOptions(pkg.WithDumpPipeline() file: 20 用于下载文件并保存到Item中。 您可以通过配置enable_file_pipeline来控制是否启用该Pipeline，默认启用。 spider.WithOptions(pkg.WithFilePipeline() image: 30 用于下载图片并保存到Item中。 您可以通过配置enable_image_pipeline来控制是否启用该Pipeline，默认启用。 spider.WithOptions(pkg.WithImagePipeline() filter: 200 用于对Item进行过滤。 它可用于去重请求，需要在中间件同时启用filter。 默认情况下，Item只有在成功保存后才会进入去重队列。 您可以通过配置enable_filter_pipeline来控制是否启用该Pipeline，默认启用。 spider.WithOptions(pkg.WithFilterPipeline() none: 101 item不做任何处理，但会认为结果已保存。 您可以通过配置enable_none_pipeline来控制是否启用该Pipeline，默认启用。 spider.WithOptions(pkg.WithNonePipeline() csv: 102 用于将结果保存到CSV文件中。 需要在ItemCsv中设置FileName，指定保存的文件名称（不包含.csv扩展名）。 您可以使用tag column:&#34;&#34;来定义CSV文件的列名。 您可以通过配置enable_csv_pipeline来控制是否启用该Pipeline，默认关闭。 spider.WithOptions(pkg.WithCsvPipeline() jsonLines: 103 用于将结果保存到JSON Lines文件中。 需要在ItemJsonl中设置FileName，指定保存的文件名称（不包含.jsonl扩展名）。 您可以使用tag json:&#34;&#34;来定义JSON Lines文件的字段。 您可以通过配置enable_json_lines_pipeline来控制是否启用该Pipeline，默认关闭。 spider.WithOptions(pkg.WithJsonLinesPipeline() mongo: 104 用于将结果保存到MongoDB中。 需要在ItemMongo中设置Collection，指定保存的collection名称。 您可以使用tag bson:&#34;&#34;来定义MongoDB文档的字段。 您可以通过配置enable_mongo_pipeline来控制是否启用该Pipeline，默认关闭。 spider.WithOptions(pkg.WithMongoPipeline() sqlite: 105 用于将结果保存到Sqlite中。 需要在ItemSqlite中设置Table，指定保存的表名。 您可以使用tag column:&#34;&#34;来定义Sqlite表的列名。 您可以通过配置enable_sqlite_pipeline来控制是否启用该Pipeline，默认关闭。 spider.WithOptions(pkg.WithSqlitePipeline() mysql: 106 用于将结果保存到MySQL中。 需要在ItemMysql中设置Table，指定保存的表名。 您可以使用tag column:&#34;&#34;来定义MySQL表的列名。 您可以通过配置enable_mysql_pipeline来控制是否启用该Pipeline，默认关闭。 spider.WithOptions(pkg.WithMysqlPipeline() kafka: 107 用于将结果保存到Kafka中。 需要在ItemKafka中设置Topic，指定保存的主题名。 您可以使用tag json:&#34;&#34;来定义Kafka消息的字段。 您可以通过配置enable_kafka_pipeline来控制是否启用该Pipeline，默认关闭。 spider.WithOptions(pkg.WithKafkaPipeline() custom: 110 自定义pipeline spider.WithOptions(pkg.WithCustomPipeline(new(CustomPipeline))">
+  <meta property="og:locale" content="zh">
+  <meta property="og:type" content="website">
+<title>数据管道 | Go Crawler</title>
+<link rel="icon" href="/go-crawler/docs/favicon.png" >
+<link rel="manifest" href="/go-crawler/docs/manifest.json">
+<link rel="canonical" href="http://localhost:1313/go-crawler/docs/zh/docs/usage/pipeline/">
+  <link rel="alternate" hreflang="en" href="http://localhost:1313/go-crawler/docs/docs/usage/pipeline/" title="Pipeline">
+<link rel="stylesheet" href="/go-crawler/docs/book.min.6c8b9d2a1fc95075ed7da46ca81060b39add8fff6741ac51259f768929281e2c.css" integrity="sha256-bIudKh/JUHXtfaRsqBBgs5rdj/9nQaxRJZ92iSkoHiw=" crossorigin="anonymous">
+  <script defer src="/go-crawler/docs/fuse.min.js"></script>
+  <script defer src="/go-crawler/docs/zh.search.min.7ecfb16fa3a3cb9f912fccea1a3fe67701ac41faffe9f340d0f03ecbddb9cb31.js" integrity="sha256-fs&#43;xb6Ojy5&#43;RL8zqGj/mdwGsQfr/6fNA0PA&#43;y925yzE=" crossorigin="anonymous"></script>
+
+  <script defer src="/go-crawler/docs/sw.min.8f5f8d39ce37f8232a7f0317a8026655f90799b045d8556ccd203097bfcc6627.js" integrity="sha256-j1&#43;NOc43&#43;CMqfwMXqAJmVfkHmbBF2FVszSAwl7/MZic=" crossorigin="anonymous"></script>
+<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/go-crawler/docs/zh/docs/usage/pipeline/index.xml" title="Go Crawler" />
+<!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+  
+</head>
+<body dir="ltr">
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      <div class="book-menu-content">
+        
+  <nav>
+<h2 class="book-brand">
+  <a class="flex align-center" href="/go-crawler/docs/zh/"><span>Go Crawler</span>
+  </a>
+</h2>
+
+
+<div class="book-search hidden">
+  <input type="text" id="book-search-input" placeholder="搜索" aria-label="搜索" maxlength="64" data-hotkeys="s/" />
+  <div class="book-search-spinner hidden"></div>
+  <ul id="book-search-results"></ul>
+</div>
+<script>document.querySelector(".book-search").classList.remove("hidden")</script>
+
+
+
+  
+
+
+
+  
+    
+  
+
+
+  
+
+
+<ul class="book-languages">
+  <li>
+    <input type="checkbox" id="languages" class="toggle" />
+    <label for="languages" class="flex justify-between">
+      <a role="button" class="flex align-center">
+        <img src="/go-crawler/docs/svg/translate.svg" class="book-icon" alt="Languages" />
+        Chinese
+      </a>
+    </label>
+
+    <ul>
+      
+      <li>
+        <a href="/go-crawler/docs/docs/usage/pipeline/">
+          English
+        </a>
+      </li>
+      
+    </ul>
+  </li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <span>Docs</span>
+  
+
+          
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/introduction/" class="">介绍</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/" class="">使用</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/architecture/" class="">基本架构</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/options/" class="">选项</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/item/" class="">存储</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/tools/" class="">工具</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/middleware/" class="">中间件</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/pipeline/" class="active">数据管道</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/request/" class="">请求</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/response/" class="">响应</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/signals/" class="">信号</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/proxy/" class="">代理</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/download/" class="">媒体下载</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/mock_server/" class="">模拟服务</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/configuration/" class="">配置</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/startup/" class="">启动</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/parse/" class="">基于字段标签的网页解析</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/question/" class="">问答</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/usage/example/" class="">示例代码</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/" class="">Admin</a>
+  
+
+          
+  <ul>
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/api/" class="">Api</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+  
+
+  
+    <a href="/go-crawler/docs/zh/docs/admin/ui/" class="">界面</a>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+  
+
+  
+    <span>Todo</span>
+  
+
+          
+  <ul>
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+        </li>
+      
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="https://github.com/lizongying/go-crawler"  target="_blank" rel="noopener">
+        Github
+      </a>
+  </li>
+  
+  <li>
+    <a href="https://lizongying.github.io/go-crawler/"  target="_blank" rel="noopener">
+        Go Crawler Admin
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+
+</nav>
+
+
+
+
+  <script>(function(){var e=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(){localStorage.setItem("menu.scrollTop",e.scrollTop)}),e.scrollTop=localStorage.getItem("menu.scrollTop")})()</script>
+
+
+ 
+      </div>
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/go-crawler/docs/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <h3>数据管道</h3>
+
+  <label for="toc-control">
+    
+    <img src="/go-crawler/docs/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#数据管道">数据管道</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown book-article"><h2 id="数据管道">
+  数据管道
+  <a class="anchor" href="#%e6%95%b0%e6%8d%ae%e7%ae%a1%e9%81%93">#</a>
+</h2>
+<p>用于流式处理Item，如数据过滤、数据存储等。
+通过配置不同的Pipeline，您可以方便地处理Item并将结果保存到不同的目标，如控制台、文件、数据库或消息队列中。
+内置的Pipeline和自定义Pipeline使用默认的order值即可。
+如果需要改变默认的order值，需要<code>spider.WithOptions(pkg.WithPipeline(new(pipeline), order)</code>启用该Pipeline并应用该order值。</p>
+<ul>
+<li>dump: 10
+<ul>
+<li>用于在控制台打印Item的详细信息。</li>
+<li>您可以通过配置enable_dump_pipeline来控制是否启用该Pipeline，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithDumpPipeline()</code></li>
+</ul>
+</li>
+<li>file: 20
+<ul>
+<li>用于下载文件并保存到Item中。</li>
+<li>您可以通过配置enable_file_pipeline来控制是否启用该Pipeline，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithFilePipeline()</code></li>
+</ul>
+</li>
+<li>image: 30
+<ul>
+<li>用于下载图片并保存到Item中。</li>
+<li>您可以通过配置enable_image_pipeline来控制是否启用该Pipeline，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithImagePipeline()</code></li>
+</ul>
+</li>
+<li>filter: 200
+<ul>
+<li>用于对Item进行过滤。</li>
+<li>它可用于去重请求，需要在中间件同时启用filter。</li>
+<li>默认情况下，Item只有在成功保存后才会进入去重队列。</li>
+<li>您可以通过配置enable_filter_pipeline来控制是否启用该Pipeline，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithFilterPipeline()</code></li>
+</ul>
+</li>
+<li>none: 101
+<ul>
+<li>item不做任何处理，但会认为结果已保存。</li>
+<li>您可以通过配置enable_none_pipeline来控制是否启用该Pipeline，默认启用。</li>
+<li><code>spider.WithOptions(pkg.WithNonePipeline()</code></li>
+</ul>
+</li>
+<li>csv: 102
+<ul>
+<li>用于将结果保存到CSV文件中。</li>
+<li>需要在ItemCsv中设置<code>FileName</code>，指定保存的文件名称（不包含.csv扩展名）。</li>
+<li>您可以使用tag <code>column:&quot;&quot;</code>来定义CSV文件的列名。</li>
+<li>您可以通过配置enable_csv_pipeline来控制是否启用该Pipeline，默认关闭。</li>
+<li><code>spider.WithOptions(pkg.WithCsvPipeline()</code></li>
+</ul>
+</li>
+<li>jsonLines: 103
+<ul>
+<li>用于将结果保存到JSON Lines文件中。</li>
+<li>需要在ItemJsonl中设置<code>FileName</code>，指定保存的文件名称（不包含.jsonl扩展名）。</li>
+<li>您可以使用tag <code>json:&quot;&quot;</code>来定义JSON Lines文件的字段。</li>
+<li>您可以通过配置enable_json_lines_pipeline来控制是否启用该Pipeline，默认关闭。</li>
+<li><code>spider.WithOptions(pkg.WithJsonLinesPipeline()</code></li>
+</ul>
+</li>
+<li>mongo: 104
+<ul>
+<li>用于将结果保存到MongoDB中。</li>
+<li>需要在ItemMongo中设置<code>Collection</code>，指定保存的collection名称。</li>
+<li>您可以使用tag <code>bson:&quot;&quot;</code>来定义MongoDB文档的字段。</li>
+<li>您可以通过配置enable_mongo_pipeline来控制是否启用该Pipeline，默认关闭。</li>
+<li><code>spider.WithOptions(pkg.WithMongoPipeline()</code></li>
+</ul>
+</li>
+<li>sqlite: 105
+<ul>
+<li>用于将结果保存到Sqlite中。</li>
+<li>需要在ItemSqlite中设置<code>Table</code>，指定保存的表名。</li>
+<li>您可以使用tag <code>column:&quot;&quot;</code>来定义Sqlite表的列名。</li>
+<li>您可以通过配置enable_sqlite_pipeline来控制是否启用该Pipeline，默认关闭。</li>
+<li><code>spider.WithOptions(pkg.WithSqlitePipeline()</code></li>
+</ul>
+</li>
+<li>mysql: 106
+<ul>
+<li>用于将结果保存到MySQL中。</li>
+<li>需要在ItemMysql中设置<code>Table</code>，指定保存的表名。</li>
+<li>您可以使用tag <code>column:&quot;&quot;</code>来定义MySQL表的列名。</li>
+<li>您可以通过配置enable_mysql_pipeline来控制是否启用该Pipeline，默认关闭。</li>
+<li><code>spider.WithOptions(pkg.WithMysqlPipeline()</code></li>
+</ul>
+</li>
+<li>kafka: 107
+<ul>
+<li>用于将结果保存到Kafka中。</li>
+<li>需要在ItemKafka中设置<code>Topic</code>，指定保存的主题名。</li>
+<li>您可以使用tag <code>json:&quot;&quot;</code>来定义Kafka消息的字段。</li>
+<li>您可以通过配置enable_kafka_pipeline来控制是否启用该Pipeline，默认关闭。</li>
+<li><code>spider.WithOptions(pkg.WithKafkaPipeline()</code></li>
+</ul>
+</li>
+<li>custom: 110
+<ul>
+<li>自定义pipeline</li>
+<li><code>spider.WithOptions(pkg.WithCustomPipeline(new(CustomPipeline))</code></li>
+</ul>
+</li>
+</ul>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+  <div><a class="flex align-center" href="https://github.com/lizongying/go-crawler/commit/ad89f68e95a3ba023d8c6fa8737b915d75dc986d" title='最后修改者 Li ZongYing | 十一月 14, 2023' target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/calendar.svg" class="book-icon" alt="" />
+      <span>十一月 14, 2023</span>
+    </a>
+  </div>
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/lizongying/go-crawler/edit/development/docs/content/zh/docs/usage/pipeline/_index.md" target="_blank" rel="noopener">
+      <img src="/go-crawler/docs/svg/edit.svg" class="book-icon" alt="" />
+      <span>编辑本页</span>
+    </a>
+  </div>
+
+
+</div>
+
+
+
+  <script>(function(){function e(e){const t=window.getSelection(),n=document.createRange();n.selectNodeContents(e),t.removeAllRanges(),t.addRange(n)}document.querySelectorAll("pre code").forEach(t=>{t.addEventListener("click",function(){if(window.getSelection().toString())return;e(t.parentElement),navigator.clipboard&&navigator.clipboard.writeText(t.parentElement.textContent)})})})()</script>
+
+
+ 
+        
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      <div class="book-toc-content">
+        
+  
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#数据管道">数据管道</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+ 
+      </div>
+    </aside>
+    
+  </main>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+

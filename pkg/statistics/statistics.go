@@ -144,9 +144,11 @@ func (s *Statistics) jobChanged(ctx pkg.Context) (err error) {
 	}
 	return
 }
-func (s *Statistics) taskChanged(ctx pkg.Context) (err error) {
+func (s *Statistics) taskChanged(task pkg.Task) (err error) {
 	defer s.mutex.Unlock()
 	s.mutex.Lock()
+
+	ctx := task.GetContext()
 
 	if ctx.GetTask().GetStatus() == pkg.TaskStatusPending {
 		s.Crawlers[ctx.GetCrawler().GetId()].IncTask()

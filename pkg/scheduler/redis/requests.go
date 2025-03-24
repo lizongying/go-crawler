@@ -217,12 +217,12 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		res, err = s.redis.ZAdd(c, s.requestKey, z).Result()
 		if res == 1 {
 			s.crawler.GetSignal().RequestChanged(request)
-			ctx.GetTask().RequestIn()
+			s.task.RequestIn()
 		}
 	} else {
 		err = s.redis.RPush(c, s.requestKey, bs).Err()
 		s.crawler.GetSignal().RequestChanged(request)
-		ctx.GetTask().RequestIn()
+		s.task.RequestIn()
 	}
 	return
 }
@@ -262,7 +262,7 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 		}
 
 		if res == 1 {
-			c.GetTask().RequestIn()
+			s.task.RequestIn()
 		}
 	} else {
 		extraKey := fmt.Sprintf("%s:%s:extra:%s", s.config.GetBotName(), name, spider.Name())
@@ -271,7 +271,7 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 			return
 		}
 
-		c.GetTask().RequestIn()
+		s.task.RequestIn()
 	}
 
 	return

@@ -28,10 +28,12 @@ type Context interface {
 }
 
 type ContextCrawler interface {
-	GetId() string
-	WithId(string) ContextCrawler
+	GetCrawler() Crawler
+	WithCrawler(Crawler) ContextCrawler
 	GetContext() context.Context
 	WithContext(context.Context) ContextCrawler
+	GetId() string
+	WithId(string) ContextCrawler
 	GetStatus() CrawlerStatus
 	WithStatus(CrawlerStatus) ContextCrawler
 	GetStartTime() time.Time
@@ -42,12 +44,12 @@ type ContextCrawler interface {
 type ContextSpider interface {
 	GetSpider() Spider
 	WithSpider(Spider) ContextSpider
+	GetContext() context.Context
+	WithContext(context.Context) ContextSpider
 	GetId() uint64
 	WithId(uint64) ContextSpider
 	GetName() string
 	WithName(string) ContextSpider
-	GetContext() context.Context
-	WithContext(context.Context) ContextSpider
 	GetStatus() SpiderStatus
 	WithStatus(SpiderStatus) ContextSpider
 	GetStartTime() time.Time
@@ -56,12 +58,14 @@ type ContextSpider interface {
 }
 
 type ContextJob interface {
+	GetJob() Job
+	WithJob(Job) ContextJob
+	GetContext() context.Context
+	WithContext(context.Context) ContextJob
 	GetId() string
 	WithId(string) ContextJob
 	GetSubId() uint64
 	WithSubId(uint64) ContextJob
-	GetContext() context.Context
-	WithContext(context.Context) ContextJob
 	GetStatus() JobStatus
 	WithStatus(JobStatus) ContextJob
 	GetStartTime() time.Time
@@ -84,14 +88,15 @@ type ContextJob interface {
 }
 
 type ContextTask interface {
-	Task
 	Stats
+	GetTask() Task
+	WithTask(Task) ContextTask
+	GetContext() context.Context
+	WithContext(context.Context) ContextTask
 	GetId() string
 	WithId(string) ContextTask
 	GetJobSubId() uint64
 	WithJobSubId(id uint64) ContextTask
-	GetContext() context.Context
-	WithContext(context.Context) ContextTask
 	GetStatus() TaskStatus
 	WithStatus(TaskStatus) ContextTask
 	GetStartTime() time.Time

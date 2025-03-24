@@ -12,17 +12,18 @@ func main() {
 	hostnamePtr := flag.String("h", "", "-h HostName")
 	flag.Parse()
 
+	var ip []string
+	var hostnames []string
+	if *ipPtr != "" {
+		ip = strings.Split(*ipPtr, ",")
+	}
+	if *hostnamePtr != "" {
+		hostnames = strings.Split(*hostnamePtr, ",")
+	}
+
 	if *selfSignedPtr {
-		SelfSigned()
+		SelfSigned(hostnames)
 	} else {
-		var ip []string
-		var hostname []string
-		if *ipPtr != "" {
-			ip = strings.Split(*ipPtr, ",")
-		}
-		if *hostnamePtr != "" {
-			hostname = strings.Split(*hostnamePtr, ",")
-		}
-		CaSigned(*caPtr, ip, hostname)
+		CaSigned(*caPtr, ip, hostnames)
 	}
 }

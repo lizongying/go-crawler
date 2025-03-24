@@ -15,6 +15,6 @@ type Scheduler interface {
 	YieldRequest(Context, Request) error
 	YieldExtra(Context, any) error
 	GetExtra(Context, any) error
-	StartScheduler(Context) error
-	StopScheduler(Context) error
+	StartScheduler(Task) error
+	StopScheduler(Task) error
 }

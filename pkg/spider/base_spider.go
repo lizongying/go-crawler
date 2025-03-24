@@ -268,10 +268,10 @@ func (s *BaseSpider) registerFuncs() {
 }
 
 func (s *BaseSpider) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
-	return ctx.GetTask().Request(ctx, request)
+	return ctx.GetTask().GetTask().Request(ctx, request)
 }
 func (s *BaseSpider) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
-	return ctx.GetTask().YieldRequest(ctx, request)
+	return ctx.GetTask().GetTask().YieldRequest(ctx, request)
 }
 func (s *BaseSpider) MustYieldRequest(ctx pkg.Context, request pkg.Request) {
 	if err := s.YieldRequest(ctx, request); err != nil {
@@ -283,7 +283,7 @@ func (s *BaseSpider) NewRequest(ctx pkg.Context, options ...pkg.RequestOption) (
 	for _, v := range options {
 		v(req)
 	}
-	return ctx.GetTask().YieldRequest(ctx, req)
+	return ctx.GetTask().GetTask().YieldRequest(ctx, req)
 }
 func (s *BaseSpider) MustNewRequest(ctx pkg.Context, options ...pkg.RequestOption) {
 	if err := s.NewRequest(ctx, options...); err != nil {
@@ -296,7 +296,7 @@ func (s *BaseSpider) MustYieldItem(c pkg.Context, item pkg.Item) {
 	}
 }
 func (s *BaseSpider) YieldExtra(ctx pkg.Context, extra any) (err error) {
-	return ctx.GetTask().YieldExtra(ctx, extra)
+	return ctx.GetTask().GetTask().YieldExtra(ctx, extra)
 }
 func (s *BaseSpider) MustYieldExtra(ctx pkg.Context, extra any) {
 	if err := s.YieldExtra(ctx, extra); err != nil {
@@ -304,7 +304,7 @@ func (s *BaseSpider) MustYieldExtra(ctx pkg.Context, extra any) {
 	}
 }
 func (s *BaseSpider) GetExtra(ctx pkg.Context, extra any) (err error) {
-	return ctx.GetTask().GetExtra(ctx, extra)
+	return ctx.GetTask().GetTask().GetExtra(ctx, extra)
 }
 func (s *BaseSpider) MustGetExtra(ctx pkg.Context, extra any) {
 	if err := s.GetExtra(ctx, extra); err != nil {
@@ -315,7 +315,7 @@ func (s *BaseSpider) MustGetExtra(ctx pkg.Context, extra any) {
 	}
 }
 func (s *BaseSpider) YieldItem(ctx pkg.Context, item pkg.Item) (err error) {
-	return ctx.GetTask().YieldItem(ctx, item)
+	return ctx.GetTask().GetTask().YieldItem(ctx, item)
 }
 func (s *BaseSpider) RequestSlotLoad(slot string) (value any, ok bool) {
 	return s.requestSlots.Load(slot)

@@ -13,12 +13,13 @@ type StatsMiddleware struct {
 	logger pkg.Logger
 }
 
-func (m *StatsMiddleware) taskStopped(c pkg.Context) (err error) {
-	task := c.GetTask()
-	if c.GetSpider().GetId() != m.GetSpider().GetContext().GetSpider().GetId() {
+func (m *StatsMiddleware) taskStopped(task pkg.Task) (err error) {
+	ctx := task.GetContext()
+
+	if ctx.GetSpider().GetId() != m.GetSpider().GetContext().GetSpider().GetId() {
 		return
 	}
-	if !utils.InSlice(task.GetStatus(), []pkg.TaskStatus{
+	if !utils.InSlice(ctx.GetTask().GetStatus(), []pkg.TaskStatus{
 		pkg.TaskStatusSuccess,
 		pkg.TaskStatusFailure,
 	}) {
@@ -26,9 +27,9 @@ func (m *StatsMiddleware) taskStopped(c pkg.Context) (err error) {
 	}
 
 	var sl []any
-	sl = append(sl, c.GetSpider().GetName(), c.GetTask().GetId())
+	sl = append(sl, ctx.GetSpider().GetName(), ctx.GetTask().GetId())
 	keys := make([]string, 0)
-	kv := task.GetStats().GetMap()
+	kv := ctx.GetTask().GetStats().GetMap()
 	for k := range kv {
 		keys = append(keys, k)
 	}
