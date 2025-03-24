@@ -37,11 +37,22 @@ func (m *Middlewares) SetMiddleware(middleware pkg.Middleware, order uint8) {
 	name := reflect.TypeOf(middleware).Elem().String()
 	middleware.SetName(name)
 	middleware.SetOrder(order)
-	for k, v := range m.middlewares {
-		if v.Name() == name {
-			m.DelMiddleware(k)
+
+	newMiddlewares := make([]pkg.Middleware, 0, len(m.middlewares))
+
+	foundIndex := -1
+	for i, v := range m.middlewares {
+		if v.Name() != name {
+			foundIndex = i
 			break
 		}
+	}
+
+	if foundIndex != -1 {
+		newMiddlewares = append(newMiddlewares, m.middlewares[:foundIndex]...)
+		newMiddlewares = append(newMiddlewares, m.middlewares[foundIndex+1:]...)
+	} else {
+		newMiddlewares = append(newMiddlewares, m.middlewares...)
 	}
 
 	m.middlewares = append(m.middlewares, middleware)
