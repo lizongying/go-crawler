@@ -21,20 +21,21 @@ type Scheduler struct {
 	task    pkg.Task
 }
 
-func (s *Scheduler) StartScheduler(ctx pkg.Context) (err error) {
-	s.task = ctx.GetTask()
+func (s *Scheduler) StartScheduler(task pkg.Task) (err error) {
+	s.task = task
 	s.UnimplementedScheduler.SetTask(s.task)
+
+	ctx := task.GetContext()
 
 	s.initScheduler(ctx)
 
 	go s.HandleItem(ctx)
 
 	go s.handleRequest(ctx)
-
 	return
 }
 
-func (s *Scheduler) StopScheduler(_ pkg.Context) (err error) {
+func (s *Scheduler) StopScheduler(_ pkg.Task) (err error) {
 	return
 }
 func (s *Scheduler) initScheduler(_ pkg.Context) {

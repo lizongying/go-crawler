@@ -18,7 +18,7 @@ func (s *Spider) ParseCompress(_ pkg.Context, response pkg.Response) (err error)
 	return
 }
 
-// TestGzip go run cmd/testCompressSpider/*.go -c dev.yml -n test-compress -f TestGzip -m once
+// TestGzip go run cmd/test_compress_spider/*.go -c dev.yml -n test-compress -f TestGzip -m once
 func (s *Spider) TestGzip(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mock_servers.NewRouteGzip(s.logger))
 

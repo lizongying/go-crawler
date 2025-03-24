@@ -30,7 +30,7 @@ func (s *Client) jobChanged(job pkg.Context) (err error) {
 	_, err = s.client.JobChanged(ctx, &pb.Job{})
 	return
 }
-func (s *Client) taskChanged(task pkg.Context) (err error) {
+func (s *Client) taskChanged(task pkg.Task) (err error) {
 	ctx := context.Background()
 	_, err = s.client.TaskChanged(ctx, &pb.Task{})
 	return
@@ -83,12 +83,12 @@ func (s *Client) FromCrawler(crawler pkg.Crawler) (c *Client) {
 
 	s.client = pb.NewStatisticsClient(conn)
 
-	//signal := s.crawler.GetSignal()
-	//signal.RegisterCrawlerChanged(s.crawlerChanged)
-	//signal.RegisterSpiderChanged(s.spiderChanged)
-	//signal.RegisterJobChanged(s.jobChanged)
-	//signal.RegisterTaskChanged(s.taskChanged)
-	//signal.RegisterRequestChanged(s.requestChanged)
-	//signal.RegisterItemChanged(s.itemChanged)
+	signal := s.crawler.GetSignal()
+	signal.RegisterCrawlerChanged(s.crawlerChanged)
+	signal.RegisterSpiderChanged(s.spiderChanged)
+	signal.RegisterJobChanged(s.jobChanged)
+	signal.RegisterTaskChanged(s.taskChanged)
+	signal.RegisterRequestChanged(s.requestChanged)
+	signal.RegisterItemChanged(s.itemChanged)
 	return s
 }

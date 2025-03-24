@@ -174,7 +174,7 @@ func (s *Spider) TestTimeout(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestImages go run cmd/testSpider/*.go -c dev.yml -n test -f TestImages -m once
+// TestImages go run cmd/test_spider/*.go -c dev.yml -n test -f TestImages -m once
 func (s *Spider) TestImages(ctx pkg.Context, _ string) (err error) {
 	if err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl("https://chinese.aljazeera.net/wp-content/uploads/2023/03/1-126.jpg").

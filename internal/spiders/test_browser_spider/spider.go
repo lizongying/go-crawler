@@ -19,7 +19,7 @@ func (s *Spider) ParseOk(_ pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestSohu go run cmd/testBrowserSpider/*.go -c example.yml -n test-browser -f TestSohu -m once
+// TestSohu go run cmd/test_browser_spider/*.go -c example.yml -n test-browser -f TestSohu -m once
 func (s *Spider) TestSohu(ctx pkg.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl("https://www.sohu.com/").
@@ -31,7 +31,7 @@ func (s *Spider) TestSohu(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestOk go run cmd/testBrowserSpider/*.go -c example.yml -n test-browser -f TestOk -m once
+// TestOk go run cmd/test_browser_spider/*.go -c example.yml -n test-browser -f TestOk -m once
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	err = s.YieldRequest(ctx, request.NewRequest().
 		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
@@ -43,7 +43,7 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestAjax go run cmd/testBrowserSpider/*.go -c example.yml -n test-browser -f TestAjax -m once
+// TestAjax go run cmd/test_browser_spider/*.go -c example.yml -n test-browser -f TestAjax -m once
 func (s *Spider) TestAjax(ctx pkg.Context, _ string) (err error) {
 	b, _ := json.Marshal(map[string]string{"adultPassengersCount": "1", "adultsCount": "1", "departureDate": "2023-08-15", "departureTimeOfDay": "ALL_DAY", "destinationAirportCode": "SLC", "fareType": "USD", "from": "", "int": "HOMEQBOMAIR", "originationAirportCode": "LGA", "passengerType": "ADULT", "promoCode": "", "reset": "true", "returnDate": "2023-08-18", "returnTimeOfDay": "ALL_DAY", "to": "", "tripType": "roundtrip", "application": "air-booking", "site": "southwest"})
 

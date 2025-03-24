@@ -18,7 +18,7 @@ func (s *Spider) ParseDecode(_ pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// TestGbk go run cmd/testDecodeSpider/*.go -c dev.yml -n test-decode -f TestGbk -m once
+// TestGbk go run cmd/test_decode_spider/*.go -c dev.yml -n test-decode -f TestGbk -m once
 func (s *Spider) TestGbk(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mock_servers.NewRouteGbk(s.logger))
 

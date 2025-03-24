@@ -802,7 +802,7 @@ Turnoverrate   float32 `_json:"turnoverrate"`
 
 data可以设置根解析`_json:"data"`， 也就是里面的字段都是在根解析下，仅需要写属性就可以了。`_json:"name"`
 
-根标签和子标签可以混用，比如根标签用xpth，子标签用json
+根标签和子标签可以混用，比如根标签用xpath，子标签用json
 
 可以使用如下标签：
 
@@ -1113,7 +1113,9 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * request context
 * total
 * status
-* cdp
+* api option
+* branch/version/time
+* crawler spider job task change
 
 ```shell
 go get -u github.com/lizongying/go-css@latest

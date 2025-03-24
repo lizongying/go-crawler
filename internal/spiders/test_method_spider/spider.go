@@ -67,7 +67,7 @@ func (s *Spider) TestPost(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-// TestGet go run cmd/testMethodSpider/*.go -c dev.yml -n test-method -f TestGet -m once
+// TestGet go run cmd/test_method_spider/*.go -c dev.yml -n test-method -f TestGet -m once
 func (s *Spider) TestGet(ctx pkg.Context, _ string) (err error) {
 	s.AddMockServerRoutes(mock_servers.NewRouteGet(s.logger))
 

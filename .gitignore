@@ -8,3 +8,4 @@ static/dist/docs
 static/dist/index.html
 .hugo_build.lock
 #docs/public
+cmd/api

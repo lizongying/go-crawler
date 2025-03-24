@@ -30,7 +30,7 @@ type Task struct {
 func (t *Task) GetContext() pkg.Context {
 	return t.context
 }
-func (t *Task) WithContext(ctx pkg.Context) *Task {
+func (t *Task) WithContext(ctx pkg.Context) pkg.Task {
 	t.context = ctx
 	return t
 }
@@ -56,10 +56,10 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 				WithStatus(pkg.TaskStatusPending).
 				WithStartTime(time.Now()).
 				WithStats(new(stats.MediaStats))))
-		t.crawler.GetSignal().TaskChanged(t.context)
+		t.crawler.GetSignal().TaskChanged(t)
 	}
 
-	if err = t.StartScheduler(t.context); err != nil {
+	if err = t.StartScheduler(t); err != nil {
 		t.logger.Error(err)
 		return
 	}
@@ -117,7 +117,7 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 	return
 }
 func (t *Task) stop(err error) {
-	_ = t.StopScheduler(t.context)
+	_ = t.StopScheduler(t)
 
 	if err != nil {
 		t.context.GetTask().WithStopReason(err.Error())
@@ -125,7 +125,7 @@ func (t *Task) stop(err error) {
 	} else {
 		t.context.GetTask().WithStatus(pkg.TaskStatusSuccess)
 	}
-	t.crawler.GetSignal().TaskChanged(t.context)
+	t.crawler.GetSignal().TaskChanged(t)
 	t.job.TaskStopped(t.context, err)
 	return
 }

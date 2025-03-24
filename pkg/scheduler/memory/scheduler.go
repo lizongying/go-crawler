@@ -23,18 +23,17 @@ type Scheduler struct {
 
 // StartScheduler
 // ctx: ContextTask
-func (s *Scheduler) StartScheduler(ctx pkg.Context) (err error) {
-	s.task = ctx.GetTask()
+func (s *Scheduler) StartScheduler(task pkg.Task) (err error) {
+	s.task = task
 	s.UnimplementedScheduler.SetTask(s.task)
 
-	go s.HandleItem(ctx)
+	go s.HandleItem(task.GetContext())
 
-	go s.handleRequest(ctx)
-
+	go s.handleRequest(task.GetContext())
 	return
 }
 
-func (s *Scheduler) StopScheduler(_ pkg.Context) (err error) {
+func (s *Scheduler) StopScheduler(_ pkg.Task) (err error) {
 	return
 }
 func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {

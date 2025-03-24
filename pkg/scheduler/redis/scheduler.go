@@ -29,15 +29,17 @@ type Scheduler struct {
 	batch               uint8
 }
 
-func (s *Scheduler) StartScheduler(ctx pkg.Context) (err error) {
+func (s *Scheduler) StartScheduler(task pkg.Task) (err error) {
 	if s.redis == nil {
 		err = errors.New(`redis nil. please check if "redis_enable: false"`)
 		s.logger.Error(err)
 		return
 	}
 
-	s.task = ctx.GetTask()
+	s.task = task
 	s.UnimplementedScheduler.SetTask(s.task)
+
+	ctx := task.GetContext()
 
 	s.initScheduler(ctx)
 
@@ -47,7 +49,7 @@ func (s *Scheduler) StartScheduler(ctx pkg.Context) (err error) {
 	return
 }
 
-func (s *Scheduler) StopScheduler(_ pkg.Context) (err error) {
+func (s *Scheduler) StopScheduler(_ pkg.Task) (err error) {
 	return
 }
 func (s *Scheduler) initScheduler(ctx pkg.Context) {

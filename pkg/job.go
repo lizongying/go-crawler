@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+type Job interface {
+}
+
 type JobStatus uint8
 
 const (

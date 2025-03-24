@@ -6,6 +6,7 @@ package api;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
 
 service Statistics {
   rpc CrawlerChanged (Crawler) returns (Response) {}
@@ -14,6 +15,17 @@ service Statistics {
   rpc TaskChanged (Task) returns (Response) {}
   rpc RequestChanged (Request) returns (Response) {}
   rpc ItemChanged (Item) returns (Response) {}
+  rpc GetCrawlers (RequestCrawlers) returns (ResponseCrawlers) {
+    option (google.api.http) = {
+      post: "/v1/example/echo"
+      body: "*"
+    };
+  }
+  rpc GetSpiders (RequestSpiders) returns (ResponseSpiders) {}
+  rpc GetJobs (RequestJobs) returns (ResponseJobs) {}
+  rpc GetTasks (RequestTasks) returns (ResponseTasks) {}
+  rpc GetRequests (RequestRequests) returns (ResponseRequests) {}
+  rpc GetItems (RequestItems) returns (ResponseItems) {}
 }
 
 message Context {
@@ -169,5 +181,43 @@ message Item {
 }
 
 message Response {
+  string message = 1;
+}
+
+message RequestCrawlers {
+  string message = 1;
+}
+message RequestSpiders {
+  string message = 1;
+}
+message RequestJobs {
+  string message = 1;
+}
+message RequestTasks {
+  string message = 1;
+}
+message RequestRequests {
+  string message = 1;
+}
+message RequestItems {
+  string message = 1;
+}
+
+message ResponseCrawlers {
+  string message = 1;
+}
+message ResponseSpiders {
+  string message = 1;
+}
+message ResponseJobs {
+  string message = 1;
+}
+message ResponseTasks {
+  string message = 1;
+}
+message ResponseRequests {
+  string message = 1;
+}
+message ResponseItems {
   string message = 1;
 }

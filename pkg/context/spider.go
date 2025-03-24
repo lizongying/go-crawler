@@ -26,6 +26,13 @@ func (c *Spider) WithSpider(spider pkg.Spider) pkg.ContextSpider {
 	c.Spider = spider
 	return c
 }
+func (c *Spider) GetContext() context.Context {
+	return c.Context
+}
+func (c *Spider) WithContext(ctx context.Context) pkg.ContextSpider {
+	c.Context = ctx
+	return c
+}
 func (c *Spider) GetId() uint64 {
 	return c.Id
 }
@@ -38,13 +45,6 @@ func (c *Spider) GetName() string {
 }
 func (c *Spider) WithName(name string) pkg.ContextSpider {
 	c.Name = name
-	return c
-}
-func (c *Spider) GetContext() context.Context {
-	return c.Context
-}
-func (c *Spider) WithContext(ctx context.Context) pkg.ContextSpider {
-	c.Context = ctx
 	return c
 }
 func (c *Spider) GetStatus() pkg.SpiderStatus {

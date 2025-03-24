@@ -53,14 +53,14 @@ func (s *Signal) JobChanged(ctx pkg.Context) {
 		_ = v(ctx)
 	}
 }
-func (s *Signal) TaskChanged(ctx pkg.Context) {
+func (s *Signal) TaskChanged(task pkg.Task) {
 	for _, v := range s.taskChanged {
-		_ = v(ctx)
+		_ = v(task)
 	}
 }
-func (s *Signal) RequestChanged(ctx pkg.Request) {
+func (s *Signal) RequestChanged(request pkg.Request) {
 	for _, v := range s.requestChanged {
-		_ = v(ctx)
+		_ = v(request)
 	}
 }
 func (s *Signal) ItemChanged(item pkg.Item) {

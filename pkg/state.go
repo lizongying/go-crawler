@@ -103,13 +103,33 @@ func NewMultiState(states ...*State) *MultiState {
 	return &MultiState{states: states}
 }
 
+// IsReady checks if all states in the MultiState are ready.
+func (m *MultiState) IsReady() bool {
+	for _, v := range m.states {
+		if !v.IsReady() {
+			return false
+		}
+	}
+	return len(m.states) > 1
+}
+
+// IsZero checks if all states in the MultiState are zero.
+func (m *MultiState) IsZero() bool {
+	for _, v := range m.states {
+		if !v.IsZero() {
+			return false
+		}
+	}
+	return true
+}
+
 // RegisterIsReady registers functions to be called when any state in the MultiState is ready.
-func (s *MultiState) RegisterIsReady(fns ...func()) {
-	s.fnIsReady = append(s.fnIsReady, fns...)
-	for _, v := range s.states {
+func (m *MultiState) RegisterIsReady(fns ...func()) {
+	m.fnIsReady = append(m.fnIsReady, fns...)
+	for _, v := range m.states {
 		fn := func() {
-			if s.IsReady() {
-				for _, v2 := range s.fnIsReady {
+			if m.IsReady() {
+				for _, v2 := range m.fnIsReady {
 					v2()
 				}
 			}
@@ -119,12 +139,12 @@ func (s *MultiState) RegisterIsReady(fns ...func()) {
 }
 
 // RegisterIsZero registers functions to be called when any state in the MultiState is zero.
-func (s *MultiState) RegisterIsZero(fns ...func()) {
-	s.fnIsZero = append(s.fnIsZero, fns...)
-	for _, v := range s.states {
+func (m *MultiState) RegisterIsZero(fns ...func()) {
+	m.fnIsZero = append(m.fnIsZero, fns...)
+	for _, v := range m.states {
 		fn := func() {
-			if s.IsZero() {
-				for _, v2 := range s.fnIsZero {
+			if m.IsZero() {
+				for _, v2 := range m.fnIsZero {
 					v2()
 				}
 			}
@@ -134,12 +154,12 @@ func (s *MultiState) RegisterIsZero(fns ...func()) {
 }
 
 // RegisterIsReadyAndIsZero registers functions to be called when any state in the MultiState is ready and zero.
-func (s *MultiState) RegisterIsReadyAndIsZero(fns ...func()) {
-	s.fnIsReadyAndIsZero = append(s.fnIsReadyAndIsZero, fns...)
-	for _, v := range s.states {
+func (m *MultiState) RegisterIsReadyAndIsZero(fns ...func()) {
+	m.fnIsReadyAndIsZero = append(m.fnIsReadyAndIsZero, fns...)
+	for _, v := range m.states {
 		fn := func() {
-			if s.IsReadyAndIsZero() {
-				for _, v2 := range s.fnIsReadyAndIsZero {
+			if m.IsReadyAndIsZero() {
+				for _, v2 := range m.fnIsReadyAndIsZero {
 					v2()
 				}
 			}
@@ -148,33 +168,13 @@ func (s *MultiState) RegisterIsReadyAndIsZero(fns ...func()) {
 	}
 }
 
-// IsReady checks if all states in the MultiState are ready.
-func (s *MultiState) IsReady() bool {
-	for _, v := range s.states {
-		if !v.IsReady() {
-			return false
-		}
-	}
-	return len(s.states) > 1
-}
-
-// IsZero checks if all states in the MultiState are zero.
-func (s *MultiState) IsZero() bool {
-	for _, v := range s.states {
-		if !v.IsZero() {
-			return false
-		}
-	}
-	return true
-}
-
 // IsReadyAndIsZero checks if all states in the MultiState are ready and zero.
-func (s *MultiState) IsReadyAndIsZero() bool {
-	return s.IsReady() && s.IsZero()
+func (m *MultiState) IsReadyAndIsZero() bool {
+	return m.IsReady() && m.IsZero()
 }
 
-func (s *MultiState) Clear() {
-	for _, v := range s.states {
+func (m *MultiState) Clear() {
+	for _, v := range m.states {
 		v.Clear()
 	}
 	return

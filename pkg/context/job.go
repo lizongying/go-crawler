@@ -8,6 +8,7 @@ import (
 )
 
 type Job struct {
+	Job         pkg.Job         `json:"-"`
 	Context     context.Context `json:"-"`
 	Id          string          `json:"id,omitempty"`
 	SubId       uint64          `json:"sub_id,omitempty"`
@@ -24,6 +25,20 @@ type Job struct {
 	StopReason  string          `json:"stop_reason,omitempty"`
 }
 
+func (c *Job) GetJob() pkg.Job {
+	return c.Job
+}
+func (c *Job) WithJob(job pkg.Job) pkg.ContextJob {
+	c.Job = job
+	return c
+}
+func (c *Job) GetContext() context.Context {
+	return c.Context
+}
+func (c *Job) WithContext(ctx context.Context) pkg.ContextJob {
+	c.Context = ctx
+	return c
+}
 func (c *Job) GetId() string {
 	return c.Id
 }
@@ -36,13 +51,6 @@ func (c *Job) GetSubId() uint64 {
 }
 func (c *Job) WithSubId(id uint64) pkg.ContextJob {
 	c.SubId = id
-	return c
-}
-func (c *Job) GetContext() context.Context {
-	return c.Context
-}
-func (c *Job) WithContext(ctx context.Context) pkg.ContextJob {
-	c.Context = ctx
 	return c
 }
 func (c *Job) GetStatus() pkg.JobStatus {

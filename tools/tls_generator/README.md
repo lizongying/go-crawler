@@ -2,8 +2,8 @@
 
 ```shell
 # CA-Signed Certificate
-./releases/tls
+./releases/tls_generator
 
 # Self-Signed Certificate
-./releases/tls -s
+./releases/tls_generator -s
 ```

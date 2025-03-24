@@ -66,6 +66,6 @@ web_server:
 	go build -ldflags "-s -w" -o ./releases/web_server ./tools/web_server
 
 protoc_gen_go:
-	protoc --go_out=./ --go_opt=paths=source_relative \
-        --go-grpc_out=./ --go-grpc_opt=paths=source_relative \
+	protoc -I ./pkg/api/proto --go_out=./pkg/api/proto --go_opt=paths=source_relative \
+        --go-grpc_out=./pkg/api/proto --go-grpc_opt=paths=source_relative \
         ./pkg/api/proto/statistics.proto
