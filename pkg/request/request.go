@@ -62,6 +62,7 @@ type Request struct {
 	Fingerprint        string              `json:"fingerprint,omitempty"`
 	Client             pkg.Client          `json:"client,omitempty"`
 	Ajax               bool                `json:"ajax,omitempty"`
+	Screenshot         string              `json:"screenshot,omitempty"`
 }
 
 func (r *Request) GetUniqueKey() string {
@@ -285,6 +286,13 @@ func (r *Request) IsAjax() bool {
 }
 func (r *Request) SetAjax(ajax bool) pkg.Request {
 	r.Ajax = ajax
+	return r
+}
+func (r *Request) GetScreenshot() string {
+	return r.Screenshot
+}
+func (r *Request) SetScreenshot(screenshot string) pkg.Request {
+	r.Screenshot = screenshot
 	return r
 }
 func (r *Request) setErr(key string, value error) {
