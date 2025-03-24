@@ -69,6 +69,7 @@ func (b *Browser) init() (err error) {
 	}
 
 	if b.proxy != nil {
+		b.logger.Info("Using proxy from " + b.proxy.String())
 		l.Proxy(b.proxy.String())
 	}
 
@@ -173,21 +174,13 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 	}
 
 	//wait()
+	b.logger.Info("loading")
+	page.MustWaitLoad()
+	b.logger.Info("loaded")
 
 	response = new(response2.Response)
 	response.SetRequest(request)
 	response.SetResponse(new(http.Response))
-
-	storePath := request.GetScreenshot()
-	if request.GetScreenshot() != "" {
-		page.MustWaitLoad()
-		_ = page.MustScreenshot(storePath)
-		response.SetImages([]pkg.Image{&media.Image{
-			File: media.File{
-				StorePath: storePath,
-			},
-		}})
-	}
 
 	if request.IsAjax() {
 		headers := make(map[string]string)
@@ -198,6 +191,7 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 		if request.GetTimeout() > 0 {
 			timeout = request.GetTimeout()
 		}
+
 		res, e := page.Eval(`
 (url, method, headers, body, timeout) => {
 	return new Promise((resolve, reject) => {
@@ -228,39 +222,54 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 }`, request.GetUrl(), request.GetMethod(), headers, request.GetBodyStr(), int(timeout/time.Millisecond))
 		if e != nil {
 			err = e
+			b.logger.Error(err)
 			return
 		}
 
 		response.SetStatusCode(res.Value.Get("status").Int())
+		//b.logger.Info("status", response.StatusCode())
+		//b.logger.Info("res.Value", res.Value)
 		response.SetBodyBytes([]byte(res.Value.Get("body").Str()))
-		return
+	} else {
+		response.SetStatusCode(200)
+
+		if source, _ := page.HTML(); source != "" {
+			response.SetBodyBytes([]byte(source))
+		}
+
+		// cookie
+		cookies, e := page.Cookies([]string{})
+		if e != nil {
+			err = e
+			b.logger.Error(err)
+			return
+		}
+
+		for _, c := range cookies {
+			response.SetCookies(&http.Cookie{
+				Name:       c.Name,
+				Value:      c.Value,
+				Path:       c.Path,
+				Domain:     c.Domain,
+				Expires:    c.Expires.Time(),
+				RawExpires: c.Expires.String(),
+				Secure:     c.Secure,
+				HttpOnly:   c.HTTPOnly,
+			})
+		}
 	}
 
-	response.SetStatusCode(200)
-
-	if source, _ := page.HTML(); source != "" {
-		response.SetBodyBytes([]byte(source))
+	storePath := request.GetScreenshot()
+	if request.GetScreenshot() != "" {
+		time.Sleep(3 * time.Second)
+		_ = page.MustScreenshot(storePath)
+		response.SetImages([]pkg.Image{&media.Image{
+			File: media.File{
+				StorePath: storePath,
+			},
+		}})
 	}
 
-	// cookie
-	cookies, err := page.Cookies([]string{})
-	if err != nil {
-		b.logger.Error(err)
-		return
-	}
-
-	for _, c := range cookies {
-		response.SetCookies(&http.Cookie{
-			Name:       c.Name,
-			Value:      c.Value,
-			Path:       c.Path,
-			Domain:     c.Domain,
-			Expires:    c.Expires.Time(),
-			RawExpires: c.Expires.String(),
-			Secure:     c.Secure,
-			HttpOnly:   c.HTTPOnly,
-		})
-	}
 	response.SetSpendTime(time.Now().Sub(start))
 
 	return
