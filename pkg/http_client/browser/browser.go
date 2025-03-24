@@ -174,6 +174,7 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 	}
 
 	//wait()
+
 	b.logger.Info("loading")
 	page.MustWaitLoad()
 	b.logger.Info("loaded")
@@ -181,6 +182,17 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 	response = new(response2.Response)
 	response.SetRequest(request)
 	response.SetResponse(new(http.Response))
+
+	storePath := request.GetScreenshot()
+	if request.GetScreenshot() != "" {
+		page.MustWaitLoad()
+		_ = page.MustScreenshot(storePath)
+		response.SetImages([]pkg.Image{&media.Image{
+			File: media.File{
+				StorePath: storePath,
+			},
+		}})
+	}
 
 	if request.IsAjax() {
 		headers := make(map[string]string)
