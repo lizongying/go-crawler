@@ -22,7 +22,7 @@
     7. [响应](#响应)
     8. [信号](#信号)
     9. [代理](#代理)
-    10. [文件和图片下载](#文件和图片下载)
+    10. [媒体下载](#媒体下载)
     11. [模拟服务](#模拟服务)
     12. [配置](#配置)
     13. [启动](#启动)
@@ -1116,6 +1116,7 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * api option
 * branch/version/time
 * crawler spider job task change
+* response 图片和文本同时存在？
 
 ```shell
 go get -u github.com/lizongying/go-css@latest

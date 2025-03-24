@@ -111,6 +111,8 @@ type Request interface {
 	SetClient(Client) Request
 	IsAjax() bool
 	SetAjax(bool) Request
+	GetScreenshot() string
+	SetScreenshot(string) Request
 	Err() map[string]error
 	SetUrl(string) Request
 	GetUrl() string

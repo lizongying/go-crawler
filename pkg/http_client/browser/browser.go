@@ -6,6 +6,7 @@ import (
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/launcher/flags"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/media"
 	response2 "github.com/lizongying/go-crawler/pkg/response"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"net/http"
@@ -159,8 +160,9 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 
 		for _, v := range request.Cookies() {
 			page.MustSetCookies(&proto.NetworkCookieParam{
-				Name:  v.Name,
-				Value: v.Value,
+				Name:   v.Name,
+				Value:  v.Value,
+				Domain: request.GetURL().Host,
 			})
 		}
 	}
@@ -171,11 +173,21 @@ func (b *Browser) DoRequest(ctx context.Context, request pkg.Request) (response 
 	}
 
 	//wait()
-	time.Sleep(2 * time.Second)
 
 	response = new(response2.Response)
 	response.SetRequest(request)
 	response.SetResponse(new(http.Response))
+
+	storePath := request.GetScreenshot()
+	if request.GetScreenshot() != "" {
+		page.MustWaitLoad()
+		_ = page.MustScreenshot(storePath)
+		response.SetImages([]pkg.Image{&media.Image{
+			File: media.File{
+				StorePath: storePath,
+			},
+		}})
+	}
 
 	if request.IsAjax() {
 		headers := make(map[string]string)
