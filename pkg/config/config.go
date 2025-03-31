@@ -419,7 +419,7 @@ func (c *Config) GetEnableFilterPipeline() bool {
 	return *c.EnableFilterPipeline
 }
 func (c *Config) GetEnableNonePipeline() bool {
-	if c.EnableCsvPipeline == nil {
+	if c.EnableNonePipeline == nil {
 		enableNonePipeline := defaultEnableNonePipeline
 		c.EnableCsvPipeline = &enableNonePipeline
 	}
