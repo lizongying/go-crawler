@@ -1101,14 +1101,20 @@ Run
       e.g., in Redis usage), it can be used. However, for greater generality, using `extra` might be more convenient.
 
   Enqueuing:
-    * `YieldExtra` or `MustYieldExtra`
+    * `YieldExtra` or `MustYieldExtra` or `UnsafeYieldExtra`
 
   Dequeuing:
     * `GetExtra` or `MustGetExtra`
 
 * Whether to use `Must[method]`, such as `MustYieldRequest`?
 
-  `Must[method]` is more concise, but it might be less convenient for troubleshooting errors. Whether to use it depends
+  `Must[method]` is more concise, but it might be less convenient for troubleshooting errors, and will exit on error. Whether to use it depends
+  on the individual style of the user.
+  If there's a need for specific error handling, then regular methods like `YieldRequest` should be used.
+
+* Whether to use `Unsafe[method]`, such as `UnsafeYieldRequest`?
+
+  `Unsafe[method]` is more concise, but it might be less convenient for troubleshooting errors. Whether to use it depends
   on the individual style of the user.
   If there's a need for specific error handling, then regular methods like `YieldRequest` should be used.
 
@@ -1125,12 +1131,17 @@ example_spider.go
 package main
 
 import (
-	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
+)
+
+const (
+	name     = "example"
+	host     = "https://httpbin.org"
+	okUrl    = "/get"
+	jsonName = "example"
 )
 
 type ExtraOk struct {
@@ -1143,24 +1154,23 @@ type DataOk struct {
 
 type Spider struct {
 	pkg.Spider
-	logger pkg.Logger
 }
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	response.MustUnmarshalExtra(&extra)
+	response.UnsafeExtra(&extra)
 
-	s.MustYieldItem(ctx, items.NewItemNone().
+	s.UnsafeYieldItem(ctx, items.NewItemNone().
 		SetData(&DataOk{
 			Count: extra.Count,
 		}))
 
 	if extra.Count > 0 {
-		s.logger.Info("manual stop")
+		s.Logger().Info("manual stop")
 		return
 	}
 
-	s.MustYieldRequest(ctx, request.NewRequest().
+	s.UnsafeYieldRequest(ctx, request.NewRequest().
 		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
@@ -1171,7 +1181,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 	s.MustYieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
+		SetUrl(okUrl).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk))
 	return
@@ -1180,17 +1190,13 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	spider = &Spider{
 		Spider: baseSpider,
-		logger: baseSpider.GetLogger(),
 	}
-	spider.WithOptions(
-		pkg.WithName("example"),
-		pkg.WithHost("https://localhost:8081"),
-	)
+	spider.SetName(name).SetHost(host).WithJsonLinesPipeline()
 	return
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mock_servers.NewRouteOk))
+	app.NewApp(NewSpider).Run()
 }
 
 ```
@@ -1207,6 +1213,16 @@ For more examples, you can refer to the following project.
 [go-crawler-example](https://github.com/lizongying/go-crawler-example)
 
 ## Tools
+
+### Generate Spider
+
+* -n Spider name
+* -f Force overwrite
+* -h help
+
+```shell
+go run tools/spider_generator/*.go
+```
 
 ### Certificate
 

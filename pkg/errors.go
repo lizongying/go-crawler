@@ -15,3 +15,10 @@ var ErrDropItem = errors.New("DropItem")
 
 var ErrQueueTimeout = errors.New("queue timeout")
 var ErrTimeout = errors.New("timeout")
+
+var ErrSpiderNotFound = errors.New("spider not found")
+
+var ErrYieldRequestFailed = errors.New("yield request failed")
+var ErrYieldExtraFailed = errors.New("yield extra failed")
+var ErrYieldItemFailed = errors.New("yield item failed")
+var ErrNilProxy = errors.New("proxy enabled but proxy is nil")

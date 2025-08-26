@@ -15,12 +15,12 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	//s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	//s.logger.Info("response", response.Text())
 
 	if extra.Count > 10 {
 		return
@@ -38,7 +38,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	//}))
 
 	//if extra.Count%1000 == 0 {
-	//	s.logger.Info("extra", utils.JsonStr(extra))
+	//	s.logger.Info("extra", utils.UnsafeJSON(extra))
 	//}
 	count := extra.Count + 1
 	//err = s.YieldRequest(ctx, request.NewRequest().

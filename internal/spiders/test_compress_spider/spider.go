@@ -14,7 +14,7 @@ type Spider struct {
 
 func (s *Spider) ParseCompress(_ pkg.Context, response pkg.Response) (err error) {
 	s.logger.Info("header", response.Headers())
-	s.logger.Info("body", response.BodyStr())
+	s.logger.Info("body", response.Text())
 	return
 }
 

@@ -25,7 +25,7 @@ func (e *Exporter) Export(item pkg.Item) (err error) {
 	return
 }
 
-func (e *Exporter) PipelineNames() (pipelines map[uint8]string) {
+func (e *Exporter) Names() (pipelines map[uint8]string) {
 	e.locker.Lock()
 	defer e.locker.Unlock()
 
@@ -58,7 +58,7 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 			if v.Order() == order {
 				return
 			} else {
-				e.DelPipeline(k)
+				e.Remove(k)
 				break
 			}
 		}
@@ -77,7 +77,7 @@ func (e *Exporter) SetPipeline(pipeline pkg.Pipeline, order uint8) {
 	e.processItemFns = processItemFns
 }
 
-func (e *Exporter) DelPipeline(index int) {
+func (e *Exporter) Remove(index int) {
 	e.locker.Lock()
 	defer e.locker.Unlock()
 
@@ -92,7 +92,7 @@ func (e *Exporter) DelPipeline(index int) {
 	return
 }
 
-func (e *Exporter) CleanPipelines() {
+func (e *Exporter) Clean() {
 	e.locker.Lock()
 	defer e.locker.Unlock()
 

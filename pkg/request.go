@@ -151,6 +151,7 @@ type Request interface {
 	SetExtra(any) Request
 	UnmarshalExtra(any) error
 	MustUnmarshalExtra(any)
+	UnsafeExtra(any)
 	Marshal() ([]byte, error)
 	SetBasicAuth(string, string) Request
 	RequestContext() context.Context

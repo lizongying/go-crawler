@@ -12,7 +12,7 @@ type Spider struct {
 }
 
 func (s *Spider) ParseOk(_ pkg.Context, response pkg.Response) (err error) {
-	s.logger.Info(response.BodyStr())
+	s.logger.Info(response.Text())
 	return
 }
 

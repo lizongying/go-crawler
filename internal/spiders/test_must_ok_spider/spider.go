@@ -15,9 +15,9 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	response.MustUnmarshalExtra(&extra)
+	response.UnsafeExtra(&extra)
 
-	s.MustYieldItem(ctx, items.NewItemNone().
+	s.UnsafeYieldItem(ctx, items.NewItemNone().
 		SetData(&DataOk{
 			Count: extra.Count,
 		}))

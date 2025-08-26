@@ -20,6 +20,7 @@ type Response interface {
 	BodyBytes() []byte
 	SetBodyBytes([]byte) Response
 	BodyStr() string
+	Text() string
 	SetBodyStr(string) Response
 	Files() []File
 	SetFiles([]File) Response
@@ -61,6 +62,8 @@ type Response interface {
 	UniqueKey() string
 	UnmarshalExtra(any) error
 	MustUnmarshalExtra(any)
+	Extra(any) error
+	UnsafeExtra(any)
 	Url() string
 	URL() *url.URL
 	Context() context.Context

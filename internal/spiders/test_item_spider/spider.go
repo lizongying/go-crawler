@@ -21,12 +21,12 @@ type Spider struct {
 
 func (s *Spider) ParseMysql(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	s.logger.Info("response", response.Text())
 
 	if extra.Count > 0 {
 		return
@@ -61,12 +61,12 @@ func (s *Spider) ParseMysql(ctx pkg.Context, response pkg.Response) (err error) 
 
 func (s *Spider) ParseKafka(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	s.logger.Info("response", response.Text())
 
 	if extra.Count > 0 {
 		return
@@ -101,12 +101,12 @@ func (s *Spider) ParseKafka(ctx pkg.Context, response pkg.Response) (err error) 
 
 func (s *Spider) ParseMongo(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	s.logger.Info("response", response.Text())
 
 	if extra.Count > 0 {
 		return
@@ -138,12 +138,12 @@ func (s *Spider) ParseMongo(ctx pkg.Context, response pkg.Response) (err error) 
 
 func (s *Spider) ParseCsv(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	s.logger.Info("response", response.Text())
 
 	if extra.Count > 2 {
 		return
@@ -175,12 +175,12 @@ func (s *Spider) ParseCsv(ctx pkg.Context, response pkg.Response) (err error) {
 
 func (s *Spider) ParseJsonl(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	s.logger.Info("response", response.Text())
 
 	if extra.Count > 2 {
 		return
@@ -212,12 +212,12 @@ func (s *Spider) ParseJsonl(ctx pkg.Context, response pkg.Response) (err error) 
 
 func (s *Spider) ParseSqlite(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	s.logger.Info("response", response.Text())
 
 	if extra.Count > 2 {
 		return

@@ -17,6 +17,10 @@ info:
 tidy:
 	go mod tidy
 
+spider_generator:
+	go vet ./tools/spider_generator
+	go build -ldflags "-s -w" -o ./releases/spider_generator ./tools/spider_generator
+
 tls_generator:
 	go vet ./tools/tls_generator
 	go build -ldflags "-s -w" -o ./releases/tls_generator ./tools/tls_generator

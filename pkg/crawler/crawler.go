@@ -200,8 +200,7 @@ func (c *Crawler) RunJob(ctx context.Context, spiderName string, startFunc strin
 	}
 
 	if spider == nil {
-		err = errors.New("nil spider")
-		c.logger.Error(err)
+		err = fmt.Errorf("%w: %s", pkg.ErrSpiderNotFound, spiderName)
 		return
 	}
 

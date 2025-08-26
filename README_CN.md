@@ -954,18 +954,24 @@ make web_server
     * `extra`
       是request中的一个结构体字段，在框架的设计里是包含能够构造唯一的请求（大多数情况下）。比如一个分类下的列表页，可能包含分类id、页码；比如一个详情页，可能包含详情id。为了兼容更多的语言，在队列中的存储形式为json格式，比较节约空间，推荐使用。
     * `unique_key`
-      是框架里请求的唯一标识，是一个字符串。在一些情况下，是可以代表唯一的，但在需要多个字段联合唯一的情况下会比较麻烦，比如列表页，比如分类加id的详情页等。如果内存（redis等使用）紧张，可以使用。但为了更加通用，可能使用`extra`
+      是框架里请求的唯一标识，是一个字符串。在一些情况下，是可以代表唯一的，但在需要多个字段联合唯一的情况下会比较麻烦，比如列表页，比如分类加id的详情页等。如果内存（redis等使用）紧张，可以使用。但为了更加通用，可能使用
+      `extra`
       更加方便。
 
   入队：
-    * `YieldExtra`或`MustYieldExtra`
+    * `YieldExtra`或`MustYieldExtra`或`UnsafeYieldExtra`
 
   出队:
     * `GetExtra`或`MustGetExtra`
 
 * 该不该使用`Must[method]`，如`MustYieldRequest`?
 
-  `Must[method]`更加简洁，但可能对于排查错误不太方便。是不是用，需要看使用者的个人风格。
+  `Must[method]`更加简洁，但可能对于排查错误不太方便，并且遇到错误会退出。是不是用，需要看使用者的个人风格。
+  如果需要特殊处理err，就需要使用普通的方法了，如`YieldRequest`。
+
+* 该不该使用`Unsafe[method]`，如`UnsafeYieldRequest`?
+
+  `Unsafe[method]`更加简洁，但可能对于排查错误不太方便。是不是用，需要看使用者的个人风格。
   如果需要特殊处理err，就需要使用普通的方法了，如`YieldRequest`。
 
 * 其他
@@ -981,12 +987,17 @@ example_spider.go
 package main
 
 import (
-	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/app"
 	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/request"
+)
+
+const (
+	name     = "example"
+	host     = "https://httpbin.org"
+	okUrl    = "/get"
+	jsonName = "example"
 )
 
 type ExtraOk struct {
@@ -999,24 +1010,23 @@ type DataOk struct {
 
 type Spider struct {
 	pkg.Spider
-	logger pkg.Logger
 }
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	response.MustUnmarshalExtra(&extra)
+	response.UnsafeExtra(&extra)
 
-	s.MustYieldItem(ctx, items.NewItemNone().
+	s.UnsafeYieldItem(ctx, items.NewItemNone().
 		SetData(&DataOk{
 			Count: extra.Count,
 		}))
 
 	if extra.Count > 0 {
-		s.logger.Info("manual stop")
+		s.Logger().Info("manual stop")
 		return
 	}
 
-	s.MustYieldRequest(ctx, request.NewRequest().
+	s.UnsafeYieldRequest(ctx, request.NewRequest().
 		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: extra.Count + 1,
@@ -1026,8 +1036,8 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 }
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
-	s.MustYieldRequest(ctx, request.NewRequest().
-		SetUrl(fmt.Sprintf("%s%s", s.GetHost(), mock_servers.UrlOk)).
+	s.UnsafeYieldRequest(ctx, request.NewRequest().
+		SetUrl(okUrl).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk))
 	return
@@ -1036,17 +1046,13 @@ func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	spider = &Spider{
 		Spider: baseSpider,
-		logger: baseSpider.GetLogger(),
 	}
-	spider.WithOptions(
-		pkg.WithName("example"),
-		pkg.WithHost("https://localhost:8081"),
-	)
+	spider.SetName(name).SetHost(host).WithJsonLinesPipeline()
 	return
 }
 
 func main() {
-	app.NewApp(NewSpider).Run(pkg.WithMockServerRoutes(mock_servers.NewRouteOk))
+	app.NewApp(NewSpider).Run()
 }
 
 ```
@@ -1063,6 +1069,16 @@ go run example_spider.go -c example.yml -n example -f TestOk -m once
 [go-crawler-example](https://github.com/lizongying/go-crawler-example)
 
 ## 工具
+
+### 生成爬虫
+
+* -n 爬虫名字
+* -f 强制覆盖
+* -h 帮助
+
+```shell
+go run tools/spider_generator/*.go
+```
 
 ### 证书签名
 

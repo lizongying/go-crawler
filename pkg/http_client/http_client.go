@@ -75,37 +75,17 @@ func NewClientJa3(ctx context.Context, conn net.Conn, cfg *tls.Config, helloID *
 
 var zeroDialer net.Dialer
 
-func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
-	bs, _ := request.Marshal()
-	h.logger.Debugf("request: %s", string(bs))
-
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	timeout := h.timeout
-	if request.GetTimeout() > 0 {
-		timeout = request.GetTimeout()
-	}
-
-	if timeout > 0 {
-		c := context.Background()
-		c, cancel := context.WithTimeout(c, timeout)
-		defer cancel()
-		request.WithRequestContext(c)
-	}
-
-	// Get a copy of the default root CAs
+func (h *HttpClient) getTransport(request pkg.Request, timeout time.Duration) (transport *http.Transport, err error) {
 	defaultCAs, err := x509.SystemCertPool()
 	if err != nil {
 		defaultCAs = x509.NewCertPool()
 	}
 	defaultCAs.AppendCertsFromPEM(static.CaCert)
 
-	transport := &http.Transport{
+	transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
-			Timeout:   60 * time.Second,
+			Timeout:   timeout,
 			KeepAlive: 60 * time.Second,
 			Resolver: func() *net.Resolver {
 				resolver := net.DefaultResolver
@@ -128,13 +108,13 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 						c, e = d.DialContext(ctx, network, address)
 					}
 
-					h.logger.Info("RemoteAddr", c.RemoteAddr(), network, address)
+					h.logger.Debug("RemoteAddr", c.RemoteAddr(), network, address)
 					return c, e
 				}
 				return resolver
 			}(),
 		}).DialContext,
-		DisableKeepAlives:     true,
+		DisableKeepAlives:     false,
 		IdleConnTimeout:       180 * time.Second,
 		TLSHandshakeTimeout:   20 * time.Second,
 		ExpectContinueTimeout: 2 * time.Second,
@@ -150,40 +130,70 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 		},
 	}
 	proxyEnable := false
-	if request.IsProxyEnable() != nil {
-		proxyEnable = *request.IsProxyEnable()
+	if pe := request.IsProxyEnable(); pe != nil {
+		proxyEnable = *pe
 	}
+
 	if proxyEnable {
-		proxy := h.proxy
-		if request.GetProxy() != nil {
-			proxy = request.GetProxy()
+		proxy := request.GetProxy()
+		if proxy == nil {
+			proxy = h.proxy
 		}
 		if proxy == nil {
-			err = errors.New("nil proxy")
+			err = fmt.Errorf("cannot send request: %w", pkg.ErrNilProxy)
 			return
 		}
 		transport.Proxy = http.ProxyURL(proxy)
 	}
 
 	httpProto := h.httpProto
-	if request.GetHttpProto() != "" {
-		httpProto = request.GetHttpProto()
+	if proto := request.GetHttpProto(); proto != "" {
+		httpProto = proto
 	}
+
+	req := request.GetHttpRequest()
+
 	if httpProto != "2.0" {
-		request.GetHttpRequest().Proto = "HTTP/1.1"
-		request.GetHttpRequest().ProtoMajor = 1
-		request.GetHttpRequest().ProtoMinor = 1
+		req.Proto = "HTTP/1.1"
+		req.ProtoMajor = 1
+		req.ProtoMinor = 1
 		transport.ForceAttemptHTTP2 = false
 	} else {
-		request.GetHttpRequest().Proto = "HTTP/2.0"
-		request.GetHttpRequest().ProtoMajor = 2
-		request.GetHttpRequest().ProtoMinor = 0
+		req.Proto = "HTTP/2.0"
+		req.ProtoMajor = 2
+		req.ProtoMinor = 0
 		transport.ForceAttemptHTTP2 = true
 	}
 
-	if requiresHTTP1(request.GetHttpRequest()) {
+	if requiresHTTP1(req) {
+		transport.ForceAttemptHTTP2 = false
 		transport.TLSClientConfig.NextProtos = nil
 	}
+
+	return
+}
+
+func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (response pkg.Response, err error) {
+	bs, _ := request.Marshal()
+	h.logger.Debugf("request: %s", string(bs))
+
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	timeout := request.GetTimeout()
+	if timeout == 0 {
+		timeout = h.timeout
+	}
+
+	if timeout > 0 {
+		c := context.Background()
+		c, cancel := context.WithTimeout(c, timeout)
+		defer cancel()
+		request.WithRequestContext(c)
+	}
+
+	transport, err := h.getTransport(request, timeout)
 
 	var resp *http.Response
 	if h.Ja3 {
@@ -277,12 +287,10 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 
 	client.Transport = transport
 
-	if timeout > 0 {
-		client.Timeout = timeout
-	}
+	req := request.GetHttpRequest()
 	response = new(response2.Response).SetRequest(request)
 	begin := time.Now()
-	resp, err = client.Do(request.GetHttpRequest())
+	resp, err = client.Do(req)
 	if err != nil {
 		h.logger.Error(err)
 		return

@@ -18,34 +18,34 @@ type Spider struct {
 
 func (s *Spider) ParseOk(_ pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	s.logger.Info("response", response.Text())
 	return
 }
 
 func (s *Spider) ParseHttpAuth(_ pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraHttpAuth
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	s.logger.Info("response", response.Text())
 	return
 }
 
 func (s *Spider) ParseCookie(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraCookie
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}
-	s.logger.Info("extra", utils.JsonStr(extra))
-	s.logger.Info("response", response.BodyStr())
+	s.logger.Info("extra", utils.UnsafeJSON(extra))
+	s.logger.Info("response", response.Text())
 
 	if extra.Count > 1 {
 		return
@@ -65,20 +65,20 @@ func (s *Spider) ParseCookie(ctx pkg.Context, response pkg.Response) (err error)
 
 func (s *Spider) ParseRedirect(_ pkg.Context, response pkg.Response) (err error) {
 	s.logger.Info("header", response.Headers())
-	s.logger.Info("body", response.BodyStr())
+	s.logger.Info("body", response.Text())
 
 	return
 }
 
 func (s *Spider) ParseTimeout(_ pkg.Context, response pkg.Response) (err error) {
 	s.logger.Info("header", response.Headers())
-	s.logger.Info("body", response.BodyStr())
+	s.logger.Info("body", response.Text())
 
 	return
 }
 
 func (s *Spider) ParseImages(_ pkg.Context, response pkg.Response) (err error) {
-	s.logger.Info("Images", utils.JsonStr(response.GetRequest()))
+	s.logger.Info("Images", utils.UnsafeJSON(response.GetRequest()))
 	s.logger.Info("len", len(response.BodyBytes()))
 
 	return

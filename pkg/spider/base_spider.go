@@ -3,6 +3,7 @@ package spider
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"github.com/lizongying/go-crawler/pkg/downloader"
@@ -11,6 +12,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"golang.org/x/time/rate"
+	"net/url"
 	"reflect"
 	"sync"
 	"time"
@@ -54,6 +56,117 @@ type BaseSpider struct {
 	requestSlots sync.Map
 }
 
+func (s *BaseSpider) PipelineNames() map[uint8]string {
+	return s.Exporter.Names()
+}
+func (s *BaseSpider) Pipelines() []pkg.Pipeline {
+	return s.Exporter.Pipelines()
+}
+func (s *BaseSpider) SetPipeline(pipeline pkg.Pipeline, order uint8) {
+	s.Exporter.SetPipeline(pipeline, order)
+}
+func (s *BaseSpider) RemovePipeline(index int) {
+	s.Exporter.Remove(index)
+}
+func (s *BaseSpider) CleanPipelines() {
+	s.Exporter.Clean()
+}
+func (s *BaseSpider) WithDumpPipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithDumpPipeline())
+	return s
+}
+func (s *BaseSpider) WithFilePipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithFilePipeline())
+	return s
+}
+func (s *BaseSpider) WithImagePipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithImagePipeline())
+	return s
+}
+func (s *BaseSpider) WithFilterPipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithFilterPipeline())
+	return s
+}
+func (s *BaseSpider) WithNonePipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithNonePipeline())
+	return s
+}
+func (s *BaseSpider) WithCsvPipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithCsvPipeline())
+	return s
+}
+func (s *BaseSpider) WithJsonLinesPipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithJsonLinesPipeline())
+	return s
+}
+func (s *BaseSpider) WithMongoPipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithMongoPipeline())
+	return s
+}
+func (s *BaseSpider) WithSqlitePipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithSqlitePipeline())
+	return s
+}
+func (s *BaseSpider) WithMysqlPipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithMysqlPipeline())
+	return s
+}
+func (s *BaseSpider) WithKafkaPipeline() pkg.Spider {
+	s.options = append(s.options, pkg.WithKafkaPipeline())
+	return s
+}
+func (s *BaseSpider) WithCustomPipeline(pipeline pkg.Pipeline) pkg.Spider {
+	s.options = append(s.options, pkg.WithCustomPipeline(pipeline))
+	return s
+}
+func (s *BaseSpider) WithPipelineDump() pkg.Spider {
+	s.options = append(s.options, pkg.WithDumpPipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineFile() pkg.Spider {
+	s.options = append(s.options, pkg.WithFilePipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineImage() pkg.Spider {
+	s.options = append(s.options, pkg.WithImagePipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineFilter() pkg.Spider {
+	s.options = append(s.options, pkg.WithFilterPipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineNone() pkg.Spider {
+	s.options = append(s.options, pkg.WithNonePipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineCsv() pkg.Spider {
+	s.options = append(s.options, pkg.WithCsvPipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineJsonLines() pkg.Spider {
+	s.options = append(s.options, pkg.WithJsonLinesPipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineMongo() pkg.Spider {
+	s.options = append(s.options, pkg.WithMongoPipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineSqlite() pkg.Spider {
+	s.options = append(s.options, pkg.WithSqlitePipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineMysql() pkg.Spider {
+	s.options = append(s.options, pkg.WithMysqlPipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineKafka() pkg.Spider {
+	s.options = append(s.options, pkg.WithKafkaPipeline())
+	return s
+}
+func (s *BaseSpider) WithPipelineCustom(pipeline pkg.Pipeline) pkg.Spider {
+	s.options = append(s.options, pkg.WithCustomPipeline(pipeline))
+	return s
+}
 func (s *BaseSpider) GetDownloader() pkg.Downloader {
 	return s.Downloader
 }
@@ -116,6 +229,93 @@ func (s *BaseSpider) GetPlatforms() (platforms []pkg.Platform) {
 		platforms = append(platforms, k)
 	}
 	return
+}
+func (s *BaseSpider) GetMiddlewares() pkg.Middlewares {
+	return s.Downloader.GetMiddlewares()
+}
+func (s *BaseSpider) WithMiddleware(middleware pkg.Middleware, order uint8) pkg.Spider {
+	s.options = append(s.options, pkg.WithMiddleware(middleware, order))
+	return s
+}
+func (s *BaseSpider) WithStatsMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithStatsMiddleware())
+	return s
+}
+func (s *BaseSpider) WithDumpMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithDumpMiddleware())
+	return s
+}
+func (s *BaseSpider) WithProxyMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithProxyMiddleware())
+	return s
+}
+func (s *BaseSpider) WithRobotsTxtMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithRobotsTxtMiddleware())
+	return s
+}
+func (s *BaseSpider) WithFilterMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithFilterMiddleware())
+	return s
+}
+func (s *BaseSpider) WithFileMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithFileMiddleware())
+	return s
+}
+func (s *BaseSpider) WithImageMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithImageMiddleware())
+	return s
+}
+func (s *BaseSpider) WithHttpMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithHttpMiddleware())
+	return s
+}
+func (s *BaseSpider) WithRetryMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithRetryMiddleware())
+	return s
+}
+func (s *BaseSpider) WithUrlMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithUrlMiddleware())
+	return s
+}
+func (s *BaseSpider) WithReferrerMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithReferrerMiddleware())
+	return s
+}
+func (s *BaseSpider) WithCookieMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithCookieMiddleware())
+	return s
+}
+func (s *BaseSpider) WithRedirectMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithRedirectMiddleware())
+	return s
+}
+func (s *BaseSpider) WithChromeMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithChromeMiddleware())
+	return s
+}
+func (s *BaseSpider) WithHttpAuthMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithHttpAuthMiddleware())
+	return s
+}
+func (s *BaseSpider) WithCompressMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithCompressMiddleware())
+	return s
+}
+func (s *BaseSpider) WithDecodeMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithDecodeMiddleware())
+	return s
+}
+func (s *BaseSpider) WithDeviceMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithDeviceMiddleware())
+	return s
+}
+func (s *BaseSpider) WithRecordErrorMiddleware() pkg.Spider {
+	s.options = append(s.options, pkg.WithRecordErrorMiddleware())
+	return s
+}
+func (s *BaseSpider) WithCustomMiddleware(middleware pkg.Middleware) pkg.Spider {
+	s.options = append(s.options, pkg.WithCustomMiddleware(middleware))
+	return s
 }
 func (s *BaseSpider) SetPlatforms(platforms ...pkg.Platform) pkg.Spider {
 	for _, platform := range platforms {
@@ -233,6 +433,9 @@ func (s *BaseSpider) SetFilter(filter pkg.Filter) pkg.Spider {
 func (s *BaseSpider) GetLogger() pkg.Logger {
 	return s.logger
 }
+func (s *BaseSpider) Logger() pkg.Logger {
+	return s.logger
+}
 func (s *BaseSpider) Options() []pkg.SpiderOption {
 	return s.options
 }
@@ -248,16 +451,18 @@ func (s *BaseSpider) registerFuncs() {
 	rt := rv.Type()
 	l := rt.NumMethod()
 	for i := 0; i < l; i++ {
+		method := rv.Method(i)
 		name := rt.Method(i).Name
-		callBack, ok := rv.Method(i).Interface().(func(pkg.Context, pkg.Response) error)
+		fn := method.Interface()
+		callBack, ok := fn.(func(pkg.Context, pkg.Response) error)
 		if ok {
 			callBacks[name] = callBack
 		}
-		errBack, ok := rv.Method(i).Interface().(func(pkg.Context, pkg.Response, error))
+		errBack, ok := fn.(func(pkg.Context, pkg.Response, error))
 		if ok {
 			errBacks[name] = errBack
 		}
-		startFunc, ok := rv.Method(i).Interface().(func(pkg.Context, string) error)
+		startFunc, ok := fn.(func(pkg.Context, string) error)
 		if ok {
 			startFuncs[name] = startFunc
 		}
@@ -268,12 +473,43 @@ func (s *BaseSpider) registerFuncs() {
 }
 
 func (s *BaseSpider) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
+	req := request.GetHttpRequest()
+	if req.URL.Scheme == "" || req.URL.Host == "" {
+		u, e := url.Parse(s.GetHost())
+		if e == nil {
+			if req.URL.Scheme == "" {
+				req.URL.Scheme = u.Scheme
+			}
+			if req.URL.Host == "" {
+				req.URL.Host = u.Host
+			}
+		}
+	}
+
 	return ctx.GetTask().GetTask().Request(ctx, request)
 }
 func (s *BaseSpider) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
+	req := request.GetHttpRequest()
+	if req.URL.Scheme == "" || req.URL.Host == "" {
+		u, e := url.Parse(s.GetHost())
+		if e == nil {
+			if req.URL.Scheme == "" {
+				req.URL.Scheme = u.Scheme
+			}
+			if req.URL.Host == "" {
+				req.URL.Host = u.Host
+			}
+		}
+	}
+
 	return ctx.GetTask().GetTask().YieldRequest(ctx, request)
 }
 func (s *BaseSpider) MustYieldRequest(ctx pkg.Context, request pkg.Request) {
+	if err := s.YieldRequest(ctx, request); err != nil {
+		panic(fmt.Errorf("%w: %v", pkg.ErrYieldRequestFailed, err))
+	}
+}
+func (s *BaseSpider) UnsafeYieldRequest(ctx pkg.Context, request pkg.Request) {
 	if err := s.YieldRequest(ctx, request); err != nil {
 		s.logger.Error(err)
 	}
@@ -292,6 +528,11 @@ func (s *BaseSpider) MustNewRequest(ctx pkg.Context, options ...pkg.RequestOptio
 }
 func (s *BaseSpider) MustYieldItem(c pkg.Context, item pkg.Item) {
 	if err := s.YieldItem(c, item); err != nil {
+		panic(fmt.Errorf("%w: %v", pkg.ErrYieldItemFailed, err))
+	}
+}
+func (s *BaseSpider) UnsafeYieldItem(c pkg.Context, item pkg.Item) {
+	if err := s.YieldItem(c, item); err != nil {
 		s.logger.Error(err)
 	}
 }
@@ -299,6 +540,11 @@ func (s *BaseSpider) YieldExtra(ctx pkg.Context, extra any) (err error) {
 	return ctx.GetTask().GetTask().YieldExtra(ctx, extra)
 }
 func (s *BaseSpider) MustYieldExtra(ctx pkg.Context, extra any) {
+	if err := s.YieldExtra(ctx, extra); err != nil {
+		panic(fmt.Errorf("%w: %v", pkg.ErrYieldExtraFailed, err))
+	}
+}
+func (s *BaseSpider) UnsafeYieldExtra(ctx pkg.Context, extra any) {
 	if err := s.YieldExtra(ctx, extra); err != nil {
 		s.logger.Error(err)
 	}
@@ -452,7 +698,7 @@ func (s *BaseSpider) JobStopped(ctx pkg.Context, err error) {
 }
 func (s *BaseSpider) Parse(_ pkg.Context, response pkg.Response) (err error) {
 	s.logger.Info("header", response.Headers())
-	s.logger.Info("body", response.BodyStr())
+	s.logger.Info("body", response.Text())
 	return
 }
 func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
@@ -461,7 +707,7 @@ func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
 		return
 	}
 	s.logger.Info("header", response.Headers())
-	s.logger.Info("body", response.BodyStr())
+	s.logger.Info("body", response.Text())
 	s.logger.Info("error", err)
 	return
 }

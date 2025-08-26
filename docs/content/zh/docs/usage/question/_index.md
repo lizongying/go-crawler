@@ -88,5 +88,5 @@ title: 问答
 
 * 其他
   
-  * 升级go-crawl
+  * 升级go-crawler
   * 清理缓存

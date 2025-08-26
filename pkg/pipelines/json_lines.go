@@ -97,7 +97,7 @@ func (m *JsonLinesPipeline) ProcessItem(item pkg.Item) (err error) {
 	}
 	m.mutex.Unlock()
 
-	_, err = file.WriteString(fmt.Sprintf("%s\n", utils.JsonStr(data)))
+	_, err = file.WriteString(fmt.Sprintf("%s\n", utils.UnsafeJSON(data)))
 	if err != nil {
 		m.logger.Error(err)
 		task.IncItemError()

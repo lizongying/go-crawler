@@ -14,7 +14,7 @@ type Spider struct {
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	var extra ExtraOk
-	if err = response.UnmarshalExtra(&extra); err != nil {
+	if err = response.Extra(&extra); err != nil {
 		s.logger.Error(err)
 		return
 	}

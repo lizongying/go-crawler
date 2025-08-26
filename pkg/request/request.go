@@ -588,6 +588,9 @@ func (r *Request) MustUnmarshalExtra(v any) {
 		panic(err)
 	}
 }
+func (r *Request) UnsafeExtra(v any) {
+	_ = r.UnmarshalExtra(v)
+}
 func (r *Request) Marshal() ([]byte, error) {
 	r.Method = r.Request.Method
 	if r.URL != nil {

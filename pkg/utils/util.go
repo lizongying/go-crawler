@@ -49,6 +49,11 @@ func NowStr() string {
 
 // JsonStr output json string
 func JsonStr(i any) string {
+	return UnsafeJSON(i)
+}
+
+// UnsafeJSON output json string
+func UnsafeJSON(i any) string {
 	m, _ := json.Marshal(i)
 	return string(m)
 }

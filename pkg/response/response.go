@@ -48,6 +48,9 @@ func (r *Response) SetBodyBytes(bodyBytes []byte) pkg.Response {
 	return r
 }
 func (r *Response) BodyStr() string {
+	return r.Text()
+}
+func (r *Response) Text() string {
 	return string(r.bodyBytes)
 }
 func (r *Response) SetBodyStr(bodyStr string) pkg.Response {
@@ -120,7 +123,13 @@ func (r *Response) UniqueKey() string {
 	return r.request.GetUniqueKey()
 }
 func (r *Response) UnmarshalExtra(v any) error {
+	return r.Extra(v)
+}
+func (r *Response) Extra(v any) error {
 	return r.request.UnmarshalExtra(v)
+}
+func (r *Response) UnsafeExtra(v any) {
+	r.request.UnsafeExtra(v)
 }
 func (r *Response) MustUnmarshalExtra(v any) {
 	r.request.MustUnmarshalExtra(v)

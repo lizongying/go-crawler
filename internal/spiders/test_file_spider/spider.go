@@ -14,7 +14,7 @@ type Spider struct {
 }
 
 func (s *Spider) ParseOk(ctx pkg.Context, _ pkg.Response) (err error) {
-	s.MustYieldItem(ctx, items.NewItemJsonl("image"). // build a jsonl item
+	s.UnsafeYieldItem(ctx, items.NewItemJsonl("image"). // build a jsonl item
 								SetData(&DataImage{}).
 								SetImagesRequest([]pkg.Request{ // with request list
 			request.NewRequest().SetUrl(fmt.Sprintf("%s%simages/th.jpeg", s.GetHost(), mock_servers.UrlFile)),

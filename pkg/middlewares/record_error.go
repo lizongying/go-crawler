@@ -95,7 +95,7 @@ func (m *RecordErrorMiddleware) ToMongo(c pkg.Context, item pkg.Item) (err error
 		return
 	}
 
-	m.logger.Debug("Data", utils.JsonStr(data))
+	m.logger.Debug("Data", utils.UnsafeJSON(data))
 	bs, err := bson.Marshal(data)
 	if err != nil {
 		m.logger.Error(err)

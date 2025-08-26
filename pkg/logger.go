@@ -1,6 +1,6 @@
 package pkg
 
-type Level int
+type Level uint8
 
 const (
 	LevelDebug Level = iota
