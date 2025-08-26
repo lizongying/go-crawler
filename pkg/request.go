@@ -160,6 +160,9 @@ type Request interface {
 	GetHttpRequest() *http.Request
 	Cookies() []*http.Cookie
 	AddCookie(c *http.Cookie) Request
+	Yield() (err error)
+	MustYield()
+	UnsafeYield()
 }
 
 type CallBack func(Context, Response) error

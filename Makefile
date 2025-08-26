@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: web_ui web_server tidy tls_generator mitm test_spider test_compress_spider test_decode_spider test_file_spider test_item_spider multi_spider
+all: web_ui web_server tidy spider_generator tls_generator mitm test_spider test_compress_spider test_decode_spider test_file_spider test_item_spider multi_spider
 
 module := $(shell head -n 1 go.mod)
 module := $(subst module ,,${module})

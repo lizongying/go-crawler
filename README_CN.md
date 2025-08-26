@@ -130,7 +130,7 @@ docker run -p 8090:8090 -d lizongying/go-crawler/test-spider:arm64 -c example.ym
 
 * Crawler：Crawler里可以有多个Spider，同时管理Spider的启动和关闭等。
 * Spider：集成了Downloader、Exporter、Scheduler等组件。在Spider里可以发起请求和解析内容。 您需要为每个Spider设置一个唯一名称。
-  `spider.WithOptions(pkg.WithName("example"))`
+  `spider.WithOptions(pkg.WithName("example"))` 或 `spider.SetName("example")`
 
   ```go
   package main
@@ -142,7 +142,6 @@ docker run -p 8090:8090 -d lizongying/go-crawler/test-spider:arm64 -c example.ym
   
   type Spider struct {
       pkg.Spider
-      logger pkg.Logger
   }
   
   // some spider funcs
@@ -150,11 +149,8 @@ docker run -p 8090:8090 -d lizongying/go-crawler/test-spider:arm64 -c example.ym
   func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
       spider = &Spider{
           Spider: baseSpider,
-          logger: baseSpider.GetLogger(),
       }
-      spider.WithOptions(
-          pkg.WithName("test"),
-      )
+      spider.SetName("example")
       return
   }
   
@@ -496,10 +492,10 @@ var parse func (ctx pkg.Context, response pkg.Response) (err error)
 req.SetCallBack(parse)
 
 // 返回请求
-s.MustYieldRequest(ctx, req)
+s.UnsafeYieldRequest(ctx, req)
 
 // 建议这么写，更简单
-s.MustYieldRequest(ctx, request.NewRequest().
+s.UnsafeYieldRequest(ctx, request.NewRequest().
 SetUrl("").
 SetBodyStr(``).
 SetExtra(&Extra{}).
@@ -976,7 +972,7 @@ make web_server
 
 * 其他
 
-    * 升级go-crawl
+    * 升级go-crawler
     * 清理缓存
 
 ## 示例

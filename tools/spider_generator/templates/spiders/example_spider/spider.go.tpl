@@ -2,17 +2,15 @@ package {{.Name}}_spider
 
 import (
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strconv"
 )
 
 const (
-	name     = "{{.Name}}"
-	host     = "https://httpbin.org"
-	okUrl    = "/get"
-	jsonName = "{{.Name}}"
+	name   = "{{.Name}}"
+	host   = "https://httpbin.org"
+	okUrl  = "/get"
+	output = "{{.Name}}"
 )
 
 type Spider struct {
@@ -26,33 +24,36 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 	count := extra.Count
 
-	s.UnsafeYieldItem(ctx, items.NewItemJsonl(jsonName).
+	s.NewItemJsonl(ctx, output).
 		SetData(&DataOk{
 			Id:    strconv.Itoa(count),
 			Count: count,
-		}))
+		}).
+		UnsafeYield()
 
 	if count > 0 {
 		s.Logger().Info("response", response.Text())
 		return
 	}
 
-	s.UnsafeYieldRequest(ctx, request.NewRequest().
+	s.NewRequest(ctx).
 		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: count + 1,
 		}).
-		SetCallBack(s.ParseOk))
+		SetCallBack(s.ParseOk).
+		UnsafeYield()
 
 	return
 }
 
 // RequestOk go run cmd/{{.Name}}_spider/*.go -c dev.yml -n {{.Name}} -f RequestOk -m once
 func (s *Spider) RequestOk(ctx pkg.Context, _ string) (err error) {
-	s.UnsafeYieldRequest(ctx, request.NewRequest().
+	s.NewRequest(ctx).
 		SetUrl(okUrl).
 		SetExtra(&ExtraOk{}).
-		SetCallBack(s.ParseOk))
+		SetCallBack(s.ParseOk).
+		UnsafeYield()
 
 	return
 }

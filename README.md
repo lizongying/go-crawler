@@ -133,7 +133,7 @@ docker run -p 8090:8090 -d lizongying/go-crawler/test-spider:arm64 -c example.ym
 * Crawler：Within the Crawler, there can be multiple Spiders, and it manages the startup and shutdown of the Spiders.
 * Spider: Spider integrates components such as Downloader, Exporter, and Scheduler. In the Spider, you can initiate
   requests and parse content. You need to set a unique name for each
-  Spider.`spider.WithOptions(pkg.WithName("example"))`
+  Spider.`spider.WithOptions(pkg.WithName("example"))` or `spider.SetName("example")`
 
     ```go
     package main
@@ -145,7 +145,6 @@ docker run -p 8090:8090 -d lizongying/go-crawler/test-spider:arm64 -c example.ym
     
     type Spider struct {
         pkg.Spider
-        logger pkg.Logger
     }
     
     // some spider funcs
@@ -153,11 +152,8 @@ docker run -p 8090:8090 -d lizongying/go-crawler/test-spider:arm64 -c example.ym
     func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
         spider = &Spider{
             Spider: baseSpider,
-            logger: baseSpider.GetLogger(),
         }
-        spider.WithOptions(
-            pkg.WithName("test"),
-        )
+        spider.SetName("example")
         return
     }
     
@@ -578,10 +574,10 @@ var parse func (ctx pkg.Context, response pkg.Response) (err error)
 req.SetCallBack(parse)
 
 // Send the request
-s.MustYieldRequest(ctx, req)
+s.UnsafeYieldRequest(ctx, req)
 
 // Suggest writing it this way, simpler.
-s.MustYieldRequest(ctx, request.NewRequest().
+s.UnsafeYieldRequest(ctx, request.NewRequest().
 SetUrl("").
 SetBodyStr(``).
 SetExtra(&Extra{}).
@@ -1120,7 +1116,7 @@ Run
 
 * Other
 
-    * Upgrade go-crawl
+    * Upgrade go-crawler
     * Clean up cache
   
 ## Example
@@ -1180,7 +1176,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 }
 
 func (s *Spider) TestOk(ctx pkg.Context, _ string) (err error) {
-	s.MustYieldRequest(ctx, request.NewRequest().
+	s.UnsafeYieldRequest(ctx, request.NewRequest().
 		SetUrl(okUrl).
 		SetExtra(&ExtraOk{}).
 		SetCallBack(s.ParseOk))

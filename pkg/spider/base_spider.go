@@ -9,6 +9,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/downloader"
 	"github.com/lizongying/go-crawler/pkg/exporter"
 	"github.com/lizongying/go-crawler/pkg/filters"
+	"github.com/lizongying/go-crawler/pkg/items"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"golang.org/x/time/rate"
@@ -32,6 +33,7 @@ type BaseSpider struct {
 	callBacks             map[string]pkg.CallBack
 	errBacks              map[string]pkg.ErrBack
 	startFuncs            map[string]pkg.StartFunc
+	funcNames             map[uintptr]string
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
 	retryMaxTimes         uint8
@@ -447,24 +449,29 @@ func (s *BaseSpider) registerFuncs() {
 	callBacks := make(map[string]pkg.CallBack)
 	errBacks := make(map[string]pkg.ErrBack)
 	startFuncs := make(map[string]pkg.StartFunc)
+	funcNames := make(map[uintptr]string)
 	rv := reflect.ValueOf(s.spider)
 	rt := rv.Type()
 	l := rt.NumMethod()
 	for i := 0; i < l; i++ {
 		method := rv.Method(i)
 		name := rt.Method(i).Name
+		ptr := method.Pointer()
 		fn := method.Interface()
 		callBack, ok := fn.(func(pkg.Context, pkg.Response) error)
 		if ok {
 			callBacks[name] = callBack
+			funcNames[ptr] = name
 		}
 		errBack, ok := fn.(func(pkg.Context, pkg.Response, error))
 		if ok {
 			errBacks[name] = errBack
+			funcNames[ptr] = name
 		}
 		startFunc, ok := fn.(func(pkg.Context, string) error)
 		if ok {
 			startFuncs[name] = startFunc
+			funcNames[ptr] = name
 		}
 	}
 	s.callBacks = callBacks
@@ -514,17 +521,13 @@ func (s *BaseSpider) UnsafeYieldRequest(ctx pkg.Context, request pkg.Request) {
 		s.logger.Error(err)
 	}
 }
-func (s *BaseSpider) NewRequest(ctx pkg.Context, options ...pkg.RequestOption) (err error) {
-	req := request.NewRequest()
+func (s *BaseSpider) NewRequest(ctx pkg.Context, options ...pkg.RequestOption) (req pkg.Request) {
+	req = request.NewRequest()
+	req = req.WithContext(ctx)
 	for _, v := range options {
 		v(req)
 	}
-	return ctx.GetTask().GetTask().YieldRequest(ctx, req)
-}
-func (s *BaseSpider) MustNewRequest(ctx pkg.Context, options ...pkg.RequestOption) {
-	if err := s.NewRequest(ctx, options...); err != nil {
-		s.logger.Error(err)
-	}
+	return
 }
 func (s *BaseSpider) MustYieldItem(c pkg.Context, item pkg.Item) {
 	if err := s.YieldItem(c, item); err != nil {
@@ -536,6 +539,61 @@ func (s *BaseSpider) UnsafeYieldItem(c pkg.Context, item pkg.Item) {
 		s.logger.Error(err)
 	}
 }
+
+// NewItemNone creates a new Item that does not output any data.
+// Useful when you only want to collect statistics without persisting items.
+func (s *BaseSpider) NewItemNone(ctx pkg.Context) (item pkg.Item) {
+	item = items.NewItemNone()
+	item = item.WithContext(ctx)
+	return
+}
+
+// NewItemCsv creates a new Item that outputs data to a CSV file with the given filename.
+func (s *BaseSpider) NewItemCsv(ctx pkg.Context, filename string) (item pkg.Item) {
+	item = items.NewItemCsv(filename)
+	item = item.WithContext(ctx)
+	return
+}
+
+// NewItemJsonl creates a new Item that outputs data to a JSON Lines (JSONL) file with the given filename.
+// The Context is used for managing file lifecycle and concurrency.
+func (s *BaseSpider) NewItemJsonl(ctx pkg.Context, fileName string) (item pkg.Item) {
+	item = items.NewItemJsonl(fileName)
+	item = item.WithContext(ctx)
+	return
+}
+
+// NewItemMongo creates a new Item that outputs data to a MongoDB collection.
+// If update is true, existing documents with the same key will be updated.
+func (s *BaseSpider) NewItemMongo(ctx pkg.Context, collection string, update bool) (item pkg.Item) {
+	item = items.NewItemMongo(collection, update)
+	item = item.WithContext(ctx)
+	return
+}
+
+// NewItemSqlite creates a new Item that outputs data to a SQLite table.
+// If update is true, existing rows with the same key will be updated.
+func (s *BaseSpider) NewItemSqlite(ctx pkg.Context, table string, update bool) (item pkg.Item) {
+	item = items.NewItemSqlite(table, update)
+	item = item.WithContext(ctx)
+	return
+}
+
+// NewItemMysql creates a new Item that outputs data to a MySQL table.
+// If update is true, existing rows with the same key will be updated.
+func (s *BaseSpider) NewItemMysql(ctx pkg.Context, table string, update bool) (item pkg.Item) {
+	item = items.NewItemMysql(table, update)
+	item = item.WithContext(ctx)
+	return
+}
+
+// NewItemKafka creates a new Item that outputs data to a Kafka topic.
+func (s *BaseSpider) NewItemKafka(ctx pkg.Context, topic string) (item pkg.Item) {
+	item = items.NewItemKafka(topic)
+	item = item.WithContext(ctx)
+	return
+}
+
 func (s *BaseSpider) YieldExtra(ctx pkg.Context, extra any) (err error) {
 	return ctx.GetTask().GetTask().YieldExtra(ctx, extra)
 }

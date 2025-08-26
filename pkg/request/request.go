@@ -611,7 +611,17 @@ func (r *Request) Unmarshal(bytes []byte) (err error) {
 	r.Request.Header = r.Header
 	return err
 }
-
+func (r *Request) Yield() (err error) {
+	return r.Context.GetSpider().GetSpider().YieldRequest(r.Context, r)
+}
+func (r *Request) MustYield() {
+	if err := r.Context.GetSpider().GetSpider().YieldRequest(r.Context, r); err != nil {
+		panic(fmt.Errorf("%w: %v", pkg.ErrYieldRequestFailed, err))
+	}
+}
+func (r *Request) UnsafeYield() {
+	_ = r.Context.GetSpider().GetSpider().YieldRequest(r.Context, r)
+}
 func NewRequest() pkg.Request {
 	request := new(Request)
 	request.Request = new(http.Request)

@@ -52,6 +52,9 @@ type Spider interface {
 	FromCrawler(Crawler) Spider
 
 	GetLogger() Logger
+
+	// Logger returns the logger associated with the spider.
+	// This provides access to logging methods for recording information, warnings, and errors.
 	Logger() Logger
 	GetConfig() Config
 
@@ -90,6 +93,33 @@ type Spider interface {
 	//   - Similar to YieldItem, but all errors are silently ignored.
 	//   - Useful for fire-and-forget scenarios where errors can be safely ignored.
 	UnsafeYieldItem(Context, Item)
+
+	// NewItemNone creates a new Item that does not output any data.
+	// Useful when you only want to collect statistics without persisting items.
+	NewItemNone(ctx Context) (item Item)
+
+	// NewItemCsv creates a new Item that outputs data to a CSV file with the given filename.
+	NewItemCsv(ctx Context, filename string) (item Item)
+
+	// NewItemJsonl creates a new Item that outputs data to a JSON Lines (JSONL) file with the given filename.
+	// The Context is used for managing file lifecycle and concurrency.
+	NewItemJsonl(ctx Context, filename string) (item Item)
+
+	// NewItemMongo creates a new Item that outputs data to a MongoDB collection.
+	// If update is true, existing documents with the same key will be updated.
+	NewItemMongo(ctx Context, collection string, update bool) (item Item)
+
+	// NewItemSqlite creates a new Item that outputs data to a SQLite table.
+	// If update is true, existing rows with the same key will be updated.
+	NewItemSqlite(ctx Context, table string, update bool) (item Item)
+
+	// NewItemMysql creates a new Item that outputs data to a MySQL table.
+	// If update is true, existing rows with the same key will be updated.
+	NewItemMysql(ctx Context, table string, update bool) (item Item)
+
+	// NewItemKafka creates a new Item that outputs data to a Kafka topic.
+	NewItemKafka(ctx Context, topic string) (item Item)
+
 	Request(Context, Request) (Response, error)
 
 	// YieldRequest tries to submit a request to the scheduler/engine.
@@ -103,8 +133,10 @@ type Spider interface {
 	// UnsafeYieldRequest submits a request but ignores any error silently.
 	// Use this only if errors can be safely discarded (not recommended for critical flows).
 	UnsafeYieldRequest(Context, Request)
-	NewRequest(Context, ...RequestOption) error
-	MustNewRequest(Context, ...RequestOption)
+
+	// NewRequest creates a new Request associated with the given Context.
+	// Optional RequestOption functions can be used to configure the request, such as setting the URL, callback, or extra data.
+	NewRequest(Context, ...RequestOption) Request
 	YieldExtra(Context, any) error
 	MustYieldExtra(Context, any)
 	UnsafeYieldExtra(Context, any)

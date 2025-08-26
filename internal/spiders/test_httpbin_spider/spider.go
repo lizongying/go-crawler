@@ -2,8 +2,6 @@ package test_httpbin_spider
 
 import (
 	"github.com/lizongying/go-crawler/pkg"
-	"github.com/lizongying/go-crawler/pkg/items"
-	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strconv"
 	"time"
@@ -27,33 +25,36 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 	count := extra.Count
 
-	s.UnsafeYieldItem(ctx, items.NewItemJsonl(output).
+	s.NewItemJsonl(ctx, output).
 		SetData(&DataOk{
 			Id:    strconv.Itoa(count),
 			Count: count,
-		}))
+		}).
+		UnsafeYield()
 
 	if count > 5 {
 		s.Logger().Info("response", response.Text())
 		return
 	}
 
-	s.UnsafeYieldRequest(ctx, request.NewRequest().
+	s.NewRequest(ctx).
 		SetUrl(response.Url()).
 		SetExtra(&ExtraOk{
 			Count: count + 1,
 		}).
-		SetCallBack(s.ParseOk))
+		SetCallBack(s.ParseOk).
+		UnsafeYield()
 
 	return
 }
 
 // RequestOk go run cmd/test_httpbin_spider/*.go -c dev.yml -n test_httpbin -f RequestOk -m once
 func (s *Spider) RequestOk(ctx pkg.Context, _ string) (err error) {
-	s.UnsafeYieldRequest(ctx, request.NewRequest().
+	s.NewRequest(ctx).
 		SetUrl(okUrl).
 		SetExtra(&ExtraOk{}).
-		SetCallBack(s.ParseOk))
+		SetCallBack(s.ParseOk).
+		UnsafeYield()
 
 	return
 }

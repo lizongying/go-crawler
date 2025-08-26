@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 )
 
@@ -40,6 +41,9 @@ type Item interface {
 	ImagesRequest() []Request
 	SetImages([]Image) Item
 	Images() []Image
+	Yield() error
+	MustYield()
+	UnsafeYield()
 }
 
 type ItemUnimplemented struct {
@@ -178,6 +182,22 @@ func (i *ItemUnimplemented) Images() []Image {
 	}
 
 	return nil
+}
+func (i *ItemUnimplemented) Yield() error {
+	s := i.context.GetSpider().GetSpider()
+	return s.YieldItem(i.context, i)
+}
+func (i *ItemUnimplemented) MustYield() {
+	s := i.context.GetSpider().GetSpider()
+	if err := s.YieldItem(i.context, i); err != nil {
+		panic(fmt.Errorf("%w: %v", ErrYieldItemFailed, err))
+	}
+}
+func (i *ItemUnimplemented) UnsafeYield() {
+	s := i.context.GetSpider().GetSpider()
+	if err := s.YieldItem(i.context, i); err != nil {
+		s.Logger().Error(err)
+	}
 }
 
 type ItemStatus uint8
