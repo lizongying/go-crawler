@@ -145,7 +145,10 @@ func (s *UnimplementedScheduler) HandleError(ctx pkg.Context, response pkg.Respo
 	if processed {
 		s.logger.Debug("error processed")
 	}
-	s.spider.ErrBack(errBackName)(ctx, response, err)
+	if errBack, e := s.spider.ErrBack(errBackName); e != nil {
+		errBack(ctx, response, e)
+	}
+
 	ctx.GetTask().IncRequestError()
 }
 func (s *UnimplementedScheduler) SyncRequest(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {

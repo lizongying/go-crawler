@@ -83,14 +83,10 @@ func (s *Statistics) spiderChanged(ctx pkg.Context) (err error) {
 	spiderOne, ok := s.Spiders[ctx.GetSpider().GetName()]
 	if !ok {
 		s.Crawlers[ctx.GetCrawler().GetId()].IncSpider()
-		var funcs []string
-		for k1 := range ctx.GetSpider().GetSpider().StartFuncs() {
-			funcs = append(funcs, k1)
-		}
 		spiderOne = new(statisticsSpider.Spider).
 			WithId(ctx.GetSpider().GetId()).
 			WithSpider(ctx.GetSpider().GetName()).
-			WithFuncs(funcs).
+			WithFuncs(ctx.GetSpider().GetSpider().StartFuncNames()).
 			WithCrawler(ctx.GetCrawler().GetId())
 		s.Spiders[ctx.GetSpider().GetName()] = spiderOne
 	}

@@ -15,17 +15,17 @@ import (
 	"reflect"
 )
 
-type App struct {
-	newSpiders []pkg.NewSpider
+type SimpleApp struct {
+	newSpiders []pkg.NewSimpleSpider
 }
 
-func NewApp(newSpiders ...pkg.NewSpider) *App {
-	return &App{
+func NewSimpleApp(newSpiders ...pkg.NewSimpleSpider) *SimpleApp {
+	return &SimpleApp{
 		newSpiders: newSpiders,
 	}
 }
 
-func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
+func (a *SimpleApp) Run(crawlOptions ...pkg.CrawlOption) {
 	constructors := []any{cli.NewCli,
 		db.NewMongoDb,
 		db.NewMysql,
@@ -61,11 +61,14 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 	for _, v := range a.newSpiders {
 		constructors = append(constructors, fx.Annotate(
 			func(logger pkg.Logger) (baseSpider pkg.Spider, err error) {
-				baseSpider, err = spider.NewBaseSpider(logger)
+				baseSpider, _ = spider.NewBaseSpider(logger)
+				simpleSpider := &spider.SimpleSpider{
+					BaseSpider: baseSpider.(*spider.BaseSpider),
+				}
 
-				baseSpider, err = v(baseSpider)
+				ss, err := v(simpleSpider)
 
-				rv := reflect.ValueOf(baseSpider)
+				rv := reflect.ValueOf(ss)
 				rt := rv.Type()
 				l := rt.NumMethod()
 				for i := 0; i < l; i++ {

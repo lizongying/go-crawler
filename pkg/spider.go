@@ -9,53 +9,155 @@ import (
 type Spider interface {
 	GetContext() Context
 	WithContext(ctx Context) Spider
+
 	Name() string
-	SetName(string) Spider
+
+	// SetName sets the spider's name.
+	SetName(name string) Spider
 	GetHost() string
-	SetHost(string) Spider
+
+	// SetHost sets the target host.
+	SetHost(host string) Spider
 	Username() string
-	SetUsername(string) Spider
+
+	// SetUsername sets the authentication username.
+	SetUsername(username string) Spider
 	Password() string
-	SetPassword(string) Spider
+
+	// SetPassword sets the authentication password.
+	SetPassword(password string) Spider
 	GetPlatforms() []Platform
-	SetPlatforms(...Platform) Spider
+
+	// SetPlatforms specifies the target platforms.
+	SetPlatforms(platforms ...Platform) Spider
 	GetBrowsers() []Browser
-	SetBrowsers(...Browser) Spider
+
+	// SetBrowsers specifies the supported browsers.
+	SetBrowsers(browsers ...Browser) Spider
+
+	GetCrawler() Crawler
+
 	GetSpider() Spider
+
 	SetSpider(spider Spider) Spider
-	CallBacks() map[string]CallBack
-	CallBack(name string) (callback CallBack)
-	ErrBacks() map[string]ErrBack
-	ErrBack(name string) (errBack ErrBack)
-	StartFuncs() map[string]StartFunc
-	StartFunc(name string) (startFunc StartFunc)
+
+	// CallBackNames returns the list of all registered callback names.
+	CallBackNames() []string
+
+	// SetCallBack registers a new callback function under the given name.
+	SetCallBack(name string, callBack CallBack)
+
+	// CallBack retrieves the callback function by name.
+	// Returns an error if the callback does not exist.
+	CallBack(name string) (callback CallBack, err error)
+
+	// SetErrBack registers a new error handler under the given name.
+	SetErrBack(name string, errBack ErrBack)
+
+	// ErrBackNames returns the list of all registered error handler names.
+	ErrBackNames() []string
+
+	// ErrBack retrieves the error handler by name.
+	// Returns an error if the error handler does not exist.
+	ErrBack(name string) (errBack ErrBack, err error)
+
+	// StartFuncNames returns the list of all registered start function names.
+	StartFuncNames() []string
+
+	// SetStartFunc registers a new start function under the given name.
+	SetStartFunc(name string, startFunc StartFunc)
+
+	// StartFunc looks up a registered StartFunc by its name.
+	// It returns the StartFunc and a nil error if found.
+	// If no StartFunc exists for the given name, it returns
+	// ErrStartFuncNotExist.
+	StartFunc(name string) (startFunc StartFunc, err error)
+
 	GetAllowedDomains() []string
 	ReplaceAllowedDomains([]string) error
 	SetAllowedDomain(string)
 	DelAllowedDomain(string) error
 	CleanAllowedDomains()
 	IsAllowedDomain(*url.URL) bool
-	RetryMaxTimes() uint8
-	SetRetryMaxTimes(uint8) Spider
-	RedirectMaxTimes() uint8
-	SetRedirectMaxTimes(uint8) Spider
-	Timeout() time.Duration
-	SetTimeout(time.Duration) Spider
-	OkHttpCodes() []int
-	SetOkHttpCodes(...int) Spider
-	GetFilter() Filter
-	SetFilter(Filter) Spider
 
-	Run(context.Context, string, string, JobMode, string, bool) (string, error)
-	Start(Context) error
+	// RetryMaxTimes returns the maximum number of retry attempts configured for the spider.
+	RetryMaxTimes() uint8
+
+	// SetRetryMaxTimes sets the maximum number of retry attempts for the spider.
+	// Returns the spider itself for chaining.
+	SetRetryMaxTimes(retryMaxTimes uint8) Spider
+
+	// RedirectMaxTimes returns the maximum number of HTTP redirects the spider will follow automatically.
+	RedirectMaxTimes() uint8
+
+	// SetRedirectMaxTimes sets the maximum number of HTTP redirects the spider
+	// will follow automatically. Returns the spider itself for chaining.
+	SetRedirectMaxTimes(redirectMaxTimes uint8) Spider
+
+	// Timeout returns the timeout duration configured for HTTP requests made by the spider.
+	Timeout() time.Duration
+
+	// SetTimeout sets the timeout for HTTP requests made by the spider.
+	// Returns the spider itself for chaining.
+	SetTimeout(timeout time.Duration) Spider
+
+	// Interval returns the duration between consecutive requests made by the spider.
+	Interval() time.Duration
+
+	// SetInterval sets the duration between consecutive requests for the spider and returns the spider for chaining.
+	SetInterval(interval time.Duration) Spider
+
+	// OkHttpCodes returns the list of HTTP status codes considered successful by the spider.
+	OkHttpCodes() []int
+
+	// SetOkHttpCodes sets the HTTP status codes that are considered successful.
+	// Requests returning other codes may trigger retries or errors.
+	// Returns the spider itself for chaining.
+	SetOkHttpCodes(okHttpCodes ...int) Spider
+
+	// GetFilter returns the filter function currently set for processing or filtering items.
+	GetFilter() Filter
+
+	// SetFilter sets a filter function to process or filter items before they are exported.
+	// Returns the spider itself for chaining.
+	SetFilter(filter Filter) Spider
+
+	// Run executes a job with the given parameters.
+	// Parameters:
+	//   - ctx: the context for controlling cancellation and timeout.
+	//   - jobFunc: the name of the job function to run.
+	//   - args: arguments to pass to the job function.
+	//   - mode: the execution mode of the job (e.g., immediate, scheduled).
+	//   - spec: scheduling specification (like a cron expression) if applicable.
+	//   - onlyOneTask: if true, ensures that for scheduled jobs, a new instance
+	//     will not start until the previous run has finished.
+	// Returns:
+	//   - id: a unique identifier for the job run.
+	//   - err: any error encountered when starting the job.
+	Run(ctx context.Context, jobFunc string, args string, mode JobMode, spec string, onlyOneTask bool) (id string, err error)
+
+	// Start starts the spider with the given context.
+	// It initializes and runs all necessary routines for crawling.
+	Start(ctx Context) error
+
+	// Stop stops the spider with the given context.
+	// It gracefully shuts down all ongoing tasks and releases resources.
 	Stop(ctx Context) error
+
+	// FromCrawler initializes a Spider instance from an existing Crawler.
+	// It returns the Spider configured based on the Crawler's settings.
 	FromCrawler(Crawler) Spider
 
+	// GetLogger returns the logger associated with the spider.
+	// This provides access to logging methods for recording information, warnings, and errors.
 	GetLogger() Logger
 
 	// Logger returns the logger associated with the spider.
 	// This provides access to logging methods for recording information, warnings, and errors.
 	Logger() Logger
+
+	// GetConfig returns the current configuration of the Spider.
+	// The returned Config contains all settings such as timeouts, headers, and pipelines.
 	GetConfig() Config
 
 	// YieldItem passes an item to the spider's pipelines for processing.
@@ -137,21 +239,23 @@ type Spider interface {
 	// NewRequest creates a new Request associated with the given Context.
 	// Optional RequestOption functions can be used to configure the request, such as setting the URL, callback, or extra data.
 	NewRequest(Context, ...RequestOption) Request
-	YieldExtra(Context, any) error
-	MustYieldExtra(Context, any)
-	UnsafeYieldExtra(Context, any)
-	GetExtra(Context, any) error
-	MustGetExtra(Context, any)
-	SetRequestRate(slot string, interval time.Duration, concurrency int)
-	AddMockServerRoutes(...Route)
 
-	GetCrawler() Crawler
+	YieldExtra(Context, any) error
+
+	MustYieldExtra(Context, any)
+
+	UnsafeYieldExtra(Context, any)
+
+	GetExtra(Context, any) error
+
+	MustGetExtra(Context, any)
+
+	SetRequestRate(slot string, interval time.Duration, concurrency int)
+
+	AddMockServerRoutes(...Route)
 
 	Options() []SpiderOption
 	WithOptions(options ...SpiderOption) Spider
-
-	Interval() time.Duration
-	WithInterval(time.Duration) Spider
 
 	RequestSlotLoad(slot string) (value any, ok bool)
 	RequestSlotStore(slot string, value any)
@@ -582,7 +686,7 @@ func WithTimeout(timeout time.Duration) SpiderOption {
 }
 func WithInterval(timeout time.Duration) SpiderOption {
 	return func(spider Spider) {
-		spider.WithInterval(timeout)
+		spider.SetInterval(timeout)
 	}
 }
 func WithOkHttpCodes(httpCodes ...int) SpiderOption {

@@ -1,20 +1,21 @@
-package test_httpbin_spider
+package abc_spider
 
 import (
+	"encoding/json"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"strconv"
 )
 
 const (
-	name   = "test_httpbin"
+	name   = "abc"
 	host   = "https://httpbin.org"
 	okUrl  = "/get"
-	output = "httpbin"
+	output = "abc"
 )
 
 type Spider struct {
-	pkg.Spider
+	pkg.SimpleSpider
 }
 
 func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
@@ -47,7 +48,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// RequestOk go run cmd/test_httpbin_spider/*.go -c example.yml -n test_httpbin -f RequestOk -m once
+// RequestOk go run cmd/abc_spider/*.go -c example.yml -n abc -f RequestOk -m once
 func (s *Spider) RequestOk(ctx pkg.Context, _ string) (err error) {
 	s.NewRequest(ctx).
 		SetUrl(okUrl).
@@ -58,9 +59,23 @@ func (s *Spider) RequestOk(ctx pkg.Context, _ string) (err error) {
 	return
 }
 
-func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
+// FromExtra go run cmd/abc_spider/*.go -c example.yml -n abc -f FromExtra -m once
+func (s *Spider) FromExtra(ctx pkg.Context, extraStr string) (err error) {
+	var extra ExtraOk
+	_ = json.Unmarshal([]byte(extraStr), &extra)
+
+	s.NewRequest(ctx).
+		SetUrl(okUrl).
+		SetExtra(&extra).
+		SetCallBack(s.ParseOk).
+		UnsafeYield()
+
+	return
+}
+
+func NewSpider(simpleSpider pkg.SimpleSpider) (spider pkg.SimpleSpider, err error) {
 	spider = &Spider{
-		baseSpider,
+		simpleSpider,
 	}
 
 	spider.SetName(name).SetHost(host).WithJsonLinesPipeline()

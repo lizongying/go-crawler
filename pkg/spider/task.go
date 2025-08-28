@@ -1,15 +1,12 @@
 package spider
 
 import (
-	"errors"
-	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	kafka2 "github.com/lizongying/go-crawler/pkg/scheduler/kafka"
 	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
 	redis2 "github.com/lizongying/go-crawler/pkg/scheduler/redis"
 	"github.com/lizongying/go-crawler/pkg/stats"
-	"reflect"
 	"time"
 )
 
@@ -83,34 +80,15 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 		}()
 
 		t.MethodIn()
-		params := []reflect.Value{
-			reflect.ValueOf(t.context),
-			reflect.ValueOf(t.context.GetJob().GetArgs()),
-		}
-		caller := reflect.ValueOf(t.spider).MethodByName(t.context.GetJob().GetFunc())
-		if !caller.IsValid() {
-			err = errors.New(fmt.Sprintf("schedule func is invalid: %s", t.context.GetJob().GetFunc()))
+		job := t.context.GetJob()
+		var startFunc pkg.StartFunc
+		startFunc, err = t.spider.StartFunc(job.GetFunc())
+		if err != nil {
 			t.logger.Error(err)
 			return
 		}
-
-		res := caller.Call(params)
-		if len(res) != 1 {
-			err = errors.New(fmt.Sprintf("%s has too many return values", t.context.GetJob().GetFunc()))
+		if err = startFunc(t.context, job.GetArgs()); err != nil {
 			t.logger.Error(err)
-			return
-		}
-
-		if res[0].Type().Name() != "error" {
-			err = errors.New(fmt.Sprintf("%s should return an error", t.context.GetJob().GetFunc()))
-			t.logger.Error(err)
-			return
-		}
-
-		if !res[0].IsNil() {
-			err = res[0].Interface().(error)
-			t.logger.Error(err)
-			return
 		}
 	}()
 

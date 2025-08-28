@@ -47,7 +47,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 	return
 }
 
-// RequestOk go run cmd/{{.Name}}_spider/*.go -c dev.yml -n {{.Name}} -f RequestOk -m once
+// RequestOk go run cmd/{{.Name}}_spider/*.go -c example.yml -n {{.Name}} -f RequestOk -m once
 func (s *Spider) RequestOk(ctx pkg.Context, _ string) (err error) {
 	s.NewRequest(ctx).
 		SetUrl(okUrl).
@@ -60,7 +60,7 @@ func (s *Spider) RequestOk(ctx pkg.Context, _ string) (err error) {
 
 func NewSpider(baseSpider pkg.Spider) (spider pkg.Spider, err error) {
 	spider = &Spider{
-		Spider: baseSpider,
+		baseSpider,
 	}
 
 	spider.SetName(name).SetHost(host).WithJsonLinesPipeline()

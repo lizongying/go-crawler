@@ -22,3 +22,5 @@ var ErrYieldRequestFailed = errors.New("yield request failed")
 var ErrYieldExtraFailed = errors.New("yield extra failed")
 var ErrYieldItemFailed = errors.New("yield item failed")
 var ErrNilProxy = errors.New("proxy enabled but proxy is nil")
+
+var ErrStartFuncNotExist = errors.New("start func not exist")

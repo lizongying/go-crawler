@@ -34,13 +34,9 @@ func (h *RouteSpider) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if req.Name == "" {
 		for _, v := range h.crawler.GetSpiders() {
 			if v.Name() == req.Name {
-				var funcs []string
-				for k1, _ := range v.CallBacks() {
-					funcs = append(funcs, k1)
-				}
 				spider = Spider{
 					Name:  v.Name(),
-					Funcs: funcs,
+					Funcs: v.CallBackNames(),
 				}
 				break
 			}

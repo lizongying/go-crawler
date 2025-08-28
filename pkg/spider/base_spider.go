@@ -14,7 +14,6 @@ import (
 	"github.com/lizongying/go-crawler/pkg/utils"
 	"golang.org/x/time/rate"
 	"net/url"
-	"reflect"
 	"sync"
 	"time"
 )
@@ -30,10 +29,9 @@ type BaseSpider struct {
 	password              string
 	platforms             map[pkg.Platform]struct{}
 	browsers              map[pkg.Browser]struct{}
-	callBacks             map[string]pkg.CallBack
-	errBacks              map[string]pkg.ErrBack
-	startFuncs            map[string]pkg.StartFunc
-	funcNames             map[uintptr]string
+	callBacks             sync.Map
+	errBacks              sync.Map
+	startFuncs            sync.Map
 	defaultAllowedDomains map[string]struct{}
 	allowedDomains        map[string]struct{}
 	retryMaxTimes         uint8
@@ -181,13 +179,6 @@ func (s *BaseSpider) GetExporter() pkg.Exporter {
 }
 func (s *BaseSpider) WithExporter(exporter pkg.Exporter) pkg.Spider {
 	s.Exporter = exporter
-	return s
-}
-func (s *BaseSpider) Interval() time.Duration {
-	return s.interval
-}
-func (s *BaseSpider) WithInterval(interval time.Duration) pkg.Spider {
-	s.interval = interval
 	return s
 }
 
@@ -347,31 +338,63 @@ func (s *BaseSpider) SetBrowsers(browsers ...pkg.Browser) pkg.Spider {
 	}
 	return s
 }
+
+// RetryMaxTimes returns the maximum number of retry attempts configured for the spider.
 func (s *BaseSpider) RetryMaxTimes() uint8 {
 	return s.retryMaxTimes
 }
+
+// SetRetryMaxTimes sets the maximum number of retry attempts for the spider.
+// Returns the spider itself for chaining.
 func (s *BaseSpider) SetRetryMaxTimes(retryMaxTimes uint8) pkg.Spider {
 	s.retryMaxTimes = retryMaxTimes
 	return s
 }
+
+// RedirectMaxTimes returns the maximum number of HTTP redirects the spider will follow automatically.
 func (s *BaseSpider) RedirectMaxTimes() uint8 {
 	return s.redirectMaxTimes
 }
+
+// SetRedirectMaxTimes sets the maximum number of HTTP redirects the spider
+// will follow automatically. Returns the spider itself for chaining.
 func (s *BaseSpider) SetRedirectMaxTimes(redirectMaxTimes uint8) pkg.Spider {
 	s.redirectMaxTimes = redirectMaxTimes
 	return s
 }
+
+// Timeout returns the timeout duration configured for HTTP requests made by the spider.
 func (s *BaseSpider) Timeout() time.Duration {
 	return s.timeout
 }
+
+// SetTimeout sets the timeout for HTTP requests made by the spider.
+// Returns the spider itself for chaining.
 func (s *BaseSpider) SetTimeout(timeout time.Duration) pkg.Spider {
 	s.timeout = timeout
 	return s
 }
+
+// Interval returns the duration between consecutive requests made by the spider.
+func (s *BaseSpider) Interval() time.Duration {
+	return s.interval
+}
+
+// SetInterval sets the duration between consecutive requests for the spider and returns the spider for chaining.
+func (s *BaseSpider) SetInterval(interval time.Duration) pkg.Spider {
+	s.interval = interval
+	return s
+}
+
+// OkHttpCodes returns the list of HTTP status codes considered successful by the spider.
 func (s *BaseSpider) OkHttpCodes() (httpCodes []int) {
 	httpCodes = s.okHttpCodes
 	return
 }
+
+// SetOkHttpCodes sets the HTTP status codes that are considered successful.
+// Requests returning other codes may trigger retries or errors.
+// Returns the spider itself for chaining.
 func (s *BaseSpider) SetOkHttpCodes(httpCodes ...int) pkg.Spider {
 	for _, v := range httpCodes {
 		if utils.InSlice(v, s.okHttpCodes) {
@@ -381,57 +404,117 @@ func (s *BaseSpider) SetOkHttpCodes(httpCodes ...int) pkg.Spider {
 	}
 	return s
 }
+
+// GetFilter returns the filter function currently set for processing or filtering items.
+func (s *BaseSpider) GetFilter() pkg.Filter {
+	return s.filter
+}
+
+// SetFilter sets a filter function to process or filter items before they are exported.
+// Returns the spider itself for chaining.
+func (s *BaseSpider) SetFilter(filter pkg.Filter) pkg.Spider {
+	s.filter = filter
+	return s
+}
+
 func (s *BaseSpider) GetSpider() pkg.Spider {
 	return s.spider
 }
+
 func (s *BaseSpider) SetSpider(spider pkg.Spider) pkg.Spider {
 	s.spider = spider
-	s.registerFuncs()
 	return s
 }
-func (s *BaseSpider) CallBacks() map[string]pkg.CallBack {
-	return s.callBacks
+
+// SetCallBack registers a new callback function under the given name.
+func (s *BaseSpider) SetCallBack(name string, callBack pkg.CallBack) {
+	s.callBacks.Store(name, callBack)
 }
-func (s *BaseSpider) CallBack(name string) (callback pkg.CallBack) {
-	if name != "" {
-		callback = s.callBacks[name]
-	}
-	if callback == nil {
+
+// CallBackNames returns the list of all registered callback names.
+func (s *BaseSpider) CallBackNames() (names []string) {
+	names = make([]string, 0)
+	s.callBacks.Range(func(k any, _ any) bool {
+		if key, ok := k.(string); ok {
+			names = append(names, key)
+		}
+		return true
+	})
+	return
+}
+
+// CallBack retrieves the callback function by name.
+// Returns an error if the callback does not exist.
+func (s *BaseSpider) CallBack(name string) (callback pkg.CallBack, err error) {
+	if v, ok := s.callBacks.Load(name); ok {
+		callback = v.(pkg.CallBack)
+	} else {
 		callback = s.Parse
 	}
 	return
 }
-func (s *BaseSpider) ErrBacks() map[string]pkg.ErrBack {
-	return s.errBacks
+
+// SetErrBack registers a new error handler under the given name.
+func (s *BaseSpider) SetErrBack(name string, errBack pkg.ErrBack) {
+	s.errBacks.Store(name, errBack)
 }
-func (s *BaseSpider) ErrBack(name string) (errBack pkg.ErrBack) {
-	if name != "" {
-		errBack = s.errBacks[name]
-	}
-	if errBack == nil {
+
+// ErrBackNames returns the list of all registered error handler names.
+func (s *BaseSpider) ErrBackNames() (names []string) {
+	names = make([]string, 0)
+	s.errBacks.Range(func(k any, _ any) bool {
+		if key, ok := k.(string); ok {
+			names = append(names, key)
+		}
+		return true
+	})
+	return
+}
+
+// ErrBack returns the error handler (ErrBack) by name.
+// If the name is not found or empty, it falls back to the default Error handler.
+func (s *BaseSpider) ErrBack(name string) (errBack pkg.ErrBack, err error) {
+	if v, ok := s.callBacks.Load(name); ok {
+		errBack = v.(pkg.ErrBack)
+	} else {
 		errBack = s.Error
 	}
 	return
 }
-func (s *BaseSpider) StartFuncs() map[string]pkg.StartFunc {
-	return s.startFuncs
+
+// SetStartFunc registers a new start function under the given name.
+func (s *BaseSpider) SetStartFunc(name string, startFunc pkg.StartFunc) {
+	s.startFuncs.Store(name, startFunc)
 }
-func (s *BaseSpider) StartFunc(name string) (startFunc pkg.StartFunc) {
-	if name != "" {
-		startFunc = s.startFuncs[name]
+
+// StartFuncNames returns the list of all registered start function names.
+func (s *BaseSpider) StartFuncNames() (names []string) {
+	names = make([]string, 0)
+	s.startFuncs.Range(func(k any, _ any) bool {
+		if key, ok := k.(string); ok {
+			names = append(names, key)
+		}
+		return true
+	})
+	return
+}
+
+// StartFunc looks up a registered StartFunc by its name.
+// It returns the StartFunc and a nil error if found.
+// If no StartFunc exists for the given name, it returns
+// ErrStartFuncNotExist.
+func (s *BaseSpider) StartFunc(name string) (startFunc pkg.StartFunc, err error) {
+	if v, ok := s.startFuncs.Load(name); ok {
+		startFunc = v.(pkg.StartFunc)
+	} else {
+		err = pkg.ErrStartFuncNotExist
 	}
 	return
 }
 func (s *BaseSpider) GetCrawler() pkg.Crawler {
 	return s.Crawler
 }
-func (s *BaseSpider) GetFilter() pkg.Filter {
-	return s.filter
-}
-func (s *BaseSpider) SetFilter(filter pkg.Filter) pkg.Spider {
-	s.filter = filter
-	return s
-}
+
 func (s *BaseSpider) GetLogger() pkg.Logger {
 	return s.logger
 }
@@ -444,39 +527,6 @@ func (s *BaseSpider) Options() []pkg.SpiderOption {
 func (s *BaseSpider) WithOptions(options ...pkg.SpiderOption) pkg.Spider {
 	s.options = options
 	return s
-}
-func (s *BaseSpider) registerFuncs() {
-	callBacks := make(map[string]pkg.CallBack)
-	errBacks := make(map[string]pkg.ErrBack)
-	startFuncs := make(map[string]pkg.StartFunc)
-	funcNames := make(map[uintptr]string)
-	rv := reflect.ValueOf(s.spider)
-	rt := rv.Type()
-	l := rt.NumMethod()
-	for i := 0; i < l; i++ {
-		method := rv.Method(i)
-		name := rt.Method(i).Name
-		ptr := method.Pointer()
-		fn := method.Interface()
-		callBack, ok := fn.(func(pkg.Context, pkg.Response) error)
-		if ok {
-			callBacks[name] = callBack
-			funcNames[ptr] = name
-		}
-		errBack, ok := fn.(func(pkg.Context, pkg.Response, error))
-		if ok {
-			errBacks[name] = errBack
-			funcNames[ptr] = name
-		}
-		startFunc, ok := fn.(func(pkg.Context, string) error)
-		if ok {
-			startFuncs[name] = startFunc
-			funcNames[ptr] = name
-		}
-	}
-	s.callBacks = callBacks
-	s.errBacks = errBacks
-	s.startFuncs = startFuncs
 }
 
 func (s *BaseSpider) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
@@ -649,7 +699,10 @@ func (s *BaseSpider) SetRequestRate(slot string, interval time.Duration, concurr
 
 	return
 }
-func (s *BaseSpider) Start(c pkg.Context) (err error) {
+
+// Start starts the spider with the given context.
+// It initializes and runs all necessary routines for crawling.
+func (s *BaseSpider) Start(_ pkg.Context) (err error) {
 	ctx := context.Background()
 
 	s.context.GetSpider().WithStatus(pkg.SpiderStatusRunning)
@@ -678,6 +731,20 @@ func (s *BaseSpider) Start(c pkg.Context) (err error) {
 	}
 	return
 }
+
+// Run executes a job with the given parameters.
+// Parameters:
+//   - ctx: the context for controlling cancellation and timeout.
+//   - jobFunc: the name of the job function to run.
+//   - args: arguments to pass to the job function.
+//   - mode: the execution mode of the job (e.g., immediate, scheduled).
+//   - spec: scheduling specification (like a cron expression) if applicable.
+//   - onlyOneTask: if true, ensures that for scheduled jobs, a new instance
+//     will not start until the previous run has finished.
+//
+// Returns:
+//   - id: a unique identifier for the job run.
+//   - err: any error encountered when starting the job.
 func (s *BaseSpider) Run(ctx context.Context, jobFunc string, args string, mode pkg.JobMode, spec string, onlyOneTask bool) (id string, err error) {
 	if s.GetContext() == nil {
 		err = errors.New("spider hasn't started")
@@ -769,6 +836,9 @@ func (s *BaseSpider) Error(_ pkg.Context, response pkg.Response, err error) {
 	s.logger.Info("error", err)
 	return
 }
+
+// Stop stops the spider with the given context.
+// It gracefully shuts down all ongoing tasks and releases resources.
 func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 	if s.context == nil || s.context.GetSpider() == nil {
 		s.logger.Warn("spider hasn't started")
@@ -820,6 +890,8 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 	return
 }
 
+// FromCrawler initializes a Spider instance from an existing Crawler.
+// It returns the Spider configured based on the Crawler's settings.
 func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 	if s == nil {
 		return new(BaseSpider).FromCrawler(crawler)

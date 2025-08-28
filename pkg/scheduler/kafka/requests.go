@@ -97,7 +97,8 @@ out:
 					}()
 
 					s.task.MethodIn()
-					if err = s.spider.CallBack(request.GetCallBack())(ctx, response); err != nil {
+					callback, _ := s.spider.CallBack(request.GetCallBack())
+					if err = callback(ctx, response); err != nil {
 						s.logger.Error(err)
 						s.HandleError(ctx, response, err, request.GetErrBack())
 						ctx.GetRequest().WithStatus(pkg.RequestStatusFailure).WithStopReason(err.Error())
