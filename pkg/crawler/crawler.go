@@ -130,9 +130,24 @@ func (c *Crawler) RunMockServer() (err error) {
 
 	return
 }
-func (c *Crawler) AddMockServerRoutes(routes ...pkg.Route) {
+func (c *Crawler) AddMockServerRoutes(routes ...pkg.Route) pkg.Crawler {
+	if !c.GetConfig().MockServerEnable() {
+		c.GetConfig().SetMockServerEnable(true)
+	}
+
 	c.mockServer.AddRoutes(routes...)
+	return c
 }
+
+func (c *Crawler) AddDefaultMocks() pkg.Crawler {
+	if !c.GetConfig().MockServerEnable() {
+		c.GetConfig().SetMockServerEnable(true)
+	}
+
+	c.mockServer.AddDefaultRoutes()
+	return c
+}
+
 func (c *Crawler) GetConfig() pkg.Config {
 	return c.config
 }
@@ -190,6 +205,7 @@ func (c *Crawler) ItemConcurrencyChan() chan struct{} {
 func (c *Crawler) StartFromCLI() bool {
 	return c.spiderName != ""
 }
+
 func (c *Crawler) RunJob(ctx context.Context, spiderName string, startFunc string, args string, mode pkg.JobMode, spec string) (id string, err error) {
 	var spider pkg.Spider
 	for _, v := range c.spiders {
@@ -276,6 +292,13 @@ func (c *Crawler) Start(ctx context.Context) (err error) {
 	c.Signal.CrawlerChanged(c.context)
 
 	c.context.GetCrawler().WithContext(ctx)
+
+	if c.GetConfig().MockServerEnable() {
+		if err = c.RunMockServer(); err != nil {
+			c.logger.Error(err)
+			return
+		}
+	}
 
 	c.context.GetCrawler().WithStatus(pkg.CrawlerStatusStarting)
 	c.Signal.CrawlerChanged(c.context)
@@ -409,13 +432,6 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 
 	crawler.SetSignal(new(signals.Signal).FromCrawler(crawler))
 	crawler.SetStatistics(new(statistics.Statistics).FromCrawler(crawler))
-
-	if config.MockServerEnable() {
-		if err = crawler.RunMockServer(); err != nil {
-			logger.Error(err)
-			return
-		}
-	}
 
 	return crawler, nil
 }

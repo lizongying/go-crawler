@@ -10,9 +10,10 @@ import (
 	"github.com/lizongying/go-crawler/pkg/exporter"
 	"github.com/lizongying/go-crawler/pkg/filters"
 	"github.com/lizongying/go-crawler/pkg/items"
+	"github.com/lizongying/go-crawler/pkg/limiter"
 	"github.com/lizongying/go-crawler/pkg/request"
 	"github.com/lizongying/go-crawler/pkg/utils"
-	"golang.org/x/time/rate"
+	"math"
 	"net/url"
 	"sync"
 	"time"
@@ -54,6 +55,10 @@ type BaseSpider struct {
 	pkg.Exporter
 
 	requestSlots sync.Map
+
+	limiterManager *limiter.Manager
+	limiterType    pkg.LimitType
+	ratePerHour    int
 }
 
 func (s *BaseSpider) PipelineNames() map[uint8]string {
@@ -386,6 +391,20 @@ func (s *BaseSpider) SetInterval(interval time.Duration) pkg.Spider {
 	return s
 }
 
+// Concurrency returns the maximum number of concurrent requests
+// that the spider is allowed to execute.
+func (s *BaseSpider) Concurrency() uint8 {
+	return s.concurrency
+}
+
+// SetConcurrency sets the maximum number of concurrent requests
+// the spider is allowed to execute and returns the Spider instance.
+// This controls how many requests can be processed in parallel.
+func (s *BaseSpider) SetConcurrency(concurrency uint8) pkg.Spider {
+	s.concurrency = concurrency
+	return s
+}
+
 // OkHttpCodes returns the list of HTTP status codes considered successful by the spider.
 func (s *BaseSpider) OkHttpCodes() (httpCodes []int) {
 	httpCodes = s.okHttpCodes
@@ -530,6 +549,12 @@ func (s *BaseSpider) WithOptions(options ...pkg.SpiderOption) pkg.Spider {
 }
 
 func (s *BaseSpider) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
+	task := ctx.GetTask().GetTask()
+	defer func() {
+		task.MethodOut()
+	}()
+	task.MethodIn()
+
 	req := request.GetHttpRequest()
 	if req.URL.Scheme == "" || req.URL.Host == "" {
 		u, e := url.Parse(s.GetHost())
@@ -543,9 +568,15 @@ func (s *BaseSpider) Request(ctx pkg.Context, request pkg.Request) (response pkg
 		}
 	}
 
-	return ctx.GetTask().GetTask().Request(ctx, request)
+	return task.Request(ctx, request)
 }
 func (s *BaseSpider) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
+	task := ctx.GetTask().GetTask()
+	defer func() {
+		task.MethodOut()
+	}()
+	task.MethodIn()
+
 	req := request.GetHttpRequest()
 	if req.URL.Scheme == "" || req.URL.Host == "" {
 		u, e := url.Parse(s.GetHost())
@@ -559,7 +590,7 @@ func (s *BaseSpider) YieldRequest(ctx pkg.Context, request pkg.Request) (err err
 		}
 	}
 
-	return ctx.GetTask().GetTask().YieldRequest(ctx, request)
+	return task.YieldRequest(ctx, request)
 }
 func (s *BaseSpider) MustYieldRequest(ctx pkg.Context, request pkg.Request) {
 	if err := s.YieldRequest(ctx, request); err != nil {
@@ -588,6 +619,15 @@ func (s *BaseSpider) UnsafeYieldItem(c pkg.Context, item pkg.Item) {
 	if err := s.YieldItem(c, item); err != nil {
 		s.logger.Error(err)
 	}
+}
+func (s *BaseSpider) YieldItem(ctx pkg.Context, item pkg.Item) (err error) {
+	task := ctx.GetTask().GetTask()
+	defer func() {
+		task.MethodOut()
+	}()
+	task.MethodIn()
+
+	return task.YieldItem(ctx, item)
 }
 
 // NewItemNone creates a new Item that does not output any data.
@@ -668,35 +708,48 @@ func (s *BaseSpider) MustGetExtra(ctx pkg.Context, extra any) {
 		}
 	}
 }
-func (s *BaseSpider) YieldItem(ctx pkg.Context, item pkg.Item) (err error) {
-	return ctx.GetTask().GetTask().YieldItem(ctx, item)
+func (s *BaseSpider) UnsafeGetExtra(ctx pkg.Context, extra any) {
+	if err := s.GetExtra(ctx, extra); err != nil {
+		s.logger.Error(err)
+	}
 }
-func (s *BaseSpider) RequestSlotLoad(slot string) (value any, ok bool) {
-	return s.requestSlots.Load(slot)
+
+// Limiter retrieves the rate limiter associated with the given slot.
+// It returns the limiter and a boolean indicating whether the limiter exists.
+func (s *BaseSpider) Limiter(slot string) (value pkg.Limiter, ok bool) {
+	return s.limiterManager.GetLimiter(slot)
 }
-func (s *BaseSpider) RequestSlotStore(slot string, value any) {
-	s.requestSlots.Store(slot, value)
-}
-func (s *BaseSpider) SetRequestRate(slot string, interval time.Duration, concurrency int) {
-	if slot == "" {
-		slot = "*"
+
+// SetRequestRate sets a request rate limiter for the given slot.
+//
+// Parameters:
+//   - slot: an identifier for grouping requests. If empty, "*" (default) is used.
+//   - interval: the total time window during which 'concurrency' number of requests are allowed.
+//   - concurrency: the maximum number of requests allowed within the given interval.
+//
+// Behavior:
+//   - If the slot has no existing limiter, a new one is created.
+//   - If a limiter already exists for the slot, its burst (concurrency) and rate limit
+//     are updated to match the new configuration.
+//   - If concurrency < 1, it will be normalized to 1.
+//
+// Example:
+//
+//	SetRequestRate("api", time.Second, 5)
+//	→ allows up to 5 requests per second for the "api" slot.
+func (s *BaseSpider) SetRequestRate(slot string, interval time.Duration, concurrency int) pkg.Limiter {
+	ratePerHour := 0
+	if interval <= 0 {
+		ratePerHour = math.MaxInt32
+	} else {
+		ratePerHour = int(time.Hour / interval)
 	}
 
-	if concurrency < 1 {
-		concurrency = 1
-	}
+	return s.limiterManager.SetLimiter(s.limiterType, slot, ratePerHour, concurrency)
+}
 
-	slotValue, ok := s.requestSlots.Load(slot)
-	if !ok {
-		requestSlot := rate.NewLimiter(rate.Every(interval/time.Duration(concurrency)), concurrency)
-		s.requestSlots.Store(slot, requestSlot)
-		return
-	}
-
-	limiter := slotValue.(*rate.Limiter)
-	limiter.SetBurst(concurrency)
-	limiter.SetLimit(rate.Every(interval / time.Duration(concurrency)))
-
+func (s *BaseSpider) SetRatePerHour(slot string, ratePerHour int, concurrency int) {
+	s.limiterManager.SetLimiter(s.limiterType, slot, ratePerHour, concurrency)
 	return
 }
 
@@ -814,9 +867,9 @@ func (s *BaseSpider) KillJob(ctx context.Context, jobId string) (err error) {
 }
 func (s *BaseSpider) JobStopped(ctx pkg.Context, err error) {
 	if err != nil {
-		s.logger.Info(s.spider.Name(), "job finished with an error:", err, "spend time:", ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()), ctx.GetJob().GetId())
+		s.logger.Infof("%s job(%s) finished. spend time: %s. with an error: %s", s.spider.Name(), ctx.GetJob().GetId(), ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()), err)
 	} else {
-		s.logger.Info(s.spider.Name(), "job finished. spend time:", ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()), ctx.GetJob().GetId())
+		s.logger.Infof("%s job(%s) finished. spend time: %s", s.spider.Name(), ctx.GetJob().GetId(), ctx.GetJob().GetStopTime().Sub(ctx.GetJob().GetStartTime()))
 	}
 
 	s.job.Out()
@@ -875,7 +928,7 @@ func (s *BaseSpider) Stop(_ pkg.Context) (err error) {
 		s.Crawler.GetSignal().SpiderChanged(s.context)
 
 		spendTime := stopTime.Sub(s.context.GetSpider().GetStartTime())
-		s.logger.Info(s.spider.Name(), s.context.GetSpider().GetId(), "spider finished. spend time:", spendTime)
+		s.logger.Infof("%s spider(%d) finished. spend time: %s", s.spider.Name(), s.context.GetSpider().GetId(), spendTime)
 		s.Crawler.SpiderStopped(s.context, err)
 	}()
 
@@ -908,6 +961,7 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 
 	s.concurrency = config.GetRequestConcurrency()
 	s.interval = time.Millisecond * time.Duration(int(config.GetRequestInterval()))
+	s.ratePerHour = int(config.GetRequestRatePerHour())
 
 	switch config.GetFilter() {
 	case pkg.FilterMemory:
@@ -920,10 +974,20 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 	s.WithDownloader(new(downloader.Downloader).FromSpider(s))
 	s.WithExporter(new(exporter.Exporter).FromSpider(s))
 
+	s.limiterType = config.GetLimitType()
+
 	slot := "*"
-	if _, ok := s.RequestSlotLoad(slot); !ok {
-		requestSlot := rate.NewLimiter(rate.Every(s.interval/time.Duration(s.concurrency)), int(s.concurrency))
-		s.RequestSlotStore(slot, requestSlot)
+
+	if s.ratePerHour == 0 {
+		if s.interval <= 0 {
+			s.ratePerHour = math.MaxInt32
+		} else {
+			s.ratePerHour = int(time.Hour / s.interval)
+		}
+	}
+
+	if _, ok := s.limiterManager.GetLimiter(slot); !ok {
+		s.limiterManager.SetLimiter(s.limiterType, slot, s.ratePerHour, int(s.concurrency))
 	}
 
 	for _, option := range s.Options() {
@@ -941,7 +1005,7 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 
 	return s
 }
-func NewBaseSpider(logger pkg.Logger) (pkg.Spider, error) {
+func NewBaseSpider(logger pkg.Logger, limiterManager *limiter.Manager) (pkg.Spider, error) {
 	defaultAllowedDomains := map[string]struct{}{"*": {}}
 	s := &BaseSpider{
 		logger:                logger,
@@ -950,6 +1014,7 @@ func NewBaseSpider(logger pkg.Logger) (pkg.Spider, error) {
 		defaultAllowedDomains: defaultAllowedDomains,
 		allowedDomains:        defaultAllowedDomains,
 		jobs:                  make(map[string]*Job),
+		limiterManager:        limiterManager,
 	}
 
 	s.job = pkg.NewState("job")

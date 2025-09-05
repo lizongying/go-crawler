@@ -29,7 +29,7 @@ func NewRedis(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) (rdb *r
 		option.Password = password
 	}
 	db := config.Redis.Example.Db
-	if password != "" {
+	if db != -1 {
 		option.DB = db
 	}
 

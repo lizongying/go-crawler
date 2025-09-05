@@ -41,8 +41,9 @@ log:
 proxy:
   example:
 request:
+  limiter_type:
   concurrency: 1
-  interval: 1000
+  rate_per_hour: 3600
   timeout: 30
   ok_http_codes:
     - 200
@@ -56,7 +57,7 @@ api:
   port: 8090
   access_key: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
 mock_server:
-  enable: true
+  enable: false
   host: https://localhost:8081
   client_auth: 0
 close_reason:

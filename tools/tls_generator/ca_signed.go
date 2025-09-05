@@ -11,7 +11,6 @@ import (
 	"log"
 	"math/big"
 	"net"
-	"os"
 	"time"
 )
 
@@ -21,31 +20,24 @@ func CreateCa() (caPrivateKey *rsa.PrivateKey, caCert *x509.Certificate, err err
 		log.Panicln("Unable to generate ca private key.", err)
 	}
 
-	caKeyBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(caPrivateKey)}
+	keyBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(caPrivateKey)}
 	for _, i := range []string{
 		"static/tls/ca.key",
 		"static/tls/ca_key.pem",
 	} {
-		var out *os.File
-		out, err = os.Create(i)
-		if err != nil {
-			log.Panicln("Unable to generate private key file.", err)
-		}
-		_ = pem.Encode(out, &caKeyBlock)
-		_ = out.Close()
-		log.Println("The ca certificate has been saved to", i)
+		_ = save(i, &keyBlock)
 	}
 
 	caCert = &x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			CommonName: "ZONGYING",
+			CommonName: "GO CRAWLER",
 		},
 		NotBefore:             time.Now(),
-		NotAfter:              time.Now().AddDate(10, 0, 0), // 有效期10年
+		NotAfter:              time.Now().AddDate(10, 0, 0), // Valid for 10 years
 		BasicConstraintsValid: true,
 		IsCA:                  true,
-		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
 	}
 
 	var caCertDER []byte
@@ -54,24 +46,17 @@ func CreateCa() (caPrivateKey *rsa.PrivateKey, caCert *x509.Certificate, err err
 		log.Panicln("Unable to create ca certificate.", err)
 	}
 
-	caCertBlock := pem.Block{Type: "CERTIFICATE", Bytes: caCertDER}
+	certBlock := pem.Block{Type: "CERTIFICATE", Bytes: caCertDER}
 	for _, i := range []string{
 		"static/tls/ca.crt",
 		"static/tls/ca_crt.pem",
 	} {
-		var out *os.File
-		out, err = os.Create(i)
-		if err != nil {
-			log.Panicln("Unable to create ca certificate file.", err)
-		}
-		_ = pem.Encode(out, &caCertBlock)
-		_ = out.Close()
-		log.Println("The ca certificate has been saved to", i)
+		_ = save(i, &certBlock)
 	}
 	return
 }
 
-func CaSigned(ca bool, ip []string, hostnames []string) {
+func CaServer(ca bool, ip []string, hostnames []string) {
 	hostname := "localhost"
 	if len(hostnames) > 0 {
 		hostname = hostnames[0]
@@ -110,29 +95,22 @@ func CaSigned(ca bool, ip []string, hostnames []string) {
 
 	serverPrivateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		log.Panicln("Unable to create server certificate key.", err)
+		log.Panicln("Unable to create certificate key.", err)
 	}
 
-	serverKeyBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(serverPrivateKey)}
+	keyBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(serverPrivateKey)}
 	for _, i := range []string{
 		"static/tls/server.key",
 		"static/tls/server_key.pem",
 	} {
-		var out *os.File
-		out, err = os.Create(i)
-		if err != nil {
-			log.Panicln("Unable to create server certificate key file.", err)
-		}
-		_ = pem.Encode(out, &serverKeyBlock)
-		_ = out.Close()
-		log.Println("The server certificate key has been saved to", i)
+		_ = save(i, &keyBlock)
 	}
 
 	serverCert := &x509.Certificate{
 		SerialNumber: big.NewInt(2),
 		Subject:      pkix.Name{CommonName: hostname},
 		NotBefore:    time.Now(),
-		NotAfter:     time.Now().AddDate(1, 0, 0),
+		NotAfter:     time.Now().AddDate(1, 0, 0), // Valid for 1 year
 		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 	}
@@ -157,21 +135,82 @@ func CaSigned(ca bool, ip []string, hostnames []string) {
 
 	serverCertDER, err := x509.CreateCertificate(rand.Reader, serverCert, caCert, &serverPrivateKey.PublicKey, caPrivateKey)
 	if err != nil {
-		log.Panicln("Unable to generate server certificate.", err)
+		log.Panicln("Unable to generate certificate.", err)
 	}
 
-	serverCertBlock := pem.Block{Type: "CERTIFICATE", Bytes: serverCertDER}
+	certBlock := pem.Block{Type: "CERTIFICATE", Bytes: serverCertDER}
 	for _, i := range []string{
 		"static/tls/server.crt",
 		"static/tls/server_crt.pem",
 	} {
-		var out *os.File
-		out, err = os.Create(i)
+		_ = save(i, &certBlock)
+	}
+}
+
+func CaClient(ca bool) {
+	var caPrivateKey *rsa.PrivateKey
+	var caCert *x509.Certificate
+	var err error
+
+	if ca {
+		caPrivateKey, caCert, err = CreateCa()
 		if err != nil {
-			log.Panicln("Unable to create server certificate file.", err)
+			log.Panicln("create ca error", err)
 		}
-		_ = pem.Encode(out, &serverCertBlock)
-		_ = out.Close()
-		log.Println("The server certificate has been saved to", i)
+	} else {
+		block, _ := pem.Decode(static.CaKey)
+		if block == nil {
+			err = errors.New("block nil")
+			log.Panicln(err)
+		}
+		caPrivateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			log.Panicln(err)
+		}
+
+		block, _ = pem.Decode(static.CaCert)
+		if block == nil {
+			err = errors.New("block nil")
+			log.Panicln(err)
+		}
+		caCert, err = x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			log.Panicln(err)
+		}
+	}
+
+	serverPrivateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		log.Panicln("Unable to create certificate key.", err)
+	}
+
+	keyBlock := pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(serverPrivateKey)}
+	for _, i := range []string{
+		"static/tls/client.key",
+		"static/tls/client_key.pem",
+	} {
+		_ = save(i, &keyBlock)
+	}
+
+	serverCert := &x509.Certificate{
+		SerialNumber: big.NewInt(3),
+		Subject:      pkix.Name{CommonName: "client"},
+		NotBefore:    time.Now(),
+		NotAfter:     time.Now().AddDate(1, 0, 0), // Valid for 1 year
+		KeyUsage:     x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
+	}
+
+	serverCertDER, err := x509.CreateCertificate(rand.Reader, serverCert, caCert, &serverPrivateKey.PublicKey, caPrivateKey)
+	if err != nil {
+		log.Panicln("Unable to generate certificate.", err)
+	}
+
+	certBlock := pem.Block{Type: "CERTIFICATE", Bytes: serverCertDER}
+	for _, i := range []string{
+		"static/tls/client.crt",
+		"static/tls/client_crt.pem",
+	} {
+		_ = save(i, &certBlock)
 	}
 }

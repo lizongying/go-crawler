@@ -51,6 +51,7 @@ type Config interface {
 
 	GetRequestConcurrency() uint8
 	GetRequestInterval() uint
+	GetRequestRatePerHour() uint
 	GetOkHttpCodes() []int
 	GetFilter() FilterType
 	GetScheduler() SchedulerType
@@ -61,4 +62,6 @@ type Config interface {
 	MockServerHost() *url.URL
 	CloseReasonQueueTimeout() uint8
 	KafkaUri() string
+
+	GetLimitType() LimitType
 }

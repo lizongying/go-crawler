@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
-	"golang.org/x/time/rate"
 	"net/http"
 	"reflect"
 	"time"
@@ -13,8 +12,7 @@ import (
 
 func (s *Scheduler) handleRequest(ctx pkg.Context) {
 	slot := "*"
-	value, _ := s.spider.RequestSlotLoad(slot)
-	requestSlot := value.(*rate.Limiter)
+	limiter, _ := s.spider.Limiter(slot)
 
 out:
 	for request := range s.requestChan {
@@ -28,22 +26,18 @@ out:
 			if slot == "" {
 				slot = "*"
 			}
-			slotValue, ok := s.spider.RequestSlotLoad(slot)
+			var ok bool
+			limiter, ok = s.spider.Limiter(slot)
 			if !ok {
 				concurrency := uint8(1)
 				if request.GetConcurrency() != nil {
 					concurrency = *request.GetConcurrency()
 				}
-				if concurrency < 1 {
-					concurrency = 1
-				}
-				requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
-				s.spider.RequestSlotStore(slot, requestSlot)
+				interval := request.GetInterval()
+				limiter = s.spider.SetRequestRate(slot, interval, int(concurrency))
 			}
 
-			requestSlot = slotValue.(*rate.Limiter)
-
-			if err := requestSlot.Wait(ctx.GetTask().GetContext()); err != nil {
+			if err := limiter.Wait(ctx.GetTask().GetContext()); err != nil {
 				s.logger.Error(err, time.Now(), ctx)
 			}
 			ctx.GetRequest().WithStatus(pkg.RequestStatusRunning)
@@ -92,6 +86,11 @@ out:
 }
 
 func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err error) {
+	defer func() {
+		s.task.MethodOut()
+	}()
+	s.task.MethodIn()
+
 	if len(s.requestChan) >= defaultRequestMax {
 		err = errors.New("exceeded the maximum number of requests")
 		s.logger.Error(err)

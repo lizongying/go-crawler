@@ -14,7 +14,18 @@ type Route interface {
 }
 
 type MockServer interface {
+	// Run starts the server.
+	// It returns an error if the server fails to start or encounters a fatal issue.
 	Run() error
+
+	// AddRoutes registers one or more custom routes to the server.
 	AddRoutes(...Route)
+
+	// AddDefaultRoutes registers the built-in default routes.
+	AddDefaultRoutes()
+
+	// GetRoutes returns a list of route names currently registered in the server.
 	GetRoutes() []string
 }
+
+type NewRoute func(logger Logger) Route

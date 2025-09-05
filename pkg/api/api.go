@@ -25,7 +25,7 @@ type Api struct {
 func (a *Api) Run() (err error) {
 	go func() {
 		a.logger.Info("access key", a.accessKey)
-		a.logger.Info("api routes", a.GetRoutes())
+		a.logger.Info("api routes", utils.UnsafeJSON(a.GetRoutes()))
 		if !a.https {
 			a.logger.Infof("api at http://%s%s http://%s%s http://%s%s", "localhost", a.srv.Addr, utils.LanIp(), a.srv.Addr, utils.InternetIp(), a.srv.Addr)
 			if err = a.srv.ListenAndServe(); err != nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/crawler"
 	"github.com/lizongying/go-crawler/pkg/db"
+	"github.com/lizongying/go-crawler/pkg/limiter"
 	"github.com/lizongying/go-crawler/pkg/loggers"
 	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/spider"
@@ -32,6 +33,7 @@ func (a *SimpleApp) Run(crawlOptions ...pkg.CrawlOption) {
 		db.NewKafka,
 		db.NewKafkaReader,
 		db.NewRedis,
+		db.NewRedisFactory,
 		loggers.NewStream,
 		fx.Annotate(
 			loggers.NewLogger,
@@ -56,12 +58,13 @@ func (a *SimpleApp) Run(crawlOptions ...pkg.CrawlOption) {
 			fx.ParamTags(`group:"spiders"`),
 		),
 		api.NewApi,
+		limiter.NewManager,
 	}
 
 	for _, v := range a.newSpiders {
 		constructors = append(constructors, fx.Annotate(
-			func(logger pkg.Logger) (baseSpider pkg.Spider, err error) {
-				baseSpider, _ = spider.NewBaseSpider(logger)
+			func(logger pkg.Logger, lm *limiter.Manager) (baseSpider pkg.Spider, err error) {
+				baseSpider, _ = spider.NewBaseSpider(logger, lm)
 				simpleSpider := &spider.SimpleSpider{
 					BaseSpider: baseSpider.(*spider.BaseSpider),
 				}

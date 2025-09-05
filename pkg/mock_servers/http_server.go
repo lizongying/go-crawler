@@ -8,12 +8,14 @@ import (
 	"fmt"
 	"github.com/lizongying/go-crawler/pkg"
 	"github.com/lizongying/go-crawler/pkg/config"
+	"github.com/lizongying/go-crawler/pkg/utils"
 	"github.com/lizongying/go-crawler/static"
 	"go.uber.org/fx"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 )
 
 var versionMap = map[uint16]string{
@@ -59,7 +61,7 @@ type HttpServer struct {
 	logger     pkg.Logger
 
 	mux    *http.ServeMux
-	routes map[string]struct{}
+	routes sync.Map
 }
 
 func convertToJA3(info *tls.ClientHelloInfo) string {
@@ -131,7 +133,7 @@ func (h *HttpServer) Run() (err error) {
 			caCertPool := x509.NewCertPool()
 			caCertPool.AppendCertsFromPEM(static.CaCert)
 			conf.ClientCAs = caCertPool
-			//conf.ClientAuth = tls.RequireAndVerifyClientCert
+			conf.ClientAuth = tls.RequireAndVerifyClientCert
 			if h.clientAuth != 0 {
 				conf.ClientAuth = tls.ClientAuthType(h.clientAuth)
 			}
@@ -153,16 +155,28 @@ func (h *HttpServer) Run() (err error) {
 
 func (h *HttpServer) AddRoutes(routes ...pkg.Route) {
 	for _, route := range routes {
-		h.mux.Handle(route.Pattern(), route)
-		h.routes[route.Pattern()] = struct{}{}
-		h.logger.Info("mock route added:", route.Pattern())
+		pattern := route.Pattern()
+		h.mux.Handle(pattern, route)
+		h.routes.Store(pattern, route)
 	}
+	h.logger.Info("mock routes added:", utils.UnsafeJSON(h.GetRoutes()))
+}
+
+func (h *HttpServer) AddDefaultRoutes() {
+	for _, newRoute := range NewRoutes {
+		route := newRoute(h.logger)
+		pattern := route.Pattern()
+		h.mux.Handle(pattern, route)
+		h.routes.Store(pattern, route)
+	}
+	h.logger.Info("mock routes added:", utils.UnsafeJSON(h.GetRoutes()))
 }
 
 func (h *HttpServer) GetRoutes() (routes []string) {
-	for route := range h.routes {
-		routes = append(routes, route)
-	}
+	h.routes.Range(func(key, value any) bool {
+		routes = append(routes, key.(string))
+		return true
+	})
 	return
 }
 
@@ -182,7 +196,9 @@ func NewHttpServer(lc fx.Lifecycle, config *config.Config, logger pkg.Logger) (h
 		srv:        srv,
 		logger:     logger,
 		mux:        http.NewServeMux(),
-		routes:     make(map[string]struct{}),
+	}
+	if config.MockServerEnable() {
+		httpServer.AddDefaultRoutes()
 	}
 	lc.Append(fx.Hook{
 		OnStop: func(ctx context.Context) error {

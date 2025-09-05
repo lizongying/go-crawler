@@ -9,7 +9,7 @@ import (
 
 const (
 	name   = "abc"
-	host   = "https://httpbin.org"
+	host   = "https://localhost:8081"
 	okUrl  = "/get"
 	output = "abc"
 )
@@ -32,7 +32,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 		}).
 		UnsafeYield()
 
-	if count > 0 {
+	if count > 5 {
 		s.Logger().Info("response", response.Text())
 		return
 	}
@@ -78,7 +78,7 @@ func NewSpider(simpleSpider pkg.SimpleSpider) (spider pkg.SimpleSpider, err erro
 		simpleSpider,
 	}
 
-	spider.SetName(name).SetHost(host).WithJsonLinesPipeline()
+	spider.SetName(name).SetHost(host).SetRatePerHour("*", 1800, 1).WithJsonLinesPipeline()
 
 	return
 }

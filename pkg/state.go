@@ -7,7 +7,7 @@ import (
 // State represents a state with ready and count properties.
 type State struct {
 	name               string
-	isReady            bool
+	isReady            atomic.Bool
 	count              atomic.Uint32
 	fnIsReady          []func()
 	fnIsZero           []func()
@@ -36,9 +36,10 @@ func (s *State) RegisterIsReadyAndIsZero(fns ...func()) {
 
 // BeReady sets the state as ready and calls the registered functions for ready state.
 func (s *State) BeReady() {
-	s.isReady = true
-	for _, v := range s.fnIsReady {
-		v()
+	if s.isReady.CompareAndSwap(false, true) {
+		for _, v := range s.fnIsReady {
+			v()
+		}
 	}
 }
 
@@ -68,7 +69,7 @@ func (s *State) Out() {
 
 // IsReady checks if the state is ready.
 func (s *State) IsReady() bool {
-	return s.isReady
+	return s.isReady.Load()
 }
 
 // IsZero checks if the count of the state is zero.
@@ -82,7 +83,7 @@ func (s *State) IsReadyAndIsZero() bool {
 }
 
 func (s *State) Clear() {
-	s.isReady = false
+	s.isReady.Store(false)
 	s.count.Store(0)
 }
 

@@ -60,7 +60,7 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 	}
 	response, err = client.DoRequest(request.RequestContext(), request)
 	if err != nil {
-		d.logger.Error(err)
+		d.logger.Warn(err)
 	}
 
 	if response == nil {
@@ -74,16 +74,6 @@ func (d *Downloader) Download(ctx pkg.Context, request pkg.Request) (response pk
 		}
 		d.logger.Error(err)
 		return
-	}
-
-	if response == nil {
-		err = errors.New("nil response")
-		d.logger.Error(err)
-		return
-	}
-
-	if response != nil && request != nil {
-		response.SetRequest(request)
 	}
 
 	return

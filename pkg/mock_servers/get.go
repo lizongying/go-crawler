@@ -17,9 +17,9 @@ func (h *RouteGet) Pattern() string {
 }
 
 func (h *RouteGet) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.logger.Info("into HandlerGet")
+	h.logger.Debug("into Get")
 	defer func() {
-		h.logger.Info("exit HandlerGet")
+		h.logger.Debug("exit Get")
 	}()
 
 	reqDump, err := httputil.DumpRequest(r, true)

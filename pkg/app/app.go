@@ -8,6 +8,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/crawler"
 	"github.com/lizongying/go-crawler/pkg/db"
+	"github.com/lizongying/go-crawler/pkg/limiter"
 	"github.com/lizongying/go-crawler/pkg/loggers"
 	"github.com/lizongying/go-crawler/pkg/mock_servers"
 	"github.com/lizongying/go-crawler/pkg/spider"
@@ -56,12 +57,13 @@ func (a *App) Run(crawlOptions ...pkg.CrawlOption) {
 			fx.ParamTags(`group:"spiders"`),
 		),
 		api.NewApi,
+		limiter.NewManager,
 	}
 
 	for _, v := range a.newSpiders {
 		constructors = append(constructors, fx.Annotate(
-			func(logger pkg.Logger) (baseSpider pkg.Spider, err error) {
-				baseSpider, err = spider.NewBaseSpider(logger)
+			func(logger pkg.Logger, lm *limiter.Manager) (baseSpider pkg.Spider, err error) {
+				baseSpider, err = spider.NewBaseSpider(logger, lm)
 
 				baseSpider, err = v(baseSpider)
 

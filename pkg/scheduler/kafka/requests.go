@@ -9,7 +9,6 @@ import (
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	request2 "github.com/lizongying/go-crawler/pkg/request"
 	"github.com/segmentio/kafka-go"
-	"golang.org/x/time/rate"
 	"net/http"
 	"reflect"
 	"strings"
@@ -18,8 +17,8 @@ import (
 
 func (s *Scheduler) handleRequest(ctx pkg.Context) {
 	slot := "*"
-	value, _ := s.spider.RequestSlotLoad(slot)
-	requestSlot := value.(*rate.Limiter)
+	limiter, _ := s.spider.Limiter(slot)
+
 out:
 	for {
 		select {
@@ -38,7 +37,6 @@ out:
 				continue
 			}
 
-			s.logger.Debugf("request: %s", req)
 			request := new(request2.Request)
 			if err = request.Unmarshal(req.Value); err != nil {
 				s.logger.Warn(err)
@@ -55,22 +53,18 @@ out:
 			if slot == "" {
 				slot = "*"
 			}
-			slotValue, ok := s.spider.RequestSlotLoad(slot)
+			var ok bool
+			limiter, ok = s.spider.Limiter(slot)
 			if !ok {
 				concurrency := uint8(1)
 				if request.GetConcurrency() != nil {
 					concurrency = *request.GetConcurrency()
 				}
-				if concurrency < 1 {
-					concurrency = 1
-				}
-				requestSlot = rate.NewLimiter(rate.Every(request.GetInterval()/time.Duration(concurrency)), int(concurrency))
-				s.spider.RequestSlotStore(slot, requestSlot)
+				interval := request.GetInterval()
+				limiter = s.spider.SetRequestRate(slot, interval, int(concurrency))
 			}
 
-			requestSlot = slotValue.(*rate.Limiter)
-
-			if err = requestSlot.Wait(ctx.GetTask().GetContext()); err != nil {
+			if err = limiter.Wait(ctx.GetTask().GetContext()); err != nil {
 				s.logger.Error(err)
 			}
 			ctx.GetRequest().WithStatus(pkg.RequestStatusRunning)

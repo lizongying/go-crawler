@@ -6,10 +6,10 @@ import (
 )
 
 func main() {
-	selfSignedPtr := flag.Bool("s", false, "-s Self-Signed")
-	caPtr := flag.Bool("c", false, "-c Create CA")
-	ipPtr := flag.String("i", "", "-i IP")
-	hostnamePtr := flag.String("h", "", "-h HostName")
+	selfSignedPtr := flag.Bool("s", false, "Self-Signed")
+	caPtr := flag.Bool("c", false, "Create CA")
+	ipPtr := flag.String("i", "", "IP")
+	hostnamePtr := flag.String("n", "", "HostName")
 	flag.Parse()
 
 	var ip []string
@@ -22,8 +22,10 @@ func main() {
 	}
 
 	if *selfSignedPtr {
-		SelfSigned(hostnames)
+		SelfServer(hostnames)
+		SelfClient()
 	} else {
-		CaSigned(*caPtr, ip, hostnames)
+		CaServer(*caPtr, ip, hostnames)
+		CaClient(*caPtr)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/scheduler/memory"
 	redis2 "github.com/lizongying/go-crawler/pkg/scheduler/redis"
 	"github.com/lizongying/go-crawler/pkg/stats"
+	"sync/atomic"
 	"time"
 )
 
@@ -22,6 +23,8 @@ type Task struct {
 	job            *Job
 	pkg.Stats
 	pkg.Scheduler
+
+	closing int32
 }
 
 func (t *Task) GetContext() pkg.Context {
@@ -65,6 +68,7 @@ func (t *Task) start(ctx pkg.Context) (id string, err error) {
 		select {
 		case <-t.context.GetTask().GetContext().Done():
 			if t.context.GetTask().GetStatus() < pkg.TaskStatusSuccess {
+				t.logger.Info("t.context.GetTask().GetStatus()", t.context.GetTask().GetStatus())
 				t.stop(t.context.GetTask().GetContext().Err())
 			}
 			return
@@ -117,6 +121,10 @@ func (t *Task) MethodOut() {
 	t.method.Out()
 }
 func (t *Task) RequestIn() {
+	if atomic.LoadInt32(&t.closing) == 1 {
+		return
+	}
+
 	if !t.request.IsReady() {
 		t.request.BeReady()
 	}
@@ -126,6 +134,10 @@ func (t *Task) RequestOut() {
 	t.request.Out()
 }
 func (t *Task) ItemIn() {
+	if atomic.LoadInt32(&t.closing) == 1 {
+		return
+	}
+
 	if !t.item.IsReady() {
 		t.item.BeReady()
 	}
@@ -150,7 +162,9 @@ func (t *Task) FromSpider(spider pkg.Spider) *Task {
 
 	t.requestAndItem = pkg.NewMultiState(t.request, t.item, t.method)
 
-	t.requestAndItem.RegisterIsReadyAndIsZero(func() {
+	// TODO 如果沒有item被處理，會導致item not ready，job不會停止
+	// 而如果不加上ready，又會導致可能所有請求結束，但item還未處理完就停止了。
+	t.requestAndItem.RegisterIsZero(func() {
 		t.stop(nil)
 	})
 

@@ -58,12 +58,14 @@ const defaultEnableJsonLinesPipeline = false
 const defaultEnableMongoPipeline = false
 const defaultEnableMysqlPipeline = false
 const defaultEnableKafkaPipeline = false
-const defaultRequestConcurrency = uint8(1) // should bigger than 1
-const defaultRequestInterval = uint(1000)  // millisecond
-const defaultRequestTimeout = uint(60)     //second
+const defaultRequestConcurrency = uint8(1)   // should bigger than 1
+const defaultRequestInterval = uint(1000)    // millisecond
+const defaultRequestRatePerHour = uint(3600) // millisecond
+const defaultRequestTimeout = uint(60)       //second
 const defaultFilterType = pkg.FilterMemory
 const defaultSchedulerType = pkg.SchedulerMemory
 const defaultLogLongFile = true
+const defaultRequestLimitType = pkg.LimitSingle
 
 type Store struct {
 	Name     string `yaml:"name" json:"-"`
@@ -122,12 +124,14 @@ type Config struct {
 		Example string `yaml:"example" json:"-"`
 	} `yaml:"proxy" json:"-"`
 	Request struct {
-		Concurrency   *uint8 `yaml:"concurrency" json:"-"`
-		Interval      *uint  `yaml:"interval" json:"-"`
-		Timeout       *uint  `yaml:"timeout" json:"-"`
-		OkHttpCodes   []int  `yaml:"ok_http_codes" json:"-"`
-		RetryMaxTimes *uint8 `yaml:"retry_max_times" json:"-"`
-		HttpProto     string `yaml:"http_proto" json:"-"`
+		LimitType     *pkg.LimitType `yaml:"limiter_type,omitempty" json:"limiter_type"`
+		Concurrency   *uint8         `yaml:"concurrency" json:"-"`
+		Interval      *uint          `yaml:"interval" json:"-"`
+		RatePerHour   *uint          `yaml:"rate_per_hour" json:"-"`
+		Timeout       *uint          `yaml:"timeout" json:"-"`
+		OkHttpCodes   []int          `yaml:"ok_http_codes" json:"-"`
+		RetryMaxTimes *uint8         `yaml:"retry_max_times" json:"-"`
+		HttpProto     string         `yaml:"http_proto" json:"-"`
 	} `yaml:"request" json:"-"`
 	Api struct {
 		Enable    *bool  `yaml:"enable,omitempty" json:"enable"`
@@ -634,6 +638,15 @@ func (c *Config) GetRequestInterval() uint {
 	return *c.Request.Interval
 }
 
+func (c *Config) GetRequestRatePerHour() uint {
+	if c.Request.RatePerHour == nil {
+		requestRatePerHour := defaultRequestRatePerHour
+		c.Request.RatePerHour = &requestRatePerHour
+	}
+
+	return *c.Request.RatePerHour
+}
+
 func (c *Config) GetRequestTimeout() time.Duration {
 	if c.Request.Timeout == nil || *c.Request.Timeout == 0 {
 		requestTimeout := defaultRequestTimeout
@@ -693,6 +706,16 @@ func (c *Config) GetSqlite() []*Sqlite {
 }
 func (c *Config) GetStore() []*Store {
 	return c.Store
+}
+
+func (c *Config) GetLimitType() pkg.LimitType {
+	if c.Request.LimitType == nil {
+		requestLimitType := defaultRequestLimitType
+		c.Request.LimitType = &requestLimitType
+		return pkg.LimitUnknown
+	}
+
+	return *c.Request.LimitType
 }
 
 func (c *Config) LoadConfig(configPath string) (err error) {

@@ -30,6 +30,7 @@ type HttpClient struct {
 	redirectMaxTimes uint8
 	retryMaxTimes    uint8
 	dnsCache         *dns_cache.DnsCache
+	config           pkg.Config
 }
 
 func NewClientJa3(ctx context.Context, conn net.Conn, cfg *tls.Config, helloID *utls.ClientHelloID, helloSpec *utls.ClientHelloSpec) (net.Conn, error) {
@@ -82,6 +83,18 @@ func (h *HttpClient) getTransport(request pkg.Request, timeout time.Duration) (t
 	}
 	defaultCAs.AppendCertsFromPEM(static.CaCert)
 
+	cert, _ := tls.X509KeyPair(static.ClientCert, static.ClientKey)
+
+	tlsConfig := tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	// TODO
+	if h.config.MockServerEnable() {
+		tlsConfig.RootCAs = defaultCAs
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+
 	transport = &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -124,10 +137,7 @@ func (h *HttpClient) getTransport(request pkg.Request, timeout time.Duration) (t
 		MaxIdleConns:        1000,
 		MaxIdleConnsPerHost: 1000,
 
-		TLSClientConfig: &tls.Config{
-			RootCAs: defaultCAs,
-			//InsecureSkipVerify: true,
-		},
+		TLSClientConfig: &tlsConfig,
 	}
 	proxyEnable := false
 	if pe := request.IsProxyEnable(); pe != nil {
@@ -292,7 +302,12 @@ func (h *HttpClient) DoRequest(ctx context.Context, request pkg.Request) (respon
 	begin := time.Now()
 	resp, err = client.Do(req)
 	if err != nil {
-		h.logger.Error(err)
+		if strings.Contains(err.Error(), "http: server gave HTTP response to HTTPS client") {
+			h.logger.Warn(err)
+			request.GetHttpRequest().URL.Scheme = "http"
+			return h.DoRequest(ctx, request)
+		}
+		err = fmt.Errorf("request failed: %w", err)
 		return
 	}
 
@@ -339,6 +354,7 @@ func (h *HttpClient) FromSpider(spider pkg.Spider) pkg.HttpClient {
 	}
 
 	config := spider.GetCrawler().GetConfig()
+	h.config = config
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 
 	h.client = http.DefaultClient

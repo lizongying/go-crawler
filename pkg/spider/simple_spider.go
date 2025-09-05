@@ -192,17 +192,31 @@ func (s *SimpleSpider) SetTimeout(timeout time.Duration) pkg.SimpleSpider {
 	return s
 }
 
-// SetInterval sets the duration between consecutive requests for the spider and returns the spider for chaining.
-func (s *SimpleSpider) SetInterval(interval time.Duration) pkg.SimpleSpider {
-	s.BaseSpider.SetInterval(interval)
-	return s
-}
-
 // SetOkHttpCodes sets the HTTP status codes that are considered successful.
 // Requests returning other codes may trigger retries or errors.
 // Returns the spider itself for chaining.
 func (s *SimpleSpider) SetOkHttpCodes(httpCodes ...int) pkg.SimpleSpider {
 	s.BaseSpider.SetOkHttpCodes(httpCodes...)
+	return s
+}
+
+// SetRatePerHour configures the request rate limit and concurrency for a given slot.
+//
+// Parameters:
+//   - slot:        Identifier to distinguish different request queues or task groups
+//     (e.g., a domain name or resource category).
+//   - ratePerHour: Maximum allowed requests per hour (rate limit), internally converted
+//     to an average rate per second.
+//   - concurrency: Maximum number of concurrent requests allowed to run in parallel.
+//
+// Returns:
+//   - The current SimpleSpider instance, enabling method chaining.
+//
+// Example:
+//
+//	spider.SetRatePerHour("example.com", 3600, 1) // 3600 requests/hour (~1 per second), concurrency = 1
+func (s *SimpleSpider) SetRatePerHour(slot string, ratePerHour int, concurrency int) pkg.SimpleSpider {
+	s.BaseSpider.SetRatePerHour(slot, ratePerHour, concurrency)
 	return s
 }
 

@@ -18,7 +18,10 @@ type Crawler interface {
 	Start(context.Context) error
 	Stop(Context) error
 	RunMockServer() error
-	AddMockServerRoutes(...Route)
+	AddMockServerRoutes(...Route) Crawler
+
+	AddDefaultMocks() Crawler
+
 	GetLogger() Logger
 	SetLogger(Logger)
 	GetConfig() Config
@@ -62,7 +65,17 @@ type Crawler interface {
 
 type CrawlOption func(Crawler)
 
-func WithMockServerRoutes(routes ...func(logger Logger) Route) CrawlOption {
+func WithMockServerRoutes(routes ...NewRoute) CrawlOption {
+	return WithMocks(routes...)
+}
+
+func WithDefaultMocks() CrawlOption {
+	return func(crawler Crawler) {
+		crawler.AddDefaultMocks()
+	}
+}
+
+func WithMocks(routes ...NewRoute) CrawlOption {
 	return func(crawler Crawler) {
 		if !crawler.GetConfig().MockServerEnable() {
 			crawler.GetConfig().SetMockServerEnable(true)
@@ -74,6 +87,7 @@ func WithMockServerRoutes(routes ...func(logger Logger) Route) CrawlOption {
 		}
 	}
 }
+
 func WithLogger(logger Logger) CrawlOption {
 	return func(crawler Crawler) {
 		crawler.SetLogger(logger)

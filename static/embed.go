@@ -20,11 +20,23 @@ var ServerCert []byte
 //go:embed tls/server_key.pem
 var ServerKey []byte
 
+//go:embed tls/client_crt.pem
+var ClientCert []byte
+
+//go:embed tls/client_key.pem
+var ClientKey []byte
+
 //go:embed tls/server_self_crt.pem
 var ServerSelfCert []byte
 
 //go:embed tls/server_self_key.pem
 var ServerSelfKey []byte
+
+//go:embed tls/client_self_crt.pem
+var ClientSelfCert []byte
+
+//go:embed tls/client_self_key.pem
+var ClientSelfKey []byte
 
 //go:embed statics
 var Statics embed.FS

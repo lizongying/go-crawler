@@ -107,6 +107,15 @@ type Spider interface {
 	// SetInterval sets the duration between consecutive requests for the spider and returns the spider for chaining.
 	SetInterval(interval time.Duration) Spider
 
+	// Concurrency returns the maximum number of concurrent requests
+	// that the spider is allowed to execute.
+	Concurrency() uint8
+
+	// SetConcurrency sets the maximum number of concurrent requests
+	// the spider is allowed to execute and returns the Spider instance.
+	// This controls how many requests can be processed in parallel.
+	SetConcurrency(concurrency uint8) Spider
+
 	// OkHttpCodes returns the list of HTTP status codes considered successful by the spider.
 	OkHttpCodes() []int
 
@@ -114,6 +123,26 @@ type Spider interface {
 	// Requests returning other codes may trigger retries or errors.
 	// Returns the spider itself for chaining.
 	SetOkHttpCodes(okHttpCodes ...int) Spider
+
+	// SetRequestRate sets a request rate limiter for the given slot.
+	//
+	// Parameters:
+	//   - slot: an identifier for grouping requests. If empty, "*" (default) is used.
+	//   - interval: the total time window during which 'concurrency' number of requests are allowed.
+	//   - concurrency: the maximum number of requests allowed within the given interval.
+	//
+	// Behavior:
+	//   - If the slot has no existing limiter, a new one is created.
+	//   - If a limiter already exists for the slot, its burst (concurrency) and rate limit
+	//     are updated to match the new configuration.
+	//   - If concurrency < 1, it will be normalized to 1.
+	//
+	// Example:
+	//   SetRequestRate("api", time.Second, 5)
+	//   → allows up to 5 requests per second for the "api" slot.
+	SetRequestRate(slot string, interval time.Duration, concurrency int) Limiter
+
+	SetRatePerHour(slot string, ratePerHour int, concurrency int)
 
 	// GetFilter returns the filter function currently set for processing or filtering items.
 	GetFilter() Filter
@@ -250,19 +279,29 @@ type Spider interface {
 
 	MustGetExtra(Context, any)
 
-	SetRequestRate(slot string, interval time.Duration, concurrency int)
+	UnsafeGetExtra(Context, any)
 
-	AddMockServerRoutes(...Route)
+	AddMockServerRoutes(...Route) Crawler
 
 	Options() []SpiderOption
+
 	WithOptions(options ...SpiderOption) Spider
 
-	RequestSlotLoad(slot string) (value any, ok bool)
-	RequestSlotStore(slot string, value any)
+	// Limiter retrieves the rate limiter associated with the given slot.
+	// It returns the limiter and a boolean indicating whether the limiter exists.
+	Limiter(slot string) (value Limiter, ok bool)
 
+	// RerunJob restarts an existing job identified by jobId.
+	// It looks up the job by its unique ID and attempts to run it again.
+	// Returns an error if the job does not exist or cannot be rerun.
 	RerunJob(ctx context.Context, jobId string) (err error)
+
+	// KillJob forcefully terminates a running job identified by jobId.
+	// It attempts to interrupt and stop the job execution.
+	// Returns an error if the job does not exist or has already finished.
 	KillJob(ctx context.Context, jobId string) (err error)
-	JobStopped(Context, error)
+
+	JobStopped(ctx Context, err error)
 
 	GetDownloader() Downloader
 	WithDownloader(Downloader) Spider
@@ -697,6 +736,11 @@ func WithOkHttpCodes(httpCodes ...int) SpiderOption {
 func WithRequestRate(slot string, interval time.Duration, concurrency int) SpiderOption {
 	return func(spider Spider) {
 		spider.SetRequestRate(slot, interval, concurrency)
+	}
+}
+func WithRatePerHour(slot string, ratePerHour int) SpiderOption {
+	return func(spider Spider) {
+		spider.SetRatePerHour(slot, ratePerHour, 1)
 	}
 }
 
