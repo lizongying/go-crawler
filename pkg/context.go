@@ -5,26 +5,82 @@ import (
 	"time"
 )
 
+// Context represents the execution context for the crawler.
+// It holds references to Crawler, Spider, Job, Task, Request, and Item,
+// It contains references to different stages of the crawling process.
 type Context interface {
+
+	// GetContext returns the current Context itself.
 	GetContext() Context
 
+	// CloneContext creates a new empty Context instance.
+	CloneContext() Context
+
+	// ----------------- Crawler -----------------
+
+	// GetCrawler returns the crawler context.
 	GetCrawler() ContextCrawler
+
+	// WithCrawler sets the crawler context and returns the updated Context.
 	WithCrawler(ContextCrawler) Context
 
+	// CloneCrawler creates a new Context with the current crawler context.
+	CloneCrawler() Context
+
+	// ----------------- Spider -----------------
+
+	// GetSpider returns the spider context.
 	GetSpider() ContextSpider
+
+	// WithSpider sets the spider context and returns the updated Context.
 	WithSpider(ContextSpider) Context
 
+	// CloneSpider creates a new Context with the current crawler and spider contexts.
+	CloneSpider() Context
+
+	// ----------------- Job -----------------
+
+	// GetJob returns the job context.
 	GetJob() ContextJob
+
+	// WithJob sets the job context and returns the updated Context.
 	WithJob(ContextJob) Context
 
+	// CloneJob creates a new Context with the current crawler, spider, and job contexts.
+	CloneJob() Context
+
+	// ----------------- Task -----------------
+
+	// GetTask returns the task context.
 	GetTask() ContextTask
+
+	// WithTask sets the task context and returns the updated Context.
 	WithTask(ContextTask) Context
 
+	// CloneTask creates a new Context with the current crawler, spider, job, and task contexts.
+	CloneTask() Context
+
+	// ----------------- Request -----------------
+
+	// GetRequest returns the request context.
 	GetRequest() ContextRequest
+
+	// WithRequest sets the request context and returns the updated Context.
 	WithRequest(ContextRequest) Context
 
+	// CloneRequest creates a new Context with the current crawler, spider, job, task, and request contexts.
+	CloneRequest() Context
+
+	// ----------------- Item -----------------
+
+	// GetItem returns the item context.
 	GetItem() ContextItem
+
+	// WithItem sets the item context and returns the updated Context.
 	WithItem(ContextItem) Context
+
+	// CloneItem creates a new Context with the current crawler, spider, job, task, request, and item contexts.
+	CloneItem() Context
 }
 
 type ContextCrawler interface {

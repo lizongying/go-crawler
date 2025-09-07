@@ -28,24 +28,16 @@ func NewSimpleApp(newSpiders ...pkg.NewSimpleSpider) *SimpleApp {
 
 func (a *SimpleApp) Run(crawlOptions ...pkg.CrawlOption) {
 	constructors := []any{cli.NewCli,
-		db.NewMongoDb,
-		db.NewMysql,
-		db.NewKafka,
-		db.NewKafkaReader,
-		db.NewRedis,
+		db.NewMongoFactory,
+		db.NewKafkaFactory,
 		db.NewRedisFactory,
+		db.NewSqliteFactory,
+		db.NewMysqlFactory,
+		db.NewStorageFactory,
 		loggers.NewStream,
 		fx.Annotate(
 			loggers.NewLogger,
 			fx.As(new(pkg.Logger)),
-		),
-		fx.Annotate(
-			db.NewSqlite,
-			fx.As(new(pkg.Sqlite)),
-		),
-		fx.Annotate(
-			db.NewStore,
-			fx.As(new(pkg.Store)),
 		),
 		config.NewConfig,
 		//fx.Annotate(

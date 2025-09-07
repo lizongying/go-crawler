@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-const defaultKafkaUri = "localhost:9092"
 const defaultEnv = "dev"
 const defaultBotName = "crawler"
 const defaultHttpProto = "2.0"
@@ -67,55 +66,22 @@ const defaultSchedulerType = pkg.SchedulerMemory
 const defaultLogLongFile = true
 const defaultRequestLimitType = pkg.LimitSingle
 
-type Store struct {
-	Name     string `yaml:"name" json:"-"`
-	Type     string `yaml:"type" json:"-"`
-	Endpoint string `yaml:"endpoint" json:"-"`
-	Region   string `yaml:"region" json:"-"`
-	Id       string `yaml:"id" json:"-"`
-	Key      string `yaml:"key" json:"-"`
-	Bucket   string `yaml:"bucket" json:"-"`
-}
-
-type Sqlite struct {
-	Name string `yaml:"name" json:"-"`
-	Path string `yaml:"path" json:"-"`
-}
-
 type Config struct {
-	Env         string `yaml:"env" json:"-"`
-	BotName     string `yaml:"bot_name" json:"-"`
-	MongoEnable bool   `yaml:"mongo_enable" json:"-"`
-	Mongo       struct {
-		Example struct {
-			Uri      string `yaml:"uri" json:"-"`
-			Database string `yaml:"database" json:"-"`
-		} `yaml:"example" json:"-"`
-	} `yaml:"mongo" json:"-"`
-	MysqlEnable bool `yaml:"mysql_enable" json:"-"`
-	Mysql       struct {
-		Example struct {
-			Uri      string `yaml:"uri" json:"-"`
-			Database string `yaml:"database" json:"-"`
-		} `yaml:"example" json:"-"`
-	} `yaml:"mysql" json:"-"`
-	RedisEnable bool `yaml:"redis_enable" json:"-"`
-	Redis       struct {
-		Example struct {
-			Addr     string `yaml:"addr" json:"-"`
-			Password string `yaml:"password" json:"-"`
-			Db       int    `yaml:"db" json:"-"`
-		} `yaml:"example" json:"-"`
-	} `yaml:"redis" json:"-"`
-	Sqlite      []*Sqlite `yaml:"sqlite" json:"-"`
-	Store       []*Store  `yaml:"store" json:"-"`
-	KafkaEnable bool      `yaml:"kafka_enable" json:"-"`
-	Kafka       struct {
-		Example struct {
-			Uri string `yaml:"uri" json:"-"`
-		} `yaml:"example" json:"-"`
-	} `yaml:"kafka" json:"-"`
-	Log struct {
+	Env         string        `yaml:"env" json:"-"`
+	BotName     string        `yaml:"bot_name" json:"-"`
+	MongoList   []pkg.Mongo   `yaml:"mongo_list" json:"-"`
+	Mongo       string        `yaml:"mongo" json:"-"`
+	MysqlList   []pkg.Mysql   `yaml:"mysql_list" json:"-"`
+	Mysql       string        `yaml:"mysql" json:"-"`
+	RedisList   []pkg.Redis   `yaml:"redis_list" json:"-"`
+	Redis       string        `yaml:"redis" json:"-"`
+	SqliteList  []pkg.Sqlite  `yaml:"sqlite_list" json:"-"`
+	Sqlite      string        `yaml:"sqlite" json:"-"`
+	StorageList []pkg.Storage `yaml:"storage_list" json:"-"`
+	Storage     string        `yaml:"storage" json:"-"`
+	KafkaList   []pkg.Kafka   `yaml:"kafka_list" json:"-"`
+	Kafka       string        `yaml:"kafka" json:"-"`
+	Log         struct {
 		Filename string  `yaml:"filename" json:"-"`
 		LongFile *bool   `yaml:"long_file" json:"-"`
 		Level    *string `yaml:"level" json:"-"`
@@ -185,13 +151,6 @@ type Config struct {
 	EnableKafkaPipeline         *bool   `yaml:"enable_kafka_pipeline,omitempty" json:"enable_kafka_pipeline"`
 }
 
-func (c *Config) KafkaUri() string {
-	if c.Kafka.Example.Uri != "" {
-		return c.Kafka.Example.Uri
-	}
-
-	return defaultKafkaUri
-}
 func (c *Config) GetEnv() string {
 	if c.Env != "" {
 		return c.Env
@@ -701,11 +660,41 @@ func (c *Config) GetFilter() pkg.FilterType {
 
 	return pkg.FilterUnknown
 }
-func (c *Config) GetSqlite() []*Sqlite {
+func (c *Config) GetKafkaList() []pkg.Kafka {
+	return c.KafkaList
+}
+func (c *Config) GetKafka() string {
+	return c.Kafka
+}
+func (c *Config) GetMongoList() []pkg.Mongo {
+	return c.MongoList
+}
+func (c *Config) GetMongo() string {
+	return c.Mongo
+}
+func (c *Config) GetMysqlList() []pkg.Mysql {
+	return c.MysqlList
+}
+func (c *Config) GetMysql() string {
+	return c.Mysql
+}
+func (c *Config) GetRedisList() []pkg.Redis {
+	return c.RedisList
+}
+func (c *Config) GetRedis() string {
+	return c.Redis
+}
+func (c *Config) GetSqliteList() []pkg.Sqlite {
+	return c.SqliteList
+}
+func (c *Config) GetSqlite() string {
 	return c.Sqlite
 }
-func (c *Config) GetStore() []*Store {
-	return c.Store
+func (c *Config) GetStorageList() []pkg.Storage {
+	return c.StorageList
+}
+func (c *Config) GetStorage() string {
+	return c.Storage
 }
 
 func (c *Config) GetLimitType() pkg.LimitType {

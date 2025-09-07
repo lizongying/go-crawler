@@ -3,7 +3,6 @@ package pipelines
 import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
 	"reflect"
 	"strings"
 )
@@ -48,8 +47,10 @@ func (m *ImagePipeline) ProcessItem(item pkg.Item) (err error) {
 		Width:  isWidth,
 		Height: isHeight,
 	}
+
+	ctx := item.GetContext()
+
 	for _, i := range images {
-		ctx := &crawlerContext.Context{}
 		r, e := m.Spider().Request(ctx, i.SetImageOptions(imageOptions))
 		if e != nil {
 			m.logger.Error(e)

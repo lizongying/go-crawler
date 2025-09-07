@@ -650,27 +650,33 @@ _ = request.Trace()
 
 数据库配置：
 
-* `mongo_enable:` 是否启用MongoDB。
-* `mongo.example.uri:` MongoDB的URI。
-* `mongo.example.database:` MongoDB的数据库名称。
-* `mysql_enable:` 是否启用MySQL。
-* `mysql.example.uri:` MySQL的URI。
-* `mysql.example.database:` MySQL的数据库名称。
-* `redis_enable:` 是否启用Redis。
-* `redis.example.addr:` Redis的地址。
-* `redis.example.password:` Redis的密码。
-* `redis.example.db:` Redis的数据库。
-* `sqlite.0.name:` sqlite名称，自定义
-* `sqlite.0.path:` sqlite文件地址
-* `store.0.name:` 存储名称，自定义
-* `store.0.type:` 存储方式（如s3、cos、oss、minio、file等）
-* `store.0.endpoint:` 对象存储的地址或者本地文件存储地址如“file://tmp/”
-* `store.0.region:` 对象存储的区域。
-* `store.0.id:` 对象存储的ID。
-* `store.0.key:` 对象存储的密钥。
-* `store.0.bucket:` 对象存储的桶名称。
-* `kafka_enable:` 是否启用Kafka。
-* `kafka.example.uri:` Kafka的URI。
+* `mongo:` MongoDB Name。
+* `mongo_list.0.name:` MongoDB的名称。
+* `mongo_list.0.uri:` MongoDB的URI。
+* `mongo_list.0.database:` MongoDB的数据库名称。
+* `mysql:` MySQL Name。
+* `mysql_list.0.name:` MySQL的名称。
+* `mysql_list.0.uri:` MySQL的URI。
+* `mysql_list.0.database:` MySQL的数据库名称。
+* `redis:` Redis Name。
+* `redis_list.0.name:` Redis的名称。
+* `redis_list.0.addr:` Redis的地址。
+* `redis_list.0.password:` Redis的密码。
+* `redis_list.0.db:` Redis的数据库。
+* `sqlite:` sqlite Name
+* `sqlite_list.0.name:` sqlite名称，自定义
+* `sqlite_list.0.path:` sqlite文件地址
+* `storage:` 存储名称
+* `storage_list.0.name:` 存储名称，自定义
+* `storage_list.0.type:` 存储方式（如s3、cos、oss、minio、file等）
+* `storage_list.0.endpoint:` 对象存储的地址或者本地文件存储地址如“file://tmp/”
+* `storage_list.0.region:` 对象存储的区域。
+* `storage_list.0.id:` 对象存储的ID。
+* `storage_list.0.key:` 对象存储的密钥。
+* `storage_list.0.bucket:` 对象存储的桶名称。
+* `kafka:` Kafka Name。
+* `kafka_list.0.name:` Kafka的名称。
+* `kafka_list.0.uri:` Kafka的URI。
 
 日志配置：
 
@@ -1129,6 +1135,7 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * branch/version/time
 * crawler spider job task change
 * response 图片和文本同时存在？
+* 日誌文件行數
 
 ```shell
 go get -u github.com/lizongying/go-css@latest

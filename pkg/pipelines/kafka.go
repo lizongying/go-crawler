@@ -13,10 +13,11 @@ import (
 
 type KafkaPipeline struct {
 	pkg.UnimplementedPipeline
-	env         string
-	logger      pkg.Logger
-	kafkaWriter *kafka.Writer
-	timeout     time.Duration
+	env     string
+	logger  pkg.Logger
+	timeout time.Duration
+	crawler pkg.Crawler
+	config  pkg.Config
 }
 
 func (m *KafkaPipeline) ProcessItem(item pkg.Item) (err error) {
@@ -74,11 +75,12 @@ func (m *KafkaPipeline) ProcessItem(item pkg.Item) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	defer cancel()
 
-	m.kafkaWriter.Topic = itemKafka.GetTopic()
-	m.kafkaWriter.Logger = kafka.LoggerFunc(func(msg string, a ...interface{}) {
-		m.logger.Info(itemKafka.GetTopic(), "insert success", a)
-	})
-	err = m.kafkaWriter.WriteMessages(ctx,
+	kafkaWriter, err := m.crawler.GetKafkaWriter(m.config.GetKafka(), itemKafka.GetTopic())
+	if err != nil {
+		return
+	}
+
+	err = kafkaWriter.WriteMessages(ctx,
 		kafka.Message{
 			Key:   []byte(fmt.Sprint(itemKafka.Id())),
 			Value: bs,
@@ -102,14 +104,10 @@ func (m *KafkaPipeline) FromSpider(spider pkg.Spider) (err error) {
 	if err = m.UnimplementedPipeline.FromSpider(spider); err != nil {
 		return
 	}
-	crawler := spider.GetCrawler()
+	m.crawler = spider.GetCrawler()
+	m.config = spider.GetConfig()
 	m.env = spider.GetConfig().GetEnv()
 	m.logger = spider.GetLogger()
-	m.kafkaWriter = crawler.GetKafka()
-	if m.kafkaWriter == nil {
-		err = errors.New("kafkaWriter nil")
-		return
-	}
 	m.timeout = time.Minute
 	return
 }

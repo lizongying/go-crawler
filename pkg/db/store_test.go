@@ -21,16 +21,14 @@ func TestNewStore(t *testing.T) {
 				loggers.NewLogger,
 				fx.As(new(pkg.Logger)),
 			),
-			fx.Annotate(
-				NewStore,
-				fx.As(new(pkg.Store)),
-			),
+			NewStorageFactory,
 			config.NewConfig,
 		),
-		fx.Invoke(func(logger pkg.Logger, store pkg.Store, shutdowner fx.Shutdowner) {
+		fx.Invoke(func(logger pkg.Logger, storageFactory *StorageFactory, shutdowner fx.Shutdowner) {
 			var err error
 			ctx := context.Background()
-			buckets, err := store.S3Client().ListBuckets(ctx, nil)
+			client, err := storageFactory.GetClient("minio")
+			buckets, err := client.(*S3Client).Client.ListBuckets(ctx, nil)
 			for _, v := range buckets.Buckets {
 				logger.Info(*v.Name, *v.CreationDate)
 			}

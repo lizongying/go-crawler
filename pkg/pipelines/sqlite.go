@@ -16,6 +16,7 @@ import (
 type SqlitePipeline struct {
 	pkg.UnimplementedPipeline
 	env     string
+	config  pkg.Config
 	logger  pkg.Logger
 	sqlite  *sql.DB
 	timeout time.Duration
@@ -158,11 +159,11 @@ func (m *SqlitePipeline) FromSpider(spider pkg.Spider) (err error) {
 		return
 	}
 	crawler := spider.GetCrawler()
-	m.env = spider.GetConfig().GetEnv()
+	m.config = spider.GetConfig()
+	m.env = m.config.GetEnv()
 	m.logger = spider.GetLogger()
-	m.sqlite = crawler.GetSqlite().Client()
-	if m.sqlite == nil {
-		err = errors.New("sqlite nil")
+	m.sqlite, err = crawler.GetSqlite(m.config.GetSqlite())
+	if err != nil {
 		return
 	}
 	m.timeout = time.Minute

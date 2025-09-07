@@ -135,7 +135,12 @@ func (m *RecordErrorMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 
 	m.UnimplementedMiddleware.FromSpider(spider)
 	m.logger = spider.GetLogger()
+	config := spider.GetConfig()
 	crawler := spider.GetCrawler()
-	m.mongoDb = crawler.GetMongoDb()
+	var err error
+	m.mongoDb, err = crawler.GetMongoDb(config.GetMongo())
+	if err != nil {
+
+	}
 	return m
 }

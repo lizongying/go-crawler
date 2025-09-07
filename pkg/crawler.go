@@ -25,13 +25,13 @@ type Crawler interface {
 	GetLogger() Logger
 	SetLogger(Logger)
 	GetConfig() Config
-	GetKafka() *kafka.Writer
-	GetKafkaReader() *kafka.Reader
-	GetRedis() *redis.Client
-	GetMongoDb() *mongo.Database
-	GetMysql() *sql.DB
-	GetSqlite() Sqlite
-	GetStore() Store
+	GetKafkaWriter(name string, topic string) (*kafka.Writer, error)
+	GetKafkaReader(name string, topic string) (*kafka.Reader, error)
+	GetRedis(name string) (*redis.Client, error)
+	GetMongoDb(name string) (*mongo.Database, error)
+	GetMysql(name string) (*sql.DB, error)
+	GetSqlite(name string) (*sql.DB, error)
+	GetStore(name string) (Store, error)
 
 	RunJob(context.Context, string, string, string, JobMode, string) (string, error)
 	RerunJob(ctx context.Context, spiderName string, jobId string) (err error)

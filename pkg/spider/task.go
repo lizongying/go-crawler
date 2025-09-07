@@ -162,8 +162,7 @@ func (t *Task) FromSpider(spider pkg.Spider) *Task {
 
 	t.requestAndItem = pkg.NewMultiState(t.request, t.item, t.method)
 
-	// TODO 如果沒有item被處理，會導致item not ready，job不會停止
-	// 而如果不加上ready，又會導致可能所有請求結束，但item還未處理完就停止了。
+	// TODO
 	t.requestAndItem.RegisterIsZero(func() {
 		t.stop(nil)
 	})
@@ -172,11 +171,17 @@ func (t *Task) FromSpider(spider pkg.Spider) *Task {
 
 	switch config.GetScheduler() {
 	case pkg.SchedulerMemory:
-		t.WithScheduler(new(memory.Scheduler).FromSpider(spider))
+		if scheduler, err := new(memory.Scheduler).FromSpider(spider); err == nil {
+			t.WithScheduler(scheduler)
+		}
 	case pkg.SchedulerRedis:
-		t.WithScheduler(new(redis2.Scheduler).FromSpider(spider))
+		if scheduler, err := new(redis2.Scheduler).FromSpider(spider); err == nil {
+			t.WithScheduler(scheduler)
+		}
 	case pkg.SchedulerKafka:
-		t.WithScheduler(new(kafka2.Scheduler).FromSpider(spider))
+		if scheduler, err := new(kafka2.Scheduler).FromSpider(spider); err == nil {
+			t.WithScheduler(scheduler)
+		}
 	default:
 	}
 

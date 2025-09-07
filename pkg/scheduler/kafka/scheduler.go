@@ -27,8 +27,6 @@ func (s *Scheduler) StartScheduler(task pkg.Task) (err error) {
 
 	ctx := task.GetContext()
 
-	s.initScheduler(ctx)
-
 	go s.HandleItem(ctx)
 
 	go s.handleRequest(ctx)
@@ -38,18 +36,7 @@ func (s *Scheduler) StartScheduler(task pkg.Task) (err error) {
 func (s *Scheduler) StopScheduler(_ pkg.Task) (err error) {
 	return
 }
-func (s *Scheduler) initScheduler(_ pkg.Context) {
-	s.requestKey = fmt.Sprintf("%s-%s-request", s.config.GetBotName(), s.spider.Name())
-	s.logger.Info("request key", s.requestKey)
-	s.kafkaWriter.Topic = s.requestKey
-	s.kafkaReader = kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  s.kafkaReader.Config().Brokers,
-		MaxBytes: 10e6, // 10MB
-		Topic:    s.requestKey,
-		GroupID:  s.config.GetBotName(),
-	})
-}
-func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
+func (s *Scheduler) FromSpider(spider pkg.Spider) (scheduler pkg.Scheduler, err error) {
 	if s == nil {
 		return new(Scheduler).FromSpider(spider)
 	}
@@ -62,9 +49,19 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	s.logger = spider.GetLogger()
 	s.UnimplementedScheduler.SetLogger(s.logger)
 	s.UnimplementedScheduler.Init()
+	k := s.config.GetKafka()
+	topic := fmt.Sprintf("%s-%s-request", s.config.GetBotName(), s.spider.Name())
+	s.logger.Info("topic", topic)
+	s.kafkaWriter, err = s.crawler.GetKafkaWriter(k, topic)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
+	s.kafkaReader, err = s.crawler.GetKafkaReader(k, topic)
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 
-	s.kafkaWriter = s.crawler.GetKafka()
-	s.kafkaReader = s.crawler.GetKafkaReader()
-
-	return s
+	return s, nil
 }

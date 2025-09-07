@@ -61,7 +61,63 @@ type Config interface {
 	SetMockServerEnable(enable bool)
 	MockServerHost() *url.URL
 	CloseReasonQueueTimeout() uint8
-	KafkaUri() string
 
 	GetLimitType() LimitType
+
+	GetSqliteList() []Sqlite
+	GetSqlite() string
+
+	GetRedisList() []Redis
+	GetRedis() string
+
+	GetMysqlList() []Mysql
+	GetMysql() string
+
+	GetMongoList() []Mongo
+	GetMongo() string
+
+	GetKafkaList() []Kafka
+	GetKafka() string
+
+	GetStorageList() []Storage
+	GetStorage() string
+}
+
+type Sqlite struct {
+	Name string `yaml:"name" json:"-"`
+	Path string `yaml:"path" json:"-"`
+}
+
+type Redis struct {
+	Name     string `yaml:"name" json:"-"`
+	Addr     string `yaml:"addr" json:"-"`
+	Password string `yaml:"password" json:"-"`
+	Db       int    `yaml:"db" json:"-"`
+}
+
+type Mysql struct {
+	Name     string `yaml:"name" json:"-"`
+	Uri      string `yaml:"uri" json:"-"`
+	Database string `yaml:"database" json:"-"`
+}
+
+type Mongo struct {
+	Name     string `yaml:"name" json:"-"`
+	Uri      string `yaml:"uri" json:"-"`
+	Database string `yaml:"database" json:"-"`
+}
+
+type Kafka struct {
+	Name string `yaml:"name" json:"-"`
+	Uri  string `yaml:"uri" json:"-"`
+}
+
+type Storage struct {
+	Name     string `yaml:"name" json:"-"`
+	Type     string `yaml:"type" json:"-"`
+	Endpoint string `yaml:"endpoint" json:"-"`
+	Region   string `yaml:"region" json:"-"`
+	Id       string `yaml:"id" json:"-"`
+	Key      string `yaml:"key" json:"-"`
+	Bucket   string `yaml:"bucket" json:"-"`
 }

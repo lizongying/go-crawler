@@ -11,7 +11,6 @@ import (
 	"github.com/segmentio/kafka-go"
 	"net/http"
 	"reflect"
-	"strings"
 	"time"
 )
 
@@ -126,13 +125,9 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		}
 	}
 
-	ctx = new(crawlerContext.Context).
-		WithCrawler(ctx.GetCrawler()).
-		WithSpider(ctx.GetSpider()).
-		WithJob(ctx.GetJob()).
-		WithTask(ctx.GetTask()).
+	ctx = ctx.CloneTask().
 		WithRequest(new(crawlerContext.Request).
-			WithContext(context.Background()).
+			WithContext(ctx.GetTask().GetContext()).
 			WithId(s.crawler.NextId()).
 			WithStatus(pkg.RequestStatusPending))
 
@@ -181,17 +176,11 @@ func (s *Scheduler) YieldExtra(c pkg.Context, extra any) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	kafkaWriter := &kafka.Writer{
-		Addr:                   kafka.TCP(strings.Split(s.config.KafkaUri(), ",")...),
-		AllowAutoTopicCreation: true,
-		Topic:                  fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.spider.Name(), name),
+	kafkaWriter, err := s.crawler.GetKafkaWriter(s.config.GetKafka(), fmt.Sprintf("%s-%s-extra-%s", s.config.GetBotName(), s.spider.Name(), name))
+	if err != nil {
+		s.logger.Error(err)
+		return
 	}
-	defer func() {
-		err = kafkaWriter.Close()
-		if err != nil {
-			s.logger.Error(err)
-		}
-	}()
 	if err = kafkaWriter.WriteMessages(ctx, kafka.Message{
 		Value: bs,
 	}); err != nil {

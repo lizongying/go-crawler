@@ -67,7 +67,7 @@ func (f *RedisFilter) Clean(c pkg.Context) (err error) {
 	return
 }
 
-func (f *RedisFilter) FromSpider(spider pkg.Spider) pkg.Filter {
+func (f *RedisFilter) FromSpider(spider pkg.Spider) (filter pkg.Filter, err error) {
 	if f == nil {
 		return new(RedisFilter).FromSpider(spider)
 	}
@@ -76,7 +76,12 @@ func (f *RedisFilter) FromSpider(spider pkg.Spider) pkg.Filter {
 
 	f.config = spider.GetConfig()
 	f.spider = spider
-	f.rdb = spider.GetCrawler().GetRedis()
 	f.logger = spider.GetLogger()
-	return f
+	f.rdb, err = spider.GetCrawler().GetRedis(f.config.GetRedis())
+	if err != nil {
+		f.logger.Error(err)
+		return
+	}
+
+	return f, nil
 }

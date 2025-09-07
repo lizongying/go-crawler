@@ -12,8 +12,8 @@ import (
 	"testing"
 )
 
-// go test -v ./pkg/db/*.go -run TestNewSqlite
-func TestNewSqlite(t *testing.T) {
+// go test -v ./pkg/db/*.go -run TestNewSqliteFactory
+func TestNewSqliteFactory(t *testing.T) {
 	_ = os.Setenv("CRAWLER_CONFIG_FILE", "/Users/lizongying/IdeaProjects/go-crawler/dev.yml")
 	fx.New(
 		fx.Provide(
@@ -22,16 +22,12 @@ func TestNewSqlite(t *testing.T) {
 				loggers.NewLogger,
 				fx.As(new(pkg.Logger)),
 			),
-			fx.Annotate(
-				NewSqlite,
-				fx.As(new(pkg.Sqlite)),
-			),
+			NewSqliteFactory,
 			config.NewConfig,
 		),
-		fx.Invoke(func(logger pkg.Logger, sqlite pkg.Sqlite, shutdowner fx.Shutdowner) {
-			var err error
-			logger.Infof("Client %+v", sqlite.Client())
-			db := sqlite.Client()
+		fx.Invoke(func(logger pkg.Logger, sqliteFactory *SqliteFactory, shutdowner fx.Shutdowner) {
+			db, err := sqliteFactory.GetClient("")
+			logger.Infof("Client %+v", db)
 			_, err = db.Exec("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, NAME TEXT)")
 			_, err = db.Exec("INSERT INTO users (name) VALUES (?)", "John Doe")
 

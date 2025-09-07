@@ -82,7 +82,7 @@ func (m *ImageMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	m.UnimplementedMiddleware.FromSpider(spider)
 	crawler := spider.GetCrawler()
 	m.logger = spider.GetLogger()
-	m.store = crawler.GetStore()
+	m.store, _ = crawler.GetStore(crawler.GetConfig().GetStorage())
 
 	return m
 }

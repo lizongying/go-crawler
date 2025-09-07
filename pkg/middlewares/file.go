@@ -68,7 +68,7 @@ func (m *FileMiddleware) FromSpider(spider pkg.Spider) pkg.Middleware {
 	m.UnimplementedMiddleware.FromSpider(spider)
 	crawler := spider.GetCrawler()
 	m.logger = spider.GetLogger()
-	m.store = crawler.GetStore()
+	m.store, _ = crawler.GetStore(spider.GetConfig().GetStorage())
 
 	// https://developer.mozilla.org/zh-CN/docs/Web/Media/Formats/Image_types
 	// https://developer.mozilla.org/zh-CN/docs/Web/Media/Formats/Containers

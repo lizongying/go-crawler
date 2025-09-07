@@ -3,11 +3,13 @@ package limiter
 import (
 	"github.com/go-redis/redis_rate/v10"
 	"github.com/lizongying/go-crawler/pkg"
+	"github.com/lizongying/go-crawler/pkg/config"
 	"github.com/lizongying/go-crawler/pkg/db"
 	"sync"
 )
 
 type Manager struct {
+	config       pkg.Config
 	redisFactory *db.RedisFactory
 	limiters     sync.Map
 }
@@ -41,7 +43,7 @@ func (m *Manager) SetLimiter(limiterType pkg.LimitType, key string, ratePerHour 
 	case pkg.LimitSingle:
 		limiter = NewSingleLimiter(key, ratePerHour, concurrency)
 	case pkg.LimitCluster:
-		if rdb, err := m.redisFactory.GetClient(); err == nil {
+		if rdb, err := m.redisFactory.GetClient(m.config.GetRedis()); err == nil {
 			limiter = NewClusterLimiter(redis_rate.NewLimiter(rdb), key, ratePerHour, concurrency)
 		}
 	default:
@@ -52,8 +54,9 @@ func (m *Manager) SetLimiter(limiterType pkg.LimitType, key string, ratePerHour 
 	return
 }
 
-func NewManager(redisFactory *db.RedisFactory) (*Manager, error) {
+func NewManager(config *config.Config, redisFactory *db.RedisFactory) (*Manager, error) {
 	return &Manager{
+		config:       config,
 		redisFactory: redisFactory,
 	}, nil
 }

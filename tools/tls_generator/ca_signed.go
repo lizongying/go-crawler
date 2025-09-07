@@ -31,7 +31,7 @@ func CreateCa() (caPrivateKey *rsa.PrivateKey, caCert *x509.Certificate, err err
 	caCert = &x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
-			CommonName: "GO CRAWLER",
+			CommonName: "CRAWLER",
 		},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().AddDate(10, 0, 0), // Valid for 10 years

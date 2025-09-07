@@ -180,13 +180,9 @@ func (s *Scheduler) YieldRequest(ctx pkg.Context, request pkg.Request) (err erro
 		}
 	}
 
-	ctx = new(crawlerContext.Context).
-		WithCrawler(ctx.GetCrawler()).
-		WithSpider(ctx.GetSpider()).
-		WithJob(ctx.GetJob()).
-		WithTask(ctx.GetTask()).
+	ctx = ctx.CloneTask().
 		WithRequest(new(crawlerContext.Request).
-			WithContext(context.Background()).
+			WithContext(ctx.GetTask().GetContext()).
 			WithId(s.crawler.NextId()).
 			WithStatus(pkg.RequestStatusPending))
 

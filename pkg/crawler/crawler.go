@@ -10,6 +10,7 @@ import (
 	"github.com/lizongying/go-crawler/pkg/cli"
 	"github.com/lizongying/go-crawler/pkg/config"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
+	"github.com/lizongying/go-crawler/pkg/db"
 	"github.com/lizongying/go-crawler/pkg/loggers"
 	"github.com/lizongying/go-crawler/pkg/signals"
 	"github.com/lizongying/go-crawler/pkg/statistics"
@@ -41,25 +42,24 @@ func init() {
 }
 
 type Crawler struct {
-	context     pkg.Context
-	spiders     []pkg.Spider
-	spiderName  string
-	startFunc   string
-	args        string
-	mode        pkg.JobMode
-	spec        string
-	config      pkg.Config
-	logger      pkg.Logger
-	MongoDb     *mongo.Database
-	Mysql       *sql.DB
-	Redis       *redis.Client
-	Kafka       *kafka.Writer
-	KafkaReader *kafka.Reader
-	Sqlite      pkg.Sqlite
-	Store       pkg.Store
-	mockServer  pkg.MockServer
-	api         *api.Api
-	statistics  pkg.Statistics
+	context        pkg.Context
+	spiders        []pkg.Spider
+	spiderName     string
+	startFunc      string
+	args           string
+	mode           pkg.JobMode
+	spec           string
+	config         pkg.Config
+	logger         pkg.Logger
+	mongoFactory   *db.MongoFactory
+	mysqlFactory   *db.MysqlFactory
+	redisFactory   *db.RedisFactory
+	kafkaFactory   *db.KafkaFactory
+	sqliteFactory  *db.SqliteFactory
+	storageFactory *db.StorageFactory
+	mockServer     pkg.MockServer
+	api            *api.Api
+	statistics     pkg.Statistics
 	pkg.Signal
 
 	spider *pkg.State
@@ -151,26 +151,26 @@ func (c *Crawler) AddDefaultMocks() pkg.Crawler {
 func (c *Crawler) GetConfig() pkg.Config {
 	return c.config
 }
-func (c *Crawler) GetKafka() *kafka.Writer {
-	return c.Kafka
+func (c *Crawler) GetKafkaWriter(name string, topic string) (*kafka.Writer, error) {
+	return c.kafkaFactory.GetWriter(name, topic)
 }
-func (c *Crawler) GetKafkaReader() *kafka.Reader {
-	return c.KafkaReader
+func (c *Crawler) GetKafkaReader(name string, topic string) (*kafka.Reader, error) {
+	return c.kafkaFactory.GetReader(name, topic)
 }
-func (c *Crawler) GetMongoDb() *mongo.Database {
-	return c.MongoDb
+func (c *Crawler) GetMongoDb(name string) (*mongo.Database, error) {
+	return c.mongoFactory.GetClient(name)
 }
-func (c *Crawler) GetMysql() *sql.DB {
-	return c.Mysql
+func (c *Crawler) GetMysql(name string) (*sql.DB, error) {
+	return c.mysqlFactory.GetClient(name)
 }
-func (c *Crawler) GetRedis() *redis.Client {
-	return c.Redis
+func (c *Crawler) GetRedis(name string) (*redis.Client, error) {
+	return c.redisFactory.GetClient(name)
 }
-func (c *Crawler) GetSqlite() pkg.Sqlite {
-	return c.Sqlite
+func (c *Crawler) GetSqlite(name string) (*sql.DB, error) {
+	return c.sqliteFactory.GetClient(name)
 }
-func (c *Crawler) GetStore() pkg.Store {
-	return c.Store
+func (c *Crawler) GetStore(name string) (pkg.Store, error) {
+	return c.storageFactory.GetClient(name)
 }
 func (c *Crawler) GetSignal() pkg.Signal {
 	return c.Signal
@@ -383,7 +383,7 @@ func (c *Crawler) SpiderStopped(_ pkg.Context, _ error) {
 	c.spider.Out()
 }
 
-func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoDb *mongo.Database, mysql *sql.DB, redis *redis.Client, kafka *kafka.Writer, kafkaReader *kafka.Reader, sqlite pkg.Sqlite, store pkg.Store, mockServer pkg.MockServer, httpApi *api.Api, stream *loggers.Stream) (crawler pkg.Crawler, err error) {
+func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logger pkg.Logger, mongoFactory *db.MongoFactory, mysqlFactory *db.MysqlFactory, redisFactory *db.RedisFactory, kafkaFactory *db.KafkaFactory, sqliteFactory *db.SqliteFactory, storageFactory *db.StorageFactory, mockServer pkg.MockServer, httpApi *api.Api, stream *loggers.Stream) (crawler pkg.Crawler, err error) {
 	spider := pkg.NewState("spider")
 	spider.RegisterIsReadyAndIsZero(func() {
 		_ = crawler.Stop(crawler.GetContext())
@@ -392,27 +392,26 @@ func NewCrawler(spiders []pkg.Spider, cli *cli.Cli, config *config.Config, logge
 	ug := uidv1.NewUid(1, nil)
 
 	crawler = &Crawler{
-		spiderName:  cli.SpiderName,
-		startFunc:   cli.StartFunc,
-		args:        cli.Args,
-		mode:        pkg.JobModeFromString(cli.Mode),
-		spec:        cli.Spec,
-		config:      config,
-		logger:      logger,
-		MongoDb:     mongoDb,
-		Mysql:       mysql,
-		Redis:       redis,
-		Kafka:       kafka,
-		KafkaReader: kafkaReader,
-		Sqlite:      sqlite,
-		Store:       store,
-		mockServer:  mockServer,
-		api:         httpApi,
-		spider:      spider,
-		stop:        make(chan struct{}),
-		ug:          ug,
-		spiders:     spiders,
-		stream:      stream,
+		spiderName:     cli.SpiderName,
+		startFunc:      cli.StartFunc,
+		args:           cli.Args,
+		mode:           pkg.JobModeFromString(cli.Mode),
+		spec:           cli.Spec,
+		config:         config,
+		logger:         logger,
+		mongoFactory:   mongoFactory,
+		mysqlFactory:   mysqlFactory,
+		redisFactory:   redisFactory,
+		kafkaFactory:   kafkaFactory,
+		sqliteFactory:  sqliteFactory,
+		storageFactory: storageFactory,
+		mockServer:     mockServer,
+		api:            httpApi,
+		spider:         spider,
+		stop:           make(chan struct{}),
+		ug:             ug,
+		spiders:        spiders,
+		stream:         stream,
 	}
 
 	httpApi.AddRoutes(new(api.RouteHome).FromCrawler(crawler))

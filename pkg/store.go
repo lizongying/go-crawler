@@ -1,8 +1,18 @@
 package pkg
 
-import "github.com/aws/aws-sdk-go-v2/service/s3"
+import (
+	"golang.org/x/net/context"
+)
 
 type Store interface {
-	S3Client() *s3.Client
+	// Save
+	// is s3:
+	//
+	//	prefix=bucket
+	//
+	// is file:
+	//
+	//	prefix=dir
 	Save(prefix string, key string, body []byte) (storePath string, err error)
+	Close(ctx context.Context) error
 }

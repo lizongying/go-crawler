@@ -763,27 +763,33 @@ configuration parameters:
 
 Database Configuration:
 
-* `mongo_enable:` Whether to enable MongoDB.
-* `mongo.example.uri:` MongoDB URI.
-* `mongo.example.database:` MongoDB database name.
-* `mysql_enable:` Whether to enable MySQL.
-* `mysql.example.uri:` MySQL URI.
-* `mysql.example.database:` MySQL database name.
-* `redis_enable:` Whether to enable Redis.
-* `redis.example.addr:` Redis address.
-* `redis.example.password:` Redis password.
-* `redis.example.db:` Redis database number.
-* `sqlite.0.name:` sqlite name.
-* `sqlite.0.path` sqlite file path.
-* `store.0.name:` storage name.
-* `store.0.type:` storage type (e.g., s3, cos, oss, minio, file, etc.).
-* `store.0.endpoint:` S3 endpoint or file path like "file://tmp/".
-* `store.0.region:` S3 region.
-* `store.0.id:` S3 access ID.
-* `store.0.key:` S3 access key.
-* `store.0.bucket:` S3 bucket name.
-* `kafka_enable:` Whether to enable Kafka.
-* `kafka.example.uri:` Kafka URI.
+* `mongo:` MongoDB Name
+* `mongo_list.0.name:` The name of the MongoDB instance
+* `mongo_list.0.uri:` The URI of the MongoDB instance.
+* `mongo_list.0.database:` The database name of the MongoDB instance.
+* `mysql:` MySQL Name
+* `mysql_list.0.name:` The name of the MySQL instance.
+* `mysql_list.0.uri:` The URI of the MySQL instance.
+* `mysql_list.0.database:` The database name of the MySQL instance.
+* `redis:` Redis Name
+* `redis_list.0.name:` The name of the Redis instance.
+* `redis_list.0.addr:` The address of the Redis instance.
+* `redis_list.0.password:` The password of the Redis instance.
+* `redis_list.0.db:` The database number of the Redis instance.
+* `sqlite:` sqlite Name
+* `sqlite_list.0.name:` The name of the SQLite instance (custom-defined).
+* `sqlite_list.0.path:` The file path of the SQLite database.
+* `storage:` storage name.
+* `storage_list.0.name:` storage name.
+* `storage_list.0.type:` storage type (e.g., s3, cos, oss, minio, file, etc.).
+* `storage_list.0.endpoint:` S3 endpoint or file path like "file://tmp/".
+* `storage_list.0.region:` S3 region.
+* `storage_list.0.id:` S3 access ID.
+* `storage_list.0.key:` S3 access key.
+* `storage_list.0.bucket:` S3 bucket name.
+* `kafka:` Kafka name.
+* `kafka_list.0.name:` Kafka name.
+* `kafka_list.0.uri:` Kafka URI.
 
 Log Configuration:
 

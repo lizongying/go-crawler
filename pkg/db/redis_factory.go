@@ -11,18 +11,70 @@ import (
 )
 
 type RedisFactory struct {
-	config *config.Config
+	config sync.Map
 	logger pkg.Logger
 
-	once sync.Once
-	rdb  *redis.Client
-	err  error
+	clients sync.Map
+}
+
+func (f *RedisFactory) GetClient(name string) (rdb *redis.Client, err error) {
+	if v, ok := f.clients.Load(name); ok {
+		return v.(*redis.Client), nil
+	}
+
+	c, ok := f.config.Load(name)
+	if !ok {
+		return nil, fmt.Errorf("redis config %s not found", name)
+	}
+
+	conf := c.(pkg.Redis)
+
+	addr := conf.Addr
+	if addr == "" {
+		err = fmt.Errorf("redis addr is empty")
+		return
+	}
+
+	option := &redis.Options{
+		Addr: addr,
+	}
+	password := conf.Password
+	if password != "" {
+		option.Password = password
+	}
+	db := conf.Db
+	if db != -1 {
+		option.DB = db
+	}
+
+	rdb = redis.NewClient(option)
+	if err = rdb.Ping(context.Background()).Err(); err != nil {
+		f.logger.Error(err)
+		return
+	}
+
+	actual, loaded := f.clients.LoadOrStore(name, rdb)
+	if loaded {
+		_ = rdb.Close()
+	}
+
+	return actual.(*redis.Client), nil
+}
+
+func (f *RedisFactory) Close(_ context.Context) error {
+	f.clients.Range(func(key, value interface{}) bool {
+		_ = value.(*redis.Client).Close()
+		return true
+	})
+	return nil
 }
 
 func NewRedisFactory(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) (redisFactory *RedisFactory, err error) {
 	redisFactory = &RedisFactory{
-		config: config,
 		logger: logger,
+	}
+	for _, i := range config.RedisList {
+		redisFactory.config.Store(i.Name, i)
 	}
 
 	lc.Append(fx.Hook{
@@ -32,38 +84,4 @@ func NewRedisFactory(config *config.Config, logger pkg.Logger, lc fx.Lifecycle) 
 	})
 
 	return
-}
-
-func (f *RedisFactory) GetClient() (rdb *redis.Client, err error) {
-	f.once.Do(func() {
-		addr := f.config.Redis.Example.Addr
-		if addr == "" {
-			err = fmt.Errorf("redis addr is empty")
-			return
-		}
-
-		option := &redis.Options{
-			Addr: addr,
-		}
-		password := f.config.Redis.Example.Password
-		if password != "" {
-			option.Password = password
-		}
-		db := f.config.Redis.Example.Db
-		if db != -1 {
-			option.DB = db
-		}
-
-		f.rdb = redis.NewClient(option)
-		f.err = f.rdb.Ping(context.Background()).Err()
-	})
-
-	return f.rdb, f.err
-}
-
-func (f *RedisFactory) Close(_ context.Context) error {
-	if f.rdb != nil {
-		return f.rdb.Close()
-	}
-	return nil
 }

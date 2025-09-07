@@ -104,11 +104,11 @@ func (m *MongoPipeline) FromSpider(spider pkg.Spider) (err error) {
 		return
 	}
 	crawler := spider.GetCrawler()
-	m.env = spider.GetConfig().GetEnv()
+	config := spider.GetConfig()
+	m.env = config.GetEnv()
 	m.logger = spider.GetLogger()
-	m.mongoDb = crawler.GetMongoDb()
-	if m.mongoDb == nil {
-		err = errors.New("mongoDb nil")
+	m.mongoDb, err = crawler.GetMongoDb(config.GetMongo())
+	if err != nil {
 		return
 	}
 	m.timeout = time.Minute

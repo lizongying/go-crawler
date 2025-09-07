@@ -36,7 +36,7 @@ func (s *Scheduler) StartScheduler(task pkg.Task) (err error) {
 func (s *Scheduler) StopScheduler(_ pkg.Task) (err error) {
 	return
 }
-func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
+func (s *Scheduler) FromSpider(spider pkg.Spider) (scheduler pkg.Scheduler, err error) {
 	if s == nil {
 		return new(Scheduler).FromSpider(spider)
 	}
@@ -52,5 +52,5 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 
 	s.requestChan = make(chan pkg.Request, defaultRequestMax)
 
-	return s
+	return s, nil
 }

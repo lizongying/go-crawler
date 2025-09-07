@@ -1,39 +1,41 @@
 env: example
 bot_name: crawler
-mongo_enable: false
-mongo:
-  example:
+mongo_list:
+  - name:
     uri: mongodb://127.0.0.1:27017
     database: crawler
-mysql_enable: false
-mysql:
-  example:
+mongo:
+mysql_list:
+  - name:
     uri: root@tcp(127.0.0.1:3306)
     database: crawler
-redis_enable: false
-redis:
-  example:
+mysql:
+redis_list:
+  - name:
     addr: 127.0.0.1:6379
     password:
     db: 0
-sqlite:
-  - name: sqlite
+redis:
+sqlite_list:
+  - name:
     path: static/crawler.db
-store:
-  #  - name: minio
-  #    type:  # s3/oss/cos/minio/file
-  #    endpoint: http://127.0.0.1:9000 # http://127.0.0.1:9000 file://tmp/
-  #    region:
-  #    id:
-  #    key:
-  #    bucket: crawler
+sqlite:
+storage_list:
+  - name: minio
+    type: minio
+    endpoint: http://127.0.0.1:9000
+    region:
+    id:
+    key:
+    bucket: crawler
   - name: file
-    type: file # s3/oss/cos/minio/file
-    endpoint:  # http://127.0.0.1:9000 file://tmp/
-kafka_enable: false
-kafka:
-  example:
+    type: file
+    endpoint: file://tmp
+storage: file
+kafka_list:
+  - name:
     uri: localhost:9092
+kafka:
 log:
   filename: /tmp/spider_{name}.log
   long_file: false # true/false

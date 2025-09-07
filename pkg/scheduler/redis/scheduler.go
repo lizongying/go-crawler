@@ -31,7 +31,7 @@ type Scheduler struct {
 
 func (s *Scheduler) StartScheduler(task pkg.Task) (err error) {
 	if s.redis == nil {
-		err = errors.New(`redis nil. please check if "redis_enable: false"`)
+		err = errors.New(`redis nil`)
 		s.logger.Error(err)
 		return
 	}
@@ -87,7 +87,7 @@ return r
 	}
 
 }
-func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
+func (s *Scheduler) FromSpider(spider pkg.Spider) (scheduler pkg.Scheduler, err error) {
 	if s == nil {
 		return new(Scheduler).FromSpider(spider)
 	}
@@ -101,11 +101,15 @@ func (s *Scheduler) FromSpider(spider pkg.Spider) pkg.Scheduler {
 	s.UnimplementedScheduler.SetLogger(s.logger)
 	s.UnimplementedScheduler.Init()
 
-	s.redis = s.crawler.GetRedis()
+	s.redis, err = s.crawler.GetRedis(s.config.GetRedis())
+	if err != nil {
+		s.logger.Error(err)
+		return
+	}
 
 	s.env = s.config.GetEnv()
 	s.enablePriorityQueue = s.config.GetEnablePriorityQueue()
 	s.batch = 1
 
-	return s
+	return s, nil
 }

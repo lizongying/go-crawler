@@ -965,9 +965,13 @@ func (s *BaseSpider) FromCrawler(crawler pkg.Crawler) pkg.Spider {
 
 	switch config.GetFilter() {
 	case pkg.FilterMemory:
-		s.SetFilter(new(filters.MemoryFilter).FromSpider(s))
+		if filter, err := new(filters.MemoryFilter).FromSpider(s); err == nil {
+			s.SetFilter(filter)
+		}
 	case pkg.FilterRedis:
-		s.SetFilter(new(filters.RedisFilter).FromSpider(s))
+		if filter, err := new(filters.RedisFilter).FromSpider(s); err == nil {
+			s.SetFilter(filter)
+		}
 	default:
 	}
 

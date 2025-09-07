@@ -3,7 +3,8 @@ package pipelines
 import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
-	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
+	"reflect"
+	"strings"
 )
 
 type FilePipeline struct {
@@ -23,9 +24,26 @@ func (m *FilePipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
+	field, ok := reflect.TypeOf(item.Data()).Elem().FieldByName("Files")
+	isUrl := false
+	isName := false
+	isExt := false
+	if ok {
+		tag := field.Tag.Get("field")
+		isUrl = strings.Contains(tag, "url")
+		isName = strings.Contains(tag, "name")
+		isExt = strings.Contains(tag, "ext")
+	}
+	fileOptions := pkg.FileOptions{
+		Url:  isUrl,
+		Name: isName,
+		Ext:  isExt,
+	}
+
+	ctx := item.GetContext()
+
 	for _, i := range files {
-		ctx := &crawlerContext.Context{}
-		r, e := m.Spider().Request(ctx, i)
+		r, e := m.Spider().Request(ctx, i.SetFileOptions(fileOptions))
 		if e != nil {
 			m.logger.Error(e)
 			continue

@@ -15,6 +15,7 @@ import (
 
 type MysqlPipeline struct {
 	pkg.UnimplementedPipeline
+	config  pkg.Config
 	env     string
 	logger  pkg.Logger
 	mysql   *sql.DB
@@ -154,11 +155,11 @@ func (m *MysqlPipeline) FromSpider(spider pkg.Spider) (err error) {
 		return
 	}
 	crawler := spider.GetCrawler()
-	m.env = spider.GetConfig().GetEnv()
+	m.config = spider.GetConfig()
+	m.env = m.config.GetEnv()
 	m.logger = spider.GetLogger()
-	m.mysql = crawler.GetMysql()
-	if m.mysql == nil {
-		err = errors.New("mysql nil")
+	m.mysql, err = crawler.GetMysql(m.config.GetMysql())
+	if err != nil {
 		return
 	}
 	m.timeout = time.Minute

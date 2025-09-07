@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/lizongying/go-crawler/pkg"
 	crawlerContext "github.com/lizongying/go-crawler/pkg/context"
+	"net/http"
 	"reflect"
 )
 
@@ -116,13 +117,9 @@ func (s *UnimplementedScheduler) YieldItem(ctx pkg.Context, item pkg.Item) (err 
 		item.SetReferrer(referrer)
 	}
 
-	c := new(crawlerContext.Context).
-		WithCrawler(ctx.GetCrawler()).
-		WithSpider(ctx.GetSpider()).
-		WithJob(ctx.GetJob()).
-		WithTask(ctx.GetTask()).
+	c := ctx.CloneRequest().
 		WithItem(new(crawlerContext.Item).
-			WithContext(ctx.GetTask().GetContext()).
+			WithContext(ctx.GetRequest().GetContext()).
 			WithId(s.crawler.NextId()).
 			WithStatus(pkg.ItemStatusPending))
 
@@ -168,14 +165,55 @@ func (s *UnimplementedScheduler) SyncRequest(ctx pkg.Context, request pkg.Reques
 		}
 
 		s.HandleError(ctx, response, err, request.GetErrBack())
+		ctx.GetRequest().WithStatus(pkg.RequestStatusFailure).WithStopReason(err.Error())
+		s.crawler.GetSignal().RequestChanged(request)
 		return
 	}
 
 	s.logger.Debugf("request %+v", request)
+
+	ctx.GetRequest().WithStatus(pkg.RequestStatusSuccess)
+	s.crawler.GetSignal().RequestChanged(request)
 	return
 }
 func (s *UnimplementedScheduler) Request(ctx pkg.Context, request pkg.Request) (response pkg.Response, err error) {
 	s.task.RequestIn()
+
+	// TODO define a common method
+	requestCtx := ctx.GetRequest()
+	if requestCtx != nil {
+		// add referrer to request
+		if requestCtx.GetReferrer() != "" {
+			request.SetReferrer(requestCtx.GetReferrer())
+		}
+
+		// add cookies to request
+		if len(requestCtx.GetCookies()) > 0 {
+			for k, v := range requestCtx.GetCookies() {
+				request.AddCookie(&http.Cookie{
+					Name:  k,
+					Value: v,
+				})
+			}
+		}
+	}
+	ctx = ctx.CloneTask().
+		WithRequest(new(crawlerContext.Request).
+			WithContext(ctx.GetTask().GetContext()).
+			WithId(s.crawler.NextId()).
+			WithStatus(pkg.RequestStatusPending))
+
+	request.WithContext(ctx)
+
+	bs, err := request.Marshal()
+	s.logger.Info("request with context:", string(bs))
+	if err != nil {
+		s.logger.Error(err)
+		s.crawler.GetSignal().RequestChanged(request)
+		return
+	}
+
+	s.crawler.GetSignal().RequestChanged(request)
 	response, err = s.SyncRequest(ctx, request)
 	s.task.RequestOut()
 	return

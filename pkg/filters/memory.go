@@ -28,12 +28,12 @@ func (f *MemoryFilter) Clean(_ pkg.Context) (err error) {
 	return
 }
 
-func (f *MemoryFilter) FromSpider(spider pkg.Spider) pkg.Filter {
+func (f *MemoryFilter) FromSpider(spider pkg.Spider) (filter pkg.Filter, err error) {
 	if f == nil {
 		return new(MemoryFilter).FromSpider(spider)
 	}
 
 	f.logger = spider.GetLogger()
 
-	return f
+	return f, nil
 }
