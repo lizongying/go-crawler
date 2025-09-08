@@ -81,14 +81,13 @@ type Config struct {
 	Storage     string        `yaml:"storage" json:"-"`
 	KafkaList   []pkg.Kafka   `yaml:"kafka_list" json:"-"`
 	Kafka       string        `yaml:"kafka" json:"-"`
+	ProxyList   []pkg.Proxy   `yaml:"proxy_list" json:"-"`
+	Proxy       string        `yaml:"proxy" json:"-"`
 	Log         struct {
 		Filename string  `yaml:"filename" json:"-"`
 		LongFile *bool   `yaml:"long_file" json:"-"`
 		Level    *string `yaml:"level" json:"-"`
 	} `yaml:"log" json:"-"`
-	Proxy struct {
-		Example string `yaml:"example" json:"-"`
-	} `yaml:"proxy" json:"-"`
 	Request struct {
 		LimitType     *pkg.LimitType `yaml:"limiter_type,omitempty" json:"limiter_type"`
 		Concurrency   *uint8         `yaml:"concurrency" json:"-"`
@@ -164,18 +163,6 @@ func (c *Config) GetBotName() string {
 	}
 
 	return defaultBotName
-}
-
-func (c *Config) GetProxy() *url.URL {
-	if c.Proxy.Example != "" {
-		proxy, err := url.Parse(c.Proxy.Example)
-		if err != nil {
-			log.Panicln(err)
-		}
-		return proxy
-	}
-
-	return nil
 }
 
 func (c *Config) GetHttpProto() string {
@@ -695,6 +682,13 @@ func (c *Config) GetStorageList() []pkg.Storage {
 }
 func (c *Config) GetStorage() string {
 	return c.Storage
+}
+
+func (c *Config) GetProxyList() []pkg.Proxy {
+	return c.ProxyList
+}
+func (c *Config) GetProxy() string {
+	return c.Proxy
 }
 
 func (c *Config) GetLimitType() pkg.LimitType {

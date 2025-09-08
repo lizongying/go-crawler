@@ -358,7 +358,6 @@ func (h *HttpClient) FromSpider(spider pkg.Spider) pkg.HttpClient {
 	h.redirectMaxTimes = config.GetRedirectMaxTimes()
 
 	h.client = http.DefaultClient
-	h.proxy = config.GetProxy()
 	h.timeout = config.GetRequestTimeout()
 	h.httpProto = config.GetHttpProto()
 	h.logger = spider.GetLogger()
@@ -366,6 +365,17 @@ func (h *HttpClient) FromSpider(spider pkg.Spider) pkg.HttpClient {
 	h.retryMaxTimes = config.GetRetryMaxTimes()
 	h.Ja3 = config.GetEnableJa3()
 	h.dnsCache = dns_cache.NewDnsCache(time.Hour*24, 3)
+
+	for _, v := range config.GetProxyList() {
+		if v.Name == config.GetProxy() {
+			var err error
+			h.proxy, err = url.Parse(v.Uri)
+			if err != nil {
+				h.logger.Error(err)
+			}
+			break
+		}
+	}
 
 	return h
 }

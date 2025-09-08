@@ -39,6 +39,7 @@ func (s *Spider) ParseOk(ctx pkg.Context, response pkg.Response) (err error) {
 
 	s.NewRequest(ctx).
 		SetUrl(response.Url()).
+		SetProxyEnable(true).
 		SetExtra(&ExtraOk{
 			Count: count + 1,
 		}).

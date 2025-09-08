@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/go-rod/rod/lib/launcher"
 	"github.com/lizongying/go-crawler/pkg"
+	"net/url"
 )
 
 const PoolSize = 2
@@ -28,10 +29,22 @@ func (m *Manager) FromSpider(spider pkg.Spider) *Manager {
 	m.logger = spider.GetLogger()
 	config := spider.GetCrawler().GetConfig()
 
+	var proxy *url.URL
+	for _, v := range config.GetProxyList() {
+		if v.Name == config.GetProxy() {
+			var err error
+			proxy, err = url.Parse(v.Uri)
+			if err != nil {
+				m.logger.Error(err)
+			}
+			break
+		}
+	}
+
 	poolSize := PoolSize
 	m.pool = make(chan *Browser, poolSize)
 	for i := 0; i < poolSize; i++ {
-		browser, err := NewBrowser(m.logger, config.GetProxy(), config.GetRequestTimeout())
+		browser, err := NewBrowser(m.logger, proxy, config.GetRequestTimeout())
 		if err != nil {
 			m.logger.Error(err)
 			continue

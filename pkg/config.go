@@ -8,7 +8,6 @@ import (
 type Config interface {
 	GetEnv() string
 	GetBotName() string
-	GetProxy() *url.URL
 	GetHttpProto() string
 	GetRequestTimeout() time.Duration
 	GetEnableJa3() bool
@@ -81,6 +80,9 @@ type Config interface {
 
 	GetStorageList() []Storage
 	GetStorage() string
+
+	GetProxyList() []Proxy
+	GetProxy() string
 }
 
 type Sqlite struct {
@@ -120,4 +122,8 @@ type Storage struct {
 	Id       string `yaml:"id" json:"-"`
 	Key      string `yaml:"key" json:"-"`
 	Bucket   string `yaml:"bucket" json:"-"`
+}
+type Proxy struct {
+	Name string `yaml:"name" json:"-"`
+	Uri  string `yaml:"uri" json:"-"`
 }

@@ -36,12 +36,16 @@ kafka_list:
   - name:
     uri: localhost:9092
 kafka:
+proxy_list:
+  - name: test
+    uri: http://127.0.0.1:10809
+  - name: test2
+    uri: http://127.0.0.1:10808
+proxy:
 log:
   filename: /tmp/spider_{name}.log
   long_file: false # true/false
   level: info # debug/info/warn/error
-proxy:
-  example:
 request:
   limiter_type:
   concurrency: 1

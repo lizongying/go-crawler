@@ -24,19 +24,22 @@ func (m *ImagePipeline) ProcessItem(item pkg.Item) (err error) {
 		return
 	}
 
-	field, ok := reflect.TypeOf(item.Data()).Elem().FieldByName("Images")
 	isUrl := false
 	isName := false
 	isExt := false
 	isWidth := false
 	isHeight := false
-	if ok {
-		tag := field.Tag.Get("field")
-		isUrl = strings.Contains(tag, "url")
-		isName = strings.Contains(tag, "name")
-		isExt = strings.Contains(tag, "ext")
-		isWidth = strings.Contains(tag, "width")
-		isHeight = strings.Contains(tag, "height")
+	t := reflect.TypeOf(item.Data()).Elem()
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if tag, ok := field.Tag.Lookup("image"); ok {
+			isUrl = strings.Contains(tag, "url")
+			isName = strings.Contains(tag, "name")
+			isExt = strings.Contains(tag, "ext")
+			isWidth = strings.Contains(tag, "width")
+			isHeight = strings.Contains(tag, "height")
+			break
+		}
 	}
 	imageOptions := pkg.ImageOptions{
 		FileOptions: pkg.FileOptions{

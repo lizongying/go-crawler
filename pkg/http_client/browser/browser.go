@@ -324,7 +324,18 @@ func (b *Browser) FromSpider(spider pkg.Spider) *Browser {
 
 	b.logger = spider.GetLogger()
 	config := spider.GetCrawler().GetConfig()
-	b.proxy = config.GetProxy()
+
+	for _, v := range config.GetProxyList() {
+		if v.Name == config.GetProxy() {
+			var err error
+			b.proxy, err = url.Parse(v.Uri)
+			if err != nil {
+				b.logger.Error(err)
+			}
+			break
+		}
+	}
+
 	b.timeout = config.GetRequestTimeout()
 
 	err := b.init()

@@ -594,18 +594,18 @@ _ = request.Trace()
       可以使用`item.SetFilesRequest([]pkg.Request{...})`
       方法设置请求列表。
     * Item.data：您的Item.data字段需要实现pkg.File的切片，用于保存下载文件的结果。
-      该字段的名称必须是Files，如`type DataFile struct {Files []*media.File}`。
+      该字段的标签必须是file，如`type DataFile struct {Files []*media.File `json:"files" file:"url,name,ext"`}`。
 
       `SetData(&DataFile{})`
-    * 可以设定返回的字段 Files []*media.File `json:"files" field:"url,name,ext"`
+    * 可以设定返回的字段 Files []*media.File `json:"files" file:"url,name,ext"`
 * 图片下载
     * 在Item中设置Images请求：在Item中，您需要设置Images请求，即包含要下载的图片的请求列表。
       可以使用item.SetImagesRequest([]pkg.Request{...})方法设置请求列表。
     * Item.data：您的Item.data字段需要实现pkg.Image的切片，用于保存下载图片的结果。
-      该字段的名称必须是Images，如`type DataImage struct {Images []*media.Image}`。
+      该字段的标签必须是image，如`type DataImage struct {Images []*media.Image image:"url,name,ext,width,height"}`。
 
       `SetData(&DataImage{})`
-    * 可以设定返回的字段 Images []*media.Image `json:"images" field:"url,name,ext,width,height"`
+    * 可以设定返回的字段 Images []*media.Image `json:"images" image:"url,name,ext,width,height"`
 
 ### 模拟服务
 
@@ -728,7 +728,10 @@ _ = request.Trace()
 
 其他配置：
 
-* proxy.example: 代理。
+* proxy_list: 代理名称。
+* proxy_list.0.name: 代理名称。
+* proxy_list.0.uri: 代理地址。
+* proxy: 代理名称。
 * request.concurrency: 请求并发数。
 * request.interval: 请求间隔时间（毫秒）。默认1000毫秒（1秒）。
 * request.timeout: 请求超时时间（秒）。默认60秒（1分钟）。
