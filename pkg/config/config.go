@@ -64,6 +64,7 @@ const defaultRequestTimeout = uint(60)       //second
 const defaultFilterType = pkg.FilterMemory
 const defaultSchedulerType = pkg.SchedulerMemory
 const defaultLogLongFile = true
+const defaultLogStdout = true
 const defaultRequestLimitType = pkg.LimitSingle
 
 type Config struct {
@@ -86,6 +87,7 @@ type Config struct {
 	Log         struct {
 		Filename string  `yaml:"filename" json:"-"`
 		LongFile *bool   `yaml:"long_file" json:"-"`
+		Stdout   *bool   `yaml:"stdout" json:"-"`
 		Level    *string `yaml:"level" json:"-"`
 	} `yaml:"log" json:"-"`
 	Request struct {
@@ -553,6 +555,14 @@ func (c *Config) GetLogLongFile() bool {
 	}
 
 	return *c.Log.LongFile
+}
+func (c *Config) GetLogStdout() bool {
+	if c.Log.Stdout == nil {
+		logStdout := defaultLogStdout
+		c.Log.Stdout = &logStdout
+	}
+
+	return *c.Log.Stdout
 }
 func (c *Config) GetLogLevel() pkg.Level {
 	if c.Log.Level == nil {

@@ -1138,7 +1138,6 @@ curl https://github.com/lizongying/go-crawler -x http://localhost:8082 --cacert 
 * branch/version/time
 * crawler spider job task change
 * response 图片和文本同时存在？
-* 日誌文件行數
 
 ```shell
 go get -u github.com/lizongying/go-css@latest

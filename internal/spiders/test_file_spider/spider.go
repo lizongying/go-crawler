@@ -14,7 +14,7 @@ type Spider struct {
 }
 
 func (s *Spider) ParseImage(ctx pkg.Context, _ pkg.Response) (err error) {
-	s.UnsafeYieldItem(ctx, items.NewItemJsonl("image"). // build a jsonl item
+	s.UnsafeYieldItem(ctx, items.NewItemJsonl("tmp/image"). // build a jsonl item
 								SetData(&DataImage{}).
 								SetImagesRequest([]pkg.Request{ // with request list
 			request.NewRequest().SetUrl(fmt.Sprintf("%simages/th.jpeg", mock_servers.UrlFile)),
@@ -23,7 +23,7 @@ func (s *Spider) ParseImage(ctx pkg.Context, _ pkg.Response) (err error) {
 }
 
 func (s *Spider) ParseFile(ctx pkg.Context, _ pkg.Response) (err error) {
-	s.UnsafeYieldItem(ctx, items.NewItemJsonl("file"). // build a jsonl item
+	s.UnsafeYieldItem(ctx, items.NewItemJsonl("tmp/file"). // build a jsonl item
 								SetData(&DataFile{}).
 								SetFilesRequest([]pkg.Request{ // with request list
 			request.NewRequest().SetUrl(fmt.Sprintf("%simages/th.jpeg", mock_servers.UrlFile)),

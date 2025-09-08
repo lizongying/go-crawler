@@ -18,7 +18,7 @@ redis_list:
 redis:
 sqlite_list:
   - name:
-    path: static/crawler.db
+    path: /tmp/crawler.db
 sqlite:
 storage_list:
   - name: minio
@@ -38,14 +38,15 @@ kafka_list:
 kafka:
 proxy_list:
   - name: test
-    uri: http://127.0.0.1:10809
+    uri: http://127.0.0.1:8888
   - name: test2
-    uri: http://127.0.0.1:10808
+    uri: http://127.0.0.1:8888
 proxy:
 log:
   filename: /tmp/spider_{name}.log
-  long_file: false # true/false
-  level: info # debug/info/warn/error
+  long_file: true # true/false
+  stdout: true # true/false
+  level: debug # debug/info/warn/error
 request:
   limiter_type:
   concurrency: 1

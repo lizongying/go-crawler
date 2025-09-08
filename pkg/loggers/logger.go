@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 )
 
@@ -20,6 +19,7 @@ var (
 
 type Logger struct {
 	longFile    bool
+	stdout      bool
 	level       pkg.Level
 	loggerDebug *log.Logger
 	loggerInfo  *log.Logger
@@ -32,10 +32,7 @@ func (l *Logger) Debug(v ...any) {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
-	if !l.longFile {
-		file = file[strings.LastIndex(file, "/")+1:]
-	}
-	v = append([]any{strings.Join([]string{file, strconv.Itoa(line)}, ":")}, v...)
+	v = append([]any{fmt.Sprintf("%s:%d", file, line)}, v...)
 	l.loggerDebug.Println(v...)
 }
 
@@ -44,10 +41,7 @@ func (l *Logger) Debugf(format string, v ...any) {
 		return
 	}
 	_, file, line, _ := runtime.Caller(1)
-	if !l.longFile {
-		file = file[strings.LastIndex(file, "/")+1:]
-	}
-	format = fmt.Sprintf("%s %s\n", strings.Join([]string{file, strconv.Itoa(line)}, ":"), format)
+	format = fmt.Sprintf("%s:%d %s\n", file, line, format)
 	l.loggerDebug.Printf(format, v...)
 }
 
@@ -55,11 +49,6 @@ func (l *Logger) Info(v ...any) {
 	if l.level > pkg.LevelInfo {
 		return
 	}
-	_, file, line, _ := runtime.Caller(1)
-	if !l.longFile {
-		file = file[strings.LastIndex(file, "/")+1:]
-	}
-	v = append([]any{strings.Join([]string{file, strconv.Itoa(line)}, ":")}, v...)
 	l.loggerInfo.Println(v...)
 }
 
@@ -67,11 +56,6 @@ func (l *Logger) Infof(format string, v ...any) {
 	if l.level > pkg.LevelInfo {
 		return
 	}
-	_, file, line, _ := runtime.Caller(1)
-	if !l.longFile {
-		file = file[strings.LastIndex(file, "/")+1:]
-	}
-	format = fmt.Sprintf("%s %s\n", strings.Join([]string{file, strconv.Itoa(line)}, ":"), format)
 	l.loggerInfo.Printf(format, v...)
 }
 
@@ -81,9 +65,9 @@ func (l *Logger) Warn(v ...any) {
 	}
 	_, file, line, _ := runtime.Caller(1)
 	if !l.longFile {
-		file = file[strings.LastIndex(file, "/")+1:]
+		file = filepath.Base(file)
 	}
-	v = append([]any{strings.Join([]string{file, strconv.Itoa(line)}, ":")}, v...)
+	v = append([]any{fmt.Sprintf("%s:%d", file, line)}, v...)
 	l.loggerWarn.Println(v...)
 }
 
@@ -93,9 +77,9 @@ func (l *Logger) Warnf(format string, v ...any) {
 	}
 	_, file, line, _ := runtime.Caller(1)
 	if !l.longFile {
-		file = file[strings.LastIndex(file, "/")+1:]
+		file = filepath.Base(file)
 	}
-	format = fmt.Sprintf("%s %s\n", strings.Join([]string{file, strconv.Itoa(line)}, ":"), format)
+	format = fmt.Sprintf("%s:%d %s\n", file, line, format)
 	l.loggerWarn.Printf(format, v...)
 }
 
@@ -105,9 +89,9 @@ func (l *Logger) Error(v ...any) {
 	}
 	_, file, line, _ := runtime.Caller(1)
 	if !l.longFile {
-		file = file[strings.LastIndex(file, "/")+1:]
+		file = filepath.Base(file)
 	}
-	v = append([]any{strings.Join([]string{file, strconv.Itoa(line)}, ":")}, v...)
+	v = append([]any{fmt.Sprintf("%s:%d", file, line)}, v...)
 	l.loggerError.Println(v...)
 }
 
@@ -117,9 +101,9 @@ func (l *Logger) Errorf(format string, v ...any) {
 	}
 	_, file, line, _ := runtime.Caller(1)
 	if !l.longFile {
-		file = file[strings.LastIndex(file, "/")+1:]
+		file = filepath.Base(file)
 	}
-	format = fmt.Sprintf("%s %s\n", strings.Join([]string{file, strconv.Itoa(line)}, ":"), format)
+	format = fmt.Sprintf("%s:%d %s\n", file, line, format)
 	l.loggerError.Printf(format, v...)
 }
 
@@ -127,11 +111,14 @@ func NewLogger(config *config.Config, stream *Stream) (logger *Logger, err error
 	logger = &Logger{
 		longFile: config.GetLogLongFile(),
 		level:    config.GetLogLevel(),
+		stdout:   config.GetLogStdout(),
 	}
 
 	var multiWriter []io.Writer
 
-	multiWriter = append(multiWriter, os.Stdout)
+	if logger.stdout {
+		multiWriter = append(multiWriter, os.Stdout)
+	}
 
 	filename := config.Log.Filename
 	if filename != "" {
@@ -145,18 +132,10 @@ func NewLogger(config *config.Config, stream *Stream) (logger *Logger, err error
 		}
 
 		var file *os.File
-		if !utils.ExistsFile(filename) {
-			file, err = os.Create(filename)
-			if err != nil {
-				log.Panicln(err)
-				return
-			}
-		} else {
-			file, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-			if err != nil {
-				log.Panicln(err)
-				return
-			}
+		file, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			log.Panicln(err)
+			return
 		}
 
 		multiWriter = append(multiWriter, file)
